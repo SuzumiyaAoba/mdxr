@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "lib": ["ES2023", "DOM"],
+    "types": ["node"],
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "@suzumiyaaoba/rv": ["./src/index.ts"],
+      "@suzumiyaaoba/rv/components": ["./src/components.ts"],
+      "rv": ["./src/index.ts"],
+      "rv/components": ["./src/components.ts"]
+    }
+  },
+  "include": ["src", "tests", "examples", "vite.config.ts"]
+}

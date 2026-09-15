@@ -1,0 +1,163 @@
+import { existsSync } from "node:fs";
+import { readFile, readdir } from "node:fs/promises";
+import path from "node:path";
+
+import type { ResolvedConfig } from "./config.js";
+import { loadConfig } from "./config.js";
+import type { ComponentMap } from "./define.js";
+import { isComponent, isRecord } from "./guards.js";
+import { htmlDocument } from "./html.js";
+import { loadUserModule } from "./load-user-module.js";
+import { mdxToHtml } from "./mdx.js";
+import { pkgRoot } from "./paths.js";
+import type { CssSource } from "./tailwind.js";
+import { buildCss } from "./tailwind.js";
+import { builtinComponents } from "./ui/index.js";
+
+const INDEX_FILES = ["index.tsx", "index.ts", "index.jsx", "index.js"];
+
+export interface LoadedComponents {
+  components: ComponentMap;
+  code?: string;
+}
+
+/** Load a user components module (file or directory with an index file). */
+export const loadComponents = async (
+  componentsPath: string
+): Promise<LoadedComponents> => {
+  let entry = componentsPath;
+  if (
+    existsSync(entry) &&
+    !(
+      entry.endsWith(".ts") ||
+      entry.endsWith(".tsx") ||
+      entry.endsWith(".js") ||
+      entry.endsWith(".jsx")
+    )
+  ) {
+    for (const name of INDEX_FILES) {
+      const candidate = path.join(entry, name);
+      if (existsSync(candidate)) {
+        entry = candidate;
+        break;
+      }
+    }
+  }
+  const { module: mod, code } = await loadUserModule(entry);
+  const components: ComponentMap = {};
+  for (const [key, val] of Object.entries(mod)) {
+    if (key === "default") {
+      // A default-exported object is treated as a { Name: Component } map.
+      if (isRecord(val)) {
+        for (const [k, v] of Object.entries(val)) {
+          if (isComponent(v)) {
+            components[k] = v;
+          }
+        }
+      }
+    } else if (isComponent(val) && /^[A-Z]/u.test(key)) {
+      components[key] = val;
+    }
+  }
+  return { code, components };
+};
+
+/** Read all of our own shipped JS so Tailwind can scan built-in classes. */
+const ownSources = async (): Promise<CssSource[]> => {
+  const dirs = [path.join(pkgRoot, "dist"), path.join(pkgRoot, "src")];
+  const out: CssSource[] = [];
+  const walk = async (d: string): Promise<void> => {
+    const ents = await readdir(d, { withFileTypes: true });
+    await Promise.all(
+      ents.map(async (e) => {
+        const p = path.join(d, e.name);
+        if (e.isDirectory()) {
+          await walk(p);
+        } else if (/\.(?:js|ts|tsx)$/u.test(e.name)) {
+          out.push({
+            content: await readFile(p, "utf-8"),
+            extension: e.name.split(".").pop() ?? "",
+          });
+        }
+      })
+    );
+  };
+  await Promise.all(dirs.filter((d) => existsSync(d)).map(walk));
+  return out;
+};
+
+export interface RenderOptions {
+  liveReload?: boolean;
+}
+
+export const renderFile = async (
+  mdxPath: string,
+  opts: RenderOptions = {}
+): Promise<string> => {
+  const abs = path.resolve(mdxPath);
+  const dir = path.dirname(abs);
+  const config: ResolvedConfig = await loadConfig(dir);
+
+  const user =
+    config.componentsPath === undefined
+      ? { components: {} }
+      : await loadComponents(config.componentsPath);
+
+  const collisions = Object.keys(user.components).filter(
+    (k) => k in builtinComponents
+  );
+  for (const k of collisions) {
+    process.stderr.write(
+      `rv: project component <${k}> overrides the built-in\n`
+    );
+  }
+
+  const components: ComponentMap = {
+    ...builtinComponents,
+    ...user.components,
+  };
+
+  const source = await readFile(abs, "utf-8");
+  const { body, frontmatter } = await mdxToHtml(source, components, abs);
+
+  const themeCss =
+    config.themePath === undefined
+      ? undefined
+      : await readFile(config.themePath, "utf-8");
+
+  // Every class that made it into the rendered output is a candidate;
+  // scanning the body covers both built-in and user components.
+  const sources: CssSource[] = [
+    { content: body, extension: "html" },
+    { content: source, extension: "mdx" },
+    { content: themeCss ?? "", extension: "css" },
+    ...(await ownSources()),
+    ...(user.code === undefined
+      ? []
+      : [{ content: user.code, extension: "js" }]),
+    ...(config.componentsCode === undefined
+      ? []
+      : [{ content: config.componentsCode, extension: "js" }]),
+  ];
+  const { css } = await buildCss(sources, themeCss);
+
+  const fmTitle =
+    typeof frontmatter.title === "string" ? frontmatter.title : undefined;
+  const title =
+    fmTitle ??
+    /<h1[^>]*>(?<text>[^<]+)</u.exec(body)?.groups?.text ??
+    "rv document";
+
+  const header =
+    fmTitle !== undefined && fmTitle !== "" && !/<article/u.test(body)
+      ? `<header class="mb-8 border-b border-neutral-200 pb-4 dark:border-neutral-800"><h1 class="m-0">${fmTitle}</h1></header>`
+      : "";
+
+  return htmlDocument({
+    body: header + body,
+    css,
+    liveReload: opts.liveReload,
+    needsMermaid: /class="[^"]*mermaid/u.test(body),
+    title,
+  });
+};

@@ -74,6 +74,14 @@ describe(mdxToHtml, () => {
     expect(body).toContain("graph TD");
   });
 
+  it("renders FileRef without prose backticks", async () => {
+    const { body } = await render(
+      'see <FileRef path="src/mdx.ts" lines="40-52" /> here'
+    );
+    expect(body).toContain("not-prose");
+    expect(body).toContain("src/mdx.ts");
+  });
+
   it("wraps fenced code with a filename header", async () => {
     const { body } = await render('```ts title="a.ts"\nconst x = 1\n```');
     expect(body).toContain("a.ts");

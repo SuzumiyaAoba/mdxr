@@ -31,6 +31,8 @@ describe(renderFile, () => {
     expect(html).toContain("<!doctype html");
     expect(html).toContain("<title>T</title>");
     expect(html).toContain("Hi");
+    // copy buttons are wired by the inlined delegated listener
+    expect(html).toContain("[data-copy]");
   });
 
   it("loads project components from rv.config.ts", async () => {

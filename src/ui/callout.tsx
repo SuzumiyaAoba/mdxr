@@ -14,11 +14,17 @@ export const CALLOUT_KINDS = [
   "goal",
   "nongoal",
   "question",
+  "answer",
 ] as const;
 export type CalloutKind = (typeof CALLOUT_KINDS)[number];
 
 const KINDS: Record<CalloutKind, { label: string; cls: string; icon: string }> =
   {
+    answer: {
+      cls: "border-cyan-500 bg-cyan-50 text-cyan-950 dark:bg-cyan-950/40 dark:text-cyan-100",
+      icon: "lucide:message-circle-check",
+      label: "Answer",
+    },
     caution: {
       cls: "border-orange-500 bg-orange-50 text-orange-950 dark:bg-orange-950/40 dark:text-orange-100",
       icon: "lucide:octagon-alert",

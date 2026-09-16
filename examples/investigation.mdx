@@ -1,0 +1,138 @@
+---
+title: Code investigation — how a document becomes HTML
+status: done
+owner: "@suzumiyaaoba"
+date: 2026-09-17
+---
+
+:::question
+Where does `rv render plan.mdx` actually turn MDX into standalone HTML, and
+what is on the path?
+:::
+
+:::toc
+:::
+
+:::answer
+`rv render` calls <SymbolRef name="renderFile" kind="fn" path="src/render.ts" />,
+which delegates compilation to <SymbolRef name="mdxToHtml" kind="fn" path="src/mdx.ts" />
+and then inlines the generated Tailwind CSS into a static document shell. No
+client runtime is emitted — copy buttons and the ToC work via a single
+delegated listener and native `<details>`.
+:::
+
+## Execution flow
+
+:::flow{title="rv render plan.mdx"}
+
+<FlowStep name="cli()" path="src/cli.ts">
+  Parses argv with cac, dispatches to the render command.
+</FlowStep>
+
+<FlowStep name="renderFile()" path="src/render.ts">
+  Reads the .mdx file, resolves project components from rv.config.ts.
+</FlowStep>
+
+<FlowStep name="mdxToHtml()" path="src/mdx.ts" lines="70-106">
+  Runs the remark plugins (directives, alerts, headings, code-file), then
+  evaluates the MDX and produces hast → JSX.
+</FlowStep>
+
+<FlowStep name="renderToStaticMarkup()">
+  Static React render — components like Callout and Flow become plain HTML.
+</FlowStep>
+
+<FlowStep name="writeFile" path="src/render.ts">
+  Inlines compiled CSS + the delegated click handler, writes the .html.
+</FlowStep>
+
+:::
+
+## Findings
+
+:::findings
+
+<Finding confidence="confirmed" title="Rendering is synchronous">
+  <code>mdxToHtml</code> awaits <code>evaluate()</code> and immediately renders
+  — there is no async component boundary. Evidence: <FileRef path="src/mdx.ts" lines="70-106" />.
+</Finding>
+
+<Finding confidence="confirmed" title="Directives become components">
+  <code>:::flow</code> / <code>:::finding</code> containers are rewritten to MDX
+  JSX elements before evaluation — see <FileRef path="src/remark/directives.ts" />.
+</Finding>
+
+<Finding confidence="inferred" title="No hydration by design">
+  Only a delegated click listener is inlined; interactive shadcn primitives can
+  therefore render just their initial state.
+</Finding>
+
+<Finding confidence="unverified" title="Serve-mode cache invalidation">
+  <code>rv serve</code> likely recompiles user components on change, but no
+  test covers the path yet.
+</Finding>
+
+:::
+
+## Related files
+
+:::files{title="Files involved"}
+
+<File path="src/cli.ts" kind="entry">
+  CLI entry — command wiring.
+</File>
+
+<File path="src/render.ts" kind="core">
+  Document shell, CSS inlining, output write.
+</File>
+
+<File path="src/mdx.ts" kind="core" lines="70-106">
+  MDX → hast → JSX compilation.
+</File>
+
+<File path="src/remark/directives.ts" kind="core">
+  `:::` containers → component mapping.
+</File>
+
+<File path="src/define.ts" kind="types">
+  defineComponent + prop validation contract.
+</File>
+
+<File path="tests/render.test.ts" kind="test" />
+<File path="dist/index.mjs" kind="generated" />
+
+:::
+
+## Module dependencies
+
+:::deps
+
+<Dep from="src/cli.ts" to="src/render.ts" kind="calls" />
+<Dep from="src/render.ts" to="src/mdx.ts" kind="calls" />
+<Dep from="src/mdx.ts" to="remark-directive" kind="imports" />
+<Dep from="src/mdx.ts" to="rehype-katex" kind="imports" />
+<Dep from="src/render.ts" to="src/assets.ts" kind="reads">
+  BASE_CSS + the delegated click handler
+</Dep>
+
+:::
+
+## Coverage
+
+<Stats>
+  <Stat value="25" label="source files read" />
+  <Stat value="6" label="plugins traced" />
+  <Stat value="~0ms" label="client JS at runtime" />
+</Stats>
+
+## History
+
+The renderer landed in <Commit repo="SuzumiyaAoba/rv" sha="f05779b">initial commit</Commit>;
+fence notation was added by <Commit repo="SuzumiyaAoba/rv" sha="30d0bec">code-explanation features</Commit>,
+tracked under <Issue repo="SuzumiyaAoba/rv" number="12">catalog drift</Issue>.
+
+## Open questions
+
+:::question
+Should `rv serve` watch rv.config.ts itself, or only the components file?
+:::

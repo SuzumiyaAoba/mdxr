@@ -2,7 +2,7 @@ import type { Node, Parent } from "unist";
 import { visit } from "unist-util-visit";
 
 const ALERT_RE =
-  /^\[!(?<kind>note|tip|important|warning|caution|danger|decision|goal|non-?goal|question)\]\s*/iu;
+  /^\[!(?<kind>note|tip|important|warning|caution|danger|decision|goal|non-?goal|question|answer)\]\s*/iu;
 
 const isParent = (n: Node): n is Parent =>
   "children" in n && Array.isArray(n.children);

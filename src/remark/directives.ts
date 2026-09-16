@@ -14,9 +14,15 @@ const CALLOUT_KINDS = new Set([
   "goal",
   "nongoal",
   "question",
+  "answer",
 ]);
 
 const CONTAINER_COMPONENTS: Record<string, string> = {
+  deps: "Deps",
+  files: "Files",
+  finding: "Finding",
+  findings: "Findings",
+  flow: "Flow",
   phase: "Phase",
   plan: "Plan",
   steps: "Steps",
@@ -70,6 +76,8 @@ const toMdxComponent = (
  *   :::note[Optional label]        → <Callout kind="note" title="Optional label">
  *   :::phase{title="X" status="doing"} → <Phase title="X" status="doing">
  *   :::plan / :::steps / :::summary / :::timeline → Plan / Steps / Summary / Timeline
+ *   :::flow / :::findings / :::finding / :::files / :::deps
+ *     → Flow / Findings / Finding / Files / Deps
  * `non-goal` is accepted as an alias of the `nongoal` callout kind.
  */
 export const remarkRvDirectives = () => (tree: Node) => {

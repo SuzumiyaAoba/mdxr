@@ -3,38 +3,48 @@ import * as v from "valibot";
 import { defineComponent, flattenChildren } from "../define.js";
 import { Icon } from "./icon.js";
 
+const closed = (x: unknown): boolean => x === false || x === "false";
+
 /**
  * Table of contents. The `:::toc` directive / `<Toc>` element is a marker —
  * the remark plugin collects the document's headings, gives them `id`s, and
  * injects the link list as this component's children. `depth`/`min` are read
- * by the plugin at that point; the component itself only frames the list.
+ * by the plugin at that point; the component itself frames the list as a
+ * collapsible outline (native <details> — works without client JS).
  */
 export const Toc = defineComponent(
   {
     description:
-      '目次。見出し (h2〜) へのリンク一覧を自動生成する。depth="4" で深さ変更 (デフォルト 3)。:::toc でも書ける',
+      '目次。見出し (h2〜) へのリンク一覧を自動生成する。depth="4" で深さ変更 (デフォルト 3)。open="false" で初期状態を折りたたみ。:::toc でも書ける',
     schema: v.looseObject({
       depth: v.optional(v.string()),
       min: v.optional(v.string()),
+      open: v.optional(v.union([v.boolean(), v.string()])),
       title: v.optional(v.string()),
     }),
   },
-  ({ title, children }) => {
+  ({ title, open, children }) => {
     if (flattenChildren(children).length === 0) {
       return null;
     }
     return (
       <nav
         aria-label="Table of contents"
-        className="not-prose my-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800"
+        className="rv-toc not-prose my-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800"
       >
-        <div className="flex items-center gap-1.5 border-b border-neutral-200 bg-neutral-50 px-4 py-2 text-xs font-semibold text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
-          <Icon className="h-3.5 w-3.5" name="lucide:list" />
-          {title ?? "Contents"}
-        </div>
-        <div className="px-4 py-3 text-sm [&_a]:text-neutral-600 [&_a]:no-underline [&_a]:transition-colors hover:[&_a]:text-neutral-900 dark:[&_a]:text-neutral-400 dark:hover:[&_a]:text-neutral-100 [&_ul]:m-0 [&_ul]:list-none [&_ul]:space-y-1 [&_ul]:p-0 [&_ul_ul]:mt-1 [&_ul_ul]:ml-4">
-          {children}
-        </div>
+        <details open={!closed(open)}>
+          <summary className="flex cursor-pointer items-center gap-1.5 bg-neutral-50 px-4 py-2 text-xs font-semibold text-neutral-500 transition-colors select-none hover:bg-neutral-100 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800/70">
+            <Icon className="h-3.5 w-3.5" name="lucide:list-tree" />
+            <span className="flex-1">{title ?? "Contents"}</span>
+            <Icon
+              className="rv-chev h-3.5 w-3.5 opacity-50"
+              name="lucide:chevron-right"
+            />
+          </summary>
+          <div className="rv-toc-body border-t border-neutral-200 px-3 py-2.5 dark:border-neutral-800">
+            {children}
+          </div>
+        </details>
       </nav>
     );
   }

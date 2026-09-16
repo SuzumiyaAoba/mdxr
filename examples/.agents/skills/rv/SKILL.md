@@ -26,9 +26,12 @@ Write documents as **Markdown + a small set of JSX components** (MDX). Do NOT wr
 | Write | Get |
 | --- | --- |
 | `:::note` / `:::warning` / `:::decision` … | `<Callout kind>` |
-| `:::goal` / `:::nongoal` / `:::question` | goal / non-goal / open-question callouts |
+| `:::goal` / `:::nongoal` / `:::question` / `:::answer` | goal / non-goal / open-question / conclusion callouts |
 | `> [!NOTE]` GitHub alert | `<Callout>` |
 | `:::phase{title="…" status="doing"}` | `<Phase>` |
+| `:::flow{title="…"}` + `<FlowStep>` | `<Flow>` numbered call/execution chain |
+| `:::findings` + `<Finding confidence>` | findings list with confidence pills |
+| `:::files` / `:::deps` | `<Files>` related-file list / `<Deps>` dependency edges |
 | `:::timeline{title="…"}` | `<Timeline>` |
 | frontmatter `status:` / `date:` / `owner:` | document header badge + meta row |
 | ` ```mermaid ` fenced block | rendered diagram |

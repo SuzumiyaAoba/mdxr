@@ -129,6 +129,15 @@ See <FileRef path="src/render.ts" lines="12-40" /> for the current entry point.
 Ship the sandboxed evaluator behind a flag, or as a minor bump?
 :::
 
+<Ask title="Pending decisions" description="Check or fill in — answers are copied, not submitted.">
+  <Question name="evaluator" type="choice" label="Sandboxed evaluator" required>
+    <Choice value="flag" checked>Behind a flag</Choice>
+    <Choice value="minor" description="No opt-out">Minor bump</Choice>
+  </Question>
+  <Question name="registries" type="toggle" label="Include remote registries in v1.0" />
+  <Question name="freeze-date" type="text" label="Freeze date" placeholder="2026-09-30" />
+</Ask>
+
 ```mermaid
 graph LR
   A[plan.mdx] --> B[evaluate]

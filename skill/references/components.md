@@ -49,7 +49,7 @@ Chronological milestone list with a left rail. `Event` requires `date` (any stri
 
 ### `<Callout kind="…" title="…">`
 
-Highlighted block. `:::note`, `:::warning`, `> [!NOTE]` produce the same output. Kinds: `note` `tip` `important` `warning` `caution` `danger` `decision` `goal` `nongoal` `question` — the last three cover plan-doc conventions (goals / non-goals / open questions). `:::non-goal` and `> [!NON-GOAL]` are aliases of `nongoal`.
+Highlighted block. `:::note`, `:::warning`, `> [!NOTE]` produce the same output. Kinds: `note` `tip` `important` `warning` `caution` `danger` `decision` `goal` `nongoal` `question` `answer` — `goal`/`nongoal`/`question` cover plan-doc conventions, `answer` is the conclusion block of an investigation report. `:::non-goal` and `> [!NON-GOAL]` are aliases of `nongoal`.
 
 ### `<Decision title="…" status="…" date="…">`
 
@@ -157,6 +157,62 @@ Change-set list — the "files this plan touches" section. `kind` drives the ico
 </Changes>
 ```
 
+### `<Flow title="…">` / `<FlowStep name path lines>` / `:::flow{title="…"}`
+
+Numbered call/execution chain — "how a request travels through the code". Each `FlowStep` renders a numbered node on a connecting rail; `name` is the function/phase label (mono), `path`/`lines` pin the location, children describe what happens there. Use `Steps` for task checklists and `Timeline` for dates — `Flow` is for hops through code.
+
+```mdx
+<Flow title="Request path">
+  <FlowStep name="cli()" path="src/cli.ts" lines="12-30">
+    Parses argv, loads config.
+  </FlowStep>
+  <FlowStep name="mdxToHtml()" path="src/mdx.ts">
+    Compiles MDX and evaluates it.
+  </FlowStep>
+</Flow>
+```
+
+### `<Findings title>` / `<Finding confidence="confirmed|inferred|unverified" title="…">` / `:::findings` / `:::finding`
+
+Investigation findings with an epistemic-status pill: `confirmed` (read from the code), `inferred` (deduced from evidence), `unverified` (claimed, not checked). `Findings` numbers each `Finding` and renders a count summary on top; children carry the evidence (`<FileRef>`, `<CodeFile>`).
+
+```mdx
+<Findings title="Investigation results">
+  <Finding confidence="confirmed" title="Rendering is synchronous">
+    `mdxToHtml` awaits `evaluate()` then calls `renderToStaticMarkup`.
+  </Finding>
+  <Finding confidence="unverified" title="Watch-mode reloads">
+    Probably, but no test covers it.
+  </Finding>
+</Findings>
+```
+
+### `<Files title>` / `<File path kind lines>` / `:::files`
+
+Related-file inventory — "the files this investigation touches". `kind` is a free-form chip; known values get an icon and color: `entry` `core` `types` `config` `test` `docs` `generated`. Children render as a muted note. For change-sets (what a plan modifies) use `Changes` instead.
+
+```mdx
+<Files title="Files involved">
+  <File path="src/mdx.ts" kind="entry" lines="70-106">
+    Pipeline entry.
+  </File>
+  <File path="src/define.ts" kind="types" />
+  <File path="tests/render.test.ts" kind="test" />
+</Files>
+```
+
+### `<Deps title>` / `<Dep from to kind>` / `:::deps`
+
+Dependency-edge list — compact alternative to a mermaid graph for module relationships. `kind` (default `imports`): `imports` `calls` `extends` `implements` `reads` `writes`. `from`/`to` accept paths, module names, or symbols; children render as a muted note.
+
+```mdx
+<Deps title="Module dependencies">
+  <Dep from="src/cli.ts" to="src/render.ts" kind="calls" />
+  <Dep from="src/mdx.ts" to="remark-directive" kind="imports" />
+  <Dep from="src/render.ts" to="dist/out.html" kind="writes" />
+</Deps>
+```
+
 ### `<Props of="…">` / `<Prop name type required default>`
 
 API/props table for documenting a component or function signature. `of` renders a caption bar; `required` (bare attr) adds a `*`; children are the description cell.
@@ -170,17 +226,53 @@ API/props table for documenting a component or function signature. `of` renders 
 </Props>
 ```
 
-### `<Ref href="…" title="…">` / `<Issue repo="o/r" number="12">` / `<PR repo="o/r" number="5">`
+### `<Ref href="…" title="…">` / `<Issue repo="o/r" number="12">` / `<PR repo="o/r" number="5">` / `<Commit repo="o/r" sha="…">`
 
-`Ref` is a linked reference card (use for a "References" section). `Issue`/`PR` are inline chips linking to `github.com/{repo}/issues|pull/{number}` — children become the title; `href` overrides the URL.
+`Ref` is a linked reference card (use for a "References" section). `Issue`/`PR`/`Commit` are inline chips linking to `github.com/{repo}/issues|pull|commit/{id}` — `Commit` displays the first 7 chars of `sha`, children become the title; `href` overrides the URL.
 
 ### `<Figure src="…" alt="…" caption="…">`
 
 Image with an optional caption (children work too). Use for screenshots or diagrams mermaid can't express.
 
-### `<Toc depth="3" min="2" title="Contents" />` / `:::toc`
+### `<Toc depth="3" min="2" title="Contents" open />` / `:::toc`
 
-Table of contents auto-built from the document's headings (h2–h3 by default — h1 is the document title). Headings always get slug `id`s, so `[link](#slug)` deep links work anywhere.
+Table of contents auto-built from the document's headings (h2–h3 by default — h1 is the document title). Headings always get slug `id`s, so `[link](#slug)` deep links work anywhere. Renders as a collapsible outline — numbered top-level entries, guide-lined nesting — on a native `<details>` (works without JS); `open="false"` starts it folded.
+
+### `<Ask title description>` / `<Question name type label>` / `<Choice value checked>`
+
+Question block that asks the reader for input — open decisions in a plan, sign-off toggles, free-form answers. Built on **native** form controls (unlike the shadcn set), so every field is interactive in the static document; "Copy answers" serializes the filled state to the clipboard as `- name: value` lines the user can paste back.
+
+`<Question>` `type`: `choice` (radio cards), `multi` (checkbox cards), `select` (dropdown), `text`, `textarea`, `toggle` (switch). Default: `choice` when it has `<Choice>` children, else `text`. `name` is the answer key; `label`, `description`, `required`, `placeholder`, `value` (text default), `rows` (textarea), `checked` (toggle) are supported.
+
+```mdx
+<Ask title="確認事項" description="プランに反映します">
+  <Question name="approach" type="choice" label="実装方針" required>
+    <Choice value="gradual" checked>
+      段階的移行
+    </Choice>
+    <Choice value="rewrite" description="ロールバック経路が必要">
+      一括書き換え
+    </Choice>
+  </Question>
+  <Question name="scope" type="multi" label="含める範囲">
+    <Choice value="api" checked>
+      API
+    </Choice>
+    <Choice value="ui">UI</Choice>
+  </Question>
+  <Question name="prio" type="select" label="優先度" placeholder="選択">
+    <Choice value="high">高</Choice>
+    <Choice value="mid">中</Choice>
+  </Question>
+  <Question name="deadline" type="text" label="期限" placeholder="YYYY-MM-DD" />
+  <Question name="notes" type="textarea" label="補足" rows="2" />
+  <Question name="preview" type="toggle" label="プレビュー環境を作る" checked />
+</Ask>
+```
+
+### `<Details summary="…" open>`
+
+Collapsible section on a native `<details>` element — opens/closes without client JS (unlike the shadcn `Collapsible`, which renders its initial state only). `open` starts it expanded.
 
 ### `<Glossary>` / `<Term name="…">`
 
@@ -269,7 +361,7 @@ Embeds a real file from disk as a fenced block — code explanations quote the a
 
 The full shadcn/ui set (Base UI primitives) is registered: `Button`, `Badge`, `Card`/`CardHeader`/…, `Alert`, `Tabs`, `Accordion`, `Dialog`, `Input`, `Label`, `Table`, `Progress`, `Skeleton`, `Separator`, `Kbd`, `Spinner`, and more — run `rv catalog` for the complete list. Use them as plain MDX elements; attributes are strings (`variant="outline"`, `size="sm"`).
 
-**Important:** documents render to static HTML with no client-side hydration. Stateful primitives (`Dialog`, `Tabs`, `Accordion`, `Tooltip`, `Select`, menus, …) render only their initial state — e.g. a dialog stays closed, tabs show the `defaultValue` panel. Prefer them for layout/structure; for always-visible content use `Card`, `Alert`, `Badge`, `Table`, `Kbd`, `Separator`, `Progress`, `Skeleton`.
+**Important:** documents render to static HTML with no client-side hydration. Stateful primitives (`Dialog`, `Tabs`, `Accordion`, `Tooltip`, `Select`, `Switch`, menus, …) render only their initial state — e.g. a dialog stays closed, a switch can't be flipped. Prefer them for layout/structure; for always-visible content use `Card`, `Alert`, `Badge`, `Table`, `Kbd`, `Separator`, `Progress`, `Skeleton`. For _actual_ interactivity use the built-ins backed by native elements: `<Ask>`/`<Question>`/`<Choice>` (form controls), `<Details>` and `<Toc>` (collapsible `<details>`), and the copy buttons.
 
 ```mdx
 <Alert>

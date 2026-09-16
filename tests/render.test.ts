@@ -479,4 +479,152 @@ describe(mdxToHtml, () => {
     const { body } = await render("inline $x^2$ math\n\n$$E = mc^2$$");
     expect(body).toContain("katex");
   });
+
+  it("renders <Toc> as a collapsible outline", async () => {
+    const { body } = await render("<Toc />\n\n## Alpha\n");
+    expect(body).toContain("rv-toc");
+    expect(body).toContain("<details");
+    expect(body).toContain("<summary");
+    expect(body).toContain("rv-toc-body");
+  });
+
+  it("renders <Details> as a native collapsible", async () => {
+    const { body } = await render(
+      '<Details summary="Why">because</Details>\n\n<Details open summary="Open">shown</Details>'
+    );
+    expect(body).toContain('class="rv-details');
+    expect(body).toContain("<summary");
+    expect(body).toContain(">because<");
+    expect(body).toContain("open");
+    expect(body).toContain("shown");
+  });
+
+  it("renders <Ask> questions on native form controls", async () => {
+    const { body } = await render(
+      '<Ask title="Decide"><Question name="approach" type="choice" label="How"><Choice value="a">A案</Choice><Choice value="b" checked>B案</Choice></Question><Question name="scope" type="multi" label="Scope"><Choice value="api">API</Choice></Question></Ask>'
+    );
+    expect(body).toContain("data-ask");
+    expect(body).toContain('type="radio"');
+    expect(body).toContain('name="approach"');
+    expect(body).toContain('type="checkbox"');
+    expect(body).toContain('name="scope"');
+  });
+
+  it("renders text/textarea/select/toggle questions", async () => {
+    const { body } = await render(
+      '<Ask><Question name="when" type="text" label="期限" placeholder="yyyy-mm-dd" /><Question name="note" type="textarea" label="補足" /><Question name="prio" type="select" label="優先度"><Choice value="h">高</Choice></Question><Question name="beta" type="toggle" label="ベータ" checked /></Ask>'
+    );
+    expect(body).toContain('type="text"');
+    expect(body).toContain("<textarea");
+    expect(body).toContain("<select");
+    expect(body).toContain("<option");
+    expect(body).toContain("rv-switch");
+  });
+
+  it("wires the Copy answers button for the client handler", async () => {
+    const { body } = await render(
+      '<Ask title="T"><Question name="x" type="text" /></Ask>'
+    );
+    expect(body).toContain("data-ask-copy");
+    expect(body).toContain('data-ask-title="T"');
+    expect(body).toContain("Copy answers");
+  });
+
+  it("renders Flow as a numbered chain with locations", async () => {
+    const { body } = await render(
+      '<Flow title="Request path"><FlowStep name="cli()" path="src/cli.ts" lines="12-30">parse argv</FlowStep><FlowStep name="mdxToHtml()" path="src/mdx.ts">compile</FlowStep></Flow>'
+    );
+    expect(body).toContain("Request path");
+    expect(body).toContain("cli()");
+    expect(body).toContain("src/cli.ts:12-30");
+    expect(body).toContain("mdxToHtml()");
+    expect(body).toContain("<ol");
+  });
+
+  it("converts :::flow into Flow", async () => {
+    const { body } = await render(
+      ':::flow{title="Pipeline"}\n<FlowStep name="a" />\n:::'
+    );
+    expect(body).toContain("Pipeline");
+    expect(body).toContain(">a<");
+  });
+
+  it("renders Findings with confidence pills and a count summary", async () => {
+    const { body } = await render(
+      '<Findings><Finding confidence="confirmed" title="Sync render">evidence</Finding><Finding confidence="unverified">guess</Finding></Findings>'
+    );
+    expect(body).toContain("Confirmed");
+    expect(body).toContain("Unverified");
+    expect(body).toContain("Sync render");
+    expect(body).toContain("2 findings");
+  });
+
+  it("counts findings by confidence in the summary", async () => {
+    const { body } = await render(
+      '<Findings><Finding confidence="confirmed" title="Sync render">evidence</Finding><Finding confidence="unverified">guess</Finding></Findings>'
+    );
+    expect(body).toContain("1 confirmed");
+    expect(body).toContain("1 unverified");
+  });
+
+  it("converts :::finding into Finding", async () => {
+    const { body } = await render(
+      ':::finding{confidence="inferred"}\nprobably caches\n:::'
+    );
+    expect(body).toContain("Inferred");
+    expect(body).toContain("probably caches");
+  });
+
+  it("rejects an unknown Finding confidence", async () => {
+    await expect(
+      render('<Finding confidence="maybe">x</Finding>')
+    ).rejects.toThrow(/Invalid props/u);
+  });
+
+  it("renders Files rows with kind chips and notes", async () => {
+    const { body } = await render(
+      '<Files><File path="src/mdx.ts" kind="entry">pipeline entry</File><File path="tests/x.ts" kind="test" /></Files>'
+    );
+    expect(body).toContain("src/mdx.ts");
+    expect(body).toContain("entry");
+    expect(body).toContain("pipeline entry");
+    expect(body).toContain("test");
+  });
+
+  it("renders Deps edges with kind labels", async () => {
+    const { body } = await render(
+      '<Deps><Dep from="src/cli.ts" to="src/render.ts" kind="calls" /><Dep from="src/mdx.ts" to="remark-gfm" kind="imports">plugin</Dep></Deps>'
+    );
+    expect(body).toContain("src/cli.ts");
+    expect(body).toContain("src/render.ts");
+    expect(body).toContain("calls");
+    expect(body).toContain("imports");
+    expect(body).toContain("plugin");
+  });
+
+  it("converts :::files and :::deps into containers", async () => {
+    const { body } = await render(
+      ':::files\n<File path="a.ts" />\n:::\n\n:::deps\n<Dep from="a" to="b" />\n:::'
+    );
+    expect(body).toContain("a.ts");
+    expect(body).toContain("imports");
+  });
+
+  it("renders Commit chips linking to the commit", async () => {
+    const { body } = await render(
+      '<Commit repo="a/b" sha="0123456789abcdef">initial</Commit>'
+    );
+    expect(body).toContain("github.com/a/b/commit/0123456789abcdef");
+    expect(body).toContain("0123456");
+    expect(body).toContain("initial");
+  });
+
+  it("converts :::answer and [!ANSWER] into an Answer callout", async () => {
+    const { body } = await render(
+      ":::answer\nThe entry point is src/cli.ts.\n:::\n\n> [!ANSWER]\n> yes\n"
+    );
+    expect(body).toContain("Answer");
+    expect(body).toContain("The entry point is src/cli.ts.");
+    expect(body).toContain("yes");
+  });
 });

@@ -97,10 +97,20 @@ export const CONVENTIONS = [
   {
     result: "Callout (with kind)",
     syntax:
-      ":::note | :::tip | :::warning | :::danger | :::decision | :::goal | :::nongoal | :::question",
+      ":::note | :::tip | :::warning | :::danger | :::decision | :::goal | :::nongoal | :::question | :::answer",
   },
   { result: "Phase", syntax: ':::phase{title="..." status="doing"}' },
   { result: "Steps container", syntax: ":::steps" },
+  {
+    result: "Flow (numbered call/execution chain)",
+    syntax: ':::flow{title="..."}',
+  },
+  {
+    result: "Findings container / Finding block",
+    syntax: ':::findings · :::finding{confidence="inferred" title="..."}',
+  },
+  { result: "Files container (related files)", syntax: ":::files" },
+  { result: "Deps container (dependency edges)", syntax: ":::deps" },
   { result: "Timeline", syntax: ':::timeline{title="..."}' },
   { result: "table of contents (auto from headings)", syntax: ":::toc" },
   { result: "Callout (GitHub alert)", syntax: "> [!NOTE] / [!WARNING] / ..." },

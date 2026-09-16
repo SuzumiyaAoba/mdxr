@@ -10,6 +10,7 @@ import { matter } from "vfile-matter";
 
 import type { ComponentMap } from "./define.js";
 import { isRecord } from "./guards.js";
+import { rehypeShiki } from "./rehype/shiki.js";
 import { remarkRvAlerts } from "./remark/alerts.js";
 import { remarkCodeMeta } from "./remark/code-meta.js";
 import { remarkRvDirectives } from "./remark/directives.js";
@@ -78,6 +79,7 @@ export const mdxToHtml = async (
     ...runtime,
     baseUrl: import.meta.url,
     format: "mdx",
+    rehypePlugins: [rehypeShiki],
     remarkPlugins: [
       remarkFrontmatter,
       remarkGfm,

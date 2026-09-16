@@ -23,11 +23,11 @@ Write documents as **Markdown + a small set of JSX components** (MDX). Do NOT wr
 
 ## Conventions (no JSX needed)
 
-| Write                                      | Get                          |
-| ------------------------------------------ | ---------------------------- |
-| `:::note` / `:::warning` / `:::decision` … | `<Callout kind>`             |
-| `> [!NOTE]` GitHub alert                   | `<Callout>`                  |
-| `:::phase{title="…" status="doing"}`       | `<Phase>`                    |
-| ` ```mermaid ` fenced block                | rendered diagram             |
-| ` ```ts title="src/x.ts" `                 | code block with filename bar |
-| `- [ ]` / `- [x]`                          | styled task list             |
+| Write | Get |
+| --- | --- |
+| `:::note` / `:::warning` / `:::decision` … | `<Callout kind>` |
+| `> [!NOTE]` GitHub alert | `<Callout>` |
+| `:::phase{title="…" status="doing"}` | `<Phase>` |
+| ` ```mermaid ` fenced block | rendered diagram |
+| ` ```ts title="src/x.ts" ` | highlighted code block + filename bar |
+| `- [ ]` / `- [x]` | styled task list |

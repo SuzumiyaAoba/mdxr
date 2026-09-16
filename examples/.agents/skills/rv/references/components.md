@@ -48,7 +48,25 @@ Standalone status pill.
 ```
 ````
 
-renders a framed block with filename + copy button. ` ```mermaid ` renders a diagram.
+renders a framed block with filename + copy button. Code is syntax-highlighted with Shiki (light/dark dual theme), so always tag the fence with a language (`ts`, `python`, `diff`, …). ` ```mermaid ` renders a diagram.
+
+## shadcn/ui components (Base UI)
+
+The full shadcn/ui set (Base UI primitives) is registered: `Button`, `Badge`, `Card`/`CardHeader`/…, `Alert`, `Tabs`, `Accordion`, `Dialog`, `Input`, `Label`, `Table`, `Progress`, `Skeleton`, `Separator`, `Kbd`, `Spinner`, and more — run `rv catalog` for the complete list. Use them as plain MDX elements; attributes are strings (`variant="outline"`, `size="sm"`).
+
+**Important:** documents render to static HTML with no client-side hydration. Stateful primitives (`Dialog`, `Tabs`, `Accordion`, `Tooltip`, `Select`, menus, …) render only their initial state — e.g. a dialog stays closed, tabs show the `defaultValue` panel. Prefer them for layout/structure; for always-visible content use `Card`, `Alert`, `Badge`, `Table`, `Kbd`, `Separator`, `Progress`, `Skeleton`.
+
+```mdx
+<Alert>
+  <AlertTitle>Heads up</AlertTitle>
+  <AlertDescription>Fully static and safe in documents.</AlertDescription>
+</Alert>
+
+<Badge variant="secondary">beta</Badge>
+<Button variant="outline">Action</Button>
+```
+
+Theme: shadcn CSS variables (`--primary`, `--background`, …) are emitted with the document CSS; `.dark` variants follow `prefers-color-scheme` via a `<html>` class toggle.
 
 ## Project-defined components
 

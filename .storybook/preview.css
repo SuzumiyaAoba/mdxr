@@ -1,7 +1,6 @@
-@import "tailwindcss";
+@import "../src/styles/globals.css";
+@import "@fontsource-variable/geist";
 @plugin "@tailwindcss/typography";
 
 /* Component stories toggle dark mode via a .dark class on <html> (toolbar
- * switch) instead of the prefers-color-scheme media query baked into
- * rendered documents. */
-@custom-variant dark (&:where(.dark, .dark *));
+ * switch). globals.css maps the `dark:` variant to `.dark` already. */

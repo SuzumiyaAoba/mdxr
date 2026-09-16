@@ -103,7 +103,7 @@ export const CONVENTIONS = [
   { result: "Callout (GitHub alert)", syntax: "> [!NOTE] / [!WARNING] / ..." },
   { result: "diagram (mermaid via CDN)", syntax: "```mermaid fenced block" },
   {
-    result: "code block with filename header",
+    result: "code block (syntax-highlighted) with filename header",
     syntax: '```lang title="file.ts"',
   },
   {

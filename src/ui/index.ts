@@ -4,6 +4,7 @@ import { FileRef } from "./file-ref.js";
 import { Phase } from "./phase.js";
 import { Plan } from "./plan.js";
 import { Pre } from "./pre.js";
+import { shadcnComponents } from "./shadcn.js";
 import { StatusBadge } from "./status-badge.js";
 import { Step, Steps } from "./steps.js";
 import { Summary } from "./summary.js";
@@ -20,6 +21,8 @@ export { Summary } from "./summary.js";
 /**
  * The built-in component catalog available inside rv documents.
  * `pre` overrides fenced code blocks; the rest are usable as MDX JSX elements.
+ * shadcn/ui (Base UI) primitives are included — interactive parts render
+ * their initial state since documents have no client-side hydration.
  */
 export const builtinComponents: ComponentMap = {
   Callout,
@@ -31,4 +34,5 @@ export const builtinComponents: ComponentMap = {
   Steps,
   Summary,
   pre: Pre,
+  ...shadcnComponents,
 };

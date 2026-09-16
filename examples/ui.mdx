@@ -1,0 +1,75 @@
+---
+title: shadcn/ui component gallery
+---
+
+<Plan title="shadcn/ui (Base UI) gallery" status="doing">
+
+Documents are static HTML — interactive primitives render their initial state. Open Storybook (`pnpm storybook`) to see real interactions.
+
+## Buttons and badges
+
+<Button>Default</Button> <Button variant="secondary">Secondary</Button>
+<Button variant="outline">Outline</Button>
+<Button variant="destructive">Destructive</Button>
+
+<Badge>stable</Badge> <Badge variant="secondary">beta</Badge>
+<Badge variant="outline">outline</Badge>
+<Badge variant="destructive">breaking</Badge>
+
+## Alert
+
+<Alert>
+  <AlertTitle>Heads up</AlertTitle>
+  <AlertDescription>
+    Alerts are fully static and safe to use in rendered documents.
+  </AlertDescription>
+</Alert>
+
+## Card
+
+<Card className="w-80">
+  <CardHeader>
+    <CardTitle>Static card</CardTitle>
+    <CardDescription>Composed from CardHeader/CardContent</CardDescription>
+  </CardHeader>
+  <CardContent>Card body content.</CardContent>
+</Card>
+
+## Tabs (initial state)
+
+<Tabs defaultValue="one">
+  <TabsList>
+    <TabsTrigger value="one">One</TabsTrigger>
+    <TabsTrigger value="two">Two</TabsTrigger>
+  </TabsList>
+  <TabsContent value="one">Panel one</TabsContent>
+  <TabsContent value="two">Panel two</TabsContent>
+</Tabs>
+
+## Accordion (initial state)
+
+<Accordion>
+  <AccordionItem value="a">
+    <AccordionTrigger>Section A</AccordionTrigger>
+    <AccordionContent>Content A</AccordionContent>
+  </AccordionItem>
+</Accordion>
+
+## Form controls
+
+<Label htmlFor="name">Name</Label>
+<Input id="name" placeholder="Ada Lovelace" />
+<Textarea placeholder="Notes" />
+<Switch /> <Checkbox /> <Slider defaultValue="40" />
+
+## Progress and skeleton
+
+<Progress value="60" />
+
+<Skeleton className="h-4 w-40" />
+
+<Separator />
+
+<Kbd>⌘K</Kbd> <Spinner />
+
+</Plan>

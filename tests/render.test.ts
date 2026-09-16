@@ -87,4 +87,32 @@ describe(mdxToHtml, () => {
     expect(body).toContain("a.ts");
     expect(body).toContain("data-copy");
   });
+
+  it("syntax-highlights fenced code with shiki", async () => {
+    const { body } = await render("```ts\nconst x: number = 1\n```");
+    expect(body).toContain('class="language-ts shiki"');
+    expect(body).toContain('class="line"');
+    // dual-theme output: token colors are CSS vars, switched in BASE_CSS
+    expect(body).toContain("--shiki-light:");
+    expect(body).toContain("--shiki-dark:");
+    // copy payload still contains the raw source
+    expect(body).toContain('data-copy="const x: number = 1"');
+  });
+
+  it("highlights lazy-loaded languages", async () => {
+    const { body } = await render("```elixir\ndef f, do: :ok\n```");
+    expect(body).toContain("--shiki-light:");
+  });
+
+  it("leaves unknown languages unhighlighted", async () => {
+    const { body } = await render("```notalanguage\nxyz\n```");
+    expect(body).not.toContain("--shiki-light");
+    expect(body).not.toContain('class="line"');
+    expect(body).toContain("xyz");
+  });
+
+  it("does not highlight mermaid blocks", async () => {
+    const { body } = await render("```mermaid\ngraph TD\nA-->B\n```");
+    expect(body).not.toContain("--shiki-light");
+  });
 });

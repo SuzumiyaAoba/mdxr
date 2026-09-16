@@ -2,6 +2,7 @@ import type { Preview } from "@storybook/react-vite";
 import { useEffect } from "react";
 
 import { BASE_CSS, handleCopyClick } from "../src/assets.js";
+import { enhanceRenderedBlocks } from "./enhance.js";
 
 import "./preview.css";
 
@@ -22,11 +23,24 @@ const ThemeSync = ({ dark }: { dark: boolean }): null => {
   return null;
 };
 
+/**
+ * Component stories bypass the render pipeline, so the post-passes documents
+ * get — shiki highlighting and mermaid.run — are replayed on the DOM here.
+ * Runs after every commit; both passes skip nodes they already handled.
+ */
+const DocumentEnhancements = (): null => {
+  useEffect(() => {
+    void enhanceRenderedBlocks(document);
+  });
+  return null;
+};
+
 const preview: Preview = {
   decorators: [
     (Story, context) => (
       <>
         <ThemeSync dark={context.globals.theme === "dark"} />
+        <DocumentEnhancements />
         {context.parameters.rvDocument === true ? (
           <Story />
         ) : (

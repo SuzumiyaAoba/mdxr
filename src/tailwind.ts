@@ -50,6 +50,18 @@ export interface CssSource {
 }
 
 /**
+ * React escapes `&` `'` `"` `<` `>` inside rendered attributes. The scanner
+ * must see the literal class text, so decode the entities React emits.
+ */
+const decodeEntities = (html: string): string =>
+  html
+    .replaceAll("&#x27;", "'")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&amp;", "&");
+
+/**
  * Compile Tailwind v4 CSS covering every class candidate found in `sources`
  * (the rendered HTML, the .mdx source, bundled user components, our own dist).
  * Returns minified CSS ready to inline into the HTML document.
@@ -59,7 +71,9 @@ export const buildCss = async (
   themeCss?: string
 ): Promise<{ css: string; dependencies: string[] }> => {
   const input = [
-    '@import "tailwindcss";',
+    // globals.css holds the shadcn/Base UI theme tokens (@theme, :root/.dark
+    // vars, custom variants) shared with Storybook; it imports tailwind itself.
+    '@import "./src/styles/globals.css";',
     '@plugin "@tailwindcss/typography";',
     BASE_CSS,
     themeCss ?? "",
@@ -79,7 +93,10 @@ export const buildCss = async (
   });
 
   const candidates = new Scanner({}).scanFiles(
-    sources.map((s) => ({ content: s.content, extension: s.extension }))
+    sources.map((s) => ({
+      content: s.extension === "html" ? decodeEntities(s.content) : s.content,
+      extension: s.extension,
+    }))
   );
 
   const css = compiler.build(candidates);

@@ -136,6 +136,7 @@ const config: StorybookConfig = {
   viteFinal: (viteConfig) =>
     mergeConfig(viteConfig, {
       plugins: [tailwindcss(), rvDocuments()],
+      resolve: { alias: { "@": srcDir } },
     }),
 };
 

@@ -11,6 +11,9 @@ const CALLOUT_KINDS = new Set([
   "caution",
   "danger",
   "decision",
+  "goal",
+  "nongoal",
+  "question",
 ]);
 
 const CONTAINER_COMPONENTS: Record<string, string> = {
@@ -18,6 +21,7 @@ const CONTAINER_COMPONENTS: Record<string, string> = {
   plan: "Plan",
   steps: "Steps",
   summary: "Summary",
+  timeline: "Timeline",
 };
 
 interface DirectiveNode extends Parent {
@@ -64,7 +68,8 @@ const toMdxComponent = (
  * remark-directive containers become rv components:
  *   :::note[Optional label]        → <Callout kind="note" title="Optional label">
  *   :::phase{title="X" status="doing"} → <Phase title="X" status="doing">
- *   :::plan / :::steps / :::summary → <Plan> / <Steps> / <Summary>
+ *   :::plan / :::steps / :::summary / :::timeline → Plan / Steps / Summary / Timeline
+ * `non-goal` is accepted as an alias of the `nongoal` callout kind.
  */
 export const remarkRvDirectives = () => (tree: Node) => {
   visit(tree, "containerDirective", (node: Node) => {
@@ -72,7 +77,7 @@ export const remarkRvDirectives = () => (tree: Node) => {
       return;
     }
     const directive = node;
-    const { name } = directive;
+    const name = directive.name === "non-goal" ? "nongoal" : directive.name;
     const attrs: Record<string, unknown> = { ...directive.attributes };
 
     const [first] = directive.children;

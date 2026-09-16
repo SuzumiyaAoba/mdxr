@@ -1,16 +1,16 @@
+import { isValidElement } from "react";
 import * as v from "valibot";
 
-import { defineComponent } from "../define.js";
-import { STATUSES } from "./status-badge.js";
+import { defineComponent, flattenChildren } from "../define.js";
+import { isRecord, nonEmpty } from "../guards.js";
+import { Due } from "./due.js";
+import { EFFORT_SIZES, Effort } from "./effort.js";
+import { Icon } from "./icon.js";
+import { Owner } from "./owner.js";
+import { PRIORITY_LEVELS, Priority } from "./priority.js";
+import { isStatus, STATUS_ICONS, STATUSES } from "./status-badge.js";
 import type { Status } from "./status-badge.js";
-
-const ICONS: Record<Status, string> = {
-  blocked:
-    "M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm5 13.6L15.6 17 12 13.4 8.4 17 7 15.6 10.6 12 7 8.4 8.4 7 12 10.6 15.6 7 17 8.4 13.4 12z",
-  doing: "M12 2a10 10 0 1 0 10 10h-2a8 8 0 1 1-8-8z",
-  done: "M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z",
-  todo: "M12 4a8 8 0 1 0 8 8h2A10 10 0 1 1 12 2z",
-};
+import { Summary } from "./summary.js";
 
 const ICON_CLS: Record<Status, string> = {
   blocked: "text-red-500",
@@ -19,33 +19,76 @@ const ICON_CLS: Record<Status, string> = {
   todo: "text-neutral-400",
 };
 
-export const Steps = defineComponent(
-  { description: "手順リストのコンテナ。<Step> を並べる" },
-  ({ children }) => <div className="my-4 space-y-3">{children}</div>
-);
-
 export const Step = defineComponent(
   {
-    description: "単一の手順。status は todo|doing|done|blocked",
+    description:
+      "単一の手順。status は todo|doing|done|blocked。owner/effort/priority/due でチップを付けられる",
     schema: v.looseObject({
+      due: v.optional(v.string()),
+      effort: v.optional(v.picklist(EFFORT_SIZES)),
+      owner: v.optional(v.string()),
+      priority: v.optional(v.picklist(PRIORITY_LEVELS)),
       status: v.optional(v.picklist(STATUSES), "todo"),
     }),
   },
-  ({ status, children }) => {
-    const s = status;
+  ({ status, owner, effort, priority, due, children }) => {
+    const hasChips =
+      priority !== undefined ||
+      effort !== undefined ||
+      nonEmpty(owner) ||
+      nonEmpty(due);
     return (
       <div className="flex gap-3">
-        <svg
-          viewBox="0 0 24 24"
-          className={`mt-1 h-4.5 w-4.5 shrink-0 ${ICON_CLS[s]}`}
-          fill="currentColor"
-          aria-label={s}
-        >
-          <path d={ICONS[s]} />
-        </svg>
+        <Icon
+          className={`mt-1 h-4.5 w-4.5 shrink-0 ${ICON_CLS[status]}`}
+          label={status}
+          name={STATUS_ICONS[status]}
+        />
         <div className="min-w-0 flex-1 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
           {children}
+          {hasChips ? (
+            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+              {priority === undefined ? null : <Priority level={priority} />}
+              {effort === undefined ? null : <Effort size={effort} />}
+              {nonEmpty(owner) ? <Owner name={owner} /> : null}
+              {nonEmpty(due) ? <Due date={due} /> : null}
+            </div>
+          ) : null}
         </div>
+      </div>
+    );
+  }
+);
+
+/** Resolve a child's effective status — only `<Step>` elements count. */
+const stepStatus = (node: unknown): Status | undefined => {
+  if (!isValidElement(node) || node.type !== Step) {
+    return undefined;
+  }
+  const s = isRecord(node.props) ? node.props.status : undefined;
+  return isStatus(s) ? s : "todo";
+};
+
+export const Steps = defineComponent(
+  {
+    description:
+      "手順リストのコンテナ。<Step> を並べる。progress で自動進捗バーを表示",
+    schema: v.looseObject({
+      progress: v.optional(v.union([v.boolean(), v.string()])),
+    }),
+  },
+  ({ progress, children }) => {
+    const show = progress === true || progress === "true" || progress === "";
+    const items = flattenChildren(children)
+      .map((node) => stepStatus(node))
+      .filter((s): s is Status => s !== undefined);
+    const done = items.filter((s) => s === "done").length;
+    return (
+      <div className="my-4 space-y-3">
+        {show && items.length > 0 ? (
+          <Summary done={done} label="Steps" total={items.length} />
+        ) : null}
+        {children}
       </div>
     );
   }

@@ -1,9 +1,21 @@
 import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
+import { Icon } from "./icon.js";
 
 export const STATUSES = ["todo", "doing", "done", "blocked"] as const;
 export type Status = (typeof STATUSES)[number];
+
+export const isStatus = (x: unknown): x is Status =>
+  typeof x === "string" && (STATUSES as readonly string[]).includes(x);
+
+/** Iconify names for each status — shared by StatusBadge, Step and Event. */
+export const STATUS_ICONS: Record<Status, string> = {
+  blocked: "lucide:circle-x",
+  doing: "lucide:loader-circle",
+  done: "lucide:circle-check",
+  todo: "lucide:circle",
+};
 
 const STYLES: Record<Status, { label: string; cls: string }> = {
   blocked: {
@@ -35,8 +47,9 @@ export const StatusBadge = defineComponent(
     const s = STYLES[status];
     return (
       <span
-        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${s.cls}`}
+        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${s.cls}`}
       >
+        <Icon className="h-3 w-3" name={STATUS_ICONS[status]} />
         {s.label}
       </span>
     );

@@ -2,7 +2,7 @@ import type { Node, Parent } from "unist";
 import { visit } from "unist-util-visit";
 
 const ALERT_RE =
-  /^\[!(?<kind>note|tip|important|warning|caution|danger|decision)\]\s*/iu;
+  /^\[!(?<kind>note|tip|important|warning|caution|danger|decision|goal|non-?goal|question)\]\s*/iu;
 
 const isParent = (n: Node): n is Parent =>
   "children" in n && Array.isArray(n.children);
@@ -55,6 +55,11 @@ export const remarkRvAlerts = () => (tree: Node) => {
       node.children.shift();
     }
 
+    const kind = (m.groups?.kind.toLowerCase() ?? "note").replace(
+      /^non-goal$/u,
+      "nongoal"
+    );
+
     const target: MdxTarget = node;
     target.type = "mdxJsxFlowElement";
     target.name = "Callout";
@@ -62,7 +67,7 @@ export const remarkRvAlerts = () => (tree: Node) => {
       {
         name: "kind",
         type: "mdxJsxAttribute",
-        value: m.groups?.kind.toLowerCase() ?? "note",
+        value: kind,
       },
     ];
   });

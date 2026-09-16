@@ -1,3 +1,4 @@
+import { Fragment, isValidElement } from "react";
 import type { ReactElement, ReactNode } from "react";
 import type { GenericSchema, InferOutput } from "valibot";
 import { safeParse } from "valibot";
@@ -67,6 +68,27 @@ export const defineComponent = <
   };
   Comp.__rv = meta;
   return Comp;
+};
+
+/**
+ * Normalize a `children` prop into a flat array: nested arrays and fragments
+ * are unwrapped, and null/undefined/boolean nodes are dropped. Used instead of
+ * `React.Children` utilities, which lint rules discourage.
+ */
+export const flattenChildren = (node: ReactNode): ReactNode[] => {
+  if (Array.isArray(node)) {
+    return node.flatMap(flattenChildren);
+  }
+  if (node === null || node === undefined || typeof node === "boolean") {
+    return [];
+  }
+  if (
+    isValidElement<{ children?: ReactNode }>(node) &&
+    node.type === Fragment
+  ) {
+    return flattenChildren(node.props.children);
+  }
+  return [node];
 };
 
 /** Extract all text from a React node tree (used for copy-to-clipboard payloads). */

@@ -2,6 +2,9 @@ import { existsSync } from "node:fs";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+
 import type { ResolvedConfig } from "./config.js";
 import { loadConfig } from "./config.js";
 import type { ComponentMap } from "./define.js";
@@ -13,6 +16,7 @@ import { pkgRoot } from "./paths.js";
 import type { CssSource } from "./tailwind.js";
 import { buildCss } from "./tailwind.js";
 import { builtinComponents } from "./ui/index.js";
+import { PlanHeader } from "./ui/plan.js";
 
 const INDEX_FILES = ["index.tsx", "index.ts", "index.jsx", "index.js"];
 
@@ -148,9 +152,30 @@ export const renderFile = async (
     /<h1[^>]*>(?<text>[^<]+)</u.exec(body)?.groups?.text ??
     "rv document";
 
+  const fmStr = (key: string): string | undefined => {
+    const val: unknown = frontmatter[key];
+    if (typeof val === "string") {
+      return val === "" ? undefined : val;
+    }
+    // YAML parses `date: 2026-09-16` into a Date.
+    if (val instanceof Date) {
+      return val.toISOString().slice(0, 10);
+    }
+    return typeof val === "number" ? String(val) : undefined;
+  };
+
   const header =
     fmTitle !== undefined && fmTitle !== "" && !/<article/u.test(body)
-      ? `<header class="mb-8 border-b border-neutral-200 pb-4 dark:border-neutral-800"><h1 class="m-0">${fmTitle}</h1></header>`
+      ? renderToStaticMarkup(
+          createElement(PlanHeader, {
+            date: fmStr("date"),
+            owner: fmStr("owner"),
+            status: fmStr("status"),
+            title: fmTitle,
+            updated: fmStr("updated"),
+            version: fmStr("version"),
+          })
+        )
       : "";
 
   return htmlDocument({

@@ -35,6 +35,20 @@ describe(renderFile, () => {
     expect(html).toContain("[data-copy]");
   });
 
+  it("builds the document header from frontmatter meta fields", async () => {
+    const dir = await makeDir();
+    const file = path.join(dir, "doc.mdx");
+    await writeFile(
+      file,
+      "---\ntitle: T\nstatus: doing\ndate: 2026-09-16\nowner: alice\nversion: v2\n---\n\nbody"
+    );
+    const html = await renderFile(file);
+    expect(html).toContain("In progress");
+    expect(html).toContain("2026-09-16");
+    expect(html).toContain("alice");
+    expect(html).toContain("v2");
+  });
+
   it("loads project components from rv.config.ts", async () => {
     const dir = await makeDir();
     await writeFile(

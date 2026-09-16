@@ -44,4 +44,15 @@ describe("shadcn/ui components in documents", () => {
     expect(css).toContain(".dark");
     expect(css).toContain("bg-primary");
   });
+
+  it("compiles icon-[set--name] classes into mask/background CSS", async () => {
+    const { css } = await buildCss([
+      {
+        content: '<span class="icon-[lucide--check]"></span>',
+        extension: "html",
+      },
+    ]);
+    expect(css).toContain(".icon-\\[lucide--check\\]");
+    expect(css).toContain("data:image/svg+xml");
+  });
 });

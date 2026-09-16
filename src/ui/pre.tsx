@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import type { DocProps } from "../define.js";
 import { textOf } from "../define.js";
 import { isRecord } from "../guards.js";
+import { Icon } from "./icon.js";
 
 const str = (v: unknown): string | undefined =>
   typeof v === "string" ? v : undefined;
@@ -44,14 +45,7 @@ export const Pre = (props: DocProps): ReactElement => {
           title="Copy code"
           aria-label="Copy code"
         >
-          <svg
-            viewBox="0 0 24 24"
-            className="h-3.5 w-3.5"
-            fill="currentColor"
-            aria-hidden
-          >
-            <path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11z" />
-          </svg>
+          <Icon className="h-3.5 w-3.5" name="lucide:copy" />
         </button>
       </figcaption>
       <pre className="m-0 overflow-x-auto bg-white p-4 text-sm dark:bg-neutral-950">

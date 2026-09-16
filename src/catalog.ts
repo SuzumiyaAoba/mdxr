@@ -96,10 +96,12 @@ export const catalogEntries = (project: ComponentMap = {}): CatalogEntry[] => {
 export const CONVENTIONS = [
   {
     result: "Callout (with kind)",
-    syntax: ":::note | :::tip | :::warning | :::danger | :::decision",
+    syntax:
+      ":::note | :::tip | :::warning | :::danger | :::decision | :::goal | :::nongoal | :::question",
   },
   { result: "Phase", syntax: ':::phase{title="..." status="doing"}' },
   { result: "Steps container", syntax: ":::steps" },
+  { result: "Timeline", syntax: ':::timeline{title="..."}' },
   { result: "Callout (GitHub alert)", syntax: "> [!NOTE] / [!WARNING] / ..." },
   { result: "diagram (mermaid via CDN)", syntax: "```mermaid fenced block" },
   {
@@ -109,6 +111,10 @@ export const CONVENTIONS = [
   {
     result: "styled markdown",
     syntax: "GFM tables, task lists, strikethrough",
+  },
+  {
+    result: "Iconify icon (inline SVG, lucide bundled)",
+    syntax: '<Icon name="lucide:rocket"> or class="icon-[lucide--rocket]"',
   },
 ];
 

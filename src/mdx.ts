@@ -2,9 +2,11 @@ import { evaluate } from "@mdx-js/mdx";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import * as runtime from "react/jsx-runtime";
+import rehypeKatex from "rehype-katex";
 import remarkDirective from "remark-directive";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
 import { VFile } from "vfile";
 import { matter } from "vfile-matter";
 
@@ -12,8 +14,10 @@ import type { ComponentMap } from "./define.js";
 import { isRecord } from "./guards.js";
 import { rehypeShiki } from "./rehype/shiki.js";
 import { remarkRvAlerts } from "./remark/alerts.js";
+import { remarkCodeFile } from "./remark/code-file.js";
 import { remarkCodeMeta } from "./remark/code-meta.js";
 import { remarkRvDirectives } from "./remark/directives.js";
+import { remarkRvHeadings } from "./remark/headings.js";
 import { remarkNoJs } from "./remark/no-js.js";
 
 export interface MdxResult {
@@ -79,14 +83,17 @@ export const mdxToHtml = async (
     ...runtime,
     baseUrl: import.meta.url,
     format: "mdx",
-    rehypePlugins: [rehypeShiki],
+    rehypePlugins: [rehypeKatex, rehypeShiki],
     remarkPlugins: [
       remarkFrontmatter,
       remarkGfm,
+      remarkMath,
       remarkDirective,
       remarkRvDirectives,
       remarkRvAlerts,
       remarkNoJs,
+      remarkRvHeadings,
+      remarkCodeFile,
       remarkCodeMeta,
     ],
   });

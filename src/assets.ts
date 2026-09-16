@@ -33,6 +33,45 @@ html:not(.dark) .shiki span {
   font-weight: var(--shiki-light-font-weight, normal);
   text-decoration: var(--shiki-light-text-decoration, none);
 }
+/* Line-level features: fences carry has-* classes on <code>; .line spans
+ * become blocks so bands/numbers span the block width. The pre's p-4 (1rem)
+ * is mirrored here so highlight bands bleed to the block edge. */
+.shiki .line { display: block; margin: 0 -1rem; padding: 0 1rem; }
+.shiki .line.highlighted { background: rgba(14, 165, 233, 0.1); }
+.dark .shiki .line.highlighted { background: rgba(14, 165, 233, 0.16); }
+.shiki .line.diff.add { background: rgba(16, 185, 129, 0.12); }
+.shiki .line.diff.remove { background: rgba(239, 68, 68, 0.1); }
+.dark .shiki .line.diff.add { background: rgba(16, 185, 129, 0.18); }
+.dark .shiki .line.diff.remove { background: rgba(239, 68, 68, 0.16); }
+.shiki .line.diff.add::before,
+.shiki .line.diff.remove::before {
+  display: inline-block; width: 1em; margin-right: 0.5em;
+  color: rgba(113, 113, 122, 0.8); user-select: none;
+}
+.shiki .line.diff.add::before { content: '+'; }
+.shiki .line.diff.remove::before { content: '−'; }
+.shiki .line.error { background: rgba(239, 68, 68, 0.12); }
+.shiki .line.warning { background: rgba(245, 158, 11, 0.14); }
+.dark .shiki .line.error { background: rgba(239, 68, 68, 0.2); }
+.dark .shiki .line.warning { background: rgba(245, 158, 11, 0.18); }
+.shiki code.has-focused .line:not(.focused) { opacity: 0.4; }
+.shiki .line.focused { opacity: 1; }
+.shiki span.highlighted-word {
+  background: rgba(245, 158, 11, 0.18); border-radius: 0.2rem;
+  outline: 1px solid rgba(245, 158, 11, 0.35); padding: 0 0.1rem;
+}
+.shiki code.has-line-numbers { counter-reset: rv-line; }
+.shiki code.has-line-numbers .line::before {
+  counter-increment: rv-line; content: counter(rv-line);
+  display: inline-block; width: 1.8em; margin-right: 1em;
+  text-align: right; color: rgba(113, 113, 122, 0.6); user-select: none;
+}
+.shiki code.has-line-numbers .line.diff.add::before,
+.shiki code.has-line-numbers .line.diff.remove::before {
+  content: counter(rv-line); /* numbers win over the +/− gutter marker */
+}
+/* KaTeX display math gets a little breathing room. */
+.katex-display { margin: 1.25rem 0; }
 `;
 
 /**
@@ -110,6 +149,14 @@ mermaid.initialize({
 });
 await mermaid.run({ nodes: document.querySelectorAll('.mermaid') });
 `;
+
+/**
+ * KaTeX stylesheet (fonts resolve relative to this URL on the CDN). Only
+ * linked when the document contains math — same CDN-on-demand model as
+ * mermaid. Version matches the bundled `katex` dependency.
+ */
+export const KATEX_CDN_URL =
+  "https://cdn.jsdelivr.net/npm/katex@0.18.7/dist/katex.min.css";
 
 /** Live-reload snippet injected by \`rv serve\` only. */
 export const LIVE_RELOAD_JS = `

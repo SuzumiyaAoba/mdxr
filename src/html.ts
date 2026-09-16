@@ -1,4 +1,10 @@
-import { CLIENT_JS, LIVE_RELOAD_JS, MERMAID_JS, THEME_JS } from "./assets.js";
+import {
+  CLIENT_JS,
+  KATEX_CDN_URL,
+  LIVE_RELOAD_JS,
+  MERMAID_JS,
+  THEME_JS,
+} from "./assets.js";
 
 const ESCAPES: Record<string, string> = {
   '"': "&quot;",
@@ -16,6 +22,7 @@ export interface DocumentOptions {
   body: string;
   css: string;
   needsMermaid: boolean;
+  needsKatex?: boolean;
   liveReload?: boolean;
 }
 
@@ -27,6 +34,7 @@ export const htmlDocument = (o: DocumentOptions): string => `<!doctype html>
 <meta name="generator" content="rv">
 <title>${escapeHtml(o.title)}</title>
 <script>${THEME_JS}</script>
+${o.needsKatex === true ? `<link rel="stylesheet" href="${KATEX_CDN_URL}">` : ""}
 <style>${o.css}</style>
 </head>
 <body class="bg-white text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100">

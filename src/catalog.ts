@@ -102,15 +102,30 @@ export const CONVENTIONS = [
   { result: "Phase", syntax: ':::phase{title="..." status="doing"}' },
   { result: "Steps container", syntax: ":::steps" },
   { result: "Timeline", syntax: ':::timeline{title="..."}' },
+  { result: "table of contents (auto from headings)", syntax: ":::toc" },
   { result: "Callout (GitHub alert)", syntax: "> [!NOTE] / [!WARNING] / ..." },
   { result: "diagram (mermaid via CDN)", syntax: "```mermaid fenced block" },
+  { result: "math (KaTeX via CDN)", syntax: "$…$ inline / $$…$$ block" },
   {
     result: "code block (syntax-highlighted) with filename header",
     syntax: '```lang title="file.ts"',
   },
   {
+    result: "code line highlights / line numbers",
+    syntax: "```ts {1,3-5} · ```ts ln · /word/ in meta",
+  },
+  {
+    result: "in-code markers (stripped from output)",
+    syntax:
+      "// [!code hl] · [!code ++] · [!code --] · [!code warning] · [!code error] · [!code focus] · [!code word:x]",
+  },
+  {
+    result: "embed a real file as a code block",
+    syntax: '<CodeFile path="src/x.ts" lines="40-52" />',
+  },
+  {
     result: "styled markdown",
-    syntax: "GFM tables, task lists, strikethrough",
+    syntax: "GFM tables, task lists, strikethrough, footnotes",
   },
   {
     result: "Iconify icon (inline SVG, lucide bundled)",

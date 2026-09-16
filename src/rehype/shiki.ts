@@ -1,6 +1,16 @@
+import {
+  transformerMetaHighlight,
+  transformerMetaWordHighlight,
+  transformerNotationDiff,
+  transformerNotationErrorLevel,
+  transformerNotationFocus,
+  transformerNotationHighlight,
+  transformerNotationWordHighlight,
+  transformerRemoveNotationEscape,
+} from "@shikijs/transformers";
 import type { Element, ElementContent, Root } from "hast";
 import { createHighlighter } from "shiki";
-import type { Highlighter, LanguageInput } from "shiki";
+import type { Highlighter, LanguageInput, ShikiTransformer } from "shiki";
 import { visit } from "unist-util-visit";
 
 import { isRecord } from "../guards.js";
@@ -59,6 +69,44 @@ const PRELOADED_LANGS = [
   "zsh",
 ] as const;
 
+/**
+ * Fence-meta tokens that turn line numbers on: ` ```ts ln ` (also accepts
+ * `line-numbers` / `lineNumbers` / `showLineNumbers`).
+ */
+const LINE_NUMBER_RE =
+  /(?:^|\s)(?:ln|line-numbers|lineNumbers|showLineNumbers)(?:\s|$)/u;
+
+/**
+ * Marks shiki's `<pre>` with `has-line-numbers` when the fence meta asks for
+ * them; BASE_CSS draws the numbers with a counter so copy stays clean.
+ */
+const transformerLineNumbers: ShikiTransformer = {
+  name: "rv:line-numbers",
+  pre(node) {
+    const raw = this.options.meta?.__raw ?? "";
+    if (LINE_NUMBER_RE.test(raw)) {
+      this.addClassToHast(node, "has-line-numbers");
+    }
+  },
+};
+
+/**
+ * Transformers shared by every highlighted block. The notation set strips
+ * `// [!code …]` markers from the output and tags lines/spans; the meta set
+ * reads the fence info string (`{1,3-5}` line ranges, `/word/` matches).
+ */
+const TRANSFORMERS: ShikiTransformer[] = [
+  transformerNotationDiff(),
+  transformerNotationErrorLevel(),
+  transformerNotationFocus(),
+  transformerNotationHighlight(),
+  transformerNotationWordHighlight(),
+  transformerRemoveNotationEscape(),
+  transformerMetaHighlight(),
+  transformerMetaWordHighlight(),
+  transformerLineNumbers,
+];
+
 let highlighterPromise: Promise<Highlighter> | undefined;
 
 const getHighlighter = async (): Promise<Highlighter> => {
@@ -71,6 +119,15 @@ const getHighlighter = async (): Promise<Highlighter> => {
 
 const isElement = (node: unknown): node is Element =>
   isRecord(node) && node.type === "element" && typeof node.tagName === "string";
+
+/** mdast-sourced nodes use `className`; shiki's hast uses `class`. Read both. */
+const classNames = (el: Element | undefined): string[] => {
+  const c = el?.properties?.className ?? el?.properties?.class;
+  if (typeof c === "string") {
+    return c.split(/\s+/u).filter(Boolean);
+  }
+  return Array.isArray(c) ? c.map(String) : [];
+};
 
 const textContent = (node: Element | ElementContent): string => {
   if (node.type === "text") {
@@ -133,6 +190,7 @@ export const highlightToHtml = async (
     defaultColor: false,
     lang,
     themes: THEMES,
+    transformers: TRANSFORMERS,
   });
   return /<code[^>]*>(?<inner>[\s\S]*?)<\/code>/u.exec(html)?.groups?.inner;
 };
@@ -144,7 +202,8 @@ export const highlightToHtml = async (
  * header, copy payload, and mermaid handling keep working.
  */
 export const rehypeShiki = () => async (tree: Root) => {
-  const targets: { code: Element; lang: string; text: string }[] = [];
+  const targets: { code: Element; lang: string; meta: string; text: string }[] =
+    [];
 
   visit(tree, "element", (node) => {
     if (node.tagName !== "pre") {
@@ -158,7 +217,9 @@ export const rehypeShiki = () => async (tree: Root) => {
     if (lang === undefined || SKIP_LANGS.has(lang)) {
       return;
     }
-    targets.push({ code, lang, text: textContent(code) });
+    const meta =
+      typeof code.properties?.meta === "string" ? code.properties.meta : "";
+    targets.push({ code, lang, meta, text: textContent(code) });
   });
 
   if (targets.length === 0) {
@@ -166,7 +227,7 @@ export const rehypeShiki = () => async (tree: Root) => {
   }
 
   await Promise.all(
-    targets.map(async ({ code, lang, text }) => {
+    targets.map(async ({ code, lang, meta, text }) => {
       const highlighter = await readyHighlighter(lang);
       if (highlighter === undefined) {
         return;
@@ -176,18 +237,25 @@ export const rehypeShiki = () => async (tree: Root) => {
       const hast = highlighter.codeToHast(text.replace(/\n$/u, ""), {
         defaultColor: false,
         lang,
+        meta: { __raw: meta },
         themes: THEMES,
+        transformers: TRANSFORMERS,
       });
-      const highlightedCode = hast.children.find(
+      const shikiPre = hast.children.find(
         (child): child is Element => isElement(child) && child.tagName === "pre"
-      )?.children[0];
+      );
+      const highlightedCode = shikiPre?.children[0];
       if (!isElement(highlightedCode) || highlightedCode.tagName !== "code") {
         return;
       }
       code.children = highlightedCode.children;
+      // Feature flags the transformers park on shiki's discarded <pre>
+      // (`has-diff`, `has-focused`, `has-line-numbers`, …) move onto our
+      // <code> so the CSS selectors below can see them.
+      const lifted = classNames(shikiPre).filter((c) => c.startsWith("has-"));
       code.properties = {
         ...code.properties,
-        className: [...(code.properties?.className ?? []), "shiki"],
+        className: [...classNames(code), "shiki", ...lifted],
       };
     })
   );

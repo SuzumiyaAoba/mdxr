@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url";
+
 import { describe, expect, it } from "vitest";
 
 import { mdxToHtml } from "../src/mdx.js";
@@ -5,10 +7,16 @@ import { builtinComponents } from "../src/ui/index.js";
 
 const render = async (src: string) => await mdxToHtml(src, builtinComponents);
 
+/** A filePath inside tests/ so <CodeFile> resolves fixtures/ relatively. */
+const renderAt = async (src: string, docPath: string) =>
+  await mdxToHtml(src, builtinComponents, docPath);
+
+const fixtureDoc = fileURLToPath(new URL("fixtures/doc.mdx", import.meta.url));
+
 describe(mdxToHtml, () => {
   it("renders markdown prose", async () => {
     const { body } = await render("# Hello\n\nSome **bold** text.");
-    expect(body).toContain("<h1>Hello</h1>");
+    expect(body).toContain('id="hello"');
     expect(body).toContain("<strong>bold</strong>");
   });
 
@@ -276,5 +284,199 @@ describe(mdxToHtml, () => {
     const { body } = await render(":::warning\nwatch out\n:::");
     expect(body).toContain("<svg");
     expect(body).toContain("iconify--lucide");
+  });
+
+  it("highlights meta line ranges ```ts {1,3}", async () => {
+    const { body } = await render(
+      "```ts {1,3}\nconst a = 1\nconst b = 2\nconst c = 3\n```"
+    );
+    expect(body.match(/line highlighted/gu)).toHaveLength(2);
+  });
+
+  it("adds has-line-numbers for ```ts ln", async () => {
+    const { body } = await render("```ts ln\nconst a = 1\n```");
+    expect(body).toContain("has-line-numbers");
+  });
+
+  it("supports // [!code hl] and strips the marker", async () => {
+    const { body } = await render(
+      "```ts\nconst a = 1 // [!code hl]\nconst b = 2\n```"
+    );
+    expect(body).toContain("line highlighted");
+    expect(body).not.toContain("[!code");
+  });
+
+  it("supports [!code ++] / [!code --] diff markers", async () => {
+    const { body } = await render(
+      "```ts\nconst a = 1 // [!code --]\nconst a = 2 // [!code ++]\n```"
+    );
+    expect(body).toContain("diff add");
+    expect(body).toContain("diff remove");
+    expect(body).toContain("has-diff");
+  });
+
+  it("supports [!code focus] and [!code warning]", async () => {
+    const { body } = await render(
+      "```ts\nconst a = 1 // [!code focus]\nconst b = 2 // [!code warning]\n```"
+    );
+    expect(body).toContain("focused");
+    expect(body).toContain("has-focused");
+    expect(body).toContain("warning");
+  });
+
+  it("highlights words via /word/ meta and [!code word:x]", async () => {
+    const { body } = await render(
+      "```ts /beta/\nconst alpha = 1\nconst beta = 2 // [!code word:alpha]\n```"
+    );
+    expect(body).toContain("highlighted-word");
+  });
+
+  it("gives headings slug ids", async () => {
+    const { body } = await render("## Alpha\n\n### Beta\n\n## Gamma\n");
+    expect(body).toContain('id="alpha"');
+    expect(body).toContain('id="beta"');
+    expect(body).toContain('id="gamma"');
+  });
+
+  it("fills <Toc> with links to the headings", async () => {
+    const { body } = await render(
+      "<Toc />\n\n## Alpha\n\n### Beta\n\n## Gamma\n"
+    );
+    expect(body).toContain("<nav");
+    expect(body).toContain("Contents");
+    expect(body).toContain('href="#alpha"');
+    expect(body).toContain('href="#beta"');
+    expect(body).toContain('href="#gamma"');
+  });
+
+  it(":::toc produces the same table of contents", async () => {
+    const { body } = await render(":::toc\n:::\n\n## Alpha\n");
+    expect(body).toContain('href="#alpha"');
+  });
+
+  it("dedupes identical heading slugs", async () => {
+    const { body } = await render("## Foo\n\n## Foo\n");
+    expect(body).toContain('id="foo"');
+    expect(body).toContain('id="foo-1"');
+  });
+
+  it("respects <Toc depth> bounds", async () => {
+    const { body } = await render(
+      '<Toc depth="2" />\n\n## Alpha\n\n### Beta\n'
+    );
+    expect(body).toContain('href="#alpha"');
+    expect(body).not.toContain('href="#beta"');
+  });
+
+  it("embeds files via <CodeFile> with a sliced range", async () => {
+    const { body } = await renderAt(
+      '<CodeFile path="sample.ts" lines="1-2" />',
+      fixtureDoc
+    );
+    expect(body).toContain("alpha");
+    expect(body).toContain("beta");
+    expect(body).not.toContain("gamma");
+    expect(body).toContain("sample.ts:1-2");
+    expect(body).toContain("language-ts");
+  });
+
+  it("fails <CodeFile> for a missing file", async () => {
+    await expect(
+      renderAt('<CodeFile path="nope.ts" />', fixtureDoc)
+    ).rejects.toThrow(/cannot read/iu);
+  });
+
+  it("renders SymbolRef with kind icon and location", async () => {
+    const { body } = await render(
+      'call <SymbolRef name="mdxToHtml" kind="fn" path="src/mdx.ts" lines="70-106" /> here'
+    );
+    expect(body).toContain("mdxToHtml");
+    expect(body).toContain("src/mdx.ts:70-106");
+    expect(body).toContain("<svg");
+  });
+
+  it("renders Changes rows with kind labels", async () => {
+    const { body } = await render(
+      '<Changes><Change kind="add" path="src/new.ts">new parser</Change><Change kind="rename" path="a.ts" to="b.ts" /><Change kind="delete" path="old.ts" /></Changes>'
+    );
+    expect(body).toContain("Add");
+    expect(body).toContain("Rename");
+    expect(body).toContain("Delete");
+    expect(body).toContain("new parser");
+    expect(body).toContain("b.ts");
+  });
+
+  it("renders a Props table", async () => {
+    const { body } = await render(
+      '<Props of="Step"><Prop name="status" type="todo|doing|done" required>marker</Prop><Prop name="owner" type="string" /></Props>'
+    );
+    expect(body).toContain("Step");
+    expect(body).toContain("status");
+    expect(body).toContain("todo|doing|done");
+    expect(body).toContain("marker");
+    expect(body).toContain("<table");
+  });
+
+  it("renders Ref card and Issue/PR chips", async () => {
+    const { body } = await render(
+      '<Ref href="https://mdxjs.com" title="MDX docs">spec</Ref>\n\n<Issue repo="a/b" number="12">bug</Issue>\n<PR repo="a/b" number="5" />'
+    );
+    expect(body).toContain("https://mdxjs.com");
+    expect(body).toContain("MDX docs");
+    expect(body).toContain("github.com/a/b/issues/12");
+    expect(body).toContain("github.com/a/b/pull/5");
+    expect(body).toContain('rel="noopener noreferrer"');
+  });
+
+  it("renders Figure with caption", async () => {
+    const { body } = await render(
+      '<Figure src="a.png" alt="diagram" caption="Fig 1" />'
+    );
+    expect(body).toContain("<figure");
+    expect(body).toContain('src="a.png"');
+    expect(body).toContain('alt="diagram"');
+    expect(body).toContain("Fig 1");
+  });
+
+  it("renders Glossary terms", async () => {
+    const { body } = await render(
+      '<Glossary><Term name="hast">HTML AST</Term><Term name="mdast">Markdown AST</Term></Glossary>'
+    );
+    expect(body).toContain("<dl");
+    expect(body).toContain("hast");
+    expect(body).toContain("HTML AST");
+    expect(body).toContain("<dt");
+    expect(body).toContain("<dd");
+  });
+
+  it("renders Before/After panels", async () => {
+    const { body } = await render(
+      "<Columns><Before>old way</Before><After>new way</After></Columns>"
+    );
+    expect(body).toContain("Before");
+    expect(body).toContain("After");
+    expect(body).toContain("old way");
+    expect(body).toContain("new way");
+  });
+
+  it("renders Cmd with a copy payload", async () => {
+    const { body } = await render("run <Cmd>pnpm build</Cmd> first");
+    expect(body).toContain("pnpm build");
+    expect(body).toContain('data-copy="pnpm build"');
+  });
+
+  it("renders Reqs with id chip and status", async () => {
+    const { body } = await render(
+      '<Reqs><Req id="REQ-1" status="done">handle it</Req><Req id="REQ-2">todo item</Req></Reqs>'
+    );
+    expect(body).toContain("REQ-1");
+    expect(body).toContain("REQ-2");
+    expect(body).toContain("Done");
+    expect(body).toContain("handle it");
+  });
+
+  it("renders math via KaTeX", async () => {
+    const { body } = await render("inline $x^2$ math\n\n$$E = mc^2$$");
+    expect(body).toContain("katex");
   });
 });

@@ -133,6 +133,75 @@ File tree rendered from a nested Markdown list. Items ending in `/` or with chil
 
 Inline file reference chip with a copy button.
 
+### `<SymbolRef name="mdxToHtml" kind="fn" path="src/mdx.ts" lines="70-106" />`
+
+Inline symbol reference chip for code explanations. `kind` picks the icon: `fn` `type` `class` `interface` `const` `enum` `prop` `component` (omit for no icon). `path`/`lines` show the definition site muted; the copy button copies `path` (or `name` when absent).
+
+```mdx
+<SymbolRef name="mdxToHtml" kind="fn" path="src/mdx.ts" /> returns
+<SymbolRef name="MdxResult" kind="interface" />.
+```
+
+### `<Changes>` / `<Change kind="add|modify|delete|rename" path="…" to="…">`
+
+Change-set list — the "files this plan touches" section. `kind` drives the icon and color (`to` is the new path on `rename`); children render as a muted note.
+
+```mdx
+<Changes>
+  <Change kind="add" path="src/remark/headings.ts">
+    slug + toc expansion
+  </Change>
+  <Change kind="modify" path="src/mdx.ts" />
+  <Change kind="rename" path="src/old.ts" to="src/new.ts" />
+  <Change kind="delete" path="src/dead.ts" />
+</Changes>
+```
+
+### `<Props of="…">` / `<Prop name type required default>`
+
+API/props table for documenting a component or function signature. `of` renders a caption bar; `required` (bare attr) adds a `*`; children are the description cell.
+
+```mdx
+<Props of="Step">
+  <Prop name="status" type="todo | doing | done | blocked" required>
+    Marker state.
+  </Prop>
+  <Prop name="effort" type="xs | s | m | l | xl" default="m" />
+</Props>
+```
+
+### `<Ref href="…" title="…">` / `<Issue repo="o/r" number="12">` / `<PR repo="o/r" number="5">`
+
+`Ref` is a linked reference card (use for a "References" section). `Issue`/`PR` are inline chips linking to `github.com/{repo}/issues|pull/{number}` — children become the title; `href` overrides the URL.
+
+### `<Figure src="…" alt="…" caption="…">`
+
+Image with an optional caption (children work too). Use for screenshots or diagrams mermaid can't express.
+
+### `<Toc depth="3" min="2" title="Contents" />` / `:::toc`
+
+Table of contents auto-built from the document's headings (h2–h3 by default — h1 is the document title). Headings always get slug `id`s, so `[link](#slug)` deep links work anywhere.
+
+### `<Glossary>` / `<Term name="…">`
+
+Definition list (`<dl>`) for domain terms. `name` is the term; children are the definition.
+
+### `<Before>` / `<After>`
+
+Semantic before/after panels (red / green header). Wrap in `<Columns>` for side-by-side; `title` overrides the label ("Current" / "Proposed").
+
+### `<Cmd>`
+
+Inline command chip — terminal icon + copy button.
+
+```mdx
+Run <Cmd>pnpm build</Cmd> then <Cmd>rv render plan.mdx</Cmd>.
+```
+
+### `<Reqs>` / `<Req id="REQ-1" status="…">`
+
+Requirement / acceptance-criteria rows: `id` renders a mono chip, optional `status` (todo|doing|done|blocked) a badge; children are the requirement text.
+
 ### `<Summary done="3" total="8" label="Progress" />`
 
 Progress bar.
@@ -166,6 +235,35 @@ Icons also work as CSS classes (mask-image, single-color) on any element:
 ````
 
 renders a framed block with filename + copy button. Code is syntax-highlighted with Shiki (light/dark dual theme), so always tag the fence with a language (`ts`, `python`, `diff`, …). ` ```mermaid ` renders a diagram.
+
+The fence meta also controls line presentation:
+
+````
+```ts {1,3-4} ln title="src/cli.ts"
+…
+```
+````
+
+- `{1,3-4}` highlights those lines; `/pattern/` highlights every match (word highlight).
+- `ln` shows line numbers (also `line-numbers`, `lineNumbers`, `showLineNumbers`).
+
+Inside the code, `// [!code …]` markers annotate lines and are stripped from output:
+
+| Marker | Effect |
+| --- | --- |
+| `// [!code hl]` / `// [!code highlight]` | highlight the line |
+| `// [!code ++]` / `// [!code --]` | green/red diff rows (works in any language) |
+| `// [!code warning]` / `// [!code error]` | amber/red line bands |
+| `// [!code focus]` | dim all other lines |
+| `// [!code word:foo]` | highlight every `foo` occurrence |
+
+### `<CodeFile path="src/x.ts" lines="40-52" lang="ts" />`
+
+Embeds a real file from disk as a fenced block — code explanations quote the actual source instead of drifting copies. `path` resolves relative to the document; `lines` slices a 1-based range (`"40"`, `"40-52"`, `"40-"`); `lang` overrides the extension-derived language. Missing files and bad ranges are render errors.
+
+### Math
+
+`$…$` inline and `$$…$$` blocks render via KaTeX (stylesheet from CDN, only linked when math is present).
 
 ## shadcn/ui components (Base UI)
 

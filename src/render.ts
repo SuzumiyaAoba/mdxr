@@ -182,6 +182,7 @@ export const renderFile = async (
     body: header + body,
     css,
     liveReload: opts.liveReload,
+    needsKatex: /class="[^"]*katex/u.test(body),
     needsMermaid: /class="[^"]*mermaid/u.test(body),
     title,
   });

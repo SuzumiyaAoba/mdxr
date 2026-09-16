@@ -22,6 +22,7 @@ const CONTAINER_COMPONENTS: Record<string, string> = {
   steps: "Steps",
   summary: "Summary",
   timeline: "Timeline",
+  toc: "Toc",
 };
 
 interface DirectiveNode extends Parent {

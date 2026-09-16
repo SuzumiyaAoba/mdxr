@@ -1,0 +1,91 @@
+---
+title: Code explanation — render pipeline
+status: doing
+owner: "@suzumiyaaoba"
+date: 2026-09-17
+---
+
+:::toc
+:::
+
+## Overview
+
+The pipeline entry is <SymbolRef name="mdxToHtml" kind="fn" path="src/mdx.ts" /> — it compiles the MDX source via <SymbolRef name="evaluate" kind="fn" /> and renders <SymbolRef name="MdxResult" kind="interface" /> through <SymbolRef name="renderToStaticMarkup" kind="fn" />.
+
+## The hot path
+
+```ts {2,5-6} ln title="src/mdx.ts"
+const file = new VFile({ path: filePath, value: source });
+const mod = await evaluate(file, { // [!code focus]
+  ...runtime,
+  remarkPlugins: [/* … */],
+  rehypePlugins: [rehypeKatex, rehypeShiki],
+});
+const body = renderToStaticMarkup( // [!code hl]
+  createElement(mod.default, { components })
+);
+```
+
+Direct file quotes stay in sync with the source:
+
+<CodeFile path="../src/guards.ts" lines="4-6" />
+
+## Proposed change
+
+```ts
+const plugins = basePlugins // [!code --]
+const plugins = [...basePlugins, remarkRvHeadings] // [!code ++]
+const legacy = true // [!code warning]
+```
+
+<Columns>
+  <Before title="Current">
+    Documents copy-paste code that drifts from the tree.
+  </Before>
+  <After title="Proposed">
+    `<CodeFile>` embeds the real file at render time.
+  </After>
+</Columns>
+
+## Surface
+
+<Props of="CodeFile">
+  <Prop name="path" type="string" required>
+    File path, resolved relative to the document.
+  </Prop>
+  <Prop name="lines" type="string">
+    1-based range: `"40"`, `"40-52"`, `"40-"`.
+  </Prop>
+  <Prop name="lang" type="string">
+    Overrides the extension-derived language.
+  </Prop>
+</Props>
+
+<Changes>
+  <Change kind="add" path="src/remark/headings.ts">slug + toc expansion</Change>
+  <Change kind="add" path="src/remark/code-file.ts">file embed transform</Change>
+  <Change kind="modify" path="src/rehype/shiki.ts">notation transformers</Change>
+  <Change kind="modify" path="src/mdx.ts">plugin wiring</Change>
+</Changes>
+
+## Terms
+
+<Glossary>
+  <Term name="hast">HTML abstract syntax tree — the rehype model.</Term>
+  <Term name="mdast">Markdown abstract syntax tree — the remark model.</Term>
+</Glossary>
+
+## Requirements
+
+<Reqs>
+  <Req id="REQ-1" status="done">Fences support `{lines}` and `ln` meta.</Req>
+  <Req id="REQ-2" status="done">`[!code …]` markers annotate lines.</Req>
+  <Req id="AC-1" status="todo">Storybook covers every catalog entry.</Req>
+</Reqs>
+
+Verify with <Cmd>pnpm build</Cmd> and <Cmd>pnpm test</Cmd>. Tracked in
+<Issue repo="SuzumiyaAoba/rv" number="12">catalog drift</Issue>.
+
+<Ref href="https://shiki.style/packages/transformers" title="@shikijs/transformers">
+  The notation/meta transformers behind the fence features.
+</Ref>

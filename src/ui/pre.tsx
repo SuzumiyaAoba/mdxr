@@ -1,4 +1,5 @@
-import type { ReactElement } from "react";
+import { isValidElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import type { DocProps } from "../define.js";
 import { textOf } from "../define.js";
@@ -34,6 +35,17 @@ export const Pre = (props: DocProps): ReactElement => {
     );
   }
 
+  // `meta`/`metastring` are plumbing for the filename header, not markup —
+  // rebuild <code> with just class+children so they don't leak as attributes.
+  const cleanCode = isValidElement<{
+    children?: ReactNode;
+    className?: unknown;
+  }>(code) ? (
+    <code className={str(code.props.className)}>{code.props.children}</code>
+  ) : (
+    code
+  );
+
   return (
     <figure className="not-prose my-4 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
       <figcaption className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
@@ -49,7 +61,7 @@ export const Pre = (props: DocProps): ReactElement => {
         </button>
       </figcaption>
       <pre className="m-0 overflow-x-auto bg-white p-4 text-sm dark:bg-neutral-950">
-        {code}
+        {cleanCode}
       </pre>
     </figure>
   );

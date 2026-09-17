@@ -192,6 +192,32 @@ describe(mdxToHtml, () => {
     expect(body).toContain("Rejected");
   });
 
+  it("renders a flexible Grid with Cell spans", async () => {
+    const { body } = await render(
+      '<Grid><Cell span="8" rowSpan="2">main</Cell><Cell span="4">side</Cell></Grid>'
+    );
+    expect(body).toContain("sm:grid-cols-12");
+    expect(body).toContain("sm:col-span-8");
+    expect(body).toContain("sm:row-span-2");
+    expect(body).toContain("sm:col-span-4");
+    expect(body).toContain("main");
+  });
+
+  it("switches Grid to auto-fit tracks when min is given", async () => {
+    const { body } = await render(
+      '<Grid min="14rem" gap="sm"><Cell>a</Cell><Cell>b</Cell></Grid>'
+    );
+    expect(body).toContain("auto-fit");
+    expect(body).toContain("minmax(14rem,1fr)");
+    expect(body).toContain("gap-2");
+  });
+
+  it("rejects a non-length Grid min", async () => {
+    await expect(render('<Grid min="wide">x</Grid>')).rejects.toThrow(
+      /Invalid props/u
+    );
+  });
+
   it("renders Risk with level pill and mitigation line", async () => {
     const { body } = await render(
       '<Risk level="high" title="Drift" mitigation="Pin deps">eval changed</Risk>'

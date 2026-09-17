@@ -32,6 +32,9 @@ const describeSchema = (schema: unknown): string => {
   if (schema.type === "union" && Array.isArray(schema.options)) {
     return schema.options.map(describeSchema).join(" | ");
   }
+  if (schema.type === "pipe" && Array.isArray(schema.pipe)) {
+    return describeSchema(schema.pipe[0]);
+  }
   return typeof schema.type === "string" ? schema.type : "unknown";
 };
 

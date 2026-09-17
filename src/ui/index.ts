@@ -17,6 +17,7 @@ import { File, Files } from "./files.js";
 import { Finding, Findings } from "./findings.js";
 import { Flow, FlowStep } from "./flow.js";
 import { Glossary, Term } from "./glossary.js";
+import { Cell, Grid } from "./grid.js";
 import { Icon } from "./icon.js";
 import { Meta, MetaItem } from "./meta.js";
 import { Option } from "./option.js";
@@ -57,6 +58,7 @@ export { File, FILE_KINDS, Files } from "./files.js";
 export { CONFIDENCES, Finding, Findings } from "./findings.js";
 export { Flow, FlowStep } from "./flow.js";
 export { Glossary, Term } from "./glossary.js";
+export { Cell, Grid } from "./grid.js";
 export { hasIcon, Icon, normalizeIconName } from "./icon.js";
 export { Meta, MetaItem } from "./meta.js";
 export { Option, OPTION_STATUSES } from "./option.js";
@@ -93,6 +95,7 @@ export const builtinComponents: ComponentMap = {
   Ask,
   Before,
   Callout,
+  Cell,
   Change,
   Changes,
   Choice,
@@ -116,6 +119,7 @@ export const builtinComponents: ComponentMap = {
   Flow,
   FlowStep,
   Glossary,
+  Grid,
   Icon,
   Issue,
   Meta,

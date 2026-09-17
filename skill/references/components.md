@@ -84,6 +84,43 @@ Alternative-comparison card. Pair with `<Columns>` for side-by-side layout.
 
 Responsive grid layout for side-by-side content (options, before/after).
 
+### `<Grid cols min gap flow items>` / `<Cell span rowSpan>`
+
+Flexible 12-track grid for anything `<Columns>` can't express: asymmetric splits, dashboards, auto-wrapping card grids. Children that aren't `<Cell>` auto-place one track each.
+
+- `cols`: `1`–`12` tracks (default `12`); applies from `sm` up — below that everything stacks.
+- `min`: CSS length (`"12rem"`, `"200px"`) switches to `auto-fit` tracks at **every** viewport — use for card grids that wrap naturally. Overrides `cols`.
+- `gap`: `none|xs|sm|md|lg|xl` (default `md`). `flow`: `row|col|row-dense|col-dense` — `*-dense` backfills gaps in dashboards. `items`: `stretch|start|center|end`.
+- `<Cell>` `span`: `1`–`12` or `full` column span; `rowSpan`: `1`–`4`. Both apply from `sm` up. `className` on either adds arbitrary utilities.
+
+```mdx
+<Grid>
+  <Cell span="8">Main narrative…</Cell>
+  <Cell span="4">Sidebar: meta, links…</Cell>
+</Grid>
+
+<Grid cols="4" flow="row-dense">
+  <Cell span="2">
+    <Stat label="Coverage" value="92%" />
+  </Cell>
+  <Cell span="2" rowSpan="2">
+    Tall notes panel
+  </Cell>
+</Grid>
+
+<Grid min="14rem" gap="sm">
+  <Option title="A" status="recommended">
+    …
+  </Option>
+  <Option title="B" status="considered">
+    …
+  </Option>
+  <Option title="C" status="rejected">
+    …
+  </Option>
+</Grid>
+```
+
 ### `<Risk level="low|medium|high" title="…" mitigation="…">`
 
 Risk block with a severity pill; `mitigation` renders a dedicated line.

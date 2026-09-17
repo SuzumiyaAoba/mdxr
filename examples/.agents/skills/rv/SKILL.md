@@ -35,7 +35,7 @@ Write documents as **Markdown + a small set of JSX components** (MDX). Do NOT wr
 | `:::timeline{title="…"}` | `<Timeline>` |
 | frontmatter `status:` / `date:` / `owner:` | document header badge + meta row |
 | ` ```mermaid ` fenced block | rendered diagram |
-| ` ```ts title="src/x.ts" ` | highlighted code block + filename bar |
+| ` ```ts title="src/x.ts" ` | highlighted code block + filename bar with file-type icon |
 | `- [ ]` / `- [x]` | styled task list |
 | nested list inside `<Tree>` | file tree |
 | `<Icon name="lucide:rocket">` / `icon-[lucide--rocket]` class | inline Iconify icon |

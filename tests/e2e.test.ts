@@ -49,6 +49,17 @@ describe(renderFile, () => {
     expect(html).toContain("v2");
   });
 
+  it("keeps <Icon> inline in prose", async () => {
+    const dir = await makeDir();
+    const file = path.join(dir, "doc.mdx");
+    await writeFile(file, 'Ship <Icon name="lucide:rocket" /> today.');
+    const html = await renderFile(file);
+    // The svg stays inside the paragraph…
+    expect(html).toMatch(/<p>Ship <svg[^>]*class="iconify/u);
+    // …and the compiled CSS keeps it inline (preflight sets svg{display:block}).
+    expect(html).toContain(".iconify,.lucide{display:inline-block}");
+  });
+
   it("loads project components from rv.config.ts", async () => {
     const dir = await makeDir();
     await writeFile(

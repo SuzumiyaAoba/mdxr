@@ -34,6 +34,7 @@
   "dependencies": {
     "@base-ui/react": "^1.8.0",
     "@iconify-json/lucide": "1.2.130",
+    "@iconify-json/vscode-icons": "1.2.77",
     "@iconify/react": "6.0.2",
     "@iconify/tailwind4": "1.2.3",
     "@mdx-js/mdx": "^3.1.1",

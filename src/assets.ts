@@ -1,5 +1,8 @@
 /** Base CSS appended after Tailwind utilities (covers what utilities can't). */
 export const BASE_CSS = `
+/* Preflight makes <svg> display:block, which splits inline text around
+ * icons; Iconify svgs (.iconify) and lucide-react svgs (.lucide) stay inline. */
+.iconify, .lucide { display: inline-block; }
 .task-list-item { list-style: none; }
 ul.contains-task-list { padding-left: 1.25rem; }
 .task-list-item input[type='checkbox'] { margin-right: 0.4em; }

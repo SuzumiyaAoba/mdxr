@@ -115,7 +115,7 @@ Inline chips: priority pill, T-shirt effort estimate (children = e.g. `3d`), dea
 
 ### `<Tree root="…">`
 
-File tree rendered from a nested Markdown list. Items ending in `/` or with children get a folder icon; `name — note` or `name # note` adds a muted note.
+File tree rendered from a nested Markdown list. Items ending in `/` or with children get a folder icon; `name — note` or `name # note` adds a muted note. Icons are picked automatically from the file extension or directory name (VS Code-style `vscode-icons` set, e.g. `.ts` → TypeScript logo, `src/` → src folder).
 
 ```mdx
 <Tree root="rv/">
@@ -131,7 +131,7 @@ File tree rendered from a nested Markdown list. Items ending in `/` or with chil
 
 ### `<FileRef path="src/mdx.ts" lines="40-52" />`
 
-Inline file reference chip with a copy button.
+Inline file reference chip with a copy button. The icon is picked automatically from the file extension (`vscode-icons` set).
 
 ### `<SymbolRef name="mdxToHtml" kind="fn" path="src/mdx.ts" lines="70-106" />`
 
@@ -144,7 +144,7 @@ Inline symbol reference chip for code explanations. `kind` picks the icon: `fn` 
 
 ### `<Changes>` / `<Change kind="add|modify|delete|rename" path="…" to="…">`
 
-Change-set list — the "files this plan touches" section. `kind` drives the icon and color (`to` is the new path on `rename`); children render as a muted note.
+Change-set list — the "files this plan touches" section. `kind` drives the icon and color (`to` is the new path on `rename`); the file path also gets an extension-based icon automatically. Children render as a muted note.
 
 ```mdx
 <Changes>
@@ -189,7 +189,7 @@ Investigation findings with an epistemic-status pill: `confirmed` (read from the
 
 ### `<Files title>` / `<File path kind lines>` / `:::files`
 
-Related-file inventory — "the files this investigation touches". `kind` is a free-form chip; known values get an icon and color: `entry` `core` `types` `config` `test` `docs` `generated`. Children render as a muted note. For change-sets (what a plan modifies) use `Changes` instead.
+Related-file inventory — "the files this investigation touches". The row icon is picked automatically from the file name/extension (`vscode-icons` set: `package.json` → npm, `Dockerfile` → Docker, `*.test.ts` → test TS, …). `kind` is a free-form chip; known values get an icon and color: `entry` `core` `types` `config` `test` `docs` `generated`. Children render as a muted note. For change-sets (what a plan modifies) use `Changes` instead.
 
 ```mdx
 <Files title="Files involved">
@@ -304,7 +304,7 @@ Standalone status pill.
 
 ### `<Icon name="lucide:rocket" label className />`
 
-Inline Iconify icon rendered as SVG — no runtime fetch. The `lucide` set is bundled; the `lucide:` prefix may be omitted (`name="check"`). Unknown names are render-time validation errors. Decorative by default (`aria-hidden`); pass `label` to expose it as an image with `aria-label`. Size and color come from `className` (`h-4 w-4 text-teal-500`).
+Inline Iconify icon rendered as SVG — no runtime fetch. The `lucide` and `vscode-icons` sets are bundled; the `lucide:` prefix may be omitted (`name="check"`). Unknown names are render-time validation errors. Decorative by default (`aria-hidden`); pass `label` to expose it as an image with `aria-label`. Size and color come from `className` (`h-4 w-4 text-teal-500`).
 
 Status badges, step markers, callouts, chips and the file tree all carry appropriate icons automatically.
 
@@ -326,7 +326,7 @@ Icons also work as CSS classes (mask-image, single-color) on any element:
 ```
 ````
 
-renders a framed block with filename + copy button. Code is syntax-highlighted with Shiki (light/dark dual theme), so always tag the fence with a language (`ts`, `python`, `diff`, …). ` ```mermaid ` renders a diagram.
+renders a framed block with filename + copy button; the header carries a file-type icon picked from the filename (or language). Code is syntax-highlighted with Shiki (light/dark dual theme), so always tag the fence with a language (`ts`, `python`, `diff`, …). ` ```mermaid ` renders a diagram.
 
 The fence meta also controls line presentation:
 

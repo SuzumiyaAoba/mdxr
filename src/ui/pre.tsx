@@ -4,6 +4,7 @@ import type { ReactElement, ReactNode } from "react";
 import type { DocProps } from "../define.js";
 import { textOf } from "../define.js";
 import { isRecord } from "../guards.js";
+import { fileIcon } from "./file-icon.js";
 import { Icon } from "./icon.js";
 
 const str = (v: unknown): string | undefined =>
@@ -49,7 +50,13 @@ export const Pre = (props: DocProps): ReactElement => {
   return (
     <figure className="not-prose my-4 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
       <figcaption className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
-        <span className="font-mono">{filename ?? lang ?? "code"}</span>
+        <span className="inline-flex items-center gap-1.5 font-mono">
+          <Icon
+            className="h-3.5 w-3.5"
+            name={fileIcon(filename ?? lang ?? "code")}
+          />
+          {filename ?? lang ?? "code"}
+        </span>
         <button
           type="button"
           data-copy={text}

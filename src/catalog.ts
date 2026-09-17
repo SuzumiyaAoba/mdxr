@@ -138,7 +138,7 @@ export const CONVENTIONS = [
     syntax: "GFM tables, task lists, strikethrough, footnotes",
   },
   {
-    result: "Iconify icon (inline SVG, lucide bundled)",
+    result: "Iconify icon (inline SVG, lucide + vscode-icons bundled)",
     syntax: '<Icon name="lucide:rocket"> or class="icon-[lucide--rocket]"',
   },
 ];

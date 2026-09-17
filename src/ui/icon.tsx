@@ -1,4 +1,5 @@
 import { icons as lucide } from "@iconify-json/lucide";
+import { icons as vscodeIcons } from "@iconify-json/vscode-icons";
 import { addCollection, Icon as IconifyIcon, iconLoaded } from "@iconify/react";
 import * as v from "valibot";
 
@@ -8,6 +9,7 @@ import { nonEmpty } from "../guards.js";
 // Bundled icon sets, registered once so names resolve synchronously during
 // static rendering (no runtime fetch — the Iconify API is never used).
 addCollection(lucide);
+addCollection(vscodeIcons);
 
 const DEFAULT_PREFIX = "lucide";
 
@@ -22,7 +24,7 @@ export const hasIcon = (name: unknown): name is string =>
 export const Icon = defineComponent(
   {
     description:
-      'Iconify アイコン (lucide セット同梱)。name="lucide:rocket"（"rocket" でも可）。label で意味を持つ画像、省略時は装飾 (aria-hidden)。className でサイズ/色を指定',
+      'Iconify アイコン (lucide と vscode-icons 同梱)。name="lucide:rocket"（"rocket" でも可）や "vscode-icons:file-type-typescript"。label で意味を持つ画像、省略時は装飾 (aria-hidden)。className でサイズ/色を指定',
     schema: v.looseObject({
       className: v.optional(v.string()),
       label: v.optional(v.string()),

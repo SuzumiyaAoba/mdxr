@@ -40,3 +40,29 @@ export const NoTitle: Story = {
     </Files>
   ),
 };
+
+export const FileTypeIcons: Story = {
+  render: () => (
+    <Files title="Icons picked from file name / extension">
+      <File path="src/app.tsx" />
+      <File path="main.py" />
+      <File path="lib.rs" />
+      <File path="main.go" />
+      <File path="styles.scss" />
+      <File path="package.json" />
+      <File path="pnpm-lock.yaml" />
+      <File path="tsconfig.json" />
+      <File path="Dockerfile" />
+      <File path=".env.local" />
+      <File path=".gitignore" />
+      <File path="README.md" />
+      <File path="app.test.ts" />
+      <File path="vite.config.ts" />
+      <File path="data.csv" />
+      <File path="logo.svg" />
+      <File path="archive.zip" />
+      <File path="LICENSE" />
+      <File path="unknown.xyz123" />
+    </Files>
+  ),
+};

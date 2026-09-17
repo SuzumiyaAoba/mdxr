@@ -2,6 +2,7 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { fileIcon } from "./file-icon.js";
 import { Icon } from "./icon.js";
 
 export const CHANGE_KINDS = ["add", "modify", "delete", "rename"] as const;
@@ -62,6 +63,10 @@ export const Change = defineComponent(
           <Icon className="h-3.5 w-3.5" name={k.icon} />
           {k.label}
         </span>
+        <Icon
+          className="h-3.5 w-3.5 shrink-0 self-center text-neutral-400 dark:text-neutral-500"
+          name={fileIcon(nonEmpty(to) ? to : path)}
+        />
         <code className="font-mono text-[0.85em] text-neutral-800 dark:text-neutral-200">
           {path}
           {nonEmpty(to) ? (

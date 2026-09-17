@@ -4,6 +4,7 @@ import * as v from "valibot";
 
 import { defineComponent, flattenChildren, textOf } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { fileIcon, folderIcon } from "./file-icon.js";
 import { Icon } from "./icon.js";
 
 type El = ReactElement<{ children?: ReactNode }>;
@@ -14,10 +15,16 @@ const isEl = (n: unknown, tag: string): n is El =>
 /** `name — note` or `name # note` inside a list item attaches a muted note. */
 const NOTE_RE = /\s+(?:—|#)\s+/u;
 
-const NodeIcon = ({ dir }: { dir: boolean }): ReactElement => (
+const NodeIcon = ({
+  dir,
+  name,
+}: {
+  dir: boolean;
+  name: string;
+}): ReactElement => (
   <Icon
     className={`h-3.5 w-3.5 shrink-0 self-center ${dir ? "text-amber-500" : "text-neutral-400 dark:text-neutral-500"}`}
-    name={dir ? "lucide:folder" : "lucide:file"}
+    name={dir ? folderIcon(name) : fileIcon(name)}
   />
 );
 
@@ -47,7 +54,8 @@ const renderList = (node: El, depth: number): ReactElement => (
       const m = NOTE_RE.exec(full);
       const name = m === null ? null : full.slice(0, m.index).trimEnd();
       const note = m === null ? null : full.slice(m.index + m[0].length).trim();
-      const isDir = nested.length > 0 || (name ?? full).trimEnd().endsWith("/");
+      const label = (name ?? full).trim();
+      const isDir = nested.length > 0 || label.endsWith("/");
 
       return (
         <li key={child.key ?? i} className="relative">
@@ -58,7 +66,7 @@ const renderList = (node: El, depth: number): ReactElement => (
                 aria-hidden
               />
             ) : null}
-            <NodeIcon dir={isDir} />
+            <NodeIcon dir={isDir} name={label} />
             <span className={isDir ? "font-medium" : undefined}>
               {name ?? row}
             </span>
@@ -89,7 +97,7 @@ export const Tree = defineComponent(
     <div className="not-prose my-4 overflow-x-auto rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 font-mono text-sm dark:border-neutral-800 dark:bg-neutral-900/60">
       {nonEmpty(root) ? (
         <div className="mb-1 flex items-center gap-1.5 font-semibold">
-          <NodeIcon dir />
+          <NodeIcon dir name={root} />
           {root}
         </div>
       ) : null}

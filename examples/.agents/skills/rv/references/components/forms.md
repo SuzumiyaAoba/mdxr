@@ -4,7 +4,7 @@ Index: [../components.md](../components.md). MDX attributes are always strings; 
 
 ### `<Ask title description>` / `<Question name type label>` / `<Choice value checked>`
 
-Question block that asks the reader for input — open decisions in a plan, sign-off toggles, free-form answers. Built on **native** form controls (unlike the shadcn set), so every field is interactive in the static document; "Copy answers" serializes the filled state to the clipboard as `- name: value` lines the user can paste back.
+Question block that asks the reader for input — open decisions in a plan, sign-off toggles, free-form answers. Built on **native** form controls (unlike the shadcn set), so every field is interactive in the static document. Answers render live as a Markdown sheet in the block's output pane — `# title` then `- **label**: answer` per question — which "Copy answers" copies to the clipboard and "Save .md" downloads as a file the user can keep or paste back.
 
 `<Question>` `type`: `choice` (radio cards), `multi` (checkbox cards), `select` (dropdown), `text`, `textarea`, `toggle` (switch). Default: `choice` when it has `<Choice>` children, else `text`. `name` is the answer key; `label`, `description`, `required`, `placeholder`, `value` (text default), `rows` (textarea), `checked` (toggle) are supported.
 

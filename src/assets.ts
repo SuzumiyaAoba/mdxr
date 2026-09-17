@@ -8,7 +8,7 @@ ul.contains-task-list { padding-left: 1.25rem; }
 .task-list-item input[type='checkbox'] { margin-right: 0.4em; }
 /* --- Interaction feedback -------------------------------------------
  * Every [data-copy] button carries an idle and a done icon
- * (.rv-copy-idle/.rv-copy-done); the delegated click handler (CLIENT_JS,
+ * (.rv-copy-idle/.rv-copy-done); the delegated event handler (CLIENT_JS,
  * also bound in the Storybook preview) toggles .copied/.copy-failed for
  * ~1.6s after each clipboard attempt. Success swaps the copy icon for an
  * emerald check with a pop; failure shakes and tints red; pressing the
@@ -26,6 +26,37 @@ ul.contains-task-list { padding-left: 1.25rem; }
 .rv-copy.copied, .rv-copy.copy-failed { opacity: 1; }
 .rv-copy.copy-failed { color: rgb(220 38 38); }
 .dark .rv-copy.copy-failed { color: rgb(248 113 113); }
+/* Theme toggle: fixed corner chrome injected by htmlDocument. Cycles
+ * auto → light → dark; [data-mode] picks which icon shows. */
+.rv-theme {
+  position: fixed; top: 0.75rem; right: 0.75rem; z-index: 50;
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 2rem; width: 2rem; margin: 0; padding: 0; border-radius: 9999px;
+  border: 1px solid rgb(229 229 229); color: rgb(82 82 82);
+  background: rgb(255 255 255 / 0.85); backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease,
+    border-color 0.15s ease, transform 0.1s ease;
+}
+.rv-theme:hover { color: rgb(23 23 23); background: rgb(255 255 255); }
+.rv-theme:active { transform: scale(0.88); }
+.rv-theme:focus-visible {
+  outline: 2px solid rgb(14 165 233); outline-offset: 2px;
+}
+.dark .rv-theme {
+  border-color: rgb(64 64 64); color: rgb(163 163 163);
+  background: rgb(23 23 23 / 0.85);
+}
+.dark .rv-theme:hover { color: rgb(250 250 250); background: rgb(23 23 23); }
+.rv-theme .rv-theme-i { display: none; }
+.rv-theme[data-mode="auto"] .rv-theme-i-auto,
+.rv-theme[data-mode="light"] .rv-theme-i-light,
+.rv-theme[data-mode="dark"] .rv-theme-i-dark {
+  display: inline-flex;
+  animation: rv-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.rv-theme svg { height: 1rem; width: 1rem; }
+@media print { .rv-theme { display: none; } }
 .rv-copy-done { display: none; }
 .copied .rv-copy-idle { display: none; }
 .copied .rv-copy-done {
@@ -33,11 +64,13 @@ ul.contains-task-list { padding-left: 1.25rem; }
   animation: rv-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .copy-failed { animation: rv-shake 0.32s ease; }
-[data-ask-copy].copy-failed {
+[data-ask-copy].copy-failed, [data-ask-save].copy-failed {
   border-color: rgb(248 113 113); color: rgb(220 38 38);
 }
-.dark [data-ask-copy].copy-failed { color: rgb(248 113 113); }
-.rv-ask [data-ask-copy].copied {
+.dark [data-ask-copy].copy-failed, .dark [data-ask-save].copy-failed {
+  color: rgb(248 113 113);
+}
+.rv-ask [data-ask-copy].copied, .rv-ask [data-ask-save].copied {
   border-color: rgb(52 211 153 / 0.6);
 }
 @keyframes rv-pop {
@@ -265,28 +298,35 @@ details[open] > summary .rv-chev { transform: rotate(90deg); }
   .rv-mark-box svg,
   .rv-switch,
   .rv-switch::after,
+  .rv-theme,
   .rv-toc-body a {
     transition: none;
   }
   .rv-copy:active { transform: none; }
   .rv-choice:active { transform: none; }
+  .rv-theme:active { transform: none; }
   .copied .rv-copy-done, .copy-failed { animation: none; }
+  .rv-theme .rv-theme-i { animation: none; }
   .rv-details::details-content,
   .rv-toc > details::details-content { transition: none; }
 }
 `;
 
 /**
- * Delegated click handler for the document's interactive bits:
- * `[data-copy]` copies a fixed string; `[data-ask-copy]` collects the
- * enclosing `[data-ask]` block's native form controls into a `- name: value`
- * answer sheet. Inlined into documents via `CLIENT_JS` (`toString`) and
- * registered by the Storybook preview, so it must stay self-contained — no
- * imports, no outer-scope references. Helpers stay nested for `toString`
- * inlining even though they capture nothing.
+ * Delegated handler for the document's interactive bits. On `input`/`change`
+ * inside an `[data-ask]` block it rewrites the block's `[data-ask-output]`
+ * Markdown answer sheet (`- **label**: answer` lines under `# title`, built
+ * from `data-q-label`/`data-q-type` on each `[data-rv-q]` wrapper). On
+ * `click`: `[data-copy]` copies a fixed string; `[data-ask-copy]` copies the
+ * sheet; `[data-ask-save]` downloads it as a `.md` file; `[data-rv-theme]`
+ * cycles the document theme auto → light → dark (persisted to localStorage,
+ * so THEME_JS can restore it before first paint). Inlined into documents via
+ * `CLIENT_JS` (`toString`) and registered by the Storybook preview, so it
+ * must stay self-contained — no imports, no outer-scope references. Helpers
+ * stay nested for `toString` inlining even though they capture nothing.
  */
 /* oxlint-disable unicorn/consistent-function-scoping -- toString() requires self-containment */
-export const handleDocClick = (e: MouseEvent): void => {
+export const handleDocEvent = (e: Event): void => {
   const el = e.target;
   if (!(el instanceof Element)) {
     return;
@@ -368,6 +408,164 @@ export const handleDocClick = (e: MouseEvent): void => {
       }
     })();
   };
+  // The text a reader actually selected for a choice/select answer: the
+  // choice card's visible label minus its description, or the <option> text.
+  // Falls back to the control's value when no text can be read.
+  const choiceText = (f: Element): string => {
+    if (f instanceof HTMLOptionElement) {
+      const t = (f.textContent ?? "").trim();
+      return t === "" ? f.value : t;
+    }
+    const fallback = f instanceof HTMLInputElement ? f.value : "";
+    const body = f.closest("label")?.querySelector(".rv-choice-text");
+    if (!(body instanceof HTMLElement)) {
+      return fallback;
+    }
+    let t = "";
+    for (const n of body.childNodes) {
+      if (n instanceof HTMLElement && n.classList.contains("rv-choice-desc")) {
+        continue;
+      }
+      t += n.textContent ?? "";
+    }
+    t = t.replaceAll(/\s+/gu, " ").trim();
+    return t === "" ? fallback : t;
+  };
+  // One question's answer: checked choices read as their visible text,
+  // selects as the chosen option's text, toggles as yes/no, free-form
+  // fields as their raw value. "" means unanswered.
+  const answerOf = (q: HTMLElement): string => {
+    const t = q.dataset.qType;
+    if (t === "multi") {
+      const vals: string[] = [];
+      for (const f of q.querySelectorAll("input:checked")) {
+        const v = choiceText(f);
+        if (v !== "") {
+          vals.push(v);
+        }
+      }
+      return vals.join(", ");
+    }
+    if (t === "choice") {
+      const f = q.querySelector("input:checked");
+      return f === null ? "" : choiceText(f);
+    }
+    if (t === "select") {
+      const s = q.querySelector("select");
+      const [opt] =
+        s instanceof HTMLSelectElement && s.value !== ""
+          ? s.selectedOptions
+          : [];
+      return opt === undefined ? "" : choiceText(opt);
+    }
+    const f = q.querySelector("input, textarea");
+    if (f instanceof HTMLTextAreaElement) {
+      return f.value.trim();
+    }
+    if (!(f instanceof HTMLInputElement)) {
+      return "";
+    }
+    if (f.type === "checkbox") {
+      // Toggle questions are checkboxes — always answered, yes or no.
+      return f.checked ? "yes" : "no";
+    }
+    return f.value.trim();
+  };
+  // Serializes an [data-ask] block into the Markdown answer sheet shown in
+  // [data-ask-output]: `# title` then one `- **label**: answer` line per
+  // question, in DOM order. Unanswered fields stay blank; toggles are
+  // always answered (yes/no). Multi-line answers indent under their item.
+  const askMarkdown = (box: HTMLElement): string => {
+    const lines: string[] = [];
+    for (const q of box.querySelectorAll("[data-rv-q]")) {
+      if (!(q instanceof HTMLElement)) {
+        continue;
+      }
+      const answer = answerOf(q).replaceAll("\n", "\n  ");
+      lines.push(
+        `- **${q.dataset.qLabel ?? ""}**:${answer === "" ? "" : ` ${answer}`}`
+      );
+    }
+    const title = box.dataset.askTitle ?? "Answers";
+    return `# ${title}\n\n${lines.length === 0 ? "(no questions)" : lines.join("\n")}`;
+  };
+  // Re-renders the answer sheet into the block's [data-ask-output] pane.
+  const syncAsk = (box: HTMLElement): void => {
+    const out = box.querySelector("[data-ask-output]");
+    if (out !== null) {
+      out.textContent = askMarkdown(box);
+    }
+  };
+  // Downloads the answer sheet as `<slug>.md` via a temporary blob link.
+  const saveAsk = (box: HTMLElement, btn: HTMLElement): void => {
+    syncAsk(box);
+    const slug = (box.dataset.askTitle ?? "answers")
+      .toLowerCase()
+      .replaceAll(/[^\p{L}\p{N}]+/gu, "-")
+      .replaceAll(/^-+|-+$/gu, "");
+    const url = URL.createObjectURL(
+      new Blob([askMarkdown(box)], { type: "text/markdown;charset=utf-8" })
+    );
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${slug === "" ? "answers" : slug}.md`;
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 1000);
+    flash(btn, "copied");
+  };
+  // Cycles auto → light → dark, persists the choice, and repaints every
+  // toggle's icon/label to match.
+  const cycleTheme = (): void => {
+    let stored: string | null = null;
+    try {
+      // localStorage can throw on file:// or in hardened contexts.
+      stored = localStorage.getItem("rv-theme");
+    } catch {
+      stored = null;
+    }
+    const mode = stored === "light" || stored === "dark" ? stored : "auto";
+    let next = "auto";
+    if (mode === "auto") {
+      next = "light";
+    } else if (mode === "light") {
+      next = "dark";
+    }
+    try {
+      if (next === "auto") {
+        localStorage.removeItem("rv-theme");
+      } else {
+        localStorage.setItem("rv-theme", next);
+      }
+    } catch {
+      // Persistence is best-effort; the toggle still applies for this view.
+    }
+    const dark =
+      next === "dark" ||
+      (next === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.classList.toggle("dark", dark);
+    const title = `Theme: ${next}`;
+    for (const b of document.querySelectorAll("[data-rv-theme]")) {
+      if (!(b instanceof HTMLElement)) {
+        continue;
+      }
+      b.dataset.mode = next;
+      b.setAttribute("title", title);
+      b.setAttribute("aria-label", `Switch theme (current: ${next})`);
+    }
+  };
+  // Field edits keep the Markdown pane live; the init pass in CLIENT_JS
+  // seeds it by bubbling a synthetic `input` event off each [data-ask].
+  if (e.type === "input" || e.type === "change") {
+    const box = el.closest("[data-ask]");
+    if (box instanceof HTMLElement) {
+      syncAsk(box);
+    }
+    return;
+  }
   const copyBtn = el.closest("[data-copy]");
   if (copyBtn instanceof HTMLElement) {
     writeClipboard(
@@ -387,46 +585,10 @@ export const handleDocClick = (e: MouseEvent): void => {
     if (!(box instanceof HTMLElement)) {
       return;
     }
-    const answers = new Map<string, string[]>();
-    for (const f of box.querySelectorAll("input, select, textarea")) {
-      const isInput = f instanceof HTMLInputElement;
-      if (
-        !(
-          isInput ||
-          f instanceof HTMLSelectElement ||
-          f instanceof HTMLTextAreaElement
-        ) ||
-        f.name === ""
-      ) {
-        continue;
-      }
-      if (
-        isInput &&
-        (f.type === "checkbox" || f.type === "radio") &&
-        !f.checked
-      ) {
-        continue;
-      }
-      const v = f.value.trim();
-      if (v === "") {
-        continue;
-      }
-      const list = answers.get(f.name);
-      if (list === undefined) {
-        answers.set(f.name, [v]);
-      } else {
-        list.push(v);
-      }
-    }
-    const lines = [...answers.entries()].map(
-      (kv) => `- ${kv[0]}: ${kv[1].join(", ")}`
-    );
-    const title = box.dataset.askTitle;
-    const head = title === undefined || title === "" ? "" : `${title}\n\n`;
-    const text =
-      head + (lines.length === 0 ? "(no answers)" : lines.join("\n"));
+    // Re-collect on click too: autofill/programmatic edits fire no events.
+    syncAsk(box);
     writeClipboard(
-      text,
+      askMarkdown(box),
       () => {
         flash(askBtn, "copied");
       },
@@ -434,12 +596,34 @@ export const handleDocClick = (e: MouseEvent): void => {
         flash(askBtn, "copy-failed");
       }
     );
+    return;
+  }
+  const askSaveBtn = el.closest("[data-ask-save]");
+  if (askSaveBtn instanceof HTMLElement) {
+    const box = askSaveBtn.closest("[data-ask]");
+    if (box instanceof HTMLElement) {
+      saveAsk(box, askSaveBtn);
+    }
+    return;
+  }
+  const themeBtn = el.closest("[data-rv-theme]");
+  if (themeBtn instanceof HTMLElement) {
+    cycleTheme();
   }
 };
 /* oxlint-enable unicorn/consistent-function-scoping */
 
-/** Small vanilla JS inlined into every document: copy/answer buttons + mermaid. */
-export const CLIENT_JS = `document.addEventListener('click', ${handleDocClick.toString()});`;
+/** Small vanilla JS inlined into every document: copy/answer/save buttons,
+ * the live Markdown answer sheet, and theme. The trailing pass seeds each
+ * Ask output pane (default-checked fields count as answers) by bubbling a
+ * synthetic `input` event off the block — the delegated handler's own
+ * input branch does the render, so no code is duplicated. */
+export const CLIENT_JS = `document.addEventListener('click', ${handleDocEvent.toString()});
+document.addEventListener('input', ${handleDocEvent.toString()});
+document.addEventListener('change', ${handleDocEvent.toString()});
+for (const b of document.querySelectorAll('[data-ask]')) {
+  b.dispatchEvent(new Event('input', { bubbles: true }));
+}`;
 
 /**
  * Mermaid is always imported from the CDN at runtime — never bundled into
@@ -476,12 +660,39 @@ es.addEventListener('reload', function () { location.reload(); });
 /**
  * The shadcn theme maps `dark:` to the `.dark` class, so dark mode is
  * class-based rather than media-based. This head script applies the class
- * before first paint and tracks system theme changes.
+ * before first paint: a stored choice from the theme toggle
+ * (localStorage `rv-theme`) wins, otherwise the document tracks
+ * `prefers-color-scheme` — and keeps tracking it only while no explicit
+ * choice is stored.
  */
 export const THEME_JS = `
 var q = matchMedia('(prefers-color-scheme: dark)');
-document.documentElement.classList.toggle('dark', q.matches);
+var stored = null;
+try { stored = localStorage.getItem('rv-theme'); } catch (e) {}
+document.documentElement.classList.toggle(
+  'dark',
+  stored === 'dark' || (stored !== 'light' && q.matches)
+);
 q.addEventListener('change', function (e) {
-  document.documentElement.classList.toggle('dark', e.matches);
+  var s = null;
+  try { s = localStorage.getItem('rv-theme'); } catch (e2) {}
+  if (s !== 'light' && s !== 'dark') {
+    document.documentElement.classList.toggle('dark', e.matches);
+  }
+});
+// This script runs in <head>, before the toggle button is parsed —
+// reflect the stored mode on it once the DOM exists.
+addEventListener('DOMContentLoaded', function () {
+  var s = null;
+  try { s = localStorage.getItem('rv-theme'); } catch (e) {}
+  var mode = s === 'light' || s === 'dark' ? s : 'auto';
+  document.querySelectorAll('[data-rv-theme]').forEach(function (b) {
+    if (!(b instanceof HTMLElement)) {
+      return;
+    }
+    b.dataset.mode = mode;
+    b.setAttribute('title', 'Theme: ' + mode);
+    b.setAttribute('aria-label', 'Switch theme (current: ' + mode + ')');
+  });
 });
 `;

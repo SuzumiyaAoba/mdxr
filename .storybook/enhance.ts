@@ -107,8 +107,20 @@ const tryRenderMermaid = async (root: ParentNode): Promise<void> => {
   }
 };
 
+/**
+ * CLIENT_JS init counterpart: seed each Ask block's Markdown answer pane by
+ * bubbling a synthetic `input` event off it — the delegated handler's input
+ * branch does the render, so no serialization code is duplicated here.
+ */
+const seedAskOutputs = (root: ParentNode): void => {
+  for (const b of root.querySelectorAll("[data-ask]")) {
+    b.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+};
+
 export const enhanceRenderedBlocks = async (
   root: ParentNode
 ): Promise<void> => {
+  seedAskOutputs(root);
   await Promise.all([highlightCodeBlocks(root), tryRenderMermaid(root)]);
 };

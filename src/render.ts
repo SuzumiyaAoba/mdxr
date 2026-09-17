@@ -94,12 +94,26 @@ export interface RenderOptions {
   liveReload?: boolean;
 }
 
-export const renderFile = async (
-  mdxPath: string,
-  opts: RenderOptions = {}
+export interface RenderSourceOptions extends RenderOptions {
+  /**
+   * Project directory: where `rv.config.ts` is looked up and where relative
+   * paths (e.g. `<CodeFile path="…">`) resolve. Defaults to the cwd.
+   */
+  dir?: string;
+  /**
+   * Document path used in error messages and as the base for relative paths.
+   * Defaults to `<dir>/document.mdx`.
+   */
+  filePath?: string;
+}
+
+/** Render MDX source text to a standalone HTML document. */
+export const render = async (
+  source: string,
+  opts: RenderSourceOptions = {}
 ): Promise<string> => {
-  const abs = path.resolve(mdxPath);
-  const dir = path.dirname(abs);
+  const dir = path.resolve(opts.dir ?? process.cwd());
+  const filePath = opts.filePath ?? path.join(dir, "document.mdx");
   const config: ResolvedConfig = await loadConfig(dir);
 
   const user =
@@ -121,8 +135,7 @@ export const renderFile = async (
     ...user.components,
   };
 
-  const source = await readFile(abs, "utf-8");
-  const { body, frontmatter } = await mdxToHtml(source, components, abs, {
+  const { body, frontmatter } = await mdxToHtml(source, components, filePath, {
     editor: config.editor,
   });
 
@@ -187,5 +200,19 @@ export const renderFile = async (
     needsKatex: /class="[^"]*katex/u.test(body),
     needsMermaid: /class="[^"]*mermaid/u.test(body),
     title,
+  });
+};
+
+/** Read `mdxPath` and render it to a standalone HTML document. */
+export const renderFile = async (
+  mdxPath: string,
+  opts: RenderOptions = {}
+): Promise<string> => {
+  const abs = path.resolve(mdxPath);
+  const source = await readFile(abs, "utf-8");
+  return await render(source, {
+    ...opts,
+    dir: path.dirname(abs),
+    filePath: abs,
   });
 };

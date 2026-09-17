@@ -11,8 +11,9 @@ Write documents as **Markdown + a small set of JSX components** (MDX). Do NOT wr
 
 1. Write the document as `*.mdx` using Markdown plus the components below.
 2. Render: `npx @suzumiyaaoba/rv render plan.mdx -o plan.html`
-3. On errors, the message includes `file:line:col` — fix and re-run. `npx @suzumiyaaoba/rv render plan.mdx --format json` prints machine-readable errors.
-4. Preview while editing: `npx @suzumiyaaoba/rv serve plan.mdx`
+3. Or pipe MDX directly: `cat plan.mdx | npx @suzumiyaaoba/rv render > plan.html` (`rv render -` also reads stdin; `-o out.html` writes a file).
+4. On errors, the message includes `file:line:col` — fix and re-run. `npx @suzumiyaaoba/rv render plan.mdx --format json` prints machine-readable errors.
+5. Preview while editing: `npx @suzumiyaaoba/rv serve plan.mdx` — or pipe: `cat plan.mdx | npx @suzumiyaaoba/rv serve`
 
 ## Rules
 

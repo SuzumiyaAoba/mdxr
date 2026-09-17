@@ -70,7 +70,7 @@ This file is an index: each group lists what its components do and links to a de
 
 | Component | What it is |
 | --- | --- |
-| `<Ask>` / `<Question>` / `<Choice>` | Native-form question blocks; "Copy answers" serializes the filled state |
+| `<Ask>` / `<Question>` / `<Choice>` | Native-form question blocks; answers show live as Markdown to copy or save |
 
 ## shadcn/ui — details: [components/shadcn.md](components/shadcn.md)
 

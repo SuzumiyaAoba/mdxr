@@ -1,22 +1,34 @@
+import { once } from "node:events";
 import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
 
-import { renderFile } from "./render.js";
+import { formatError } from "./format-error.js";
+import type { RenderSourceOptions } from "./render.js";
+import { render, renderFile } from "./render.js";
 
-const errorPage = (err: unknown): string => {
-  const msg = err instanceof Error ? err.message : String(err);
-  return `<!doctype html><meta charset="utf-8"><body style="font-family:monospace;background:#1c1917;color:#fca5a5;padding:2rem"><h1>rv render error</h1><pre>${msg.replaceAll("<", "&lt;")}</pre></body>`;
-};
+const errorPage = (err: unknown): string =>
+  `<!doctype html><meta charset="utf-8"><body style="font-family:monospace;background:#1c1917;color:#fca5a5;padding:2rem"><h1>rv render error</h1><pre>${formatError(err).replaceAll("<", "&lt;")}</pre></body>`;
 
-export const serve = async (mdxPath: string, port: number): Promise<void> => {
-  const abs = path.resolve(mdxPath);
-  const dir = path.dirname(abs);
+interface PreviewTarget {
+  /** Label shown in the startup log. */
+  label: string;
+  /** Re-render the document; errors are served as an error page. */
+  renderDoc: () => Promise<string>;
+  /** Directory watched for changes (config, components, theme, sources). */
+  watchDir: string;
+  /** Non-recursive fallback watch target (the document file). */
+  watchFile?: string;
+}
 
+const servePreview = async (
+  target: PreviewTarget,
+  port: number
+): Promise<http.Server> => {
   let html = "";
   const rebuild = async () => {
     try {
-      html = await renderFile(abs, { liveReload: true });
+      html = await target.renderDoc();
     } catch (error) {
       html = errorPage(error);
     }
@@ -58,14 +70,67 @@ export const serve = async (mdxPath: string, port: number): Promise<void> => {
 
   const recursive =
     process.platform === "darwin" || process.platform === "win32";
+  let watcher: fs.FSWatcher | undefined;
   try {
-    fs.watch(dir, { recursive }, notify);
+    watcher = fs.watch(target.watchDir, { recursive }, notify);
   } catch {
-    fs.watch(abs, notify);
+    try {
+      watcher = fs.watch(target.watchFile ?? target.watchDir, notify);
+    } catch {
+      watcher = undefined;
+    }
   }
-
-  server.listen(port, () => {
-    console.log(`rv: serving ${mdxPath} at http://localhost:${port}`);
-    console.log("rv: watching for changes (Ctrl+C to stop)");
+  server.on("close", () => {
+    watcher?.close();
   });
+
+  server.listen(port);
+  // Rejects on 'error' (e.g. EADDRINUSE) before 'listening'.
+  await once(server, "listening");
+
+  const address = server.address();
+  const boundPort =
+    typeof address === "object" && address !== null ? address.port : port;
+  console.log(`rv: serving ${target.label} at http://localhost:${boundPort}`);
+  console.log("rv: watching for changes (Ctrl+C to stop)");
+  return server;
+};
+
+/** Serve an .mdx file, rebuilding + live-reloading on changes in its directory. */
+export const serve = async (
+  mdxPath: string,
+  port: number
+): Promise<http.Server> => {
+  const abs = path.resolve(mdxPath);
+  return await servePreview(
+    {
+      label: mdxPath,
+      renderDoc: async () => await renderFile(abs, { liveReload: true }),
+      watchDir: path.dirname(abs),
+      watchFile: abs,
+    },
+    port
+  );
+};
+
+/** Serve MDX source passed directly (e.g. piped via stdin). */
+export const serveSource = async (
+  source: string,
+  port: number,
+  opts: Omit<RenderSourceOptions, "liveReload"> = {}
+): Promise<http.Server> => {
+  const dir = path.resolve(opts.dir ?? process.cwd());
+  return await servePreview(
+    {
+      label: opts.filePath ?? "stdin",
+      renderDoc: async () =>
+        await render(source, {
+          dir,
+          filePath: opts.filePath,
+          liveReload: true,
+        }),
+      watchDir: dir,
+    },
+    port
+  );
 };

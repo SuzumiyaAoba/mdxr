@@ -6,23 +6,18 @@ import { cac } from "cac";
 
 import { catalogEntries, formatCatalog, CONVENTIONS } from "./catalog.js";
 import { loadConfig } from "./config.js";
+import { formatError } from "./format-error.js";
 import { installSkill } from "./init.js";
-import { loadComponents, renderFile } from "./render.js";
-import { serve } from "./serve.js";
+import { loadComponents, render, renderFile } from "./render.js";
+import { serve, serveSource } from "./serve.js";
 import { builtinComponents } from "./ui/index.js";
 
-const formatError = (err: unknown): string => {
-  if (err instanceof Error) {
-    // vfile-style messages carry line/column for agent self-repair.
-    const e = err as Error & { line?: number; column?: number; file?: string };
-    const loc =
-      e.line === null || e.line === undefined
-        ? ""
-        : `:${e.line}:${e.column ?? 0}`;
-    const file = e.file ?? "";
-    return `${file}${loc} ${e.message}`.trim();
+const readStdin = async (): Promise<string> => {
+  const chunks: Buffer[] = [];
+  for await (const chunk of process.stdin as AsyncIterable<Buffer>) {
+    chunks.push(chunk);
   }
-  return String(err);
+  return Buffer.concat(chunks).toString("utf-8");
 };
 
 const fail = (err: unknown, json: boolean): never => {
@@ -37,30 +32,86 @@ const fail = (err: unknown, json: boolean): never => {
 const cli = cac("rv");
 
 cli
-  .command("render <file>", "Render an .mdx document to a standalone HTML file")
-  .option("-o, --out <path>", "Output path (default: <file>.html)")
+  .command("render [file]", "Render an .mdx document to a standalone HTML file")
+  .option(
+    "-o, --out <path>",
+    "Output path (default: <file>.html; stdout for stdin input or '-')"
+  )
   .option("--format <format>", "Error output: text | json")
-  .action(async (file: string, opts: { out?: string; format?: string }) => {
-    const json = opts.format === "json";
-    try {
-      const html = await renderFile(file);
-      const out = opts.out ?? `${file.replace(/\.(?:mdx|md)$/u, "")}.html`;
-      await writeFile(path.resolve(out), html);
-      if (json) {
-        console.log(JSON.stringify({ ok: true, out }));
-      } else {
-        console.log(`rv: wrote ${out}`);
+  .action(
+    async (
+      file: string | undefined,
+      opts: { out?: string; format?: string }
+    ) => {
+      const json = opts.format === "json";
+      try {
+        const fromStdin = file === undefined || file === "-";
+        if (fromStdin && process.stdin.isTTY) {
+          throw new Error(
+            "no input: pass an .mdx file or pipe MDX source via stdin"
+          );
+        }
+
+        const html = fromStdin
+          ? await render(await readStdin(), {
+              dir: process.cwd(),
+              filePath: "<stdin>",
+            })
+          : await renderFile(file);
+
+        const out =
+          opts.out === "-"
+            ? undefined
+            : (opts.out ??
+              (file === undefined || file === "-"
+                ? undefined
+                : `${file.replace(/\.(?:mdx|md)$/u, "")}.html`));
+
+        if (out === undefined) {
+          // No status line: stdout carries the HTML itself. Downstream
+          // pipes (e.g. `| head`) may close early — EPIPE is not an error.
+          process.stdout.on("error", (err: NodeJS.ErrnoException) => {
+            if (err.code === "EPIPE") {
+              process.exit(0);
+            }
+            throw err;
+          });
+          process.stdout.write(html);
+          return;
+        }
+        await writeFile(path.resolve(out), html);
+        if (json) {
+          console.log(JSON.stringify({ ok: true, out }));
+        } else {
+          console.log(`rv: wrote ${out}`);
+        }
+      } catch (error) {
+        fail(error, json);
       }
-    } catch (error) {
-      fail(error, json);
     }
-  });
+  );
 
 cli
-  .command("serve <file>", "Preview a document in the browser with live reload")
+  .command("serve [file]", "Preview a document in the browser with live reload")
   .option("-p, --port <port>", "Port", { default: 3737 })
-  .action(async (file: string, opts: { port: number }) => {
-    await serve(file, opts.port);
+  .action(async (file: string | undefined, opts: { port: number }) => {
+    try {
+      if (file === undefined || file === "-") {
+        if (process.stdin.isTTY) {
+          throw new Error(
+            "no input: pass an .mdx file or pipe MDX source via stdin"
+          );
+        }
+        await serveSource(await readStdin(), opts.port, {
+          dir: process.cwd(),
+          filePath: "<stdin>",
+        });
+        return;
+      }
+      await serve(file, opts.port);
+    } catch (error) {
+      fail(error, false);
+    }
   });
 
 cli

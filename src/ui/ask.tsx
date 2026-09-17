@@ -80,10 +80,10 @@ export const Choice = defineComponent(
             <Icon className="h-3 w-3" name="lucide:check" />
           )}
         </span>
-        <span className="min-w-0 flex-1 leading-snug">
+        <span className="rv-choice-text min-w-0 flex-1 leading-snug">
           {children}
           {nonEmpty(description) ? (
-            <span className="mt-0.5 block text-xs text-neutral-500 dark:text-neutral-400">
+            <span className="rv-choice-desc mt-0.5 block text-xs text-neutral-500 dark:text-neutral-400">
               {description}
             </span>
           ) : null}
@@ -97,10 +97,11 @@ const isCheckedChoice = (node: ReactNode): node is ReactElement<DocProps> =>
   isValidElement<DocProps>(node) && truthy(node.props.checked);
 
 /**
- * One question inside `<Ask>`. `name` is the answer key used in the copied
- * answer sheet. Types: `choice` (radio cards), `multi` (checkbox cards),
- * `select` (dropdown), `text`, `textarea`, `toggle` (switch). Defaults to
- * `choice` when it has <Choice> children, otherwise `text`.
+ * One question inside `<Ask>`. `name` is the answer key; the Markdown answer
+ * sheet shows `label` (falling back to `name`). Types: `choice` (radio
+ * cards), `multi` (checkbox cards), `select` (dropdown), `text`, `textarea`,
+ * `toggle` (switch). Defaults to `choice` when it has <Choice> children,
+ * otherwise `text`.
  */
 export const Question = defineComponent(
   {
@@ -134,9 +135,17 @@ export const Question = defineComponent(
       type ?? (flattenChildren(children).length > 0 ? "choice" : "text");
     const ctx = useMemo(() => ({ mode: CHOICE_MODE[t], name }), [t, name]);
     const id = `rv-q-${name}`;
+    // Resolved label + type ride on the wrapper so the client handler can
+    // pair every control with the text the reader saw (Markdown sheet).
+    const labelText = nonEmpty(label) ? label : name;
+    const qAttrs = {
+      "data-q-label": labelText,
+      "data-q-type": t,
+      "data-rv-q": "",
+    } as const;
     const labelEl = (
       <>
-        {nonEmpty(label) ? label : name}
+        {labelText}
         {truthy(required) ? (
           <span className="ml-0.5 text-red-500">*</span>
         ) : null}
@@ -148,7 +157,7 @@ export const Question = defineComponent(
       </p>
     ) : null;
     const frame = (control: ReactElement): ReactElement => (
-      <div className="rv-q px-4 py-3.5">
+      <div className="rv-q px-4 py-3.5" {...qAttrs}>
         <label className="text-sm font-medium" htmlFor={id}>
           {labelEl}
         </label>
@@ -159,7 +168,7 @@ export const Question = defineComponent(
 
     if (t === "choice" || t === "multi") {
       return (
-        <fieldset className="rv-q m-0 border-0 px-4 py-3.5">
+        <fieldset className="rv-q m-0 border-0 px-4 py-3.5" {...qAttrs}>
           <legend className="p-0 text-sm font-medium">{labelEl}</legend>
           {descEl}
           <div className="mt-2 space-y-1.5">
@@ -171,7 +180,7 @@ export const Question = defineComponent(
 
     if (t === "toggle") {
       return (
-        <div className="rv-q px-4 py-3.5">
+        <div className="rv-q px-4 py-3.5" {...qAttrs}>
           <label
             className="flex cursor-pointer items-center justify-between gap-3"
             htmlFor={id}
@@ -242,14 +251,15 @@ export const Question = defineComponent(
 
 /**
  * A block of questions asking the reader for input — e.g. open decisions in
- * a plan. Built on native form controls so it is interactive in static HTML;
- * "Copy answers" serializes the answers as `- name: value` lines to the
- * clipboard (nothing is submitted anywhere).
+ * a plan. Built on native form controls so it is interactive in static HTML.
+ * Answers are rendered live as a Markdown sheet (`- **label**: answer` lines
+ * under `# title`) in the output pane; "Copy answers" copies it to the
+ * clipboard and "Save .md" downloads it (nothing is submitted anywhere).
  */
 export const Ask = defineComponent(
   {
     description:
-      "ユーザーへの質問フォーム。<Question> を並べる。ネイティブコントロールで JS なしに操作可能。「Copy answers」で回答をコピーして貼り戻す",
+      "ユーザーへの質問フォーム。<Question> を並べる。ネイティブコントロールで JS なしに操作可能。回答はラベル付きの Markdown として表示され、「Copy answers」でコピー、「Save .md」で保存できる",
     schema: v.looseObject({
       description: v.optional(v.string()),
       title: v.optional(v.string()),
@@ -275,24 +285,52 @@ export const Ask = defineComponent(
       <div className="divide-y divide-neutral-100 dark:divide-neutral-800/70">
         {children}
       </div>
+      <div className="border-t border-neutral-200 dark:border-neutral-800">
+        <div className="flex items-center gap-1.5 px-4 pt-2.5 text-xs font-medium text-neutral-400 dark:text-neutral-500">
+          <Icon className="h-3 w-3" name="lucide:file-text" />
+          Markdown
+        </div>
+        <pre
+          className="m-0 max-h-64 overflow-auto px-4 pt-1 pb-3 font-mono text-xs leading-relaxed break-words whitespace-pre-wrap text-neutral-600 dark:text-neutral-300"
+          data-ask-output
+        >
+          (answers appear here as Markdown)
+        </pre>
+      </div>
       <div className="flex items-center justify-between gap-3 border-t border-neutral-200 bg-neutral-50 px-4 py-2 dark:border-neutral-800 dark:bg-neutral-900">
         <span className="text-xs text-neutral-400 dark:text-neutral-500">
-          Copied to your clipboard — paste it back to reply.
+          Updates live as you answer — copy or save it.
         </span>
-        <button
-          className="inline-flex shrink-0 cursor-pointer items-center rounded-md border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium text-neutral-700 transition-all hover:bg-neutral-100 active:translate-y-px dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
-          data-ask-copy
-          type="button"
-        >
-          <span className="rv-copy-idle inline-flex items-center gap-1.5">
-            <Icon className="h-3.5 w-3.5" name="lucide:clipboard-list" />
-            Copy answers
-          </span>
-          <span className="rv-copy-done hidden items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-            <Icon className="h-3.5 w-3.5" name="lucide:check" />
-            Copied
-          </span>
-        </button>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            className="inline-flex cursor-pointer items-center rounded-md border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium text-neutral-700 transition-all hover:bg-neutral-100 active:translate-y-px dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
+            data-ask-copy
+            type="button"
+          >
+            <span className="rv-copy-idle inline-flex items-center gap-1.5">
+              <Icon className="h-3.5 w-3.5" name="lucide:clipboard-list" />
+              Copy answers
+            </span>
+            <span className="rv-copy-done hidden items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+              <Icon className="h-3.5 w-3.5" name="lucide:check" />
+              Copied
+            </span>
+          </button>
+          <button
+            className="inline-flex cursor-pointer items-center rounded-md border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium text-neutral-700 transition-all hover:bg-neutral-100 active:translate-y-px dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
+            data-ask-save
+            type="button"
+          >
+            <span className="rv-copy-idle inline-flex items-center gap-1.5">
+              <Icon className="h-3.5 w-3.5" name="lucide:download" />
+              Save .md
+            </span>
+            <span className="rv-copy-done hidden items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+              <Icon className="h-3.5 w-3.5" name="lucide:check" />
+              Saved
+            </span>
+          </button>
+        </div>
       </div>
     </section>
   )

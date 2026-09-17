@@ -706,6 +706,26 @@ describe(mdxToHtml, () => {
     expect(body).toContain("Copy answers");
   });
 
+  it("renders the Markdown answer pane and Save .md button", async () => {
+    const { body } = await render(
+      '<Ask title="T"><Question name="x" type="text" /></Ask>'
+    );
+    expect(body).toContain("data-ask-output");
+    expect(body).toContain("data-ask-save");
+    expect(body).toContain("Save .md");
+  });
+
+  it("tags each question wrapper with its label and type", async () => {
+    const { body } = await render(
+      '<Ask><Question name="when" type="text" label="期限" /><Question name="beta" type="toggle" label="ベータ" /><Question name="x" type="text" /></Ask>'
+    );
+    expect(body).toContain('data-q-label="期限"');
+    expect(body).toContain('data-q-type="text"');
+    expect(body).toContain('data-q-type="toggle"');
+    // No label falls back to the answer key.
+    expect(body).toContain('data-q-label="x"');
+  });
+
   it("renders Flow as a numbered chain with locations", async () => {
     const { body } = await render(
       '<Flow title="Request path"><FlowStep name="cli()" path="src/cli.ts" lines="12-30">parse argv</FlowStep><FlowStep name="mdxToHtml()" path="src/mdx.ts">compile</FlowStep></Flow>'

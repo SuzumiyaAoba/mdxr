@@ -1,7 +1,7 @@
 import type { Preview } from "@storybook/react-vite";
 import { useEffect } from "react";
 
-import { BASE_CSS, handleDocClick } from "../src/assets.js";
+import { BASE_CSS, handleDocEvent } from "../src/assets.js";
 import { enhanceRenderedBlocks } from "./enhance.js";
 
 import "./preview.css";
@@ -12,8 +12,10 @@ if (typeof document !== "undefined") {
   const style = document.createElement("style");
   style.textContent = BASE_CSS;
   document.head.append(style);
-  // Rendered documents inline this listener via CLIENT_JS.
-  document.addEventListener("click", handleDocClick);
+  // Rendered documents inline these listeners via CLIENT_JS.
+  document.addEventListener("click", handleDocEvent);
+  document.addEventListener("input", handleDocEvent);
+  document.addEventListener("change", handleDocEvent);
 }
 
 const ThemeSync = ({ dark }: { dark: boolean }): null => {

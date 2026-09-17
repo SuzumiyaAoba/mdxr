@@ -17,10 +17,10 @@ export const Ref = defineComponent(
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="not-prose my-3 flex items-start gap-3 rounded-lg border border-neutral-200 p-3 text-inherit no-underline transition-colors hover:bg-neutral-50 dark:border-neutral-800 dark:hover:bg-neutral-900"
+      className="group not-prose my-3 flex items-start gap-3 rounded-lg border border-neutral-200 p-3 text-inherit no-underline transition-colors hover:bg-neutral-50 active:bg-neutral-100 dark:border-neutral-800 dark:hover:bg-neutral-900 dark:active:bg-neutral-800"
     >
       <Icon
-        className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400"
+        className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
         name="lucide:external-link"
       />
       <span className="min-w-0 flex-1">
@@ -50,7 +50,7 @@ const ghLink = (
 ): string => `https://github.com/${repo}/${GH_PATH[kind]}/${id}`;
 
 const CHIP_CLS =
-  "not-prose mx-0.5 inline-flex items-center gap-1.5 rounded-md border border-neutral-300 bg-neutral-100 px-1.5 py-0.5 align-baseline text-[0.85em] text-neutral-800 no-underline transition-colors hover:bg-neutral-200 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700";
+  "not-prose mx-0.5 inline-flex items-center gap-1.5 rounded-md border border-neutral-300 bg-neutral-100 px-1.5 py-0.5 align-baseline text-[0.85em] text-neutral-800 no-underline transition-all hover:bg-neutral-200 active:scale-95 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700";
 
 const refChip = (
   kind: "issue" | "pr",

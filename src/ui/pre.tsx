@@ -106,11 +106,16 @@ export const Pre = (props: DocProps): ReactElement => {
         <button
           type="button"
           data-copy={text}
-          className="rv-copy cursor-pointer opacity-60 transition-opacity hover:opacity-100"
+          className="rv-copy cursor-pointer opacity-60"
           title="Copy code"
           aria-label="Copy code"
         >
-          <Icon className="h-3.5 w-3.5" name="lucide:copy" />
+          <span className="rv-copy-idle inline-flex">
+            <Icon className="h-3.5 w-3.5" name="lucide:copy" />
+          </span>
+          <span className="rv-copy-done hidden items-center text-emerald-600 dark:text-emerald-400">
+            <Icon className="h-3.5 w-3.5" name="lucide:check" />
+          </span>
         </button>
       </figcaption>
       <pre className="m-0 overflow-x-auto bg-white p-4 text-sm dark:bg-neutral-950">

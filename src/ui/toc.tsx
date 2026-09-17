@@ -33,7 +33,7 @@ export const Toc = defineComponent(
         className="rv-toc not-prose my-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800"
       >
         <details open={!closed(open)}>
-          <summary className="flex cursor-pointer items-center gap-1.5 bg-neutral-50 px-4 py-2 text-xs font-semibold text-neutral-500 transition-colors select-none hover:bg-neutral-100 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800/70">
+          <summary className="flex cursor-pointer items-center gap-1.5 bg-neutral-50 px-4 py-2 text-xs font-semibold text-neutral-500 transition-colors select-none hover:bg-neutral-100 active:bg-neutral-200 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800/70 dark:active:bg-neutral-800">
             <Icon className="h-3.5 w-3.5" name="lucide:list-tree" />
             <span className="flex-1">{title ?? "Contents"}</span>
             <Icon

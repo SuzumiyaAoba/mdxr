@@ -77,11 +77,16 @@ export const Transcript = ({
         <button
           type="button"
           data-copy={body}
-          className="rv-copy shrink-0 cursor-pointer text-neutral-500 opacity-60 transition-opacity hover:opacity-100"
+          className="rv-copy shrink-0 cursor-pointer text-neutral-500 opacity-60"
           title="Copy transcript"
           aria-label="Copy transcript"
         >
-          <Icon className="h-3.5 w-3.5" name="lucide:copy" />
+          <span className="rv-copy-idle inline-flex">
+            <Icon className="h-3.5 w-3.5" name="lucide:copy" />
+          </span>
+          <span className="rv-copy-done hidden items-center text-emerald-400">
+            <Icon className="h-3.5 w-3.5" name="lucide:check" />
+          </span>
         </button>
       </figcaption>
       <pre className="m-0 overflow-x-auto p-4 font-mono text-sm leading-relaxed">

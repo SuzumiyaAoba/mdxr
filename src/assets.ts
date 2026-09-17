@@ -6,7 +6,50 @@ export const BASE_CSS = `
 .task-list-item { list-style: none; }
 ul.contains-task-list { padding-left: 1.25rem; }
 .task-list-item input[type='checkbox'] { margin-right: 0.4em; }
-.rv-copy.copied { opacity: 1; }
+/* --- Interaction feedback -------------------------------------------
+ * Every [data-copy] button carries an idle and a done icon
+ * (.rv-copy-idle/.rv-copy-done); the delegated click handler (CLIENT_JS,
+ * also bound in the Storybook preview) toggles .copied/.copy-failed for
+ * ~1.6s after each clipboard attempt. Success swaps the copy icon for an
+ * emerald check with a pop; failure shakes and tints red; pressing the
+ * button scales it down briefly. */
+.rv-copy {
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 0.25rem;
+  transition: opacity 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+.rv-copy:hover { opacity: 1; }
+.rv-copy:active { transform: scale(0.82); }
+.rv-copy:focus-visible {
+  outline: 2px solid rgb(14 165 233); outline-offset: 1px; opacity: 1;
+}
+.rv-copy.copied, .rv-copy.copy-failed { opacity: 1; }
+.rv-copy.copy-failed { color: rgb(220 38 38); }
+.dark .rv-copy.copy-failed { color: rgb(248 113 113); }
+.rv-copy-done { display: none; }
+.copied .rv-copy-idle { display: none; }
+.copied .rv-copy-done {
+  display: inline-flex;
+  animation: rv-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.copy-failed { animation: rv-shake 0.32s ease; }
+[data-ask-copy].copy-failed {
+  border-color: rgb(248 113 113); color: rgb(220 38 38);
+}
+.dark [data-ask-copy].copy-failed { color: rgb(248 113 113); }
+.rv-ask [data-ask-copy].copied {
+  border-color: rgb(52 211 153 / 0.6);
+}
+@keyframes rv-pop {
+  0% { transform: scale(0.3); opacity: 0; }
+  70% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes rv-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
 /* shiki dual-theme: token spans carry --shiki-* variables, not colors. */
 .shiki span {
   color: var(--shiki-light);
@@ -90,6 +133,24 @@ html { scroll-behavior: smooth; }
 .rv-details > summary::marker { content: ""; }
 .rv-chev { transition: transform 0.15s ease; }
 details[open] > summary .rv-chev { transform: rotate(90deg); }
+/* Smooth expand/collapse for the native <details> blocks (Details, Toc).
+ * Chromium animates block-size via ::details-content + interpolate-size;
+ * engines without the pseudo-element never match these rules and keep the
+ * instant toggle. */
+:root { interpolate-size: allow-keywords; }
+.rv-details::details-content,
+.rv-toc > details::details-content {
+  block-size: 0;
+  overflow-y: clip;
+  transition:
+    content-visibility 0.22s allow-discrete,
+    block-size 0.22s ease;
+}
+.rv-details[open]::details-content,
+.rv-toc > details[open]::details-content {
+  block-size: auto;
+  block-size: calc-size(auto);
+}
 /* ToC outline: numbered top-level entries, guide-lined nested lists. */
 .rv-toc-body ul { list-style: none; margin: 0; padding: 0; }
 .rv-toc-body li > p { margin: 0; }
@@ -101,6 +162,8 @@ details[open] > summary .rv-chev { transform: rotate(90deg); }
   transition: color 0.12s, background 0.12s;
 }
 .rv-toc-body a:hover { color: rgb(23 23 23); background: rgb(245 245 245); }
+.rv-toc-body a:active { background: rgb(229 229 229); }
+.dark .rv-toc-body a:active { background: rgb(64 64 64); }
 .dark .rv-toc-body a { color: rgb(163 163 163); }
 .dark .rv-toc-body a:hover { color: rgb(250 250 250); background: rgb(38 38 38); }
 .rv-toc-body > ul { counter-reset: rv-toc; }
@@ -125,6 +188,11 @@ details[open] > summary .rv-chev { transform: rotate(90deg); }
 .rv-toc-body ul ul a { font-size: 0.8125rem; padding: 0.2rem 0.45rem; }
 /* Ask: native form controls stay interactive without hydration. The real
  * inputs are visually hidden; state is styled through :checked/~ siblings. */
+.rv-choice {
+  transition: color 0.12s, background-color 0.12s, border-color 0.12s,
+    transform 0.1s ease;
+}
+.rv-choice:active { transform: scale(0.985); }
 .rv-choice:has(:checked) {
   border-color: rgb(23 23 23); background: rgb(250 250 250);
 }
@@ -152,6 +220,12 @@ details[open] > summary .rv-chev { transform: rotate(90deg); }
 .rv-choice input:checked ~ .rv-mark-box {
   background: rgb(23 23 23); color: rgb(255 255 255);
 }
+/* Checkbox glyph pops in instead of fading. */
+.rv-mark-box svg {
+  transform: scale(0.4);
+  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.rv-choice input:checked ~ .rv-mark-box svg { transform: scale(1); }
 .rv-choice input:checked ~ .rv-mark-radio::after { transform: scale(1); }
 .dark .rv-mark { border-color: rgb(82 82 82); background: rgb(23 23 23); }
 .dark .rv-mark-radio::after { background: rgb(250 250 250); }
@@ -169,16 +243,37 @@ details[open] > summary .rv-chev { transform: rotate(90deg); }
   content: ""; position: absolute; top: 0.125rem; left: 0.125rem;
   height: 1rem; width: 1rem; border-radius: 9999px;
   background: rgb(255 255 255); box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
-  transition: transform 0.15s;
+  transition: transform 0.15s, width 0.15s;
 }
 .rv-q input:checked ~ .rv-switch { background: rgb(23 23 23); }
 .rv-q input:checked ~ .rv-switch::after { transform: translateX(1rem); }
+/* Thumb stretches while the switch is held (iOS-style press feedback). */
+.rv-q:active .rv-switch::after { width: 1.25rem; }
+.rv-q:active input:checked ~ .rv-switch::after {
+  transform: translateX(0.875rem);
+}
 .dark .rv-switch { background: rgb(64 64 64); }
 .dark .rv-q input:checked ~ .rv-switch { background: rgb(245 245 245); }
 .dark .rv-q input:checked ~ .rv-switch::after { background: rgb(23 23 23); }
-/* "Copy answers" button feedback: swap the label on success. */
-.rv-ask [data-ask-copy].copied .rv-copy-idle { display: none; }
-.rv-ask [data-ask-copy].copied .rv-copy-done { display: inline-flex; }
+/* Reduced motion: every animation/transition above becomes instant. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .rv-copy,
+  .rv-chev,
+  .rv-choice,
+  .rv-mark,
+  .rv-mark-box svg,
+  .rv-switch,
+  .rv-switch::after,
+  .rv-toc-body a {
+    transition: none;
+  }
+  .rv-copy:active { transform: none; }
+  .rv-choice:active { transform: none; }
+  .copied .rv-copy-done, .copy-failed { animation: none; }
+  .rv-details::details-content,
+  .rv-toc > details::details-content { transition: none; }
+}
 `;
 
 /**
@@ -196,13 +291,43 @@ export const handleDocClick = (e: MouseEvent): void => {
   if (!(el instanceof Element)) {
     return;
   }
-  const markCopied = (b: HTMLElement): void => {
-    b.classList.add("copied");
-    setTimeout(() => {
-      b.classList.remove("copied");
-    }, 1200);
+  // Flashes a feedback state on a button: swaps to the .rv-copy-done icon /
+  // label and tints it via .copied (success) or shakes it red via
+  // .copy-failed. A repeat click restarts the pop (reflow) and the timer.
+  const flash = (
+    b: HTMLElement,
+    cls: "copied" | "copy-failed",
+    label?: string
+  ): void => {
+    const ex = b as HTMLElement & {
+      rvLabel?: null | string;
+      rvTimer?: ReturnType<typeof setTimeout>;
+    };
+    clearTimeout(ex.rvTimer);
+    if (label !== undefined) {
+      ex.rvLabel ??= b.getAttribute("aria-label");
+      b.setAttribute("aria-label", label);
+    }
+    b.classList.remove("copied", "copy-failed");
+    void b.offsetWidth;
+    b.classList.add(cls);
+    ex.rvTimer = setTimeout(() => {
+      b.classList.remove(cls);
+      if (ex.rvLabel !== undefined) {
+        if (ex.rvLabel === null) {
+          b.removeAttribute("aria-label");
+        } else {
+          b.setAttribute("aria-label", ex.rvLabel);
+        }
+        ex.rvLabel = undefined;
+      }
+    }, 1600);
   };
-  const writeClipboard = (text: string, done: () => void): void => {
+  const writeClipboard = (
+    text: string,
+    done: () => void,
+    fail: () => void
+  ): void => {
     const legacy = (): boolean => {
       const ta = document.createElement("textarea");
       ta.value = text;
@@ -225,6 +350,8 @@ export const handleDocClick = (e: MouseEvent): void => {
     if (clip === undefined) {
       if (legacy()) {
         done();
+      } else {
+        fail();
       }
       return;
     }
@@ -235,15 +362,23 @@ export const handleDocClick = (e: MouseEvent): void => {
       } catch {
         if (legacy()) {
           done();
+        } else {
+          fail();
         }
       }
     })();
   };
   const copyBtn = el.closest("[data-copy]");
   if (copyBtn instanceof HTMLElement) {
-    writeClipboard(copyBtn.dataset.copy ?? "", () => {
-      markCopied(copyBtn);
-    });
+    writeClipboard(
+      copyBtn.dataset.copy ?? "",
+      () => {
+        flash(copyBtn, "copied", "Copied");
+      },
+      () => {
+        flash(copyBtn, "copy-failed", "Copy failed");
+      }
+    );
     return;
   }
   const askBtn = el.closest("[data-ask-copy]");
@@ -290,9 +425,15 @@ export const handleDocClick = (e: MouseEvent): void => {
     const head = title === undefined || title === "" ? "" : `${title}\n\n`;
     const text =
       head + (lines.length === 0 ? "(no answers)" : lines.join("\n"));
-    writeClipboard(text, () => {
-      markCopied(askBtn);
-    });
+    writeClipboard(
+      text,
+      () => {
+        flash(askBtn, "copied");
+      },
+      () => {
+        flash(askBtn, "copy-failed");
+      }
+    );
   }
 };
 /* oxlint-enable unicorn/consistent-function-scoping */

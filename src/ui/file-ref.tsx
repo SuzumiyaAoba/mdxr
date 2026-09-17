@@ -25,11 +25,16 @@ export const FileRef = defineComponent(
       <button
         type="button"
         data-copy={path}
-        className="rv-copy -mr-0.5 cursor-pointer opacity-40 transition-opacity hover:opacity-100"
+        className="rv-copy -mr-0.5 cursor-pointer opacity-40"
         title="Copy path"
         aria-label="Copy path"
       >
-        <Icon className="h-3.5 w-3.5" name="lucide:copy" />
+        <span className="rv-copy-idle inline-flex">
+          <Icon className="h-3.5 w-3.5" name="lucide:copy" />
+        </span>
+        <span className="rv-copy-done hidden items-center text-emerald-600 dark:text-emerald-400">
+          <Icon className="h-3.5 w-3.5" name="lucide:check" />
+        </span>
       </button>
     </code>
   )

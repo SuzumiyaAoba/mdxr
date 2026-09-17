@@ -18,8 +18,8 @@ Write documents as **Markdown + a small set of JSX components** (MDX). Do NOT wr
 
 - **No JS in documents.** `import`/`export` and `{expressions}` are rejected. All attributes are strings: `<Step status="done">`, not `status={...}`.
 - Prefer plain Markdown for prose; use components only for structure.
-- If a needed component is missing, run `npx @suzumiyaaoba/rv catalog --json` to see the full catalog, then define it in the project's component file — see `references/components.md` for the extension mechanism.
-- Use `references/components.md` for the full component reference.
+- If a needed component is missing, run `npx @suzumiyaaoba/rv catalog --json` to see the full catalog, then define it in the project's component file — see `references/extending.md` for the extension mechanism.
+- For component usage, read `references/components.md` (the index), then only the `references/components/*.md` detail file(s) the document needs.
 
 ## Conventions (no JSX needed)
 

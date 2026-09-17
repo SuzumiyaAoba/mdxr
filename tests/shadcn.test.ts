@@ -33,6 +33,32 @@ describe("shadcn/ui components in documents", () => {
     expect(body).toContain("panel-a");
   });
 
+  it("renders Meter with label and value", async () => {
+    const { body } = await render(
+      '<Meter value="75"><MeterLabel>Storage</MeterLabel><MeterValue /><MeterTrack><MeterIndicator /></MeterTrack></Meter>'
+    );
+    expect(body).toContain("Storage");
+    expect(body).toContain("meter-indicator");
+  });
+
+  it("renders Frame structure", async () => {
+    const { body } = await render(
+      "<Frame><FrameHeader><FrameTitle>T</FrameTitle></FrameHeader><FramePanel>P</FramePanel><FrameFooter>F</FrameFooter></Frame>"
+    );
+    expect(body).toContain("frame-panel");
+    expect(body).toContain(">T</div>");
+    expect(body).toContain("P");
+    expect(body).toContain("F");
+  });
+
+  it("renders Fieldset with legend", async () => {
+    const { body } = await render(
+      "<Fieldset><FieldsetLegend>Contact</FieldsetLegend><Input /></Fieldset>"
+    );
+    expect(body).toContain("<fieldset");
+    expect(body).toContain("Contact");
+  });
+
   it("compiles theme tokens and shadcn utilities into the document CSS", async () => {
     const { css } = await buildCss([
       {

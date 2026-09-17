@@ -26,6 +26,8 @@ import * as drawer from "../components/ui/drawer.js";
 import * as dropdownMenu from "../components/ui/dropdown-menu.js";
 import * as empty from "../components/ui/empty.js";
 import * as field from "../components/ui/field.js";
+import * as fieldset from "../components/ui/fieldset.js";
+import * as frame from "../components/ui/frame.js";
 import * as hoverCard from "../components/ui/hover-card.js";
 import * as inputGroup from "../components/ui/input-group.js";
 import * as inputOtp from "../components/ui/input-otp.js";
@@ -37,6 +39,7 @@ import * as marker from "../components/ui/marker.js";
 import * as menubar from "../components/ui/menubar.js";
 import * as messageScroller from "../components/ui/message-scroller.js";
 import * as message from "../components/ui/message.js";
+import * as meter from "../components/ui/meter.js";
 import * as nativeSelect from "../components/ui/native-select.js";
 import * as navigationMenu from "../components/ui/navigation-menu.js";
 import * as pagination from "../components/ui/pagination.js";
@@ -92,6 +95,8 @@ const MODULES: Record<string, Record<string, unknown>> = {
   "dropdown-menu": dropdownMenu,
   empty,
   field,
+  fieldset,
+  frame,
   "hover-card": hoverCard,
   input,
   "input-group": inputGroup,
@@ -103,6 +108,7 @@ const MODULES: Record<string, Record<string, unknown>> = {
   menubar,
   message,
   "message-scroller": messageScroller,
+  meter,
   "native-select": nativeSelect,
   "navigation-menu": navigationMenu,
   pagination,

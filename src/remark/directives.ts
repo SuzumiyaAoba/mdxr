@@ -18,13 +18,17 @@ const CALLOUT_KINDS = new Set([
 ]);
 
 const CONTAINER_COMPONENTS: Record<string, string> = {
+  board: "Board",
   deps: "Deps",
+  endpoints: "Endpoints",
   files: "Files",
   finding: "Finding",
   findings: "Findings",
   flow: "Flow",
+  graph: "Graph",
   hypotheses: "Hypotheses",
   hypothesis: "Hypothesis",
+  matrix: "Matrix",
   phase: "Phase",
   plan: "Plan",
   search: "Search",
@@ -32,9 +36,11 @@ const CONTAINER_COMPONENTS: Record<string, string> = {
   steps: "Steps",
   summary: "Summary",
   terminal: "Terminal",
+  tests: "Tests",
   timeline: "Timeline",
   toc: "Toc",
   trace: "Trace",
+  waterfall: "Waterfall",
 };
 
 interface DirectiveNode extends Parent {

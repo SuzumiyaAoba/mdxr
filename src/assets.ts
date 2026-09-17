@@ -158,14 +158,18 @@ html:not(.dark) .shiki span {
 .katex-display { margin: 1.25rem 0; }
 /* Smooth anchor jumps for the ToC and other in-page links. */
 html { scroll-behavior: smooth; }
-/* Native <details> used by Toc/Details/Tree: drop the default marker, rotate
- * the chevron on open. */
+/* Native <details> used by Toc/Details/Tree/Json: drop the default marker,
+ * rotate the chevron on open. */
 .mdxr-toc > details > summary::-webkit-details-marker,
 .mdxr-details > summary::-webkit-details-marker,
-.mdxr-tree summary::-webkit-details-marker { display: none; }
+.mdxr-tree summary::-webkit-details-marker,
+.mdxr-json summary::-webkit-details-marker { display: none; }
 .mdxr-toc > details > summary::marker,
 .mdxr-details > summary::marker,
-.mdxr-tree summary::marker { content: ""; }
+.mdxr-tree summary::marker,
+.mdxr-json summary::marker { content: ""; }
+/* Json: the "N keys/items" badge only matters while the node is folded. */
+.mdxr-json details[open] > summary .mdxr-count { display: none; }
 .mdxr-chev { transition: transform 0.15s ease; }
 details[open] > summary .mdxr-chev { transform: rotate(90deg); }
 /* Smooth expand/collapse for the native <details> blocks (Details, Toc,

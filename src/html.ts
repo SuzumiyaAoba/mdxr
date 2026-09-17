@@ -39,6 +39,11 @@ export interface DocumentOptions {
   needsMermaid: boolean;
   needsKatex?: boolean;
   liveReload?: boolean;
+  /**
+   * Client bundle that `hydrateRoot`s the compiled MDX module onto
+   * `<main id="mdxr-root">`, making Base UI primitives interactive.
+   */
+  hydrateJs?: string;
 }
 
 export const htmlDocument = (o: DocumentOptions): string => `<!doctype html>
@@ -54,12 +59,13 @@ ${o.needsKatex === true ? `<link rel="stylesheet" href="${KATEX_CDN_URL}">` : ""
 </head>
 <body class="bg-white text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100">
 ${THEME_TOGGLE_HTML}
-<main class="prose prose-neutral dark:prose-invert mx-auto max-w-3xl px-6 py-10">
+<main id="mdxr-root" class="prose prose-neutral dark:prose-invert mx-auto max-w-3xl px-6 py-10">
 ${o.body}
 </main>
 <script>${CLIENT_JS}</script>
 ${o.needsMermaid ? `<script type="module">${MERMAID_JS}</script>` : ""}
 ${o.liveReload === true ? `<script>${LIVE_RELOAD_JS}</script>` : ""}
+${o.hydrateJs === undefined ? "" : `<script>${o.hydrateJs}</script>`}
 </body>
 </html>
 `;

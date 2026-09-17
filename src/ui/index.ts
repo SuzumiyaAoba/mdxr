@@ -1,6 +1,7 @@
 import type { ComponentMap } from "../define.js";
 import { Approval, Approvals } from "./approvals.js";
 import { Ask, Choice, Question } from "./ask.js";
+import { Board, BoardCard, Lane } from "./board.js";
 import { Callout } from "./callout.js";
 import { Change, Changes } from "./changes.js";
 import { Cmd } from "./cmd.js";
@@ -11,15 +12,20 @@ import { Dep, Deps } from "./deps.js";
 import { Details } from "./details.js";
 import { Due } from "./due.js";
 import { Effort } from "./effort.js";
+import { Endpoint, Endpoints } from "./endpoints.js";
 import { Figure } from "./figure.js";
 import { FileRef } from "./file-ref.js";
 import { File, Files } from "./files.js";
 import { Finding, Findings } from "./findings.js";
 import { Flow, FlowStep } from "./flow.js";
 import { Glossary, Term } from "./glossary.js";
+import { Edge, Graph, Node } from "./graph.js";
 import { Cell, Grid } from "./grid.js";
 import { Hypotheses, Hypothesis } from "./hypothesis.js";
 import { Icon } from "./icon.js";
+import { Del, Ins } from "./ins-del.js";
+import { Json } from "./json.js";
+import { Matrix } from "./matrix.js";
 import { Meta, MetaItem } from "./meta.js";
 import { Option } from "./option.js";
 import { Owner } from "./owner.js";
@@ -39,10 +45,12 @@ import { Step, Steps } from "./steps.js";
 import { Summary } from "./summary.js";
 import { SymbolRef } from "./symbol-ref.js";
 import { Terminal } from "./terminal.js";
+import { Test, Tests } from "./tests.js";
 import { Event, Timeline } from "./timeline.js";
 import { Toc } from "./toc.js";
 import { Trace, TraceFrame } from "./trace.js";
 import { Tree } from "./tree.js";
+import { Span, Waterfall } from "./waterfall.js";
 
 export { Approval, Approvals } from "./approvals.js";
 export { Ask, Choice, Question, QUESTION_TYPES } from "./ask.js";
@@ -50,21 +58,29 @@ export { Callout, CALLOUT_KINDS } from "./callout.js";
 export { Change, CHANGE_KINDS, Changes } from "./changes.js";
 export { Cmd } from "./cmd.js";
 export { Column, Columns } from "./columns.js";
+export { Board, BoardCard, Lane } from "./board.js";
 export { After, Before } from "./compare.js";
 export { Decision, DECISION_STATUSES } from "./decision.js";
 export { Dep, DEP_KINDS, Deps } from "./deps.js";
 export { Details } from "./details.js";
+export { DiffView, parseDiff } from "./diff.js";
+export type { FileDiff } from "./diff.js";
 export { Due } from "./due.js";
 export { Effort, EFFORT_SIZES } from "./effort.js";
+export { Endpoint, Endpoints, HTTP_METHODS } from "./endpoints.js";
 export { Figure } from "./figure.js";
 export { FileRef } from "./file-ref.js";
 export { File, FILE_KINDS, Files } from "./files.js";
 export { CONFIDENCES, Finding, Findings } from "./findings.js";
 export { Flow, FlowStep } from "./flow.js";
 export { Glossary, Term } from "./glossary.js";
+export { Edge, Graph, Node } from "./graph.js";
 export { Cell, Grid } from "./grid.js";
 export { Hypotheses, Hypothesis, HYPOTHESIS_STATUSES } from "./hypothesis.js";
 export { hasIcon, Icon, normalizeIconName } from "./icon.js";
+export { Del, Ins } from "./ins-del.js";
+export { Json } from "./json.js";
+export { Matrix } from "./matrix.js";
 export { Meta, MetaItem } from "./meta.js";
 export { Option, OPTION_STATUSES } from "./option.js";
 export { Owner } from "./owner.js";
@@ -83,16 +99,18 @@ export { Step, Steps } from "./steps.js";
 export { Summary } from "./summary.js";
 export { SYMBOL_KINDS, SymbolRef } from "./symbol-ref.js";
 export { TERMINAL_LANGS, Terminal } from "./terminal.js";
+export { Test, TEST_STATUSES, Tests } from "./tests.js";
 export { Event, Timeline } from "./timeline.js";
 export { Toc } from "./toc.js";
 export { FRAME_KINDS, Trace, TraceFrame } from "./trace.js";
 export { Tree } from "./tree.js";
+export { Span, Waterfall } from "./waterfall.js";
 
 /**
  * The built-in component catalog available inside mdxr documents.
  * `pre` overrides fenced code blocks; the rest are usable as MDX JSX elements.
- * shadcn/ui (Base UI) primitives are included — interactive parts render
- * their initial state since documents have no client-side hydration.
+ * shadcn/ui (Base UI) primitives are included — rendered documents carry a
+ * hydration bundle, so interactive parts work in the browser.
  * `Toc` and `CodeFile` are remark-level features (injected/expanded before
  * render); `Toc` still needs this entry so MDX accepts the element.
  */
@@ -102,6 +120,8 @@ export const builtinComponents: ComponentMap = {
   Approvals,
   Ask,
   Before,
+  Board,
+  BoardCard,
   Callout,
   Cell,
   Change,
@@ -112,11 +132,15 @@ export const builtinComponents: ComponentMap = {
   Columns,
   Commit,
   Decision,
+  Del,
   Dep,
   Deps,
   Details,
   Due,
+  Edge,
   Effort,
+  Endpoint,
+  Endpoints,
   Event,
   Figure,
   File,
@@ -127,13 +151,19 @@ export const builtinComponents: ComponentMap = {
   Flow,
   FlowStep,
   Glossary,
+  Graph,
   Grid,
   Hypotheses,
   Hypothesis,
   Icon,
+  Ins,
   Issue,
+  Json,
+  Lane,
+  Matrix,
   Meta,
   MetaItem,
+  Node,
   Option,
   Owner,
   PR,
@@ -149,6 +179,7 @@ export const builtinComponents: ComponentMap = {
   Risk,
   Search,
   Searches,
+  Span,
   Stat,
   Stats,
   StatusBadge,
@@ -158,11 +189,14 @@ export const builtinComponents: ComponentMap = {
   SymbolRef,
   Term,
   Terminal,
+  Test,
+  Tests,
   Timeline,
   Toc,
   Trace,
   TraceFrame,
   Tree,
+  Waterfall,
   pre: Pre,
   ...shadcnComponents,
 };

@@ -1,10 +1,12 @@
+import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
-import { evaluate } from "@mdx-js/mdx";
+import { compile } from "@mdx-js/mdx";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import * as runtime from "react/jsx-runtime";
 import rehypeKatex from "rehype-katex";
 import remarkDirective from "remark-directive";
 import remarkFrontmatter from "remark-frontmatter";
@@ -13,22 +15,51 @@ import remarkMath from "remark-math";
 import { VFile } from "vfile";
 import { matter } from "vfile-matter";
 
-import type { ComponentMap } from "./define.js";
+import type { AnyComponent, ComponentMap } from "./define.js";
 import { DocContext } from "./doc-context.js";
 import { editorUrl } from "./editor.js";
 import { isRecord } from "./guards.js";
+import { cacheDir } from "./paths.js";
 import { rehypeShiki } from "./rehype/shiki.js";
 import { remarkMdxrAlerts } from "./remark/alerts.js";
 import { remarkCodeFile } from "./remark/code-file.js";
 import { remarkCodeMeta } from "./remark/code-meta.js";
 import { remarkMdxrDirectives } from "./remark/directives.js";
+import { remarkFilePaths } from "./remark/file-paths.js";
 import { remarkMdxrHeadings } from "./remark/headings.js";
 import { remarkNoJs } from "./remark/no-js.js";
+import { takeUsedIcons } from "./ui/icon.js";
 
 export interface MdxResult {
   body: string;
   frontmatter: Record<string, unknown>;
+  /**
+   * Compiled MDX module source (ESM, `react/jsx-runtime` imports). The same
+   * module is rendered here and re-bundled into the document's hydration
+   * script, so client and server evaluate identical code.
+   */
+  code: string;
+  /**
+   * Every `fileLink(rel, line)` call made during SSR, keyed `rel\0line`. The
+   * hydration bundle replays these so components see identical link results
+   * (no `existsSync` in the browser).
+   */
+  fileLinks: Record<string, string>;
+  /**
+   * Iconify names (`prefix:name`) resolved while rendering — the hydration
+   * bundle registers exactly this subset instead of the full icon sets.
+   */
+  usedIcons: string[];
+  /**
+   * Catalog keys the compiled document references — the hydrate import list.
+   * Extracted from the emitted module rather than observed at render: the
+   * module spreads `props.components`, so proxy-based tracking would record
+   * every catalog key.
+   */
+  usedComponents: string[];
 }
+
+const isComponent = (v: unknown): v is AnyComponent => typeof v === "function";
 
 const levenshtein = (a: string, b: string): number => {
   const dp = Array.from({ length: a.length + 1 }, (_, i) => [
@@ -76,6 +107,58 @@ const enhanceRenderError = (
   );
 };
 
+/**
+ * Import a compiled MDX module. Written into this package's cache dir so its
+ * `react/jsx-runtime` import resolves to our copy — the same instance the
+ * hydration bundle pins via its resolve plugin.
+ */
+const importCompiled = async (
+  code: string
+): Promise<Record<string, unknown>> => {
+  await mkdir(cacheDir, { recursive: true });
+  const hash = createHash("sha256").update(code).digest("hex").slice(0, 12);
+  const out = path.join(cacheDir, `doc-${hash}.mjs`);
+  if (!existsSync(out)) {
+    await writeFile(out, code);
+  }
+  const raw: unknown = await import(pathToFileURL(out).href);
+  return isRecord(raw) ? raw : {};
+};
+
+/**
+ * Which catalog entries the document references is visible in the compiled
+ * module itself: JSX identifiers become `_missingMdxReference("Name", …)`
+ * checks, markdown element overrides read `_components.name`, and a `wrapper`
+ * entry is picked straight off `props.components`. (Spreading `components`
+ * into `_components` makes runtime tracking see every key — hence static
+ * extraction here instead.)
+ */
+const extractUsedComponents = (
+  code: string,
+  components: ComponentMap
+): string[] => {
+  const catalogKeys = new Set(Object.keys(components));
+  const used = new Set<string>();
+  for (const m of code.matchAll(/_missingMdxReference\("(?<name>[^"]+)"/gu)) {
+    const name = m.groups?.name;
+    if (name !== undefined && catalogKeys.has(name)) {
+      used.add(name);
+    }
+  }
+  for (const m of code.matchAll(
+    /_components\.(?<dot>\w+)|_components\["(?<bracket>[^"]+)"\]/gu
+  )) {
+    const name = m.groups?.dot ?? m.groups?.bracket;
+    if (name !== undefined && catalogKeys.has(name)) {
+      used.add(name);
+    }
+  }
+  if (catalogKeys.has("wrapper")) {
+    used.add("wrapper");
+  }
+  return [...used];
+};
+
 export const mdxToHtml = async (
   source: string,
   components: ComponentMap,
@@ -95,13 +178,23 @@ export const mdxToHtml = async (
       ? frontmatter.editor
       : opts.editor;
   const dir = file.dirname ?? ".";
+  // Calls are recorded so the hydration bundle can replay identical results —
+  // the client has no filesystem, so a missing map entry means "no link".
+  const fileLinks = new Map<string, string>();
   const fileLink = (rel: string, line?: string): string | undefined => {
     const abs = path.resolve(dir, rel);
-    return existsSync(abs) ? editorUrl(editor, abs, line) : undefined;
+    const url = existsSync(abs) ? editorUrl(editor, abs, line) : undefined;
+    if (url !== undefined) {
+      // NUL separator — `rel` may legitimately end in digits, and the client
+      // lookup in hydrate.ts uses the same key shape.
+      fileLinks.set(`${rel}\0${line ?? ""}`, url);
+    }
+    return url;
   };
 
-  const mod = await evaluate(file, {
-    ...runtime,
+  // Compile once: the emitted module is imported for SSR *and* inlined into
+  // the hydration bundle, so both sides run byte-identical document code.
+  const compiled = await compile(file, {
     baseUrl: import.meta.url,
     format: "mdx",
     rehypePlugins: [rehypeKatex, rehypeShiki],
@@ -116,20 +209,38 @@ export const mdxToHtml = async (
       remarkMdxrHeadings,
       remarkCodeFile,
       remarkCodeMeta,
+      remarkFilePaths,
     ],
   });
+  const code = String(compiled);
+  const mod = await importCompiled(code);
 
+  const used = extractUsedComponents(code, components);
+
+  const docComponent = mod.default;
+  if (!isComponent(docComponent)) {
+    throw new Error("Compiled document has no default export component.");
+  }
+
+  takeUsedIcons();
   let body: string;
   try {
     body = renderToStaticMarkup(
       createElement(
         DocContext.Provider,
         { value: { fileLink } },
-        createElement(mod.default, { components })
+        createElement(docComponent, { components })
       )
     );
   } catch (error) {
     throw enhanceRenderError(error, components);
   }
-  return { body, frontmatter };
+  return {
+    body,
+    code,
+    fileLinks: Object.fromEntries(fileLinks),
+    frontmatter,
+    usedComponents: used,
+    usedIcons: takeUsedIcons(),
+  };
 };

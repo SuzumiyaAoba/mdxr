@@ -114,14 +114,31 @@ export const CONVENTIONS = [
   },
   { result: "Files container (related files)", syntax: ":::files" },
   { result: "Deps container (dependency edges)", syntax: ":::deps" },
+  { result: "Tests container (test report)", syntax: ":::tests" },
+  { result: "Endpoints container (API routes)", syntax: ":::endpoints" },
+  { result: "Board container (kanban)", syntax: ":::board" },
+  {
+    result: "Graph container (static node/edge SVG, dagre layout)",
+    syntax: ':::graph{title="..." direction="right"}',
+  },
+  { result: "Waterfall container (timing bars)", syntax: ":::waterfall" },
+  { result: "Matrix container (comparison grid)", syntax: ":::matrix" },
   { result: "Timeline", syntax: ':::timeline{title="..."}' },
   { result: "table of contents (auto from headings)", syntax: ":::toc" },
   { result: "Callout (GitHub alert)", syntax: "> [!NOTE] / [!WARNING] / ..." },
   { result: "diagram (mermaid via CDN)", syntax: "```mermaid fenced block" },
+  {
+    result: "unified-diff cards (per-file headers, hunk line numbers)",
+    syntax: "```diff or ```patch fenced block",
+  },
   { result: "math (KaTeX via CDN)", syntax: "$…$ inline / $$…$$ block" },
   {
     result: "code block (syntax-highlighted) with filename header",
     syntax: '```lang title="file.ts"',
+  },
+  {
+    result: "FileRef chip (editor link when the file exists)",
+    syntax: "`src/x.ts` inline code naming a real file",
   },
   {
     result: "code line highlights / line numbers",

@@ -1,5 +1,9 @@
 // Public entry: `mdxr/components`
 // Re-export the built-in catalog so custom components can compose them.
+// `export *` keeps the surface complete — the hydration bundle never loads
+// this barrel (it resolves each used name straight to its leaf module).
+export * from "./ui/index.js";
+export { DocContext } from "./doc-context.js";
 export {
   Approval,
   Approvals,
@@ -97,6 +101,8 @@ export * from "./components/ui/drawer.js";
 export * from "./components/ui/dropdown-menu.js";
 export * from "./components/ui/empty.js";
 export * from "./components/ui/field.js";
+export * from "./components/ui/fieldset.js";
+export * from "./components/ui/frame.js";
 export * from "./components/ui/hover-card.js";
 export * from "./components/ui/input.js";
 export * from "./components/ui/input-group.js";
@@ -108,6 +114,7 @@ export * from "./components/ui/marker.js";
 export * from "./components/ui/menubar.js";
 export * from "./components/ui/message.js";
 export * from "./components/ui/message-scroller.js";
+export * from "./components/ui/meter.js";
 export * from "./components/ui/native-select.js";
 export * from "./components/ui/navigation-menu.js";
 export * from "./components/ui/pagination.js";

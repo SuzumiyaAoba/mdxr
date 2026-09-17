@@ -1,0 +1,195 @@
+import type { ReactElement } from "react";
+import * as v from "valibot";
+
+import { defineComponent, textOf } from "../define.js";
+import { isRecord, nonEmpty } from "../guards.js";
+import { Icon } from "./icon.js";
+
+/**
+ * Collapsible JSON tree — objects/arrays fold via nested native <details>
+ * (no client JS). The document supplies JSON as a `value` attribute or as a
+ * fenced ```json block child; the fence's raw text is what gets parsed.
+ */
+
+const MAX_DEPTH = 32;
+const MAX_STRING = 160;
+
+const closed = (x: unknown): boolean => x === false || x === "false";
+
+const Leaf = ({ value }: { value: unknown }): ReactElement => {
+  if (value === null) {
+    return (
+      <span className="text-neutral-400 italic dark:text-neutral-500">
+        null
+      </span>
+    );
+  }
+  if (typeof value === "string") {
+    const s =
+      value.length > MAX_STRING ? `${value.slice(0, MAX_STRING)}…` : value;
+    return (
+      <span className="break-all text-emerald-700 dark:text-emerald-400">
+        {JSON.stringify(s)}
+      </span>
+    );
+  }
+  if (typeof value === "number") {
+    return (
+      <span className="text-sky-700 tabular-nums dark:text-sky-400">
+        {String(value)}
+      </span>
+    );
+  }
+  if (typeof value === "boolean") {
+    return (
+      <span className="text-violet-700 dark:text-violet-400">
+        {String(value)}
+      </span>
+    );
+  }
+  return <span>{JSON.stringify(value)}</span>;
+};
+
+const Key = ({ name }: { name: number | string }): ReactElement => (
+  <>
+    <span className="text-sky-700 dark:text-sky-300">
+      {typeof name === "string" ? JSON.stringify(name) : name}
+    </span>
+    <span className="text-neutral-400 dark:text-neutral-500">:</span>
+  </>
+);
+
+const NodeView = ({
+  depth,
+  name,
+  openAll,
+  value,
+}: {
+  depth: number;
+  name?: number | string;
+  openAll: boolean;
+  value: unknown;
+}): ReactElement => {
+  const keyEl =
+    name === undefined ? null : (
+      <span className="inline-flex shrink-0 items-baseline gap-1">
+        <Key name={name} />
+      </span>
+    );
+  if (depth > MAX_DEPTH) {
+    return (
+      <div className="flex items-baseline gap-1.5 py-px">
+        {keyEl}
+        <span className="text-neutral-400">…</span>
+      </div>
+    );
+  }
+  const isArr = Array.isArray(value);
+  if (!isArr && !isRecord(value)) {
+    return (
+      <div className="flex items-baseline gap-1.5 py-px">
+        {keyEl}
+        <Leaf value={value} />
+      </div>
+    );
+  }
+  const entries: [number | string, unknown][] = isArr
+    ? value.map((item, i) => [i, item])
+    : Object.entries(value);
+  const openB = isArr ? "[" : "{";
+  const closeB = isArr ? "]" : "}";
+  if (entries.length === 0) {
+    return (
+      <div className="flex items-baseline gap-1.5 py-px">
+        {keyEl}
+        <span className="text-neutral-400 dark:text-neutral-500">
+          {openB}
+          {closeB}
+        </span>
+      </div>
+    );
+  }
+  return (
+    <details className="group" open={openAll}>
+      <summary className="flex cursor-pointer list-none items-baseline gap-1.5 py-px select-none">
+        <Icon
+          className="mdxr-chev h-3 w-3 shrink-0 self-center text-neutral-400 dark:text-neutral-500"
+          name="lucide:chevron-right"
+        />
+        {keyEl}
+        <span className="text-neutral-400 dark:text-neutral-500">{openB}</span>
+        <span className="mdxr-count rounded bg-neutral-200/70 px-1 text-[0.65rem] text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+          {entries.length} {isArr ? "items" : "keys"}
+        </span>
+      </summary>
+      <div className="ml-[1.05rem] border-l border-neutral-200 pl-2.5 dark:border-neutral-800">
+        {entries.map(([k, item]) => (
+          <NodeView
+            depth={depth + 1}
+            key={k}
+            name={k}
+            openAll={openAll}
+            value={item}
+          />
+        ))}
+      </div>
+      <div className="ml-[1.05rem] text-neutral-400 dark:text-neutral-500">
+        {closeB}
+      </div>
+    </details>
+  );
+};
+
+export const Json = defineComponent(
+  {
+    description:
+      '折りたたみ可能な JSON ツリー (ネストした <details>、JS 不要)。value 属性に JSON 文字列、または子に ```json フェンス。open="false" で全階層を折り畳み。title でキャプション+コピー',
+    schema: v.looseObject({
+      open: v.optional(v.union([v.boolean(), v.string()])),
+      title: v.optional(v.string()),
+      value: v.optional(v.string()),
+    }),
+  },
+  ({ title, open, value, children }) => {
+    const text = nonEmpty(value) ? value : textOf(children).trim();
+    if (!nonEmpty(text)) {
+      throw new Error(
+        "<Json> requires JSON text via the `value` attribute or a fenced block child"
+      );
+    }
+    let data: unknown;
+    try {
+      data = JSON.parse(text);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      throw new Error(`<Json> invalid JSON: ${msg}`, { cause: error });
+    }
+    return (
+      <figure className="mdxr-json not-prose my-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
+        {nonEmpty(title) ? (
+          <figcaption className="flex items-center gap-2 border-b border-neutral-200 bg-neutral-50 px-4 py-2 text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+            <Icon className="h-3.5 w-3.5" name="lucide:braces" />
+            <span className="min-w-0 flex-1 truncate font-medium">{title}</span>
+            <button
+              aria-label="Copy JSON"
+              className="mdxr-copy cursor-pointer opacity-60"
+              data-copy={text}
+              title="Copy JSON"
+              type="button"
+            >
+              <span className="mdxr-copy-idle inline-flex">
+                <Icon className="h-3.5 w-3.5" name="lucide:copy" />
+              </span>
+              <span className="mdxr-copy-done hidden items-center text-emerald-600 dark:text-emerald-400">
+                <Icon className="h-3.5 w-3.5" name="lucide:check" />
+              </span>
+            </button>
+          </figcaption>
+        ) : null}
+        <div className="overflow-x-auto bg-neutral-50 px-4 py-3 font-mono text-[0.8125rem] leading-relaxed dark:bg-neutral-900/60">
+          <NodeView depth={0} openAll={!closed(open)} value={data} />
+        </div>
+      </figure>
+    );
+  }
+);

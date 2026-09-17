@@ -38,10 +38,14 @@ cli
     "Output path (default: <file>.html; stdout for stdin input or '-')"
   )
   .option("--format <format>", "Error output: text | json")
+  .option(
+    "--no-hydrate",
+    "Emit static HTML without the client hydration bundle"
+  )
   .action(
     async (
       file: string | undefined,
-      opts: { out?: string; format?: string }
+      opts: { out?: string; format?: string; hydrate?: boolean }
     ) => {
       const json = opts.format === "json";
       try {
@@ -56,8 +60,9 @@ cli
           ? await render(await readStdin(), {
               dir: process.cwd(),
               filePath: "<stdin>",
+              hydrate: opts.hydrate,
             })
-          : await renderFile(file);
+          : await renderFile(file, { hydrate: opts.hydrate });
 
         const out =
           opts.out === "-"

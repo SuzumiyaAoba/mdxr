@@ -138,7 +138,7 @@ const MODULES: Record<string, Record<string, unknown>> = {
 /**
  * Wrap a shadcn/ui (Base UI) component for the document catalog. Props stay
  * loose — MDX attributes arrive as strings — and each entry gets a catalog
- * description noting that interactive parts render only their initial state.
+ * description noting that interactive parts come alive via hydration.
  */
 const wrap = (
   moduleName: string,
@@ -147,7 +147,7 @@ const wrap = (
 ): AnyComponent =>
   defineComponent(
     {
-      description: `shadcn/ui ${exportName} (${moduleName}) — Base UI; static documents render the initial state.`,
+      description: `shadcn/ui ${exportName} (${moduleName}) — Base UI; interactive after hydration.`,
       schema: v.looseObject({}),
     },
     (props) => <Comp {...props} />
@@ -165,5 +165,19 @@ export const shadcnComponents: ComponentMap = Object.fromEntries(
         ? [[name, wrap(moduleName, name, comp)]]
         : []
     )
+  )
+);
+
+/**
+ * shadcn export name → module specifier relative to this directory
+ * (`../components/ui/<name>.js`). The hydration bundle resolves each used
+ * component straight to its leaf module — the barrel would defeat
+ * tree-shaking.
+ */
+export const shadcnModules: Record<string, string> = Object.fromEntries(
+  Object.entries(MODULES).flatMap(([moduleName, mod]) =>
+    Object.keys(mod)
+      .filter((name) => /^[A-Z]/u.test(name) && isComponent(mod[name]))
+      .map((name) => [name, `../components/ui/${moduleName}.js`])
   )
 );

@@ -545,6 +545,41 @@ describe(mdxToHtml, () => {
     expect(body).toContain("nope.ts");
   });
 
+  it("turns inline-code file paths into FileRef links", async () => {
+    const { body } = await renderAt(
+      "open `../fixtures/sample.ts` but not `sample.ts`",
+      fixtureDoc
+    );
+    expect(body).toContain("vscode://file/");
+    expect(body).toContain("../fixtures/sample.ts");
+    // A bare filename stays plain inline code.
+    expect(body).toContain("<code>sample.ts</code>");
+  });
+
+  it("turns `path:lines` inline code into a ranged FileRef", async () => {
+    const { body } = await renderAt("`../fixtures/sample.ts:2-3`", fixtureDoc);
+    expect(body).toMatch(/vscode:\/\/file\/[^"]*sample\.ts:2/iu);
+    expect(body).toContain(":2-3</span>");
+  });
+
+  it("leaves non-existent inline-code paths as plain code", async () => {
+    const { body } = await renderAt(
+      "`no/such.ts` and `https://x.test/a`",
+      fixtureDoc
+    );
+    expect(body).toContain("<code>no/such.ts</code>");
+    expect(body).not.toContain("vscode://");
+  });
+
+  it("does not convert inline-code paths inside links", async () => {
+    const { body } = await renderAt(
+      "[`../fixtures/sample.ts`](https://x.test)",
+      fixtureDoc
+    );
+    expect(body).not.toContain("vscode://");
+    expect(body).toContain("<code>../fixtures/sample.ts</code>");
+  });
+
   it("renders Figure with caption", async () => {
     const { body } = await render(
       '<Figure src="a.png" alt="diagram" caption="Fig 1" />'
@@ -856,5 +891,204 @@ describe(mdxToHtml, () => {
     expect(body).toContain("Answer");
     expect(body).toContain("The entry point is src/cli.ts.");
     expect(body).toContain("yes");
+  });
+
+  it("renders a ```diff fence as structured per-file cards", async () => {
+    const { body } = await render(
+      "```diff\ndiff --git a/src/a.ts b/src/a.ts\nindex 111..222 100644\n--- a/src/a.ts\n+++ b/src/a.ts\n@@ -1,2 +1,2 @@\n-old\n+new\n context\n```"
+    );
+    for (const s of [
+      "src/a.ts",
+      "+1",
+      "−1",
+      "@@ -1,2 +1,2 @@",
+      "old",
+      "new",
+      "index 111..222 100644",
+    ]) {
+      expect(body).toContain(s);
+    }
+  });
+
+  it("renders a ```patch fence the same way", async () => {
+    const { body } = await render(
+      "```patch\n--- a/x.ts\n+++ b/x.ts\n@@ -1 +1 @@\n-a\n+b\n```"
+    );
+    expect(body).toContain("x.ts");
+    expect(body).toContain("+1");
+  });
+
+  it("marks new and deleted files in diffs", async () => {
+    const { body } = await render(
+      "```diff\n--- /dev/null\n+++ b/added.ts\n@@ -0,0 +1 @@\n+hi\n```\n\n```diff\n--- a/gone.ts\n+++ /dev/null\n@@ -1 +0,0 @@\n-bye\n```"
+    );
+    expect(body).toContain("new file");
+    expect(body).toContain("deleted");
+  });
+
+  it("renders bare +/- streams without headers", async () => {
+    const { body } = await render("```diff\n+added line\n-removed line\n```");
+    expect(body).toContain("added line");
+    expect(body).toContain("removed line");
+    expect(body).toContain("+1");
+    expect(body).toContain("−1");
+  });
+
+  it("renders a Graph with svg edges and node cards", async () => {
+    const { body } = await render(
+      '<Graph title="Pipeline"><Node id="a" label="parse" /><Node id="b" label="render" /><Edge from="a" to="b" label="html" /></Graph>'
+    );
+    expect(body).toContain("<svg");
+    expect(body).toContain("Pipeline");
+    expect(body).toContain("parse");
+    expect(body).toContain("render");
+    expect(body).toContain("html");
+  });
+
+  it("accepts :::graph directives", async () => {
+    const { body } = await render(
+      ':::graph\n<Node id="a" />\n<Node id="b" />\n<Edge from="a" to="b" />\n:::'
+    );
+    expect(body).toContain("<svg");
+  });
+
+  it("renders Tests with per-status counts", async () => {
+    const { body } = await render(
+      '<Tests title="unit" tool="vitest"><Test name="parses" status="pass" duration="12ms" /><Test name="renders" status="fail" duration="800ms">boom</Test><Test name="skips" status="skip" /></Tests>'
+    );
+    for (const s of [
+      "parses",
+      "1 passed",
+      "1 failed",
+      "1 skipped",
+      "vitest",
+      "boom",
+    ]) {
+      expect(body).toContain(s);
+    }
+  });
+
+  it("accepts :::tests directives", async () => {
+    const { body } = await render(
+      ':::tests\n<Test name="t" status="pass" />\n:::'
+    );
+    expect(body).toContain("1 passed");
+  });
+
+  it("renders Endpoints with method chips and a base prefix", async () => {
+    const { body } = await render(
+      '<Endpoints base="/api/v1" title="API"><Endpoint method="POST" path="/users" auth="admin">create</Endpoint><Endpoint method="get" path="/users" /></Endpoints>'
+    );
+    for (const s of ["POST", "GET", "/api/v1", "/users", "admin", "create"]) {
+      expect(body).toContain(s);
+    }
+  });
+
+  it("renders Json as a collapsible tree", async () => {
+    const { body } = await render(
+      '<Json title="cfg" value=\'{"a":1,"b":[true,null],"c":{"d":"x"}}\' />'
+    );
+    for (const s of [
+      "mdxr-json",
+      "<details",
+      'open=""',
+      "&quot;a&quot;",
+      "&quot;d&quot;",
+      "true",
+      "null",
+    ]) {
+      expect(body).toContain(s);
+    }
+  });
+
+  it("renders Json from a fenced child and honors open", async () => {
+    const { body } = await render(
+      '<Json open="false">\n\n```json\n{"k": [1, 2]}\n```\n\n</Json>'
+    );
+    expect(body).toContain("mdxr-json");
+    expect(body).toContain("&quot;k&quot;");
+    expect(body).not.toContain('open=""');
+  });
+
+  it("rejects invalid JSON in Json", async () => {
+    await expect(render('<Json value="{oops" />')).rejects.toThrow(
+      /invalid JSON/iu
+    );
+  });
+
+  it("renders a Waterfall with positioned span bars", async () => {
+    const { body } = await render(
+      '<Waterfall title="request" unit="ms"><Span name="db" start="0" duration="120ms" /><Span name="api" start="120" duration="80" /></Waterfall>'
+    );
+    expect(body).toContain("request");
+    expect(body).toContain("db");
+    expect(body).toContain("api");
+    expect(body).toContain("left:60%");
+    expect(body).toContain("200");
+  });
+
+  it("accepts :::waterfall directives", async () => {
+    const { body } = await render(
+      ':::waterfall\n<Span name="s" duration="50ms" />\n:::'
+    );
+    expect(body).toContain("s");
+    expect(body).toContain("50ms");
+  });
+
+  it("renders a Board with lanes, counts, and card chips", async () => {
+    const { body } = await render(
+      '<Board><Lane title="Todo" status="todo"><BoardCard title="Write docs" priority="p1" owner="aoba" /></Lane><Lane title="Done" status="done"><BoardCard title="Ship" status="done" /></Lane></Board>'
+    );
+    for (const s of [
+      "Todo",
+      "Done",
+      "Write docs",
+      "Ship",
+      "aoba",
+      ">1</span>",
+    ]) {
+      expect(body).toContain(s);
+    }
+  });
+
+  it("accepts :::board directives", async () => {
+    const { body } = await render(
+      ':::board\n<Lane title="T"><BoardCard title="c" /></Lane>\n:::'
+    );
+    expect(body).toContain("T");
+    expect(body).toContain("c");
+  });
+
+  it("renders a Matrix with column headers and icon cells", async () => {
+    const { body } = await render(
+      '<Matrix title="Compare" cols="mdx, mdxr">\n- syntax | yes | no\n- charts | ~ | yes\n</Matrix>'
+    );
+    for (const s of [
+      "Compare",
+      "mdx",
+      "mdxr",
+      "syntax",
+      "charts",
+      'aria-label="yes"',
+      'aria-label="no"',
+      'aria-label="partial"',
+    ]) {
+      expect(body).toContain(s);
+    }
+  });
+
+  it("accepts :::matrix directives", async () => {
+    const { body } = await render(':::matrix{cols="a,b"}\n- f | yes | no\n:::');
+    expect(body).toContain('aria-label="yes"');
+  });
+
+  it("renders Ins and Del as semantic inline edits", async () => {
+    const { body } = await render(
+      "change <Del>old</Del> to <Ins>new</Ins> here"
+    );
+    expect(body).toContain("<del");
+    expect(body).toContain("<ins");
+    expect(body).toContain("old");
+    expect(body).toContain("new");
   });
 });

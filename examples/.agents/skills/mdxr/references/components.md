@@ -4,7 +4,7 @@ MDX attributes are always strings (`status="done"`). `children` is Markdown.
 
 This file is an index: each group lists what its components do and links to a detail file with full signatures and examples. Read only the detail file(s) the document needs. `mdxr catalog --json` is the machine-readable source of truth for component names and attributes.
 
-**File links.** Components carrying `path` (`FileRef`, `SymbolRef`, `File`, `TraceFrame`, `FlowStep`, `Change`) and fenced-code filename headers become editor links — `vscode://file/…` by default — when the file exists on disk (paths resolve relative to the document). Frontmatter `editor:` or `editor` in `mdxr.config.ts` picks another editor: `cursor`, `zed`, `vscode-insiders`, `windsurf`, `sublime`, `textmate`, `idea`, a custom `{path}`/`{line}` URL template, or `none` to disable. `href="…"` on a component overrides the URL entirely.
+**File links.** Components carrying `path` (`FileRef`, `SymbolRef`, `File`, `TraceFrame`, `FlowStep`, `Change`) and fenced-code filename headers become editor links — `vscode://file/…` by default — when the file exists on disk (paths resolve relative to the document). Frontmatter `editor:` or `editor` in `mdxr.config.ts` picks another editor: `cursor`, `zed`, `vscode-insiders`, `windsurf`, `sublime`, `textmate`, `idea`, a custom `{path}`/`{line}` URL template, or `none` to disable. `href="…"` on a component overrides the URL entirely. Inline code works too: `` `src/mdx.ts` `` (optional `:40-52` lines suffix) auto-converts to `<FileRef>` when it resolves to a real file — a bare `mdx.ts` without a `/` stays plain code.
 
 ## Document scaffolding — details: [components/document.md](components/document.md)
 
@@ -36,6 +36,8 @@ This file is an index: each group lists what its components do and links to a de
 | `<Stats>` / `<Stat>` | Metric card grid; `delta` colored by sign |
 | `<Priority>` `<Effort>` `<Due>` `<Owner>` | Inline chips (priority, T-shirt effort, deadline, person) |
 | `<Reqs>` / `<Req>` | Requirement / acceptance-criteria rows |
+| `<Board>` / `<Lane>` / `<BoardCard>` | Kanban board — lanes with status dots and card counts — `:::board` |
+| `<Matrix>` | Comparison grid — nested list rows, `yes`/`no`/`partial`/`✓`/`✗`/`△` cells render as icons — `:::matrix` |
 | `<Summary>` | Progress bar |
 | `<StatusBadge>` | Standalone status pill |
 
@@ -57,6 +59,18 @@ This file is an index: each group lists what its components do and links to a de
 | `<SymbolRef>` | Inline symbol chip (fn/type/class/…) |
 | `<CodeFile>` | Embeds a real file from disk as a code block |
 | `<Props>` / `<Prop>` | API/props table for a component or function |
+
+## Output artifacts — details: [components/output.md](components/output.md)
+
+| Component | What it is |
+| --- | --- |
+| ` ```diff ` / ` ```patch ` fence | Structured per-file diff cards — editor links, `+N −M` stats, hunk line numbers |
+| `<Graph>` / `<Node>` / `<Edge>` | Static node/edge diagram — dagre layout at render time, SVG edges, editor-linked nodes — `:::graph` |
+| `<Tests>` / `<Test>` | Test-run report — status pills, auto counts and duration sum — `:::tests` |
+| `<Endpoints>` / `<Endpoint>` | API route list — method chips, `base` prefix, `auth`/`deprecated` — `:::endpoints` |
+| `<Json>` | Collapsible JSON tree on nested `<details>` — `value` attr or fenced child |
+| `<Waterfall>` / `<Span>` | Timing waterfall (OTel-trace-style bars) — `:::waterfall` |
+| `<Ins>` / `<Del>` | Inline word-level edits — semantic `<ins>`/`<del>` |
 
 ## Layout — details: [components/layout.md](components/layout.md)
 

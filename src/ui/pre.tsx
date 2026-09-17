@@ -6,6 +6,7 @@ import { textOf } from "../define.js";
 import { DocContext } from "../doc-context.js";
 import { firstLine } from "../editor.js";
 import { isRecord, nonEmpty } from "../guards.js";
+import { DiffView } from "./diff.js";
 import { fileIcon } from "./file-icon.js";
 import { linkTarget } from "./file-link.js";
 import { Icon } from "./icon.js";
@@ -111,7 +112,8 @@ const terminalView = (
 /**
  * Fences that render as something other than a code block: ```mermaid becomes
  * a diagram (mermaid loads from CDN only when present), console/terminal
- * sessions become transcripts. Returns undefined for ordinary code fences.
+ * sessions become transcripts, ```diff/```patch become structured per-file
+ * diff cards. Returns undefined for ordinary code fences.
  */
 const specialView = (
   lang: string | undefined,
@@ -125,6 +127,9 @@ const specialView = (
         {text}
       </pre>
     );
+  }
+  if (lang === "diff" || lang === "patch") {
+    return <DiffView filename={filename} text={text} />;
   }
   return terminalView(lang, meta, text, filename);
 };

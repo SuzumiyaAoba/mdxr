@@ -95,6 +95,37 @@ Inline chips: priority pill, T-shirt effort estimate (children = e.g. `3d`), dea
 
 Requirement / acceptance-criteria rows: `id` renders a mono chip, optional `status` (todo|doing|done|blocked) a badge; children are the requirement text.
 
+### `<Board title>` / `<Lane title status>` / `<BoardCard title>` / `:::board`
+
+Kanban board — `Lane`s lay out side by side (horizontal scroll on narrow viewports); the header shows a status dot plus a card-count badge. `BoardCard` requires `title`; optional `status` icon plus the same inline chips as `Step` (`priority`, `effort`, `owner`, `due`); children are a muted description.
+
+```mdx
+<Board title="Sprint 12">
+  <Lane title="Todo" status="todo">
+    <BoardCard title="Write migration guide" priority="p1" owner="alice" />
+  </Lane>
+  <Lane title="In progress" status="doing">
+    <BoardCard title="Graph component" status="doing" due="2026-09-20">
+      dagre layout + svg edges
+    </BoardCard>
+  </Lane>
+  <Lane title="Done" status="done">
+    <BoardCard title="Ship v0.1" status="done" />
+  </Lane>
+</Board>
+```
+
+### `<Matrix title cols="…">` / `:::matrix{cols="…"}`
+
+Comparison matrix. `cols` is a comma-separated header row; each top-level list item is one matrix row — the item text before the first `|` is the row label, the `|`-separated rest are cells. Cell values `yes`/`ok`/`✓`/`○`, `no`/`✗`/`×`/`ng`, `partial`/`~`/`△`/`warn`, and `-`/`—`/`?` render as icons; anything else renders as text.
+
+```mdx
+<Matrix title="Renderer comparison" cols="mdxr, raw mdx, astro">
+  - standalone html | yes | no | partial - editor links | yes | no | no -
+  hydration | no | yes | yes
+</Matrix>
+```
+
 ### `<Summary done="3" total="8" label="Progress" />`
 
 Progress bar.

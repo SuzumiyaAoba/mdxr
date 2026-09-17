@@ -8,17 +8,18 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { ResolvedConfig } from "./config.js";
 import { loadConfig } from "./config.js";
 import type { ComponentMap } from "./define.js";
+import { formatError } from "./format-error.js";
 import { isComponent, isRecord } from "./guards.js";
 import { htmlDocument } from "./html.js";
-import { loadUserModule } from "./load-user-module.js";
+import { buildHydrateScript } from "./hydrate.js";
+import { loadUserModule, resolveModuleEntry } from "./load-user-module.js";
 import { mdxToHtml } from "./mdx.js";
 import { pkgRoot } from "./paths.js";
 import type { CssSource } from "./tailwind.js";
 import { buildCss } from "./tailwind.js";
+import { takeUsedIcons } from "./ui/icon.js";
 import { builtinComponents } from "./ui/index.js";
 import { PlanHeader } from "./ui/plan.js";
-
-const INDEX_FILES = ["index.tsx", "index.ts", "index.jsx", "index.js"];
 
 export interface LoadedComponents {
   components: ComponentMap;
@@ -29,24 +30,7 @@ export interface LoadedComponents {
 export const loadComponents = async (
   componentsPath: string
 ): Promise<LoadedComponents> => {
-  let entry = componentsPath;
-  if (
-    existsSync(entry) &&
-    !(
-      entry.endsWith(".ts") ||
-      entry.endsWith(".tsx") ||
-      entry.endsWith(".js") ||
-      entry.endsWith(".jsx")
-    )
-  ) {
-    for (const name of INDEX_FILES) {
-      const candidate = path.join(entry, name);
-      if (existsSync(candidate)) {
-        entry = candidate;
-        break;
-      }
-    }
-  }
+  const entry = resolveModuleEntry(componentsPath);
   const { module: mod, code } = await loadUserModule(entry);
   const components: ComponentMap = {};
   for (const [key, val] of Object.entries(mod)) {
@@ -92,6 +76,12 @@ const ownSources = async (): Promise<CssSource[]> => {
 
 export interface RenderOptions {
   liveReload?: boolean;
+  /**
+   * Inline a client bundle that hydrates the document (`hydrateRoot`), making
+   * interactive components (Tabs, Accordion, Switch, …) actually work.
+   * Default true; `false` emits purely static HTML.
+   */
+  hydrate?: boolean;
 }
 
 export interface RenderSourceOptions extends RenderOptions {
@@ -106,6 +96,44 @@ export interface RenderSourceOptions extends RenderOptions {
    */
   filePath?: string;
 }
+
+/**
+ * Inline client bundle for hydration. No catalog component was read → nothing
+ * in the document can hydrate, so the bundle is skipped entirely (pure
+ * markdown docs stay lean). A bundle failure degrades to the (correct)
+ * static output with a warning.
+ */
+const buildHydrateBundle = async (args: {
+  code: string;
+  config: ResolvedConfig;
+  fileLinks: Record<string, string>;
+  headerProps?: Record<string, string | undefined>;
+  hydrate?: boolean;
+  usedComponents: string[];
+  usedIcons: string[];
+}): Promise<string | undefined> => {
+  if (!(args.hydrate ?? true) || args.usedComponents.length === 0) {
+    return undefined;
+  }
+  try {
+    return await buildHydrateScript({
+      code: args.code,
+      componentsPath:
+        args.config.componentsPath === undefined
+          ? undefined
+          : resolveModuleEntry(args.config.componentsPath),
+      fileLinks: args.fileLinks,
+      header: args.headerProps,
+      usedComponents: args.usedComponents,
+      usedIcons: args.usedIcons,
+    });
+  } catch (error) {
+    process.stderr.write(
+      `mdxr: hydration bundle skipped: ${formatError(error)}\n`
+    );
+    return undefined;
+  }
+};
 
 /** Render MDX source text to a standalone HTML document. */
 export const render = async (
@@ -135,9 +163,10 @@ export const render = async (
     ...user.components,
   };
 
-  const { body, frontmatter } = await mdxToHtml(source, components, filePath, {
-    editor: config.editor,
-  });
+  const { body, code, fileLinks, frontmatter, usedComponents, usedIcons } =
+    await mdxToHtml(source, components, filePath, {
+      editor: config.editor,
+    });
 
   const themeCss =
     config.themePath === undefined
@@ -179,23 +208,39 @@ export const render = async (
     return typeof val === "number" ? String(val) : undefined;
   };
 
-  const header =
+  const headerProps =
     fmTitle !== undefined && fmTitle !== "" && !/<article/u.test(body)
-      ? renderToStaticMarkup(
-          createElement(PlanHeader, {
-            date: fmStr("date"),
-            owner: fmStr("owner"),
-            status: fmStr("status"),
-            title: fmTitle,
-            updated: fmStr("updated"),
-            version: fmStr("version"),
-          })
-        )
-      : "";
+      ? {
+          date: fmStr("date"),
+          owner: fmStr("owner"),
+          status: fmStr("status"),
+          title: fmTitle,
+          updated: fmStr("updated"),
+          version: fmStr("version"),
+        }
+      : undefined;
+  const header =
+    headerProps === undefined
+      ? ""
+      : renderToStaticMarkup(createElement(PlanHeader, headerProps));
+
+  // Icon recording spans both SSR passes (body inside mdxToHtml, header here).
+  usedIcons.push(...takeUsedIcons());
+
+  const hydrateJs = await buildHydrateBundle({
+    code,
+    config,
+    fileLinks,
+    headerProps,
+    hydrate: opts.hydrate,
+    usedComponents,
+    usedIcons,
+  });
 
   return htmlDocument({
     body: header + body,
     css,
+    hydrateJs,
     liveReload: opts.liveReload,
     needsKatex: /class="[^"]*katex/u.test(body),
     needsMermaid: /class="[^"]*mermaid/u.test(body),

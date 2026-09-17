@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -33,6 +34,33 @@ export interface BundledModule {
   /** Bundled source — also used as a Tailwind scan source. */
   code: string;
 }
+
+const INDEX_FILES = ["index.tsx", "index.ts", "index.jsx", "index.js"];
+
+/**
+ * Resolve a user module path: directories collapse to their index file.
+ * Used both when importing the module (SSR) and when bundling it for the
+ * hydration script.
+ */
+export const resolveModuleEntry = (entryPath: string): string => {
+  if (
+    existsSync(entryPath) &&
+    !(
+      entryPath.endsWith(".ts") ||
+      entryPath.endsWith(".tsx") ||
+      entryPath.endsWith(".js") ||
+      entryPath.endsWith(".jsx")
+    )
+  ) {
+    for (const name of INDEX_FILES) {
+      const candidate = path.join(entryPath, name);
+      if (existsSync(candidate)) {
+        return candidate;
+      }
+    }
+  }
+  return entryPath;
+};
 
 /**
  * Bundle a user-authored TS/TSX module and import it.

@@ -42,6 +42,20 @@ const Tick = (): ReactElement => (
 );
 
 /**
+ * Vertical rail joining a nested row to its siblings. `-top-0.5` bridges the
+ * `space-y-0.5` gap between rows so the line stays continuous; on the last row
+ * it stops at the tick, turning `├─` into `└─`.
+ */
+const Rail = ({ last }: { last: boolean }): ReactElement => (
+  <span
+    aria-hidden
+    className={`absolute -top-0.5 -left-3 w-px bg-neutral-200 dark:bg-neutral-700 ${
+      last ? "h-[calc(0.72em_+_3px)]" : "bottom-0"
+    }`}
+  />
+);
+
+/**
  * Column spacer matching the disclosure chevron's width so file rows align
  * with directory rows (which lead with a chevron, like Starlight's FileTree).
  */
@@ -103,8 +117,7 @@ const Entry = ({
   );
 };
 
-const nestedListCls =
-  "mt-0.5 ml-[7px] list-none space-y-0.5 border-l border-neutral-200 p-0 pl-3 dark:border-neutral-700";
+const nestedListCls = "mt-0.5 ml-[7px] list-none space-y-0.5 p-0 pl-3";
 
 /** Render a `<ul>` element (and its nested lists) as file-tree rows. */
 const renderList = (
@@ -112,7 +125,7 @@ const renderList = (
   depth: number,
   expanded: boolean
 ): ReactElement => {
-  const renderItem = (child: El): ReactElement => {
+  const renderItem = (child: El, last: boolean): ReactElement => {
     const kids = flattenChildren(child.props.children);
     const nested = kids.filter((k): k is El => isEl(k, "ul"));
     const nestedSet = new Set<ReactNode>(nested);
@@ -132,6 +145,7 @@ const renderList = (
     if (PLACEHOLDER_RE.test(label)) {
       return (
         <li className="relative">
+          {depth > 0 ? <Rail last={last} /> : null}
           <PlaceholderRow depth={depth} />
         </li>
       );
@@ -153,6 +167,7 @@ const renderList = (
     if (!isDir) {
       return (
         <li className="relative">
+          {depth > 0 ? <Rail last={last} /> : null}
           <Row depth={depth}>
             <Spacer />
             {entry}
@@ -166,6 +181,7 @@ const renderList = (
     // starts closed and reveals a `…` placeholder — same as Starlight.
     return (
       <li className="relative">
+        {depth > 0 ? <Rail last={last} /> : null}
         <details open={expanded && nested.length > 0}>
           <summary className="group flex cursor-pointer items-baseline gap-1.5 py-px select-none">
             {depth > 0 ? <Tick /> : null}
@@ -185,6 +201,7 @@ const renderList = (
           ) : (
             <ul className={nestedListCls}>
               <li className="relative">
+                <Rail last />
                 <PlaceholderRow depth={depth + 1} />
               </li>
             </ul>
@@ -194,15 +211,21 @@ const renderList = (
     );
   };
 
+  const items = flattenChildren(node.props.children);
+  const lastLi = items.findLastIndex((c) => isEl(c, "li"));
   return (
     <ul
       className={depth === 0 ? "m-0 list-none space-y-0.5 p-0" : nestedListCls}
     >
-      {flattenChildren(node.props.children).map((child, i) => {
+      {items.map((child, i) => {
         if (!isEl(child, "li")) {
           return <Fragment key={i}>{child}</Fragment>;
         }
-        return <Fragment key={child.key ?? i}>{renderItem(child)}</Fragment>;
+        return (
+          <Fragment key={child.key ?? i}>
+            {renderItem(child, i === lastLi)}
+          </Fragment>
+        );
       })}
     </ul>
   );

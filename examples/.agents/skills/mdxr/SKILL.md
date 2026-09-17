@@ -37,10 +37,16 @@ Write documents as **Markdown + a small set of JSX components** (MDX). Do NOT wr
 | `:::trace` + `<TraceFrame>` | stack/call trace with error line |
 | `:::terminal{cmd="…" exit="…"}` / ` ```console ` fence | terminal transcript |
 | `:::files` / `:::deps` | `<Files>` related-file list / `<Deps>` dependency edges |
+| `:::tests` + `<Test>` / `:::endpoints` + `<Endpoint>` | `<Tests>` run report / `<Endpoints>` API list |
+| `:::board` + `<Lane>`/`<BoardCard>` | `<Board>` kanban |
+| `:::graph` + `<Node>`/`<Edge>` | `<Graph>` static node/edge diagram (dagre layout, no client JS) |
+| `:::waterfall` + `<Span>` / `:::matrix` + list | `<Waterfall>` timing bars / `<Matrix>` comparison grid |
 | `:::timeline{title="…"}` | `<Timeline>` |
 | frontmatter `status:` / `date:` / `owner:` | document header badge + meta row |
 | `path`-carrying components (`<FileRef>`, `<File>`, `<TraceFrame>`, `<FlowStep>`, `<Change>`, `<SymbolRef path>`) + `title="…"` code headers | `vscode://file/…` editor links when the file exists; frontmatter `editor:` picks the scheme (`cursor`, `zed`, `none`, …) |
+| `` `src/x.ts` `` inline code naming a real file (optional `:L`/`:L-M`) | `<FileRef>` chip — icon, copy button, editor link (a bare `x.ts` stays plain code) |
 | ` ```mermaid ` fenced block | rendered diagram |
+| ` ```diff ` / ` ```patch ` fenced block | structured per-file diff cards |
 | ` ```ts title="src/x.ts" ` | highlighted code block + filename bar with file-type icon |
 | `- [ ]` / `- [x]` | styled task list |
 | nested list inside `<Tree>` | file tree |

@@ -33,7 +33,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # ultracite pulls in execa 10, which requires Node >= 22.
       - run: pnpm check
+        if: matrix.node-version != 20
 
       - run: pnpm test
 

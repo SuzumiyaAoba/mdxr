@@ -1,15 +1,85 @@
-import { isValidElement } from "react";
+import { isValidElement, useContext } from "react";
 import type { ReactElement, ReactNode } from "react";
 
 import type { DocProps } from "../define.js";
 import { textOf } from "../define.js";
-import { isRecord } from "../guards.js";
+import { DocContext } from "../doc-context.js";
+import { firstLine } from "../editor.js";
+import { isRecord, nonEmpty } from "../guards.js";
 import { fileIcon } from "./file-icon.js";
+import { linkTarget } from "./file-link.js";
 import { Icon } from "./icon.js";
 import { TERMINAL_LANGS, Transcript } from "./terminal.js";
 
 const str = (v: unknown): string | undefined =>
   typeof v === "string" ? v : undefined;
+
+/** "src/x.ts:40-52" → { path: "src/x.ts", line: "40" }; labels stay untouched. */
+const splitFileLine = (filename: string): { line?: string; path: string } => {
+  const m = /^(?<p>.+?):(?<ls>\d+(?:-\d*)?)$/u.exec(filename);
+  return m?.groups === undefined
+    ? { path: filename }
+    : { line: firstLine(m.groups.ls), path: m.groups.p };
+};
+
+/** Editor link for a code-header filename, when it resolves to a real file. */
+const useFilenameLink = (filename: string | undefined): string | undefined => {
+  const { fileLink } = useContext(DocContext);
+  if (filename === undefined || fileLink === undefined) {
+    return undefined;
+  }
+  const target = splitFileLine(filename);
+  return nonEmpty(target.path) ? fileLink(target.path, target.line) : undefined;
+};
+
+/** Filename/language bar for a fenced block; links to the file when it exists. */
+const CodeHeader = (props: {
+  filename?: string;
+  lang?: string;
+  text: string;
+}): ReactElement => {
+  const link = useFilenameLink(props.filename);
+  const label = (
+    <>
+      <Icon
+        className="h-3.5 w-3.5"
+        name={fileIcon(props.filename ?? props.lang ?? "code")}
+      />
+      {props.filename ?? props.lang ?? "code"}
+    </>
+  );
+  return (
+    <figcaption className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+      {link === undefined ? (
+        <span className="inline-flex items-center gap-1.5 font-mono">
+          {label}
+        </span>
+      ) : (
+        <a
+          className="inline-flex items-center gap-1.5 font-mono text-inherit no-underline hover:underline"
+          href={link}
+          {...linkTarget(link)}
+        >
+          {label}
+        </a>
+      )}
+      <button
+        type="button"
+        data-copy={props.text}
+        className="rv-copy cursor-pointer opacity-60"
+        title="Copy code"
+        aria-label="Copy code"
+      >
+        <span className="rv-copy-idle inline-flex">
+          <Icon className="h-3.5 w-3.5" name="lucide:copy" />
+        </span>
+        <span className="rv-copy-done hidden items-center text-emerald-600 dark:text-emerald-400">
+          <Icon className="h-3.5 w-3.5" name="lucide:check" />
+        </span>
+      </button>
+    </figcaption>
+  );
+};
 
 /**
  * ```console / ```terminal / ```shellsession fences render as a terminal
@@ -95,29 +165,7 @@ export const Pre = (props: DocProps): ReactElement => {
 
   return (
     <figure className="not-prose my-4 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
-      <figcaption className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
-        <span className="inline-flex items-center gap-1.5 font-mono">
-          <Icon
-            className="h-3.5 w-3.5"
-            name={fileIcon(filename ?? lang ?? "code")}
-          />
-          {filename ?? lang ?? "code"}
-        </span>
-        <button
-          type="button"
-          data-copy={text}
-          className="rv-copy cursor-pointer opacity-60"
-          title="Copy code"
-          aria-label="Copy code"
-        >
-          <span className="rv-copy-idle inline-flex">
-            <Icon className="h-3.5 w-3.5" name="lucide:copy" />
-          </span>
-          <span className="rv-copy-done hidden items-center text-emerald-600 dark:text-emerald-400">
-            <Icon className="h-3.5 w-3.5" name="lucide:check" />
-          </span>
-        </button>
-      </figcaption>
+      <CodeHeader filename={filename} lang={lang} text={text} />
       <pre className="m-0 overflow-x-auto bg-white p-4 text-sm dark:bg-neutral-950">
         {cleanCode}
       </pre>

@@ -36,7 +36,7 @@ Image with an optional caption (children work too). Use for screenshots or diagr
 
 ### `<Ref href="…" title="…">` / `<Issue repo="o/r" number="12">` / `<PR repo="o/r" number="5">` / `<Commit repo="o/r" sha="…">`
 
-`Ref` is a linked reference card (use for a "References" section). `Issue`/`PR`/`Commit` are inline chips linking to `github.com/{repo}/issues|pull|commit/{id}` — `Commit` displays the first 7 chars of `sha`, children become the title; `href` overrides the URL.
+`Ref` is a linked reference card (use for a "References" section). `Issue`/`PR`/`Commit` are inline chips linking to `github.com/{repo}/issues|pull|commit/{id}` — `repo` may also be `host/owner/repo` or a full URL for GitHub Enterprise. `Commit` displays the first 7 chars of `sha`, children become the title; `href` overrides the URL.
 
 ### `<Cmd>`
 
@@ -70,7 +70,7 @@ Icons also work as CSS classes (mask-image, single-color) on any element:
 ```
 ````
 
-renders a framed block with filename + copy button; the header carries a file-type icon picked from the filename (or language). Code is syntax-highlighted with Shiki (light/dark dual theme), so always tag the fence with a language (`ts`, `python`, `diff`, …). ` ```mermaid ` renders a diagram.
+renders a framed block with filename + copy button; the header carries a file-type icon picked from the filename (or language), and links to the file in your editor when it exists on disk (see "File links" in [../components.md](../components.md)). Code is syntax-highlighted with Shiki (light/dark dual theme), so always tag the fence with a language (`ts`, `python`, `diff`, …). ` ```mermaid ` renders a diagram.
 
 The fence meta also controls line presentation:
 

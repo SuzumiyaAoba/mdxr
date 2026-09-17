@@ -3,6 +3,7 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { fileIcon } from "./file-icon.js";
+import { linkTarget, useFileLink } from "./file-link.js";
 import { Icon } from "./icon.js";
 
 export const CHANGE_KINDS = ["add", "modify", "delete", "rename"] as const;
@@ -46,15 +47,28 @@ export const Changes = defineComponent(
 export const Change = defineComponent(
   {
     description:
-      "変更ファイル1行。kind は add|modify|delete|rename。rename 時は to に変更後パス。children は注記",
+      "変更ファイル1行。kind は add|modify|delete|rename。rename 時は to に変更後パス。実在ファイルはエディタリンク（既定 vscode://）になり、href で上書き可。children は注記",
     schema: v.looseObject({
+      href: v.optional(v.string()),
       kind: v.optional(v.picklist(CHANGE_KINDS), "modify"),
       path: v.string(),
       to: v.optional(v.string()),
     }),
   },
-  ({ kind, path, to, children }) => {
+  ({ kind, path, to, href, children }) => {
     const k = KINDS[kind];
+    const link = useFileLink(nonEmpty(to) ? to : path, undefined, href);
+    const label = (
+      <code className="font-mono text-[0.85em] text-neutral-800 dark:text-neutral-200">
+        {path}
+        {nonEmpty(to) ? (
+          <span className="text-neutral-400 dark:text-neutral-500">
+            {" → "}
+            {to}
+          </span>
+        ) : null}
+      </code>
+    );
     return (
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-2.5">
         <span
@@ -67,15 +81,17 @@ export const Change = defineComponent(
           className="h-3.5 w-3.5 shrink-0 self-center text-neutral-400 dark:text-neutral-500"
           name={fileIcon(nonEmpty(to) ? to : path)}
         />
-        <code className="font-mono text-[0.85em] text-neutral-800 dark:text-neutral-200">
-          {path}
-          {nonEmpty(to) ? (
-            <span className="text-neutral-400 dark:text-neutral-500">
-              {" → "}
-              {to}
-            </span>
-          ) : null}
-        </code>
+        {link === undefined ? (
+          label
+        ) : (
+          <a
+            className="text-inherit no-underline hover:underline"
+            href={link}
+            {...linkTarget(link)}
+          >
+            {label}
+          </a>
+        )}
         {children === undefined ? null : (
           <span className="min-w-0 flex-1 text-sm text-neutral-500 dark:text-neutral-400">
             {children}

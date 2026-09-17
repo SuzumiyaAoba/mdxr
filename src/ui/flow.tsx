@@ -3,6 +3,7 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { indexChildren, useChildIndex } from "./child-index.js";
+import { linkTarget, useFileLink } from "./file-link.js";
 import { Icon } from "./icon.js";
 
 export const Flow = defineComponent(
@@ -24,15 +25,36 @@ export const Flow = defineComponent(
 export const FlowStep = defineComponent(
   {
     description:
-      "フローの1ホップ。name は関数名や処理名、path/lines で発生箇所を併記。children はその処理の説明",
+      "フローの1ホップ。name は関数名や処理名、path/lines で発生箇所を併記（実在すればエディタリンク、href で上書き可）。children はその処理の説明",
     schema: v.looseObject({
+      href: v.optional(v.string()),
       lines: v.optional(v.string()),
       name: v.optional(v.string()),
       path: v.optional(v.string()),
     }),
   },
-  ({ name, path, lines, children }) => {
+  ({ name, path, lines, href, children }) => {
     const { n, last } = useChildIndex();
+    const link = useFileLink(path, lines, href);
+    const loc = (
+      <>
+        {path}
+        {nonEmpty(lines) ? `:${lines}` : ""}
+      </>
+    );
+    const locCls = "font-mono text-xs text-neutral-400 dark:text-neutral-500";
+    const locEl =
+      link === undefined ? (
+        <span className={locCls}>{loc}</span>
+      ) : (
+        <a
+          className={`${locCls} no-underline hover:underline`}
+          href={link}
+          {...linkTarget(link)}
+        >
+          {loc}
+        </a>
+      );
     return (
       <li className="relative pt-1 pb-4 pl-10 last:pb-0">
         {last ? null : (
@@ -58,12 +80,7 @@ export const FlowStep = defineComponent(
                 {name}
               </code>
             ) : null}
-            {nonEmpty(path) ? (
-              <span className="font-mono text-xs text-neutral-400 dark:text-neutral-500">
-                {path}
-                {nonEmpty(lines) ? `:${lines}` : ""}
-              </span>
-            ) : null}
+            {nonEmpty(path) ? locEl : null}
           </div>
         ) : null}
         {children === undefined ? null : (

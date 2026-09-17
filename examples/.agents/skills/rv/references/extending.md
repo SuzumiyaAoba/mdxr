@@ -10,8 +10,11 @@ import { defineConfig } from "@suzumiyaaoba/rv";
 export default defineConfig({
   components: "./components/index.tsx", // named exports become MDX components
   theme: "./rv.css", // optional: @theme token overrides
+  editor: "vscode", // optional: file-link target — see below
 });
 ```
+
+`editor` sets the URL scheme for file links (`path`-carrying components and code-block filename headers): `vscode` (default), `cursor`, `zed`, `vscode-insiders`, `windsurf`, `sublime`, `textmate`, `idea`, a custom template like `"myed://open?f={path}&l={line}"`, or `"none"` to disable. Frontmatter `editor:` overrides it per document.
 
 Define components with `defineComponent` (adds a valibot schema — used for runtime validation **and** `rv catalog` documentation):
 

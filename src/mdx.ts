@@ -1,3 +1,6 @@
+import { existsSync } from "node:fs";
+import path from "node:path";
+
 import { evaluate } from "@mdx-js/mdx";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -11,6 +14,8 @@ import { VFile } from "vfile";
 import { matter } from "vfile-matter";
 
 import type { ComponentMap } from "./define.js";
+import { DocContext } from "./doc-context.js";
+import { editorUrl } from "./editor.js";
 import { isRecord } from "./guards.js";
 import { rehypeShiki } from "./rehype/shiki.js";
 import { remarkRvAlerts } from "./remark/alerts.js";
@@ -74,10 +79,26 @@ const enhanceRenderError = (
 export const mdxToHtml = async (
   source: string,
   components: ComponentMap,
-  filePath = "document.mdx"
+  filePath = "document.mdx",
+  opts: { editor?: string } = {}
 ): Promise<MdxResult> => {
   const file = new VFile({ path: filePath, value: source });
   matter(file);
+  // vfile-matter sets `file.data.matter`, but its types don't declare it.
+  const fmRaw: unknown = isRecord(file.data) ? file.data.matter : undefined;
+  const frontmatter: Record<string, unknown> = isRecord(fmRaw) ? fmRaw : {};
+
+  // Frontmatter `editor:` overrides the rv.config.ts default; "none" or an
+  // unresolvable path disables the link. Only existing files get links.
+  const editor =
+    typeof frontmatter.editor === "string" && frontmatter.editor !== ""
+      ? frontmatter.editor
+      : opts.editor;
+  const dir = file.dirname ?? ".";
+  const fileLink = (rel: string, line?: string): string | undefined => {
+    const abs = path.resolve(dir, rel);
+    return existsSync(abs) ? editorUrl(editor, abs, line) : undefined;
+  };
 
   const mod = await evaluate(file, {
     ...runtime,
@@ -100,14 +121,15 @@ export const mdxToHtml = async (
 
   let body: string;
   try {
-    body = renderToStaticMarkup(createElement(mod.default, { components }));
+    body = renderToStaticMarkup(
+      createElement(
+        DocContext.Provider,
+        { value: { fileLink } },
+        createElement(mod.default, { components })
+      )
+    );
   } catch (error) {
     throw enhanceRenderError(error, components);
   }
-  // vfile-matter sets `file.data.matter`, but its types don't declare it.
-  const fm: unknown = isRecord(file.data) ? file.data.matter : undefined;
-  return {
-    body,
-    frontmatter: isRecord(fm) ? fm : {},
-  };
+  return { body, frontmatter };
 };

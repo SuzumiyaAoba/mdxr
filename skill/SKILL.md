@@ -38,6 +38,7 @@ Write documents as **Markdown + a small set of JSX components** (MDX). Do NOT wr
 | `:::files` / `:::deps` | `<Files>` related-file list / `<Deps>` dependency edges |
 | `:::timeline{title="…"}` | `<Timeline>` |
 | frontmatter `status:` / `date:` / `owner:` | document header badge + meta row |
+| `path`-carrying components (`<FileRef>`, `<File>`, `<TraceFrame>`, `<FlowStep>`, `<Change>`, `<SymbolRef path>`) + `title="…"` code headers | `vscode://file/…` editor links when the file exists; frontmatter `editor:` picks the scheme (`cursor`, `zed`, `none`, …) |
 | ` ```mermaid ` fenced block | rendered diagram |
 | ` ```ts title="src/x.ts" ` | highlighted code block + filename bar with file-type icon |
 | `- [ ]` / `- [x]` | styled task list |

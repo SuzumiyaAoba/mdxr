@@ -8,6 +8,13 @@ import { loadUserModule } from "./load-user-module.js";
 export interface RvConfig {
   /** Path to a TS/TSX module whose named exports are extra MDX components. */
   components?: string;
+  /**
+   * Editor used for file links (`vscode` default). A known name (`cursor`,
+   * `zed`, `vscode-insiders`, `windsurf`, `sublime`, `textmate`, `idea`), a
+   * `{path}`/`{line}` URL template, or `"none"` to disable. Frontmatter
+   * `editor:` overrides per document.
+   */
+  editor?: string;
   /** Path to a CSS file with `@theme` overrides / extra utilities. */
   theme?: string;
 }
@@ -20,6 +27,7 @@ export interface ResolvedConfig {
   /** Bundled rv.config code (Tailwind scan source). */
   componentsCode?: string;
   dir: string;
+  editor?: string;
 }
 
 const CONFIG_FILES = [
@@ -38,6 +46,7 @@ export const loadConfig = async (dir: string): Promise<ResolvedConfig> => {
   const raw = isRecord(mod.default) ? mod.default : {};
   const components =
     typeof raw.components === "string" ? raw.components : undefined;
+  const editor = typeof raw.editor === "string" ? raw.editor : undefined;
   const theme = typeof raw.theme === "string" ? raw.theme : undefined;
   return {
     componentsCode: code,
@@ -45,6 +54,7 @@ export const loadConfig = async (dir: string): Promise<ResolvedConfig> => {
       ? path.resolve(dir, components)
       : undefined,
     dir,
+    editor: nonEmpty(editor) ? editor : undefined,
     themePath: nonEmpty(theme) ? path.resolve(dir, theme) : undefined,
   };
 };

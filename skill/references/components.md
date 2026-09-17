@@ -4,6 +4,8 @@ MDX attributes are always strings (`status="done"`). `children` is Markdown.
 
 This file is an index: each group lists what its components do and links to a detail file with full signatures and examples. Read only the detail file(s) the document needs. `rv catalog --json` is the machine-readable source of truth for component names and attributes.
 
+**File links.** Components carrying `path` (`FileRef`, `SymbolRef`, `File`, `TraceFrame`, `FlowStep`, `Change`) and fenced-code filename headers become editor links — `vscode://file/…` by default — when the file exists on disk (paths resolve relative to the document). Frontmatter `editor:` or `editor` in `rv.config.ts` picks another editor: `cursor`, `zed`, `vscode-insiders`, `windsurf`, `sublime`, `textmate`, `idea`, a custom `{path}`/`{line}` URL template, or `none` to disable. `href="…"` on a component overrides the URL entirely.
+
 ## Document scaffolding — details: [components/document.md](components/document.md)
 
 | Component | What it is |

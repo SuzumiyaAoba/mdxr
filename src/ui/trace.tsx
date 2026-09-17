@@ -3,6 +3,7 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { indexChildren, useChildIndex } from "./child-index.js";
+import { linkTarget, useFileLink } from "./file-link.js";
 import { Icon } from "./icon.js";
 
 export const FRAME_KINDS = ["app", "lib"] as const;
@@ -38,17 +39,38 @@ export const Trace = defineComponent(
 export const TraceFrame = defineComponent(
   {
     description:
-      "スタックフレーム1行。#番号はコンテナ内で自動採番（先頭=#0）。name=シンボル名、path/lines=発生箇所、kind=app|lib（lib は淡色+タグ）。children は注記",
+      "スタックフレーム1行。#番号はコンテナ内で自動採番（先頭=#0）。name=シンボル名、path/lines=発生箇所（実在すればエディタリンク、href で上書き可）、kind=app|lib（lib は淡色+タグ）。children は注記",
     schema: v.looseObject({
+      href: v.optional(v.string()),
       kind: v.optional(v.picklist(FRAME_KINDS), "app"),
       lines: v.optional(v.string()),
       name: v.string(),
       path: v.optional(v.string()),
     }),
   },
-  ({ name, path, lines, kind, children }) => {
+  ({ name, path, lines, kind, href, children }) => {
     const { n } = useChildIndex();
     const lib = kind === "lib";
+    const link = useFileLink(path, lines, href);
+    const loc = (
+      <>
+        {path}
+        {nonEmpty(lines) ? `:${lines}` : ""}
+      </>
+    );
+    const locCls = "font-mono text-xs text-neutral-400 dark:text-neutral-500";
+    const locEl =
+      link === undefined ? (
+        <span className={locCls}>{loc}</span>
+      ) : (
+        <a
+          className={`${locCls} no-underline hover:underline`}
+          href={link}
+          {...linkTarget(link)}
+        >
+          {loc}
+        </a>
+      );
     return (
       <div
         className={`flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-2 ${lib ? "opacity-60" : ""}`}
@@ -59,12 +81,7 @@ export const TraceFrame = defineComponent(
         <code className="font-mono text-[0.85em] text-neutral-800 dark:text-neutral-200">
           {name}
         </code>
-        {nonEmpty(path) ? (
-          <span className="font-mono text-xs text-neutral-400 dark:text-neutral-500">
-            {path}
-            {nonEmpty(lines) ? `:${lines}` : ""}
-          </span>
-        ) : null}
+        {nonEmpty(path) ? locEl : null}
         {lib ? (
           <span className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-neutral-400 dark:text-neutral-500">
             <Icon className="h-3 w-3" name="lucide:package" />

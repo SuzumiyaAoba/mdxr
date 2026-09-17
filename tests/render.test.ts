@@ -454,6 +454,63 @@ describe(mdxToHtml, () => {
     expect(body).toContain('rel="noopener noreferrer"');
   });
 
+  it("links Issue/PR/Commit chips to non-github.com hosts", async () => {
+    const { body } = await render(
+      '<Issue repo="ghe.acme.dev/a/b" number="12" />\n<PR repo="https://ghe.acme.dev/a/b/" number="5" />\n<Commit repo="http://git.internal/a/b" sha="0123456" />'
+    );
+    expect(body).toContain("https://ghe.acme.dev/a/b/issues/12");
+    expect(body).toContain("https://ghe.acme.dev/a/b/pull/5");
+    expect(body).toContain("http://git.internal/a/b/commit/0123456");
+  });
+
+  it("links path-bearing components to the editor (vscode:// default)", async () => {
+    const { body } = await renderAt(
+      '<FileRef path="sample.ts" lines="10-20" />\n\n:::files\n<File path="sample.ts" lines="3" />\n:::\n\n:::trace\n<TraceFrame name="f" path="sample.ts" lines="7" />\n:::',
+      fixtureDoc
+    );
+    expect(body).toContain("vscode://file/");
+    expect(body).toContain("sample.ts:10");
+    expect(body).toContain("sample.ts:3");
+    expect(body).toContain("sample.ts:7");
+  });
+
+  it("links fenced-code filename headers when the file exists", async () => {
+    const { body } = await renderAt(
+      '```ts title="sample.ts:2"\nconst x = 1\n```',
+      fixtureDoc
+    );
+    expect(body).toContain("vscode://file/");
+    expect(body).toContain("sample.ts:2");
+  });
+
+  it("honors frontmatter editor: picklist, template, none", async () => {
+    const zed = await renderAt(
+      '---\neditor: zed\n---\n\n<FileRef path="sample.ts" />',
+      fixtureDoc
+    );
+    expect(zed.body).toContain("zed://file/");
+
+    const tpl = await renderAt(
+      '---\neditor: "myed://open?f={path}&l={line}"\n---\n\n<FileRef path="sample.ts" lines="7" />',
+      fixtureDoc
+    );
+    expect(tpl.body).toContain("myed://open?f=");
+    expect(tpl.body).toContain("&amp;l=7");
+
+    const none = await renderAt(
+      '---\neditor: none\n---\n\n<FileRef path="sample.ts" />\n\n<FileRef path="sample.ts" href="https://x.test/f" />',
+      fixtureDoc
+    );
+    expect(none.body).not.toContain("vscode://");
+    expect(none.body).toContain('href="https://x.test/f"');
+  });
+
+  it("leaves missing files unlinked", async () => {
+    const { body } = await renderAt('<FileRef path="nope.ts" />', fixtureDoc);
+    expect(body).not.toContain("vscode://");
+    expect(body).toContain("nope.ts");
+  });
+
   it("renders Figure with caption", async () => {
     const { body } = await render(
       '<Figure src="a.png" alt="diagram" caption="Fig 1" />'

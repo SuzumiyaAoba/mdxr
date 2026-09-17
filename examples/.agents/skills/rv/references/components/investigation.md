@@ -19,7 +19,7 @@ Investigation findings with an epistemic-status pill: `confirmed` (read from the
 
 ### `<Files title>` / `<File path kind lines>` / `:::files`
 
-Related-file inventory — "the files this investigation touches". The row icon is picked automatically from the file name/extension (`vscode-icons` set: `package.json` → npm, `Dockerfile` → Docker, `*.test.ts` → test TS, …). `kind` is a free-form chip; known values get an icon and color: `entry` `core` `types` `config` `test` `docs` `generated`. Children render as a muted note. For change-sets (what a plan modifies) use `Changes` instead.
+Related-file inventory — "the files this investigation touches". The row icon is picked automatically from the file name/extension (`vscode-icons` set: `package.json` → npm, `Dockerfile` → Docker, `*.test.ts` → test TS, …). `kind` is a free-form chip; known values get an icon and color: `entry` `core` `types` `config` `test` `docs` `generated`. Children render as a muted note. For change-sets (what a plan modifies) use `Changes` instead. `path` links to the file in the reader's editor when it exists on disk (`href` overrides; see "File links" in [../components.md](../components.md)).
 
 ```mdx
 <Files title="Files involved">
@@ -45,7 +45,7 @@ Dependency-edge list — compact alternative to a mermaid graph for module relat
 
 ### `<Changes>` / `<Change kind="add|modify|delete|rename" path="…" to="…">`
 
-Change-set list — the "files this plan touches" section. `kind` drives the icon and color (`to` is the new path on `rename`); the file path also gets an extension-based icon automatically. Children render as a muted note.
+Change-set list — the "files this plan touches" section. `kind` drives the icon and color (`to` is the new path on `rename`); the file path also gets an extension-based icon automatically. Children render as a muted note. The path links to the file in the reader's editor when it exists (`to` wins on `rename`; `href` overrides).
 
 ```mdx
 <Changes>
@@ -60,7 +60,7 @@ Change-set list — the "files this plan touches" section. `kind` drives the ico
 
 ### `<Flow title="…">` / `<FlowStep name path lines>` / `:::flow{title="…"}`
 
-Numbered call/execution chain — "how a request travels through the code". Each `FlowStep` renders a numbered node on a connecting rail; `name` is the function/phase label (mono), `path`/`lines` pin the location, children describe what happens there. Use `Steps` for task checklists and `Timeline` for dates — `Flow` is for hops through code.
+Numbered call/execution chain — "how a request travels through the code". Each `FlowStep` renders a numbered node on a connecting rail; `name` is the function/phase label (mono), `path`/`lines` pin the location (linked to the file in the reader's editor when it exists; `href` overrides), children describe what happens there. Use `Steps` for task checklists and `Timeline` for dates — `Flow` is for hops through code.
 
 ```mdx
 <Flow title="Request path">
@@ -91,11 +91,11 @@ File tree rendered from a nested Markdown list. Items ending in `/` or with chil
 
 ### `<FileRef path="src/mdx.ts" lines="40-52" />`
 
-Inline file reference chip with a copy button. The icon is picked automatically from the file extension (`vscode-icons` set).
+Inline file reference chip with a copy button. The icon is picked automatically from the file extension (`vscode-icons` set). Links to the file in the reader's editor (`vscode://file/…` by default) when it exists on disk; `href` overrides the URL, `editor: none` disables linking.
 
 ### `<SymbolRef name="mdxToHtml" kind="fn" path="src/mdx.ts" lines="70-106" />`
 
-Inline symbol reference chip for code explanations. `kind` picks the icon: `fn` `type` `class` `interface` `const` `enum` `prop` `component` (omit for no icon). `path`/`lines` show the definition site muted; the copy button copies `path` (or `name` when absent).
+Inline symbol reference chip for code explanations. `kind` picks the icon: `fn` `type` `class` `interface` `const` `enum` `prop` `component` (omit for no icon). `path`/`lines` show the definition site muted — the chip links to that file in the reader's editor when it exists (`href` overrides); the copy button copies `path` (or `name` when absent).
 
 ```mdx
 <SymbolRef name="mdxToHtml" kind="fn" path="src/mdx.ts" /> returns
@@ -104,7 +104,7 @@ Inline symbol reference chip for code explanations. `kind` picks the icon: `fn` 
 
 ### `<CodeFile path="src/x.ts" lines="40-52" lang="ts" />`
 
-Embeds a real file from disk as a fenced block — code explanations quote the actual source instead of drifting copies. `path` resolves relative to the document; `lines` slices a 1-based range (`"40"`, `"40-52"`, `"40-"`); `lang` overrides the extension-derived language. Missing files and bad ranges are render errors.
+Embeds a real file from disk as a fenced block — code explanations quote the actual source instead of drifting copies. `path` resolves relative to the document; `lines` slices a 1-based range (`"40"`, `"40-52"`, `"40-"`); `lang` overrides the extension-derived language. The filename header links back to the file in the reader's editor. Missing files and bad ranges are render errors.
 
 ### `<Props of="…">` / `<Prop name type required default>`
 
@@ -159,7 +159,7 @@ Hypothesis ledger — the "what we suspected, and whether it held up" section of
 
 ### `<Trace title error>` / `<TraceFrame name path lines kind="app|lib">` / `:::trace`
 
-Stack/call trace for error and crash investigations. `error` renders the exception line on top (red); `TraceFrame`s are auto-numbered `#0…` top-down (most recent first, like `gdb bt`). `kind="lib"` dims framework/runtime frames and adds a `lib` tag. Children are per-frame notes.
+Stack/call trace for error and crash investigations. `error` renders the exception line on top (red); `TraceFrame`s are auto-numbered `#0…` top-down (most recent first, like `gdb bt`). `kind="lib"` dims framework/runtime frames and adds a `lib` tag. `path` links to the file in the reader's editor when it exists (`href` overrides). Children are per-frame notes.
 
 ```mdx
 <Trace error="TypeError: Cannot read properties of undefined (reading 'kind')">

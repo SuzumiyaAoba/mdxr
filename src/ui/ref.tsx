@@ -43,11 +43,20 @@ const GH_PATH: Record<"commit" | "issue" | "pr", string> = {
   pr: "pull",
 };
 
+/** `o/r` → github.com; `host/o/r` or a full URL → that host (e.g. GHES). */
+const repoBase = (repo: string): string => {
+  const r = repo.replace(/\/+$/u, "");
+  if (r.includes("://")) {
+    return r;
+  }
+  return r.split("/").length > 2 ? `https://${r}` : `https://github.com/${r}`;
+};
+
 const ghLink = (
   kind: "issue" | "pr" | "commit",
   repo: string,
   id: string
-): string => `https://github.com/${repo}/${GH_PATH[kind]}/${id}`;
+): string => `${repoBase(repo)}/${GH_PATH[kind]}/${id}`;
 
 const CHIP_CLS =
   "not-prose mx-0.5 inline-flex items-center gap-1.5 rounded-md border border-neutral-300 bg-neutral-100 px-1.5 py-0.5 align-baseline text-[0.85em] text-neutral-800 no-underline transition-all hover:bg-neutral-200 active:scale-95 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700";
@@ -87,7 +96,7 @@ const ghRefSchema = () =>
 export const Issue = defineComponent(
   {
     description:
-      'GitHub issue 参照チップ。repo="owner/repo" と number は必須。children はタイトル',
+      'GitHub issue 参照チップ。repo="owner/repo"（"host/owner/repo" や URL も可）と number は必須。children はタイトル',
     schema: ghRefSchema(),
   },
   ({ repo, number, href, children }) =>
@@ -97,7 +106,7 @@ export const Issue = defineComponent(
 export const PR = defineComponent(
   {
     description:
-      'GitHub pull request 参照チップ。repo="owner/repo" と number は必須。children はタイトル',
+      'GitHub pull request 参照チップ。repo="owner/repo"（"host/owner/repo" や URL も可）と number は必須。children はタイトル',
     schema: ghRefSchema(),
   },
   ({ repo, number, href, children }) =>
@@ -107,7 +116,7 @@ export const PR = defineComponent(
 export const Commit = defineComponent(
   {
     description:
-      'GitHub コミット参照チップ。repo="owner/repo" と sha は必須。sha は先頭7文字で表示。children はタイトル',
+      'GitHub コミット参照チップ。repo="owner/repo"（"host/owner/repo" や URL も可）と sha は必須。sha は先頭7文字で表示。children はタイトル',
     schema: v.looseObject({
       href: v.optional(v.string()),
       repo: v.string(),

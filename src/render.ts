@@ -122,7 +122,9 @@ export const renderFile = async (
   };
 
   const source = await readFile(abs, "utf-8");
-  const { body, frontmatter } = await mdxToHtml(source, components, abs);
+  const { body, frontmatter } = await mdxToHtml(source, components, abs, {
+    editor: config.editor,
+  });
 
   const themeCss =
     config.themePath === undefined

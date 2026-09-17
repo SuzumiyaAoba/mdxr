@@ -2,6 +2,7 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { linkTarget, useFileLink } from "./file-link.js";
 import { Icon } from "./icon.js";
 
 export const SYMBOL_KINDS = [
@@ -30,20 +31,19 @@ const KIND_ICONS: Record<SymbolKind, string> = {
 export const SymbolRef = defineComponent(
   {
     description:
-      "コードシンボル (関数/型など) への参照チップ。kind でアイコンを出し分け、path/lines で定義場所を併記できる",
+      "コードシンボル (関数/型など) への参照チップ。kind でアイコンを出し分け、path/lines で定義場所を併記できる。実在する path はエディタリンク（既定 vscode://）になり、href で上書き可",
     schema: v.looseObject({
+      href: v.optional(v.string()),
       kind: v.optional(v.picklist(SYMBOL_KINDS)),
       lines: v.optional(v.string()),
       name: v.string(),
       path: v.optional(v.string()),
     }),
   },
-  ({ name, kind, path, lines }) => (
-    <code className="not-prose mx-0.5 inline-flex items-center gap-1.5 rounded-md border border-neutral-300 bg-neutral-100 px-1.5 py-0.5 align-baseline font-mono text-[0.85em] text-neutral-800 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
-      {kind === undefined ? null : (
-        <Icon className="h-3.5 w-3.5 opacity-60" name={KIND_ICONS[kind]} />
-      )}
-      <span>
+  ({ name, kind, path, lines, href }) => {
+    const link = useFileLink(path, lines, href);
+    const label = (
+      <>
         {name}
         {nonEmpty(path) ? (
           <span className="opacity-60">
@@ -52,21 +52,39 @@ export const SymbolRef = defineComponent(
             {nonEmpty(lines) ? `:${lines}` : ""}
           </span>
         ) : null}
-      </span>
-      <button
-        type="button"
-        data-copy={nonEmpty(path) ? path : name}
-        className="rv-copy -mr-0.5 cursor-pointer opacity-40"
-        title="Copy"
-        aria-label="Copy"
-      >
-        <span className="rv-copy-idle inline-flex">
-          <Icon className="h-3.5 w-3.5" name="lucide:copy" />
-        </span>
-        <span className="rv-copy-done hidden items-center text-emerald-600 dark:text-emerald-400">
-          <Icon className="h-3.5 w-3.5" name="lucide:check" />
-        </span>
-      </button>
-    </code>
-  )
+      </>
+    );
+    return (
+      <code className="not-prose mx-0.5 inline-flex items-center gap-1.5 rounded-md border border-neutral-300 bg-neutral-100 px-1.5 py-0.5 align-baseline font-mono text-[0.85em] text-neutral-800 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
+        {kind === undefined ? null : (
+          <Icon className="h-3.5 w-3.5 opacity-60" name={KIND_ICONS[kind]} />
+        )}
+        {link === undefined ? (
+          <span>{label}</span>
+        ) : (
+          <a
+            className="text-inherit no-underline hover:underline"
+            href={link}
+            {...linkTarget(link)}
+          >
+            {label}
+          </a>
+        )}
+        <button
+          type="button"
+          data-copy={nonEmpty(path) ? path : name}
+          className="rv-copy -mr-0.5 cursor-pointer opacity-40"
+          title="Copy"
+          aria-label="Copy"
+        >
+          <span className="rv-copy-idle inline-flex">
+            <Icon className="h-3.5 w-3.5" name="lucide:copy" />
+          </span>
+          <span className="rv-copy-done hidden items-center text-emerald-600 dark:text-emerald-400">
+            <Icon className="h-3.5 w-3.5" name="lucide:check" />
+          </span>
+        </button>
+      </code>
+    );
+  }
 );

@@ -45,9 +45,9 @@ export const Risk = defineComponent(
     const s = STYLES[level];
     return (
       <aside
-        className={`my-4 rounded-r-lg border-l-4 bg-neutral-50 px-4 py-3 text-sm dark:bg-neutral-900/60 ${s.border}`}
+        className={`my-6 rounded-r-lg border-l-4 bg-neutral-50 px-4 py-3 text-sm dark:bg-neutral-900/60 ${s.border}`}
       >
-        <div className="mb-1 flex flex-wrap items-baseline gap-2">
+        <div className="flex flex-wrap items-baseline gap-2">
           <span
             className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${s.chip}`}
           >
@@ -58,9 +58,11 @@ export const Risk = defineComponent(
             <span className="font-semibold">{title}</span>
           ) : null}
         </div>
-        <div className="[&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-          {children}
-        </div>
+        {children === undefined ? null : (
+          <div className="mt-1.5 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+            {children}
+          </div>
+        )}
         {nonEmpty(mitigation) ? (
           <div className="mt-2 border-t border-neutral-200 pt-2 text-xs dark:border-neutral-700">
             <span className="font-medium">Mitigation: </span>

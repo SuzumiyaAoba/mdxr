@@ -12,19 +12,19 @@ export const Props = defineComponent(
     }),
   },
   ({ of, children }) => (
-    <figure className="not-prose my-4 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
+    <figure className="not-prose my-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
       {nonEmpty(of) ? (
-        <figcaption className="border-b border-neutral-200 bg-neutral-50 px-3 py-1.5 font-mono text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+        <figcaption className="border-b border-neutral-200 bg-neutral-50 px-4 py-2 font-mono text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
           {of}
         </figcaption>
       ) : null}
       <table className="m-0 w-full text-sm">
         <thead>
           <tr className="border-b border-neutral-200 text-left text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
-            <th className="px-3 py-2 font-medium">Name</th>
+            <th className="py-2 pr-3 pl-4 font-medium">Name</th>
             <th className="px-3 py-2 font-medium">Type</th>
             <th className="px-3 py-2 font-medium">Default</th>
-            <th className="px-3 py-2 font-medium">Description</th>
+            <th className="py-2 pr-4 pl-3 font-medium">Description</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800/60">
@@ -51,7 +51,7 @@ export const Prop = defineComponent(
   },
   ({ name, type, required, default: def, children }) => (
     <tr>
-      <td className="px-3 py-2 align-top font-mono text-[0.85em] whitespace-nowrap">
+      <td className="py-2 pr-3 pl-4 align-top font-mono text-[0.85em] whitespace-nowrap">
         {name}
         {isTruthy(required) ? (
           <span className="ml-0.5 text-red-500" title="required">
@@ -65,7 +65,7 @@ export const Prop = defineComponent(
       <td className="px-3 py-2 align-top font-mono text-[0.85em] text-neutral-500 dark:text-neutral-400">
         {nonEmpty(def) ? def : "—"}
       </td>
-      <td className="px-3 py-2 align-top text-neutral-600 dark:text-neutral-300 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+      <td className="py-2 pr-4 pl-3 align-top text-neutral-600 dark:text-neutral-300 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
         {children}
       </td>
     </tr>

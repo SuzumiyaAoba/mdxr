@@ -13,12 +13,12 @@ const panel = (
 ): ReactElement => (
   <div className={`overflow-hidden rounded-lg border ${cls.border}`}>
     <div
-      className={`flex items-center gap-1.5 border-b px-3 py-1.5 text-xs font-semibold ${cls.head}`}
+      className={`flex items-center gap-1.5 border-b px-4 py-2 text-xs font-semibold ${cls.head}`}
     >
       <Icon className="h-3.5 w-3.5" name={icon} />
       {title ?? label}
     </div>
-    <div className="px-3 py-2 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+    <div className="px-4 py-2.5 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
       {children}
     </div>
   </div>

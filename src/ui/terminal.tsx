@@ -53,8 +53,8 @@ export const Transcript = ({
   const lines = body.replace(/\n+$/u, "").split("\n");
   const succeeded = exit === "" || exit === "0";
   return (
-    <figure className="not-prose my-4 overflow-hidden rounded-lg border border-neutral-800 bg-neutral-950">
-      <figcaption className="flex items-center gap-2 border-b border-neutral-800 bg-neutral-900 px-3 py-1.5 text-xs">
+    <figure className="not-prose my-6 overflow-hidden rounded-lg border border-neutral-800 bg-neutral-950">
+      <figcaption className="flex items-center gap-2 border-b border-neutral-800 bg-neutral-900 px-4 py-2 text-xs">
         <span aria-hidden className="flex shrink-0 gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full bg-red-500/70" />
           <span className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />

@@ -18,7 +18,7 @@ export const Columns = defineComponent(
     }),
   },
   ({ cols, children }) => (
-    <div className={`my-4 grid gap-4 ${COLS[cols]}`}>{children}</div>
+    <div className={`my-6 grid gap-4 ${COLS[cols]}`}>{children}</div>
   )
 );
 

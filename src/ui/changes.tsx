@@ -38,7 +38,7 @@ export const Changes = defineComponent(
     description: "変更ファイル一覧のコンテナ。<Change> を並べる",
   },
   ({ children }) => (
-    <div className="not-prose my-4 divide-y divide-neutral-200 rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
+    <div className="not-prose my-6 divide-y divide-neutral-200 rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
       {children}
     </div>
   )

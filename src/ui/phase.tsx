@@ -20,7 +20,7 @@ export const Phase = defineComponent(
   ({ title, status, owner, due, children }) => {
     const hasChips = status !== undefined || nonEmpty(owner) || nonEmpty(due);
     return (
-      <section className="my-8">
+      <section className="my-10">
         <h2 className="mt-0 flex flex-wrap items-center gap-3 border-b border-neutral-200 pb-2 dark:border-neutral-800">
           {title}
           {hasChips ? (

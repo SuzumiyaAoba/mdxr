@@ -90,18 +90,20 @@ export const Callout = defineComponent(
     const k = KINDS[kind];
     return (
       <aside
-        className={`my-4 rounded-r-lg border-l-4 px-4 py-3 text-sm ${k.cls}`}
+        className={`my-6 rounded-r-lg border-l-4 px-4 py-3 text-sm ${k.cls}`}
       >
-        <div className="mb-1 flex items-center gap-1.5 font-semibold">
+        <div className="flex items-center gap-1.5 font-semibold">
           <Icon className="h-4 w-4 shrink-0" name={k.icon} />
           <span>{k.label}</span>
           {title !== undefined && title !== "" ? (
             <span className="font-normal opacity-75">{title}</span>
           ) : null}
         </div>
-        <div className="[&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-          {children}
-        </div>
+        {children === undefined ? null : (
+          <div className="mt-1.5 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+            {children}
+          </div>
+        )}
       </aside>
     );
   }

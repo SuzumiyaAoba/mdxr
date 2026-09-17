@@ -7,7 +7,7 @@ export const Glossary = defineComponent(
     description: "用語集コンテナ。<Term> を並べる",
   },
   ({ children }) => (
-    <dl className="not-prose my-4 divide-y divide-neutral-200 rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
+    <dl className="not-prose my-6 divide-y divide-neutral-200 rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
       {children}
     </dl>
   )

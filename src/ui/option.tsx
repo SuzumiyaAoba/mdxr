@@ -47,7 +47,7 @@ export const Option = defineComponent(
   ({ title, status, children }) => {
     const s = STYLES[status];
     return (
-      <div className={`my-3 rounded-lg border p-4 ${s.card}`}>
+      <div className={`my-6 rounded-lg border p-4 ${s.card}`}>
         <div className="flex flex-wrap items-center gap-2">
           {nonEmpty(title) ? (
             <span className="font-semibold">{title}</span>
@@ -59,9 +59,11 @@ export const Option = defineComponent(
             {s.label}
           </span>
         </div>
-        <div className="text-sm [&>*:first-child]:mt-2 [&>*:last-child]:mb-0">
-          {children}
-        </div>
+        {children === undefined ? null : (
+          <div className="mt-1.5 text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+            {children}
+          </div>
+        )}
       </div>
     );
   }

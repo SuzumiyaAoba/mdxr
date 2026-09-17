@@ -17,8 +17,8 @@ export const Summary = defineComponent(
     const t = Number(total);
     const pct = t > 0 ? Math.min(100, Math.round((d / t) * 100)) : 0;
     return (
-      <div className="not-prose my-4">
-        <div className="mb-1 flex items-baseline justify-between text-sm">
+      <div className="not-prose my-6">
+        <div className="mb-1.5 flex items-baseline justify-between text-sm">
           <span className="font-medium">{label ?? "Progress"}</span>
           <span className="text-neutral-500 tabular-nums dark:text-neutral-400">
             {d}/{t}

@@ -15,7 +15,7 @@ export const Flow = defineComponent(
     }),
   },
   ({ title, children }) => (
-    <section className="my-4">
+    <section className="my-6">
       {nonEmpty(title) ? <h3 className="mt-0">{title}</h3> : null}
       <ol className="not-prose m-0 list-none p-0">{indexChildren(children)}</ol>
     </section>
@@ -84,7 +84,7 @@ export const FlowStep = defineComponent(
           </div>
         ) : null}
         {children === undefined ? null : (
-          <div className="mt-1 text-sm text-neutral-600 dark:text-neutral-300 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+          <div className="mt-1.5 text-sm text-neutral-600 dark:text-neutral-300 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
             {children}
           </div>
         )}

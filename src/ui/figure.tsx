@@ -16,7 +16,7 @@ export const Figure = defineComponent(
   ({ src, alt, caption, children }) => {
     const cap = nonEmpty(caption) ? caption : children;
     return (
-      <figure className="not-prose my-4">
+      <figure className="not-prose my-6">
         <img
           src={src}
           alt={alt ?? ""}

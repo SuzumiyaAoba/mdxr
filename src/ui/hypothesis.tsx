@@ -99,10 +99,10 @@ export const Hypotheses = defineComponent(
       total += 1;
     }
     return (
-      <section className="my-4">
+      <section className="my-6">
         {nonEmpty(title) ? <h3 className="mt-0">{title}</h3> : null}
         {total > 0 ? (
-          <div className="mb-2 flex flex-wrap items-center gap-x-2 text-xs text-neutral-500 dark:text-neutral-400">
+          <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-neutral-500 dark:text-neutral-400">
             <span>
               {total} hypothes{total === 1 ? "is" : "es"}
             </span>
@@ -116,7 +116,7 @@ export const Hypotheses = defineComponent(
             })}
           </div>
         ) : null}
-        <div className="not-prose space-y-2">{indexChildren(children)}</div>
+        <div className="not-prose space-y-3">{indexChildren(children)}</div>
       </section>
     );
   }

@@ -17,7 +17,7 @@ export const Ref = defineComponent(
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="group not-prose my-3 flex items-start gap-3 rounded-lg border border-neutral-200 p-3 text-inherit no-underline transition-colors hover:bg-neutral-50 active:bg-neutral-100 dark:border-neutral-800 dark:hover:bg-neutral-900 dark:active:bg-neutral-800"
+      className="group not-prose my-6 flex items-start gap-3 rounded-lg border border-neutral-200 px-4 py-3 text-inherit no-underline transition-colors hover:bg-neutral-50 active:bg-neutral-100 dark:border-neutral-800 dark:hover:bg-neutral-900 dark:active:bg-neutral-800"
     >
       <Icon
         className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"

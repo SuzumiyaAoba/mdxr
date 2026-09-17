@@ -44,10 +44,12 @@ export const Step = defineComponent(
           label={status}
           name={STATUS_ICONS[status]}
         />
-        <div className="min-w-0 flex-1 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-          {children}
+        <div className="min-w-0 flex-1">
+          <div className="[&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+            {children}
+          </div>
           {hasChips ? (
-            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
               {priority === undefined ? null : <Priority level={priority} />}
               {effort === undefined ? null : <Effort size={effort} />}
               {nonEmpty(owner) ? <Owner name={owner} /> : null}
@@ -84,7 +86,7 @@ export const Steps = defineComponent(
       .filter((s): s is Status => s !== undefined);
     const done = items.filter((s) => s === "done").length;
     return (
-      <div className="my-4 space-y-3">
+      <div className="my-6 space-y-3">
         {show && items.length > 0 ? (
           <Summary done={done} label="Steps" total={items.length} />
         ) : null}

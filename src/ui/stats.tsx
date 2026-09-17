@@ -9,7 +9,7 @@ export const Stats = defineComponent(
     description: "指標カードのグリッド。<Stat> を並べる",
   },
   ({ children }) => (
-    <div className="not-prose my-4 grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-3">
+    <div className="not-prose my-6 grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-3">
       {children}
     </div>
   )
@@ -52,7 +52,7 @@ export const Stat = defineComponent(
       </div>
       {nonEmpty(delta) ? (
         <div
-          className={`mt-1 flex items-center gap-1 text-xs font-medium ${deltaStyle(delta).cls}`}
+          className={`mt-1.5 flex items-center gap-1 text-xs font-medium ${deltaStyle(delta).cls}`}
         >
           <Icon className="h-3.5 w-3.5" name={deltaStyle(delta).icon} />
           {delta}

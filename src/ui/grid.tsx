@@ -98,7 +98,7 @@ export const Grid = defineComponent(
       : `grid-cols-1 ${COLS[cols]}`;
     return (
       <div
-        className={`my-4 grid ${tracks} ${GAPS[gap]} ${FLOWS[flow]} ${ITEMS[items]} ${className ?? ""}`}
+        className={`my-6 grid ${tracks} ${GAPS[gap]} ${FLOWS[flow]} ${ITEMS[items]} ${className ?? ""}`}
       >
         {children}
       </div>

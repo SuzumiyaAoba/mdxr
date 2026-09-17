@@ -49,7 +49,7 @@ const CodeHeader = (props: {
     </>
   );
   return (
-    <figcaption className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+    <figcaption className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-4 py-2 text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
       {link === undefined ? (
         <span className="inline-flex items-center gap-1.5 font-mono">
           {label}
@@ -164,7 +164,7 @@ export const Pre = (props: DocProps): ReactElement => {
   );
 
   return (
-    <figure className="not-prose my-4 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
+    <figure className="not-prose my-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
       <CodeHeader filename={filename} lang={lang} text={text} />
       <pre className="m-0 overflow-x-auto bg-white p-4 text-sm dark:bg-neutral-950">
         {cleanCode}

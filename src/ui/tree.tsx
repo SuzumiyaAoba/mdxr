@@ -94,9 +94,9 @@ export const Tree = defineComponent(
     }),
   },
   ({ root, children }) => (
-    <div className="not-prose my-4 overflow-x-auto rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 font-mono text-sm dark:border-neutral-800 dark:bg-neutral-900/60">
+    <div className="not-prose my-6 overflow-x-auto rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 font-mono text-sm dark:border-neutral-800 dark:bg-neutral-900/60">
       {nonEmpty(root) ? (
-        <div className="mb-1 flex items-center gap-1.5 font-semibold">
+        <div className="mb-1.5 flex items-center gap-1.5 font-semibold">
           <NodeIcon dir name={root} />
           {root}
         </div>

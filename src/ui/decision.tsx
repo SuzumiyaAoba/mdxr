@@ -57,8 +57,8 @@ export const Decision = defineComponent(
   ({ title, status, date, children }) => {
     const s = STYLES[status];
     return (
-      <section className="my-4 rounded-lg border border-indigo-200 bg-indigo-50/50 px-4 py-3 dark:border-indigo-900 dark:bg-indigo-950/30">
-        <div className="mb-1 flex flex-wrap items-baseline gap-2">
+      <section className="my-6 rounded-lg border border-indigo-200 bg-indigo-50/50 px-4 py-3 dark:border-indigo-900 dark:bg-indigo-950/30">
+        <div className="flex flex-wrap items-baseline gap-2">
           <span className="font-semibold text-indigo-900 dark:text-indigo-100">
             {title}
           </span>
@@ -74,9 +74,11 @@ export const Decision = defineComponent(
             </time>
           ) : null}
         </div>
-        <div className="text-sm [&>*:first-child]:mt-1 [&>*:last-child]:mb-0">
-          {children}
-        </div>
+        {children === undefined ? null : (
+          <div className="mt-1.5 text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+            {children}
+          </div>
+        )}
       </section>
     );
   }

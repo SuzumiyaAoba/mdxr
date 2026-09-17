@@ -61,7 +61,7 @@ export const Event = defineComponent(
         {nonEmpty(title) ? <span className="font-medium">{title}</span> : null}
       </div>
       {children === undefined ? null : (
-        <div className="text-sm [&>*:first-child]:mt-1 [&>*:last-child]:mb-0">
+        <div className="text-sm [&>*:first-child]:mt-1.5 [&>*:last-child]:mb-0">
           {children}
         </div>
       )}

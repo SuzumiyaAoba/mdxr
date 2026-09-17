@@ -18,6 +18,7 @@ import { Finding, Findings } from "./findings.js";
 import { Flow, FlowStep } from "./flow.js";
 import { Glossary, Term } from "./glossary.js";
 import { Cell, Grid } from "./grid.js";
+import { Hypotheses, Hypothesis } from "./hypothesis.js";
 import { Icon } from "./icon.js";
 import { Meta, MetaItem } from "./meta.js";
 import { Option } from "./option.js";
@@ -30,14 +31,17 @@ import { Prop, Props } from "./props.js";
 import { Commit, Issue, PR, Ref } from "./ref.js";
 import { Req, Reqs } from "./req.js";
 import { Risk } from "./risk.js";
+import { Search, Searches } from "./search.js";
 import { shadcnComponents } from "./shadcn.js";
 import { Stat, Stats } from "./stats.js";
 import { StatusBadge } from "./status-badge.js";
 import { Step, Steps } from "./steps.js";
 import { Summary } from "./summary.js";
 import { SymbolRef } from "./symbol-ref.js";
+import { Terminal } from "./terminal.js";
 import { Event, Timeline } from "./timeline.js";
 import { Toc } from "./toc.js";
+import { Trace, TraceFrame } from "./trace.js";
 import { Tree } from "./tree.js";
 
 export { Approval, Approvals } from "./approvals.js";
@@ -59,6 +63,7 @@ export { CONFIDENCES, Finding, Findings } from "./findings.js";
 export { Flow, FlowStep } from "./flow.js";
 export { Glossary, Term } from "./glossary.js";
 export { Cell, Grid } from "./grid.js";
+export { Hypotheses, Hypothesis, HYPOTHESIS_STATUSES } from "./hypothesis.js";
 export { hasIcon, Icon, normalizeIconName } from "./icon.js";
 export { Meta, MetaItem } from "./meta.js";
 export { Option, OPTION_STATUSES } from "./option.js";
@@ -71,13 +76,16 @@ export { Prop, Props } from "./props.js";
 export { Commit, Issue, PR, Ref } from "./ref.js";
 export { Req, Reqs } from "./req.js";
 export { Risk, RISK_LEVELS } from "./risk.js";
+export { Search, Searches } from "./search.js";
 export { Stat, Stats } from "./stats.js";
 export { StatusBadge, STATUSES } from "./status-badge.js";
 export { Step, Steps } from "./steps.js";
 export { Summary } from "./summary.js";
 export { SYMBOL_KINDS, SymbolRef } from "./symbol-ref.js";
+export { TERMINAL_LANGS, Terminal } from "./terminal.js";
 export { Event, Timeline } from "./timeline.js";
 export { Toc } from "./toc.js";
+export { FRAME_KINDS, Trace, TraceFrame } from "./trace.js";
 export { Tree } from "./tree.js";
 
 /**
@@ -120,6 +128,8 @@ export const builtinComponents: ComponentMap = {
   FlowStep,
   Glossary,
   Grid,
+  Hypotheses,
+  Hypothesis,
   Icon,
   Issue,
   Meta,
@@ -137,6 +147,8 @@ export const builtinComponents: ComponentMap = {
   Req,
   Reqs,
   Risk,
+  Search,
+  Searches,
   Stat,
   Stats,
   StatusBadge,
@@ -145,8 +157,11 @@ export const builtinComponents: ComponentMap = {
   Summary,
   SymbolRef,
   Term,
+  Terminal,
   Timeline,
   Toc,
+  Trace,
+  TraceFrame,
   Tree,
   pre: Pre,
   ...shadcnComponents,

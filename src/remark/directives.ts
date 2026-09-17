@@ -23,12 +23,18 @@ const CONTAINER_COMPONENTS: Record<string, string> = {
   finding: "Finding",
   findings: "Findings",
   flow: "Flow",
+  hypotheses: "Hypotheses",
+  hypothesis: "Hypothesis",
   phase: "Phase",
   plan: "Plan",
+  search: "Search",
+  searches: "Searches",
   steps: "Steps",
   summary: "Summary",
+  terminal: "Terminal",
   timeline: "Timeline",
   toc: "Toc",
+  trace: "Trace",
 };
 
 interface DirectiveNode extends Parent {
@@ -78,6 +84,8 @@ const toMdxComponent = (
  *   :::plan / :::steps / :::summary / :::timeline → Plan / Steps / Summary / Timeline
  *   :::flow / :::findings / :::finding / :::files / :::deps
  *     → Flow / Findings / Finding / Files / Deps
+ *   :::terminal / :::trace / :::hypotheses / :::hypothesis / :::searches / :::search
+ *     → Terminal / Trace / Hypotheses / Hypothesis / Searches / Search
  * `non-goal` is accepted as an alias of the `nongoal` callout kind.
  */
 export const remarkRvDirectives = () => (tree: Node) => {

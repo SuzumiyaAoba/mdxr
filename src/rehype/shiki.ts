@@ -23,10 +23,21 @@ import { isRecord } from "../guards.js";
 const THEMES = { dark: "github-dark", light: "github-light" } as const;
 
 /**
- * Languages handled by other means (mermaid renders as a diagram) or that have
- * no grammar (plain text aliases) — left untouched so `pre` stays cheap.
+ * Languages handled by other means (mermaid renders as a diagram, console
+ * sessions render as a terminal transcript) or that have no grammar (plain
+ * text aliases) — left untouched so `pre` stays cheap.
  */
-const SKIP_LANGS = new Set(["mermaid", "plain", "plaintext", "text", "txt"]);
+const SKIP_LANGS = new Set([
+  "console",
+  "mermaid",
+  "plain",
+  "plaintext",
+  "shell-session",
+  "shellsession",
+  "terminal",
+  "text",
+  "txt",
+]);
 
 /**
  * A middle ground between startup cost and coverage: grammars in this list are

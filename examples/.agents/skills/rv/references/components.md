@@ -2,10 +2,7 @@
 
 MDX attributes are always strings (`status="done"`). `children` is Markdown.
 
-This file is an index: each group lists what its components do and links to a
-detail file with full signatures and examples. Read only the detail file(s) the
-document needs. `rv catalog --json` is the machine-readable source of truth for
-component names and attributes.
+This file is an index: each group lists what its components do and links to a detail file with full signatures and examples. Read only the detail file(s) the document needs. `rv catalog --json` is the machine-readable source of truth for component names and attributes.
 
 ## Document scaffolding — details: [components/document.md](components/document.md)
 
@@ -45,6 +42,10 @@ component names and attributes.
 | Component | What it is |
 | --- | --- |
 | `<Findings>` / `<Finding>` | Numbered findings with confidence pills — `:::findings` |
+| `<Hypotheses>` / `<Hypothesis>` | Hypothesis ledger (supported/refuted/untested) — `:::hypotheses` |
+| `<Terminal>` | Command transcript (`$` prompts, output, exit badge) — `:::terminal`, ` ```console ` |
+| `<Trace>` / `<TraceFrame>` | Stack/call trace with error line, dimmed lib frames — `:::trace` |
+| `<Searches>` / `<Search>` | Search-query log (pattern/scope/tool/hits) — `:::searches` |
 | `<Files>` / `<File>` | Related-file inventory — `:::files` |
 | `<Deps>` / `<Dep>` | Dependency-edge list — `:::deps` |
 | `<Changes>` / `<Change>` | Change-set list (add/modify/delete/rename) |
@@ -71,12 +72,8 @@ component names and attributes.
 
 ## shadcn/ui — details: [components/shadcn.md](components/shadcn.md)
 
-The full shadcn/ui (Base UI) set is registered (`Button`, `Card`, `Table`,
-`Tabs`, …). Documents have no client-side hydration, so stateful primitives
-render their initial state only — prefer `Card`/`Alert`/`Badge`/`Table` and the
-native-element built-ins (`<Ask>`, `<Details>`, `<Toc>`) for interactivity.
+The full shadcn/ui (Base UI) set is registered (`Button`, `Card`, `Table`, `Tabs`, …). Documents have no client-side hydration, so stateful primitives render their initial state only — prefer `Card`/`Alert`/`Badge`/`Table` and the native-element built-ins (`<Ask>`, `<Details>`, `<Toc>`) for interactivity.
 
 ## Project-defined components — details: [extending.md](extending.md)
 
-Projects can register their own components via `rv.config.ts` +
-`defineComponent`; a same-name component overrides the built-in.
+Projects can register their own components via `rv.config.ts` + `defineComponent`; a same-name component overrides the built-in.

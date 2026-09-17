@@ -506,6 +506,99 @@ describe(mdxToHtml, () => {
     expect(body).toContain("katex");
   });
 
+  it("renders :::terminal as a transcript with cmd and exit badge", async () => {
+    const { body } = await render(
+      ':::terminal{cmd="pnpm test" exit="1" title="test run"}\n\n```\nFAIL x.test.ts\n```\n\n:::'
+    );
+    expect(body).toContain("$ pnpm test");
+    expect(body).toContain("exit 1");
+    expect(body).toContain("FAIL x.test.ts");
+    expect(body).toContain("test run");
+    expect(body).toContain('data-copy="$ pnpm test');
+  });
+
+  it("marks the exit badge by status", async () => {
+    const { body } = await render(
+      ':::terminal{cmd="pnpm build" exit="0"}\n\n```\ndone\n```\n\n:::'
+    );
+    expect(body).toContain("exit 0");
+    expect(body).toContain("bg-emerald-900");
+  });
+
+  it("renders ```console fences as transcripts with $ prompt lines", async () => {
+    const { body } = await render(
+      '```console exit="0"\n$ rg foo src/\nsrc/x.ts: 3\n```'
+    );
+    expect(body).toContain("exit 0");
+    expect(body).toContain("src/x.ts: 3");
+    // prompt line renders the literal `$ ` prefix in emerald
+    expect(body).toContain(">$</span> rg foo src/");
+    // no code figure / shiki highlighting
+    expect(body).not.toContain("language-console");
+  });
+
+  it("still highlights plain fenced code normally", async () => {
+    const { body } = await render("```bash\necho hi\n```");
+    expect(body).toContain("--shiki-light:");
+  });
+
+  it("renders :::hypotheses with status pills", async () => {
+    const { body } = await render(
+      ':::hypotheses\n\n<Hypothesis status="supported" title="A holds" />\n<Hypothesis status="refuted" title="B ruled out" />\n<Hypothesis status="untested" title="C open" />\n\n:::'
+    );
+    expect(body).toContain("Supported");
+    expect(body).toContain("Refuted");
+    expect(body).toContain("Untested");
+  });
+
+  it("summarizes hypothesis counts in the container", async () => {
+    const { body } = await render(
+      ':::hypotheses\n\n<Hypothesis status="supported" />\n<Hypothesis status="refuted" />\n<Hypothesis status="untested" />\n\n:::'
+    );
+    expect(body).toContain("3 hypotheses");
+    expect(body).toContain("1 supported");
+    expect(body).toContain("1 refuted");
+  });
+
+  it("renders :::trace with an error line and numbered frames", async () => {
+    const { body } = await render(
+      ':::trace{error="TypeError: boom"}\n\n<TraceFrame name="parse" path="src/a.ts" lines="10" />\n<TraceFrame name="run" path="src/b.ts" />\n\n:::'
+    );
+    expect(body).toContain("TypeError: boom");
+    expect(body).toContain("#0");
+    expect(body).toContain("#1");
+    expect(body).toContain("parse");
+    expect(body).toContain("src/a.ts:10");
+  });
+
+  it("dims lib frames with a tag", async () => {
+    const { body } = await render(
+      ':::trace\n\n<TraceFrame name="visit" path="node_modules/x/index.js" kind="lib" />\n\n:::'
+    );
+    expect(body).toContain("lib");
+    expect(body).toContain("opacity-60");
+  });
+
+  it("renders :::searches rows with hit badges", async () => {
+    const { body } = await render(
+      ':::searches\n\n<Search pattern="evaluate" path="src/" tool="rg" hits="3" />\n<Search pattern="hydrateRoot" path="src/" hits="0">dead end</Search>\n\n:::'
+    );
+    expect(body).toContain("evaluate");
+    expect(body).toContain("in src/");
+    expect(body).toContain("3 hits");
+    expect(body).toContain("no hits");
+    expect(body).toContain("dead end");
+  });
+
+  it("summarizes search totals in the container", async () => {
+    const { body } = await render(
+      ':::searches{title="Method"}\n\n<Search pattern="a" hits="3" />\n<Search pattern="b" hits="0" />\n\n:::'
+    );
+    expect(body).toContain("Method");
+    expect(body).toContain("2 searches");
+    expect(body).toContain("3 hits");
+  });
+
   it("renders <Toc> as a collapsible outline", async () => {
     const { body } = await render("<Toc />\n\n## Alpha\n");
     expect(body).toContain("rv-toc");

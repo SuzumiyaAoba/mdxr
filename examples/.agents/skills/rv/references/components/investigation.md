@@ -118,3 +118,76 @@ API/props table for documenting a component or function signature. `of` renders 
   <Prop name="effort" type="xs | s | m | l | xl" default="m" />
 </Props>
 ```
+
+### `<Terminal cmd exit title>` / `:::terminal` / ` ```console `
+
+Terminal transcript — the standard evidence block for "what was run and what it printed". `cmd` renders as a `$ `-prompted first line; `exit` adds a title-bar badge (`0` green, anything else red). Children carry the output: put it in a fenced block for verbatim text — plain-text children are parsed as Markdown, which can mangle `_`, `*` etc. Body lines starting with `$ ` render as prompt lines, so multi-command sessions work too. The copy button copies the whole transcript.
+
+````mdx
+<Terminal cmd="pnpm test" exit="1" title="test run">
+
+```
+FAIL  tests/render.test.ts
+  ✗ renders markdown prose
+```
+
+</Terminal>
+````
+
+A ` ```console ` (or ` ```terminal ` / ` ```shellsession `) fence renders the same transcript with no component — `exit="N"` and `title="…"` in the fence meta work as well:
+
+````
+```console exit="1" title="grep evidence"
+$ rg 'evaluate' src/ --count
+src/mdx.ts: 3
+```
+````
+
+### `<Hypotheses title>` / `<Hypothesis status="supported|refuted|untested" title="…">` / `:::hypotheses` / `:::hypothesis`
+
+Hypothesis ledger — the "what we suspected, and whether it held up" section of a debugging-style investigation. `supported` = evidence backs it, `refuted` = ruled out (record dead ends — they save the reader from re-checking), `untested` = not yet checked. `Hypotheses` numbers each entry and summarizes per-status counts; children carry the reasoning and evidence (`<Terminal>`, `<FileRef>`).
+
+```mdx
+<Hypotheses title="Hypotheses tested">
+  <Hypothesis status="refuted" title="CSS loads at runtime">
+    Ruled out: the stylesheet is inlined into the HTML — see the
+    <Terminal cmd="grep stylesheet dist/out.html">…</Terminal>
+  </Hypothesis>
+  <Hypothesis status="supported" title="Directives expand before eval" />
+</Hypotheses>
+```
+
+### `<Trace title error>` / `<TraceFrame name path lines kind="app|lib">` / `:::trace`
+
+Stack/call trace for error and crash investigations. `error` renders the exception line on top (red); `TraceFrame`s are auto-numbered `#0…` top-down (most recent first, like `gdb bt`). `kind="lib"` dims framework/runtime frames and adds a `lib` tag. Children are per-frame notes.
+
+```mdx
+<Trace error="TypeError: Cannot read properties of undefined (reading 'kind')">
+  <TraceFrame name="toMdxComponent" path="src/remark/directives.ts" lines="64">
+    leaf directives have no attributes record
+  </TraceFrame>
+  <TraceFrame
+    name="visit"
+    path="node_modules/unist-util-visit/index.js"
+    kind="lib"
+  />
+  <TraceFrame
+    name="remarkRvDirectives"
+    path="src/remark/directives.ts"
+    lines="91"
+  />
+</Trace>
+```
+
+### `<Searches title>` / `<Search pattern path tool hits>` / `:::searches` / `:::search`
+
+Query log — provenance for an investigation: which patterns were searched where and how much came back. `pattern` is required; `path` is the scope (`in src/`), `tool` a small mono chip (`rg`, `grep`, …), `hits` a count badge — `0` renders "no hits" so dead ends read as deliberate exclusions. `Searches` adds a totals line; children are notes.
+
+```mdx
+<Searches title="How the code was searched">
+  <Search pattern="evaluate" path="src/" tool="rg" hits="3" />
+  <Search pattern="hydrateRoot" path="src/" tool="rg" hits="0">
+    Dead end — there is no client entry point.
+  </Search>
+</Searches>
+```

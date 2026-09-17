@@ -31,6 +31,10 @@ Write documents as **Markdown + a small set of JSX components** (MDX). Do NOT wr
 | `:::phase{title="…" status="doing"}` | `<Phase>` |
 | `:::flow{title="…"}` + `<FlowStep>` | `<Flow>` numbered call/execution chain |
 | `:::findings` + `<Finding confidence>` | findings list with confidence pills |
+| `:::hypotheses` + `<Hypothesis status>` | hypothesis ledger (supported/refuted/untested) |
+| `:::searches` + `<Search pattern hits>` | search-query log |
+| `:::trace` + `<TraceFrame>` | stack/call trace with error line |
+| `:::terminal{cmd="…" exit="…"}` / ` ```console ` fence | terminal transcript |
 | `:::files` / `:::deps` | `<Files>` related-file list / `<Deps>` dependency edges |
 | `:::timeline{title="…"}` | `<Timeline>` |
 | frontmatter `status:` / `date:` / `owner:` | document header badge + meta row |

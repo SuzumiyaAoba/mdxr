@@ -50,3 +50,7 @@ mdxr init --tool claude    # → .claude/skills/mdxr/
 mdxr init --tool all       # all supported tools
 mdxr init --global         # into your home directory instead
 ```
+
+## License
+
+MIT

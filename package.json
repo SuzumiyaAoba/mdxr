@@ -2,6 +2,7 @@
   "name": "mdxr",
   "version": "0.1.0",
   "description": "Render agent-authored MDX documents (plans, reports) to standalone HTML with a semantic component catalog",
+  "license": "MIT",
   "bin": {
     "mdxr": "./dist/cli.mjs"
   },

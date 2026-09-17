@@ -135,3 +135,18 @@ This project uses **React Doctor** for React health checks (correctness, perform
 - **Pre-commit**: lefthook runs `react-doctor --staged --blocking none` (advisory, never blocks)
 - **CI**: `.github/workflows/react-doctor.yml` scans PRs and posts an advisory summary
 - **Rules**: `pnpm react-doctor rules list` / `rules explain <rule>`; configure via `doctor.config.ts`
+
+---
+
+## Releasing
+
+Publishing to npm is automated via `.github/workflows/release.yml`:
+
+1. Bump `version` in `package.json` and commit.
+2. Push a matching tag (`git tag v0.1.0 && git push origin v0.1.0`, or create a GitHub release). The workflow verifies the tag matches `package.json`.
+3. Requires the `NPM_TOKEN` repo secret (npm granular access token with publish permission for `mdxr`). Provenance attestation is enabled via `--provenance`.
+
+Notes:
+
+- `pnpm publish` runs `prepack` (`pnpm build`) automatically, so `dist/` is always rebuilt before packing.
+- Node >= 22.13 is required for the dev toolchain (pnpm 11 uses `node:sqlite`; ultracite pulls in execa 10 which needs `Set.prototype.union`). CI uses standalone pnpm so `test`/`build` still run on the Node 20 matrix leg, while `pnpm check` is gated to `node-version != 20`.

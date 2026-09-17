@@ -36,6 +36,12 @@ const highlightCodeBlocks = async (root: ParentNode): Promise<void> => {
       }
       code.innerHTML = html;
       code.classList.add("shiki");
+      // has-* flags live on shiki's discarded <pre>; restore the one the CSS
+      // reads (focus dimming) from the grafted line spans.
+      code.classList.toggle(
+        "has-focused",
+        code.querySelector(".line.focused") !== null
+      );
     })
   );
 };

@@ -30,7 +30,8 @@
     "fix": "ultracite fix",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "prepare": "lefthook install"
+    "prepare": "lefthook install",
+    "react-doctor": "react-doctor"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -87,7 +88,9 @@
     "lefthook": "^2.1.14",
     "oxfmt": "^0.68.0",
     "oxlint": "^1.83.0",
+    "oxlint-plugin-complexity": "2.1.8",
     "oxlint-tsgolint": "^7.0.2001",
+    "react-doctor": "^0.9.14",
     "storybook": "^10.6.0",
     "typescript": "^5.8.0",
     "ultracite": "7.11.1",
@@ -97,5 +100,6 @@
   },
   "engines": {
     "node": ">=20"
-  }
+  },
+  "packageManager": "pnpm@11.25.0"
 }

@@ -124,3 +124,14 @@ Oxlint + Oxfmt's linter will catch most issues automatically. Focus your attenti
 ---
 
 Most formatting and common issues are automatically fixed by Oxlint + Oxfmt. Run `pnpm dlx ultracite fix` before committing to ensure compliance.
+
+---
+
+## React Doctor
+
+This project uses **React Doctor** for React health checks (correctness, performance, security, accessibility, maintainability) with a 0-100 score.
+
+- **Scan**: `pnpm react-doctor` (add `--verbose` for details, `--scope changed` for branch-introduced issues, `--score` for the number only)
+- **Pre-commit**: lefthook runs `react-doctor --staged --blocking none` (advisory, never blocks)
+- **CI**: `.github/workflows/react-doctor.yml` scans PRs and posts an advisory summary
+- **Rules**: `pnpm react-doctor rules list` / `rules explain <rule>`; configure via `doctor.config.ts`

@@ -12,5 +12,24 @@ export default defineConfig({
     "src/hooks/**",
     "src/lib/**",
   ],
+  jsPlugins: [{ name: "complexity", specifier: "oxlint-plugin-complexity" }],
   options: { typeAware: true, typeCheck: true },
+  overrides: [
+    {
+      files: [
+        "**/*.{test,spec,test-d,spec-d}.{ts,tsx,js,jsx}",
+        "**/__tests__/**/*.{ts,tsx,js,jsx}",
+      ],
+      rules: {
+        // describe/it nesting dominates the metric, not actual logic.
+        "complexity/complexity": "off",
+      },
+    },
+  ],
+  rules: {
+    // eslint/complexity only covers cyclomatic; the plugin checks both
+    // cyclomatic and cognitive complexity in a single pass.
+    complexity: "off",
+    "complexity/complexity": ["warn", { cognitive: 15, cyclomatic: 20 }],
+  },
 });

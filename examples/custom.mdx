@@ -1,0 +1,65 @@
+---
+title: Custom components — project-defined TSX
+status: done
+owner: "@suzumiyaaoba"
+date: 2026-09-18
+---
+
+:::note
+The components on this page are **not** built into mdxr. They are plain React
+(TSX) defined by this project: `mdxr.config.ts` points at a components module
+and every named export becomes usable as an MDX tag.
+:::
+
+## Wiring
+
+<CodeFile path="mdxr.config.ts" />
+
+The components themselves — embedded live, so this page never drifts from the
+source:
+
+<CodeFile path="components/index.tsx" />
+
+## LinkCard — props + children
+
+The simplest shape: a valibot schema validates `href`/`title`, and markdown
+children render inside the card.
+
+<LinkCard href="https://mdxjs.com" title="MDX documentation">
+  Component model used by the renderer.
+</LinkCard>
+
+## FeatureCard — composing built-ins
+
+`mdxr/components` re-exports the catalog, so custom components wrap `<Icon>`,
+`<StatusBadge>`, `<Callout>`, … instead of re-styling from scratch. Reusing
+`STATUSES` keeps the `status` picklist identical to the built-in one.
+
+<FeatureCard title="MDX component pipeline" status="done" icon="lucide:puzzle">
+  Replaced the string-template renderer with typed components.
+</FeatureCard>
+<FeatureCard title="Custom component loading" status="done" icon="lucide:blocks">
+  esbuild bundles the module; React and valibot resolve to mdxr's own copy.
+</FeatureCard>
+<FeatureCard title="Remote component registries" status="blocked">
+  Waiting on a sandboxed evaluator.
+</FeatureCard>
+
+## Counter — hydration
+
+The client bundle imports the same `components/index.tsx`, so hooks work after
+load — this counter is operable in the rendered HTML:
+
+<Counter label="widgets" start="3" /> <Counter />
+
+## Prop validation
+
+Schemas turn typos into document errors with `file:line:col` instead of
+silent mis-render. `<FeatureCard status="nope">` fails at render time:
+
+```console
+mdxr: error: Invalid props: status: Invalid type: Expected ("todo" | "doing" | "done" | "blocked") but received "nope"
+```
+
+`mdxr catalog --json` lists project components alongside the built-ins —
+`"source": "project"` — so an agent can discover them before writing a doc.

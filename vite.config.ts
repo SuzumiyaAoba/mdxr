@@ -1,16 +1,11 @@
-import ultraciteFmt from "ultracite/oxfmt";
-import core from "ultracite/oxlint/core";
-import react from "ultracite/oxlint/react";
-import vitest from "ultracite/oxlint/vitest";
 import { defineConfig } from "vite-plus";
 
+import oxfmtConfig from "./oxfmt.config";
+import oxlintConfig from "./oxlint.config";
+
 export default defineConfig({
-  fmt: { ...ultraciteFmt },
-  lint: {
-    extends: [core, react, vitest],
-    ignorePatterns: core.ignorePatterns,
-    options: { typeAware: true, typeCheck: true },
-  },
+  fmt: oxfmtConfig,
+  lint: oxlintConfig,
   pack: {
     dts: true,
     entry: {

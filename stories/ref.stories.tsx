@@ -22,11 +22,11 @@ export const IssueAndPR: Story = {
   render: () => (
     <p>
       Tracked in{" "}
-      <Issue repo="SuzumiyaAoba/rv" number="12">
+      <Issue repo="SuzumiyaAoba/mdxr" number="12">
         catalog drift
       </Issue>{" "}
       {/* oxlint-disable-next-line react/jsx-pascal-case */}
-      and fixed by <PR repo="SuzumiyaAoba/rv" number="34" />.
+      and fixed by <PR repo="SuzumiyaAoba/mdxr" number="34" />.
     </p>
   ),
 };

@@ -24,6 +24,7 @@
   },
   "scripts": {
     "build": "vp pack",
+    "build:examples": "pnpm build && node scripts/render-examples.ts",
     "test": "vp test",
     "check": "ultracite check",
     "fix": "ultracite fix",

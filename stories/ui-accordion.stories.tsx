@@ -19,7 +19,7 @@ export const Default: Story = {
   render: () => (
     <Accordion>
       <AccordionItem value="item-1">
-        <AccordionTrigger>What is rv?</AccordionTrigger>
+        <AccordionTrigger>What is mdxr?</AccordionTrigger>
         <AccordionContent>An MDX to standalone HTML renderer.</AccordionContent>
       </AccordionItem>
       <AccordionItem value="item-2">

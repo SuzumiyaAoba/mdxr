@@ -1,4 +1,4 @@
-import { defineComponent, v } from "@suzumiyaaoba/rv";
+import { defineComponent, v } from "mdxr";
 
 export const LinkCard = defineComponent(
   {

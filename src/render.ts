@@ -96,7 +96,7 @@ export interface RenderOptions {
 
 export interface RenderSourceOptions extends RenderOptions {
   /**
-   * Project directory: where `rv.config.ts` is looked up and where relative
+   * Project directory: where `mdxr.config.ts` is looked up and where relative
    * paths (e.g. `<CodeFile path="…">`) resolve. Defaults to the cwd.
    */
   dir?: string;
@@ -126,7 +126,7 @@ export const render = async (
   );
   for (const k of collisions) {
     process.stderr.write(
-      `rv: project component <${k}> overrides the built-in\n`
+      `mdxr: project component <${k}> overrides the built-in\n`
     );
   }
 
@@ -165,7 +165,7 @@ export const render = async (
   const title =
     fmTitle ??
     /<h1[^>]*>(?<text>[^<]+)</u.exec(body)?.groups?.text ??
-    "rv document";
+    "mdxr document";
 
   const fmStr = (key: string): string | undefined => {
     const val: unknown = frontmatter[key];

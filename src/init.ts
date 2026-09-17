@@ -6,15 +6,15 @@ import path from "node:path";
 import { pkgRoot } from "./paths.js";
 
 const LOCAL_DIRS: Record<string, string> = {
-  agents: ".agents/skills/rv",
-  claude: ".claude/skills/rv",
-  devin: ".devin/skills/rv",
+  agents: ".agents/skills/mdxr",
+  claude: ".claude/skills/mdxr",
+  devin: ".devin/skills/mdxr",
 };
 
 const GLOBAL_DIRS: Record<string, string> = {
-  agents: ".agents/skills/rv",
-  claude: ".claude/skills/rv",
-  devin: ".config/devin/skills/rv",
+  agents: ".agents/skills/mdxr",
+  claude: ".claude/skills/mdxr",
+  devin: ".config/devin/skills/mdxr",
 };
 
 export interface InitOptions {

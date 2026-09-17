@@ -116,7 +116,7 @@ const toList = (items: TocItem[]): ListNode => ({
  *    children — `depth`/`min` attributes bound the heading levels included
  *    (defaults: h2–h3, i.e. min=2 depth=3).
  */
-export const remarkRvHeadings = () => (tree: Node) => {
+export const remarkMdxrHeadings = () => (tree: Node) => {
   const seen = new Map<string, number>();
   const headings: TocItem[] = [];
 

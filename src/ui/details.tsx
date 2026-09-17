@@ -20,12 +20,12 @@ export const Details = defineComponent(
     const isOpen = open === true || open === "" || open === "true";
     return (
       <details
-        className="rv-details my-6 rounded-lg border border-neutral-200 dark:border-neutral-800"
+        className="mdxr-details my-6 rounded-lg border border-neutral-200 dark:border-neutral-800"
         open={isOpen}
       >
         <summary className="flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-neutral-700 transition-colors select-none hover:bg-neutral-50 active:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-900 dark:active:bg-neutral-800">
           <Icon
-            className="rv-chev h-4 w-4 shrink-0 text-neutral-400"
+            className="mdxr-chev h-4 w-4 shrink-0 text-neutral-400"
             name="lucide:chevron-right"
           />
           {summary ?? "Details"}

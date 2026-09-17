@@ -92,7 +92,7 @@ const LINE_NUMBER_RE =
  * them; BASE_CSS draws the numbers with a counter so copy stays clean.
  */
 const transformerLineNumbers: ShikiTransformer = {
-  name: "rv:line-numbers",
+  name: "mdxr:line-numbers",
   pre(node) {
     const raw = this.options.meta?.__raw ?? "";
     if (LINE_NUMBER_RE.test(raw)) {

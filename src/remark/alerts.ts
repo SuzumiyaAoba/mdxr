@@ -24,7 +24,7 @@ type MdxTarget = Node & { name?: string; attributes?: unknown };
  *   > Be careful.
  * renders identically to <Callout kind="warning">.
  */
-export const remarkRvAlerts = () => (tree: Node) => {
+export const remarkMdxrAlerts = () => (tree: Node) => {
   visit(tree, "blockquote", (node: Node) => {
     if (!isParent(node)) {
       return;

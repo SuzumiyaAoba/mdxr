@@ -256,12 +256,46 @@ describe(mdxToHtml, () => {
 
   it("renders Tree from a nested list with folder detection and notes", async () => {
     const { body } = await render(
-      '<Tree root="rv/">\n\n- src/\n  - render.ts — pipeline entry\n- package.json\n\n</Tree>'
+      '<Tree root="mdxr/">\n\n- src/\n  - render.ts — pipeline entry\n- package.json\n\n</Tree>'
     );
-    expect(body).toContain("rv/");
+    expect(body).toContain("mdxr/");
     expect(body).toContain("render.ts");
     expect(body).toContain("pipeline entry");
     expect(body).toContain("package.json");
+  });
+
+  it("renders Tree folders as collapsible <details> (open by default)", async () => {
+    const { body } = await render(
+      "<Tree>\n\n- src/\n  - render.ts\n- empty/\n- package.json\n\n</Tree>"
+    );
+    expect(body).toContain("<details open");
+    expect(body).toContain("<summary");
+    // A bare `dir/` renders collapsed and reveals a `…` placeholder.
+    expect(body).toContain("<details>");
+  });
+
+  it('starts Tree folders collapsed with open="false"', async () => {
+    const { body } = await render(
+      '<Tree open="false">\n\n- src/\n  - render.ts\n\n</Tree>'
+    );
+    expect(body).toContain("<details>");
+    expect(body).not.toContain("<details open");
+  });
+
+  it("renders `...`/`…` Tree entries as placeholders without icons", async () => {
+    const { body } = await render(
+      "<Tree>\n\n- src/\n  - index.ts\n  - ...\n- …\n\n</Tree>"
+    );
+    const placeholders = body.match(/>…</gu) ?? [];
+    expect(placeholders.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("highlights bold Tree entries", async () => {
+    const { body } = await render(
+      "<Tree>\n\n- **important.ts**\n- plain.ts\n\n</Tree>"
+    );
+    expect(body).toContain("<strong>important.ts</strong>");
+    expect(body).toContain("bg-amber-500/15");
   });
 
   it("adds an automatic progress bar to Steps with progress", async () => {
@@ -658,17 +692,17 @@ describe(mdxToHtml, () => {
 
   it("renders <Toc> as a collapsible outline", async () => {
     const { body } = await render("<Toc />\n\n## Alpha\n");
-    expect(body).toContain("rv-toc");
+    expect(body).toContain("mdxr-toc");
     expect(body).toContain("<details");
     expect(body).toContain("<summary");
-    expect(body).toContain("rv-toc-body");
+    expect(body).toContain("mdxr-toc-body");
   });
 
   it("renders <Details> as a native collapsible", async () => {
     const { body } = await render(
       '<Details summary="Why">because</Details>\n\n<Details open summary="Open">shown</Details>'
     );
-    expect(body).toContain('class="rv-details');
+    expect(body).toContain('class="mdxr-details');
     expect(body).toContain("<summary");
     expect(body).toContain(">because<");
     expect(body).toContain("open");
@@ -694,7 +728,7 @@ describe(mdxToHtml, () => {
     expect(body).toContain("<textarea");
     expect(body).toContain("<select");
     expect(body).toContain("<option");
-    expect(body).toContain("rv-switch");
+    expect(body).toContain("mdxr-switch");
   });
 
   it("wires the Copy answers button for the client handler", async () => {

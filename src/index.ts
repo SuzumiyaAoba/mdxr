@@ -1,10 +1,10 @@
-// Public entry: `@suzumiyaaoba/rv`
-// API surface for rv.config.ts and custom component modules.
-export { defineConfig, type RvConfig } from "./config.js";
+// Public entry: `mdxr`
+// API surface for mdxr.config.ts and custom component modules.
+export { defineConfig, type MdxrConfig } from "./config.js";
 export {
   defineComponent,
   textOf,
   type ComponentMeta,
-  type RvComponent,
+  type MdxrComponent,
 } from "./define.js";
 export * as v from "valibot";

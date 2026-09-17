@@ -64,7 +64,7 @@ export const Choice = defineComponent(
       return <option value={value}>{children}</option>;
     }
     return (
-      <label className="rv-choice flex cursor-pointer items-start gap-2.5 rounded-lg border border-neutral-200 px-3 py-2 text-sm transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800/60">
+      <label className="mdxr-choice flex cursor-pointer items-start gap-2.5 rounded-lg border border-neutral-200 px-3 py-2 text-sm transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800/60">
         <input
           className="sr-only"
           defaultChecked={truthy(checked)}
@@ -74,16 +74,16 @@ export const Choice = defineComponent(
         />
         <span
           aria-hidden
-          className={`rv-mark ${mode === "radio" ? "rv-mark-radio" : "rv-mark-box"}`}
+          className={`mdxr-mark ${mode === "radio" ? "mdxr-mark-radio" : "mdxr-mark-box"}`}
         >
           {mode === "radio" ? null : (
             <Icon className="h-3 w-3" name="lucide:check" />
           )}
         </span>
-        <span className="rv-choice-text min-w-0 flex-1 leading-snug">
+        <span className="mdxr-choice-text min-w-0 flex-1 leading-snug">
           {children}
           {nonEmpty(description) ? (
-            <span className="rv-choice-desc mt-0.5 block text-xs text-neutral-500 dark:text-neutral-400">
+            <span className="mdxr-choice-desc mt-0.5 block text-xs text-neutral-500 dark:text-neutral-400">
               {description}
             </span>
           ) : null}
@@ -134,14 +134,14 @@ export const Question = defineComponent(
     const t: QuestionType =
       type ?? (flattenChildren(children).length > 0 ? "choice" : "text");
     const ctx = useMemo(() => ({ mode: CHOICE_MODE[t], name }), [t, name]);
-    const id = `rv-q-${name}`;
+    const id = `mdxr-q-${name}`;
     // Resolved label + type ride on the wrapper so the client handler can
     // pair every control with the text the reader saw (Markdown sheet).
     const labelText = nonEmpty(label) ? label : name;
     const qAttrs = {
+      "data-mdxr-q": "",
       "data-q-label": labelText,
       "data-q-type": t,
-      "data-rv-q": "",
     } as const;
     const labelEl = (
       <>
@@ -157,7 +157,7 @@ export const Question = defineComponent(
       </p>
     ) : null;
     const frame = (control: ReactElement): ReactElement => (
-      <div className="rv-q px-4 py-3.5" {...qAttrs}>
+      <div className="mdxr-q px-4 py-3.5" {...qAttrs}>
         <label className="text-sm font-medium" htmlFor={id}>
           {labelEl}
         </label>
@@ -168,8 +168,10 @@ export const Question = defineComponent(
 
     if (t === "choice" || t === "multi") {
       return (
-        <fieldset className="rv-q m-0 border-0 px-4 py-3.5" {...qAttrs}>
-          <legend className="p-0 text-sm font-medium">{labelEl}</legend>
+        // <legend> sits at the fieldset's top edge regardless of the
+        // fieldset's padding-top, so the top padding lives on the legend.
+        <fieldset className="mdxr-q m-0 px-4 pb-3.5" {...qAttrs}>
+          <legend className="p-0 pt-4.5 text-sm font-medium">{labelEl}</legend>
           {descEl}
           <div className="mt-2 space-y-1.5">
             <ChoiceMode.Provider value={ctx}>{children}</ChoiceMode.Provider>
@@ -180,7 +182,7 @@ export const Question = defineComponent(
 
     if (t === "toggle") {
       return (
-        <div className="rv-q px-4 py-3.5" {...qAttrs}>
+        <div className="mdxr-q px-4 py-3.5" {...qAttrs}>
           <label
             className="flex cursor-pointer items-center justify-between gap-3"
             htmlFor={id}
@@ -197,7 +199,7 @@ export const Question = defineComponent(
               type="checkbox"
               value="yes"
             />
-            <span aria-hidden className="rv-switch" />
+            <span aria-hidden className="mdxr-switch" />
           </label>
         </div>
       );
@@ -267,7 +269,7 @@ export const Ask = defineComponent(
   },
   ({ title, description, children }) => (
     <section
-      className="rv-ask not-prose my-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800"
+      className="mdxr-ask not-prose my-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800"
       data-ask
       data-ask-title={nonEmpty(title) ? title : undefined}
     >
@@ -307,11 +309,11 @@ export const Ask = defineComponent(
             data-ask-copy
             type="button"
           >
-            <span className="rv-copy-idle inline-flex items-center gap-1.5">
+            <span className="mdxr-copy-idle inline-flex items-center gap-1.5">
               <Icon className="h-3.5 w-3.5" name="lucide:clipboard-list" />
               Copy answers
             </span>
-            <span className="rv-copy-done hidden items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+            <span className="mdxr-copy-done hidden items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
               <Icon className="h-3.5 w-3.5" name="lucide:check" />
               Copied
             </span>
@@ -321,11 +323,11 @@ export const Ask = defineComponent(
             data-ask-save
             type="button"
           >
-            <span className="rv-copy-idle inline-flex items-center gap-1.5">
+            <span className="mdxr-copy-idle inline-flex items-center gap-1.5">
               <Icon className="h-3.5 w-3.5" name="lucide:download" />
               Save .md
             </span>
-            <span className="rv-copy-done hidden items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+            <span className="mdxr-copy-done hidden items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
               <Icon className="h-3.5 w-3.5" name="lucide:check" />
               Saved
             </span>

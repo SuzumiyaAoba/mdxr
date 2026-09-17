@@ -20,7 +20,7 @@ export const Default: Story = {
         Line-level code annotations.
       </Req>
       <Req id="AC-1" status="todo">
-        `rv catalog` lists every built-in.
+        `mdxr catalog` lists every built-in.
       </Req>
       <Req id="AC-2" status="blocked">
         Remote registries.

@@ -21,7 +21,7 @@ export const WithHeader: Story = {
         <p>MDX compile via evaluate() plus Tailwind v4 runtime CSS.</p>
       </Phase>
       <Phase status="doing" title="Phase 2 — extensibility">
-        <p>Project-defined components loaded through rv.config.ts.</p>
+        <p>Project-defined components loaded through mdxr.config.ts.</p>
       </Phase>
     </Plan>
   ),

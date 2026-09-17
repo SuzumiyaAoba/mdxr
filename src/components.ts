@@ -1,4 +1,4 @@
-// Public entry: `@suzumiyaaoba/rv/components`
+// Public entry: `mdxr/components`
 // Re-export the built-in catalog so custom components can compose them.
 export {
   Approval,
@@ -67,7 +67,7 @@ export {
   defineComponent,
   textOf,
   type ComponentMeta,
-  type RvComponent,
+  type MdxrComponent,
 } from "./define.js";
 
 // shadcn/ui (Base UI) component set — composable from project components.

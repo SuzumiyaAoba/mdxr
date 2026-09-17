@@ -22,7 +22,7 @@ export const RelatedFiles: Story = {
       <File path="src/define.ts" kind="types">
         Component contract and prop validation.
       </File>
-      <File path="rv.config.ts" kind="config" />
+      <File path="mdxr.config.ts" kind="config" />
       <File path="tests/render.test.ts" kind="test" />
       <File path="dist/index.mjs" kind="generated" />
       <File path="src/custom/handler.ts" kind="middleware">

@@ -29,7 +29,7 @@ export const StackTrace: Story = {
         kind="lib"
       />
       <TraceFrame
-        name="remarkRvDirectives"
+        name="remarkMdxrDirectives"
         path="src/remark/directives.ts"
         lines="91"
       />

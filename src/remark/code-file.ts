@@ -73,14 +73,18 @@ export const remarkCodeFile = () => (tree: Node, file: VFile) => {
     }
     const rel = attr(node, "path");
     if (rel === undefined) {
-      file.fail("<CodeFile> requires a `path` attribute", node, "rv:code-file");
+      file.fail(
+        "<CodeFile> requires a `path` attribute",
+        node,
+        "mdxr:code-file"
+      );
     }
     const abs = path.resolve(file.dirname ?? ".", rel);
     let content: string;
     try {
       content = readFileSync(abs, "utf-8");
     } catch {
-      file.fail(`<CodeFile> cannot read ${rel}`, node, "rv:code-file");
+      file.fail(`<CodeFile> cannot read ${rel}`, node, "mdxr:code-file");
     }
 
     const rangeSpec = attr(node, "lines");
@@ -91,7 +95,7 @@ export const remarkCodeFile = () => (tree: Node, file: VFile) => {
         file.fail(
           `<CodeFile> invalid lines range: ${rangeSpec}`,
           node,
-          "rv:code-file"
+          "mdxr:code-file"
         );
       }
       const all = content.replace(/\n$/u, "").split("\n");
@@ -99,7 +103,7 @@ export const remarkCodeFile = () => (tree: Node, file: VFile) => {
         file.fail(
           `<CodeFile> lines ${rangeSpec} out of range (${all.length} lines in ${rel})`,
           node,
-          "rv:code-file"
+          "mdxr:code-file"
         );
       }
       content = all.slice(range.start - 1, range.end).join("\n");

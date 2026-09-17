@@ -30,7 +30,7 @@ const iconSvg = (name: string): string => {
  * `data-mode` selects the visible icon (auto → light → dark, cycled by
  * `handleDocEvent`); THEME_JS restores the stored choice before paint.
  */
-const THEME_TOGGLE_HTML = `<button type="button" class="rv-theme" data-rv-theme data-mode="auto" title="Theme: auto" aria-label="Switch theme (current: auto)"><span class="rv-theme-i rv-theme-i-auto">${iconSvg("sun-moon")}</span><span class="rv-theme-i rv-theme-i-light">${iconSvg("sun")}</span><span class="rv-theme-i rv-theme-i-dark">${iconSvg("moon")}</span></button>`;
+const THEME_TOGGLE_HTML = `<button type="button" class="mdxr-theme" data-mdxr-theme data-mode="auto" title="Theme: auto" aria-label="Switch theme (current: auto)"><span class="mdxr-theme-i mdxr-theme-i-auto">${iconSvg("sun-moon")}</span><span class="mdxr-theme-i mdxr-theme-i-light">${iconSvg("sun")}</span><span class="mdxr-theme-i mdxr-theme-i-dark">${iconSvg("moon")}</span></button>`;
 
 export interface DocumentOptions {
   title: string;
@@ -46,7 +46,7 @@ export const htmlDocument = (o: DocumentOptions): string => `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="generator" content="rv">
+<meta name="generator" content="mdxr">
 <title>${escapeHtml(o.title)}</title>
 <script>${THEME_JS}</script>
 ${o.needsKatex === true ? `<link rel="stylesheet" href="${KATEX_CDN_URL}">` : ""}

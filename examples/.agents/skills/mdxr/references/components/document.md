@@ -43,7 +43,7 @@ Image with an optional caption (children work too). Use for screenshots or diagr
 Inline command chip — terminal icon + copy button.
 
 ```mdx
-Run <Cmd>pnpm build</Cmd> then <Cmd>rv render plan.mdx</Cmd>.
+Run <Cmd>pnpm build</Cmd> then <Cmd>mdxr render plan.mdx</Cmd>.
 ```
 
 ### `<Icon name="lucide:rocket" label className />`

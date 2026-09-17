@@ -1,5 +1,4 @@
 import { createHash } from "node:crypto";
-import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -8,40 +7,15 @@ import { build } from "esbuild";
 import type { Plugin } from "esbuild";
 
 import { isRecord } from "./guards.js";
-import { cacheDir, pkgRoot } from "./paths.js";
+import { cacheDir } from "./paths.js";
 
 // Bare specifiers that must resolve to *this* package's dependencies so the
 // user's bundle shares our React instance (required for hooks) and our
-// `defineComponent` registry.
+// `defineComponent` registry. `mdxr`/`mdxr/components` reach this same package
+// via Node's self-reference (the cache file lives inside the package root).
 /* oxlint-disable require-unicode-regexp -- esbuild serializes onResolve filter
    regexes to Go's RE2, which rejects the `u` flag. */
-const SHARED_EXTERNALS =
-  /^(?:react|react-dom|valibot|@suzumiyaaoba\/rv)(?:\/.*)?$/;
-
-const pickEntry = (file: string, srcFallback: string): string =>
-  existsSync(file) ? file : srcFallback;
-
-/**
- * Alias shorthands for users: `rv` / `rv/components` resolve to this package
- * whether or not it is installed under the project's own node_modules.
- */
-const rvAlias: Plugin = {
-  name: "rv-alias",
-  setup(b) {
-    b.onResolve({ filter: /^rv$/ }, () => ({
-      path: pickEntry(
-        path.join(pkgRoot, "dist/index.mjs"),
-        path.join(pkgRoot, "src/index.ts")
-      ),
-    }));
-    b.onResolve({ filter: /^rv\/components$/ }, () => ({
-      path: pickEntry(
-        path.join(pkgRoot, "dist/components.mjs"),
-        path.join(pkgRoot, "src/components.ts")
-      ),
-    }));
-  },
-};
+const SHARED_EXTERNALS = /^(?:react|react-dom|valibot|mdxr)(?:\/.*)?$/;
 /* oxlint-enable require-unicode-regexp */
 
 const sharedExternals: Plugin = {
@@ -76,7 +50,7 @@ export const loadUserModule = async (
     jsxImportSource: "react",
     logLevel: "silent",
     platform: "node",
-    plugins: [rvAlias, sharedExternals],
+    plugins: [sharedExternals],
     target: "node20",
     write: false,
   });

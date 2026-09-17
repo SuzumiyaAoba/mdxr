@@ -14,7 +14,7 @@ export const CallChain: Story = {
   render: () => (
     <Flow title="Request path">
       <FlowStep name="cli()" path="src/cli.ts" lines="12-30">
-        Parses argv and loads rv.config.ts.
+        Parses argv and loads mdxr.config.ts.
       </FlowStep>
       <FlowStep name="renderFile()" path="src/render.ts">
         Reads the document and compiles Tailwind for the used classes.

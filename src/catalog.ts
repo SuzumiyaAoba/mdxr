@@ -75,9 +75,9 @@ export const catalogEntries = (project: ComponentMap = {}): CatalogEntry[] => {
       continue;
     }
     entries.push({
-      description: comp.__rv?.description,
+      description: comp.__mdxr?.description,
       name,
-      props: propsOf(comp.__rv?.schema),
+      props: propsOf(comp.__mdxr?.schema),
       source: name in project ? "project" : "builtin",
     });
   }
@@ -86,9 +86,9 @@ export const catalogEntries = (project: ComponentMap = {}): CatalogEntry[] => {
       continue;
     }
     entries.push({
-      description: comp.__rv?.description,
+      description: comp.__mdxr?.description,
       name,
-      props: propsOf(comp.__rv?.schema),
+      props: propsOf(comp.__mdxr?.schema),
       source: "project",
     });
   }

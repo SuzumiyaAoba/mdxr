@@ -1,25 +1,25 @@
 ---
-name: rv
-description: Write rich plan/report documents as MDX using the rv component catalog, then render them to standalone HTML with `npx @suzumiyaaoba/rv render`. Use when creating plan files, status reports, reviews, or any structured document meant to be viewed as a styled HTML page.
+name: mdxr
+description: Write rich plan/report documents as MDX using the mdxr component catalog, then render them to standalone HTML with `npx mdxr render`. Use when creating plan files, status reports, reviews, or any structured document meant to be viewed as a styled HTML page.
 ---
 
-# rv — agent-authored documents rendered to HTML
+# mdxr — agent-authored documents rendered to HTML
 
-Write documents as **Markdown + a small set of JSX components** (MDX). Do NOT write raw HTML: `rv render` compiles the document deterministically, so markup, styling and scripts are never emitted by the model.
+Write documents as **Markdown + a small set of JSX components** (MDX). Do NOT write raw HTML: `mdxr render` compiles the document deterministically, so markup, styling and scripts are never emitted by the model.
 
 ## Workflow
 
 1. Write the document as `*.mdx` using Markdown plus the components below.
-2. Render: `npx @suzumiyaaoba/rv render plan.mdx -o plan.html`
-3. Or pipe MDX directly: `cat plan.mdx | npx @suzumiyaaoba/rv render > plan.html` (`rv render -` also reads stdin; `-o out.html` writes a file).
-4. On errors, the message includes `file:line:col` — fix and re-run. `npx @suzumiyaaoba/rv render plan.mdx --format json` prints machine-readable errors.
-5. Preview while editing: `npx @suzumiyaaoba/rv serve plan.mdx` — or pipe: `cat plan.mdx | npx @suzumiyaaoba/rv serve`
+2. Render: `npx mdxr render plan.mdx -o plan.html`
+3. Or pipe MDX directly: `cat plan.mdx | npx mdxr render > plan.html` (`mdxr render -` also reads stdin; `-o out.html` writes a file).
+4. On errors, the message includes `file:line:col` — fix and re-run. `npx mdxr render plan.mdx --format json` prints machine-readable errors.
+5. Preview while editing: `npx mdxr serve plan.mdx` — or pipe: `cat plan.mdx | npx mdxr serve`
 
 ## Rules
 
 - **No JS in documents.** `import`/`export` and `{expressions}` are rejected. All attributes are strings: `<Step status="done">`, not `status={...}`.
 - Prefer plain Markdown for prose; use components only for structure.
-- If a needed component is missing, run `npx @suzumiyaaoba/rv catalog --json` to see the full catalog, then define it in the project's component file — see `references/extending.md` for the extension mechanism.
+- If a needed component is missing, run `npx mdxr catalog --json` to see the full catalog, then define it in the project's component file — see `references/extending.md` for the extension mechanism.
 - For component usage, read `references/components.md` (the index), then only the `references/components/*.md` detail file(s) the document needs.
 
 ## Conventions (no JSX needed)

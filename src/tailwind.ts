@@ -83,7 +83,7 @@ export const buildCss = async (
   ].join("\n");
 
   // `onDependency` is optional in the types but invoked unconditionally
-  // inside @tailwindcss/node — and it tells us which files rv serve
+  // inside @tailwindcss/node — and it tells us which files mdxr serve
   // should watch.
   const dependencies = new Set<string>();
   const compiler = await compile(input, {

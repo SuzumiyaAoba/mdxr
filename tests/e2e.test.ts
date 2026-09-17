@@ -11,7 +11,7 @@ import { serveSource } from "../src/serve.js";
 const tmpDirs: string[] = [];
 
 const makeDir = async (): Promise<string> => {
-  const dir = await mkdtemp(path.join(os.tmpdir(), "rv-test-"));
+  const dir = await mkdtemp(path.join(os.tmpdir(), "mdxr-test-"));
   tmpDirs.push(dir);
   return dir;
 };
@@ -36,7 +36,7 @@ describe(renderFile, () => {
     // copy buttons are wired by the inlined delegated listener
     expect(html).toContain("[data-copy]");
     // theme toggle is part of the document chrome
-    expect(html).toContain('data-rv-theme data-mode="auto"');
+    expect(html).toContain('data-mdxr-theme data-mode="auto"');
   });
 
   it("builds the document header from frontmatter meta fields", async () => {
@@ -64,10 +64,10 @@ describe(renderFile, () => {
     expect(html).toContain(".iconify,.lucide{display:inline-block}");
   });
 
-  it("loads project components from rv.config.ts", async () => {
+  it("loads project components from mdxr.config.ts", async () => {
     const dir = await makeDir();
     await writeFile(
-      path.join(dir, "rv.config.ts"),
+      path.join(dir, "mdxr.config.ts"),
       `export default { components: "./components.tsx" };\n`
     );
     await writeFile(
@@ -106,10 +106,10 @@ describe(render, () => {
     expect(html).toContain("Hi");
   });
 
-  it("loads project components from rv.config.ts in `dir`", async () => {
+  it("loads project components from mdxr.config.ts in `dir`", async () => {
     const dir = await makeDir();
     await writeFile(
-      path.join(dir, "rv.config.ts"),
+      path.join(dir, "mdxr.config.ts"),
       `export default { components: "./components.tsx" };\n`
     );
     await writeFile(
@@ -186,7 +186,7 @@ describe(serveSource, () => {
     try {
       const res = await fetch(`http://localhost:${portOf(server)}/`);
       const html = await res.text();
-      expect(html).toContain("rv render error");
+      expect(html).toContain("mdxr render error");
       expect(html).toContain("not allowed");
     } finally {
       closeServer(server);

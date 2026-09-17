@@ -6,7 +6,7 @@ date: 2026-09-17
 ---
 
 :::question
-Where does `rv render plan.mdx` actually turn MDX into standalone HTML, and
+Where does `mdxr render plan.mdx` actually turn MDX into standalone HTML, and
 what is on the path?
 :::
 
@@ -14,7 +14,7 @@ what is on the path?
 :::
 
 :::answer
-`rv render` calls <SymbolRef name="renderFile" kind="fn" path="src/render.ts" />,
+`mdxr render` calls <SymbolRef name="renderFile" kind="fn" path="src/render.ts" />,
 which delegates compilation to <SymbolRef name="mdxToHtml" kind="fn" path="src/mdx.ts" />
 and then inlines the generated Tailwind CSS into a static document shell. No
 client runtime is emitted — copy buttons and the ToC work via a single
@@ -23,14 +23,14 @@ delegated listener and native `<details>`.
 
 ## Execution flow
 
-:::flow{title="rv render plan.mdx"}
+:::flow{title="mdxr render plan.mdx"}
 
 <FlowStep name="cli()" path="src/cli.ts">
   Parses argv with cac, dispatches to the render command.
 </FlowStep>
 
 <FlowStep name="renderFile()" path="src/render.ts">
-  Reads the .mdx file, resolves project components from rv.config.ts.
+  Reads the .mdx file, resolves project components from mdxr.config.ts.
 </FlowStep>
 
 <FlowStep name="mdxToHtml()" path="src/mdx.ts" lines="70-106">
@@ -68,7 +68,7 @@ delegated listener and native `<details>`.
 </Finding>
 
 <Finding confidence="unverified" title="Serve-mode cache invalidation">
-  <code>rv serve</code> likely recompiles user components on change, but no
+  <code>mdxr serve</code> likely recompiles user components on change, but no
   test covers the path yet.
 </Finding>
 
@@ -156,7 +156,7 @@ Test Files  2 passed (2)
   shell; there is no hydration. The `hits="0"` search above is the check.
 </Hypothesis>
 
-<Hypothesis status="untested" title="rv serve watches rv.config.ts">
+<Hypothesis status="untested" title="mdxr serve watches mdxr.config.ts">
   Plausible, but the watch path has no test coverage yet.
 </Hypothesis>
 
@@ -170,7 +170,7 @@ Test Files  2 passed (2)
   leaf directives carry no attributes record — guarded since.
 </TraceFrame>
 <TraceFrame name="visit" path="node_modules/unist-util-visit/index.js" kind="lib" />
-<TraceFrame name="remarkRvDirectives" path="src/remark/directives.ts" lines="91" />
+<TraceFrame name="remarkMdxrDirectives" path="src/remark/directives.ts" lines="91" />
 <TraceFrame name="mdxToHtml" path="src/mdx.ts" lines="70-106" />
 
 :::
@@ -192,5 +192,5 @@ tracked under <Issue repo="SuzumiyaAoba/rv" number="12">catalog drift</Issue>.
 ## Open questions
 
 :::question
-Should `rv serve` watch rv.config.ts itself, or only the components file?
+Should `mdxr serve` watch mdxr.config.ts itself, or only the components file?
 :::

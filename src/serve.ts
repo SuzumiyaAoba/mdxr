@@ -8,7 +8,7 @@ import type { RenderSourceOptions } from "./render.js";
 import { render, renderFile } from "./render.js";
 
 const errorPage = (err: unknown): string =>
-  `<!doctype html><meta charset="utf-8"><body style="font-family:monospace;background:#1c1917;color:#fca5a5;padding:2rem"><h1>rv render error</h1><pre>${formatError(err).replaceAll("<", "&lt;")}</pre></body>`;
+  `<!doctype html><meta charset="utf-8"><body style="font-family:monospace;background:#1c1917;color:#fca5a5;padding:2rem"><h1>mdxr render error</h1><pre>${formatError(err).replaceAll("<", "&lt;")}</pre></body>`;
 
 interface PreviewTarget {
   /** Label shown in the startup log. */
@@ -37,7 +37,7 @@ const servePreview = async (
 
   const clients = new Set<http.ServerResponse>();
   const server = http.createServer((req, res) => {
-    if (req.url === "/__rv_events") {
+    if (req.url === "/__mdxr_events") {
       res.writeHead(200, {
         "cache-control": "no-cache",
         connection: "keep-alive",
@@ -91,8 +91,8 @@ const servePreview = async (
   const address = server.address();
   const boundPort =
     typeof address === "object" && address !== null ? address.port : port;
-  console.log(`rv: serving ${target.label} at http://localhost:${boundPort}`);
-  console.log("rv: watching for changes (Ctrl+C to stop)");
+  console.log(`mdxr: serving ${target.label} at http://localhost:${boundPort}`);
+  console.log("mdxr: watching for changes (Ctrl+C to stop)");
   return server;
 };
 

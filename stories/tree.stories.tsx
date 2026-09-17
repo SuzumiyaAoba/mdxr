@@ -12,7 +12,42 @@ type Story = StoryObj<typeof meta>;
 
 export const FileTree: Story = {
   render: () => (
-    <Tree root="rv/">
+    <Tree root="mdxr/">
+      <ul>
+        <li>
+          src/
+          <ul>
+            <li>render.ts — pipeline entry</li>
+            <li>
+              ui/
+              <ul>
+                <li>
+                  <strong>plan.tsx</strong>
+                </li>
+                <li>steps.tsx</li>
+                <li>…</li>
+              </ul>
+            </li>
+            <li>remark/ — directive plugins</li>
+            <li>styles/</li>
+          </ul>
+        </li>
+        <li>
+          examples/
+          <ul>
+            <li>plan.mdx # this document</li>
+          </ul>
+        </li>
+        <li>package.json</li>
+        <li>...</li>
+      </ul>
+    </Tree>
+  ),
+};
+
+export const Collapsed: Story = {
+  render: () => (
+    <Tree open="false" root="mdxr/">
       <ul>
         <li>
           src/
@@ -25,13 +60,6 @@ export const FileTree: Story = {
                 <li>steps.tsx</li>
               </ul>
             </li>
-            <li>remark/ — directive plugins</li>
-          </ul>
-        </li>
-        <li>
-          examples/
-          <ul>
-            <li>plan.mdx # this document</li>
           </ul>
         </li>
         <li>package.json</li>

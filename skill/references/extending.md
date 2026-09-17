@@ -2,25 +2,25 @@
 
 Index: [components.md](components.md).
 
-Create `rv.config.ts` in the project root:
+Create `mdxr.config.ts` in the project root:
 
 ```ts
-import { defineConfig } from "@suzumiyaaoba/rv";
+import { defineConfig } from "mdxr";
 
 export default defineConfig({
   components: "./components/index.tsx", // named exports become MDX components
-  theme: "./rv.css", // optional: @theme token overrides
+  theme: "./mdxr.css", // optional: @theme token overrides
   editor: "vscode", // optional: file-link target — see below
 });
 ```
 
 `editor` sets the URL scheme for file links (`path`-carrying components and code-block filename headers): `vscode` (default), `cursor`, `zed`, `vscode-insiders`, `windsurf`, `sublime`, `textmate`, `idea`, a custom template like `"myed://open?f={path}&l={line}"`, or `"none"` to disable. Frontmatter `editor:` overrides it per document.
 
-Define components with `defineComponent` (adds a valibot schema — used for runtime validation **and** `rv catalog` documentation):
+Define components with `defineComponent` (adds a valibot schema — used for runtime validation **and** `mdxr catalog` documentation):
 
 ```tsx
 // components/index.tsx
-import { defineComponent, v } from "@suzumiyaaoba/rv";
+import { defineComponent, v } from "mdxr";
 
 export const LinkCard = defineComponent(
   {
@@ -42,6 +42,6 @@ export const LinkCard = defineComponent(
 ```
 
 - Tailwind classes in custom components are compiled automatically.
-- `import { Callout, StatusBadge } from '@suzumiyaaoba/rv/components'` to compose built-ins (or from `rv/components` shorthand).
+- `import { Callout, StatusBadge } from 'mdxr/components'` to compose built-ins (or from `mdxr/components` shorthand).
 - A project component with the same name as a built-in overrides it (a warning is printed).
 - Components must be synchronous — no Suspense / data fetching.

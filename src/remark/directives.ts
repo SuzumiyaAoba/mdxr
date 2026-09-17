@@ -78,7 +78,7 @@ const toMdxComponent = (
 };
 
 /**
- * remark-directive containers become rv components:
+ * remark-directive containers become mdxr components:
  *   :::note[Optional label]        → <Callout kind="note" title="Optional label">
  *   :::phase{title="X" status="doing"} → <Phase title="X" status="doing">
  *   :::plan / :::steps / :::summary / :::timeline → Plan / Steps / Summary / Timeline
@@ -88,7 +88,7 @@ const toMdxComponent = (
  *     → Terminal / Trace / Hypotheses / Hypothesis / Searches / Search
  * `non-goal` is accepted as an alias of the `nongoal` callout kind.
  */
-export const remarkRvDirectives = () => (tree: Node) => {
+export const remarkMdxrDirectives = () => (tree: Node) => {
   visit(tree, "containerDirective", (node: Node) => {
     if (!isDirective(node)) {
       return;

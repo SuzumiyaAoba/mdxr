@@ -66,14 +66,14 @@ const CodeHeader = (props: {
       <button
         type="button"
         data-copy={props.text}
-        className="rv-copy cursor-pointer opacity-60"
+        className="mdxr-copy cursor-pointer opacity-60"
         title="Copy code"
         aria-label="Copy code"
       >
-        <span className="rv-copy-idle inline-flex">
+        <span className="mdxr-copy-idle inline-flex">
           <Icon className="h-3.5 w-3.5" name="lucide:copy" />
         </span>
-        <span className="rv-copy-done hidden items-center text-emerald-600 dark:text-emerald-400">
+        <span className="mdxr-copy-done hidden items-center text-emerald-600 dark:text-emerald-400">
           <Icon className="h-3.5 w-3.5" name="lucide:check" />
         </span>
       </button>

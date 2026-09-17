@@ -4,8 +4,8 @@ import path from "node:path";
 import { isRecord, nonEmpty } from "./guards.js";
 import { loadUserModule } from "./load-user-module.js";
 
-/** Shape of `rv.config.ts` in a project that uses rv. */
-export interface RvConfig {
+/** Shape of `mdxr.config.ts` in a project that uses mdxr. */
+export interface MdxrConfig {
   /** Path to a TS/TSX module whose named exports are extra MDX components. */
   components?: string;
   /**
@@ -19,22 +19,22 @@ export interface RvConfig {
   theme?: string;
 }
 
-export const defineConfig = (config: RvConfig): RvConfig => config;
+export const defineConfig = (config: MdxrConfig): MdxrConfig => config;
 
 export interface ResolvedConfig {
   componentsPath?: string;
   themePath?: string;
-  /** Bundled rv.config code (Tailwind scan source). */
+  /** Bundled mdxr.config code (Tailwind scan source). */
   componentsCode?: string;
   dir: string;
   editor?: string;
 }
 
 const CONFIG_FILES = [
-  "rv.config.ts",
-  "rv.config.mts",
-  "rv.config.js",
-  "rv.config.mjs",
+  "mdxr.config.ts",
+  "mdxr.config.mts",
+  "mdxr.config.js",
+  "mdxr.config.mjs",
 ];
 
 export const loadConfig = async (dir: string): Promise<ResolvedConfig> => {

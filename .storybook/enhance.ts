@@ -25,10 +25,10 @@ const highlightCodeBlocks = async (root: ParentNode): Promise<void> => {
       // code.textContent (React removing our spans) gets re-processed while
       // untouched nodes are skipped.
       const text = (code.textContent ?? "").replace(/\n$/u, "");
-      if (code.dataset.rvHighlight === text) {
+      if (code.dataset.mdxrHighlight === text) {
         return;
       }
-      code.dataset.rvHighlight = text;
+      code.dataset.mdxrHighlight = text;
       const html = await highlightToHtml(lang, text);
       if (html === undefined) {
         code.classList.remove("shiki");
@@ -63,7 +63,7 @@ const loadMermaid = async (): Promise<MermaidApi> => {
   );
   const api = isRecord(mod) ? mod.default : undefined;
   if (api === undefined) {
-    throw new TypeError("rv: mermaid CDN module has no default export");
+    throw new TypeError("mdxr: mermaid CDN module has no default export");
   }
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return api as MermaidApi;
@@ -103,7 +103,7 @@ const tryRenderMermaid = async (root: ParentNode): Promise<void> => {
     await renderMermaidBlocks(root);
   } catch (error) {
     // CDN import failures etc. — a rendered document fails the same way.
-    console.error("rv: mermaid render failed", error);
+    console.error("mdxr: mermaid render failed", error);
   }
 };
 

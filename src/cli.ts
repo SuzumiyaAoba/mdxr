@@ -24,12 +24,12 @@ const fail = (err: unknown, json: boolean): never => {
   if (json) {
     console.log(JSON.stringify({ error: formatError(err), ok: false }));
   } else {
-    console.error(`rv: error: ${formatError(err)}`);
+    console.error(`mdxr: error: ${formatError(err)}`);
   }
   process.exit(1);
 };
 
-const cli = cac("rv");
+const cli = cac("mdxr");
 
 cli
   .command("render [file]", "Render an .mdx document to a standalone HTML file")
@@ -83,7 +83,7 @@ cli
         if (json) {
           console.log(JSON.stringify({ ok: true, out }));
         } else {
-          console.log(`rv: wrote ${out}`);
+          console.log(`mdxr: wrote ${out}`);
         }
       } catch (error) {
         fail(error, json);
@@ -117,7 +117,7 @@ cli
 cli
   .command("catalog", "List available components (built-in + project-defined)")
   .option("--json", "Print machine-readable JSON")
-  .option("--dir <dir>", "Project directory to read rv.config.ts from")
+  .option("--dir <dir>", "Project directory to read mdxr.config.ts from")
   .action(async (opts: { json?: boolean; dir?: string }) => {
     try {
       const dir = path.resolve(opts.dir ?? process.cwd());
@@ -148,7 +148,7 @@ cli
   });
 
 cli
-  .command("init", "Install the rv agent skill into this project")
+  .command("init", "Install the mdxr agent skill into this project")
   .option("--tool <tool>", "agents | claude | devin | all", {
     default: "agents",
   })
@@ -158,7 +158,7 @@ cli
     try {
       const paths = await installSkill(opts);
       for (const p of paths) {
-        console.log(`rv: installed skill → ${p}`);
+        console.log(`mdxr: installed skill → ${p}`);
       }
     } catch (error) {
       fail(error, false);

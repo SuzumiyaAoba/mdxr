@@ -9,14 +9,14 @@ import { build } from "esbuild";
 import type { Plugin } from "vite";
 import { mergeConfig } from "vite";
 
-const VIRTUAL_ID = "virtual:rv-documents";
+const VIRTUAL_ID = "virtual:mdxr-documents";
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
 
 const rootDir = process.cwd();
 const docsDir = path.join(rootDir, "examples");
 const srcDir = path.join(rootDir, "src");
 const rendererEntry = path.join(srcDir, "render.ts");
-const cacheDir = path.join(rootDir, ".rv-cache");
+const cacheDir = path.join(rootDir, ".mdxr-cache");
 
 const listFiles = async (dir: string): Promise<string[]> => {
   try {
@@ -37,7 +37,7 @@ type RenderFile = (mdxPath: string) => Promise<string>;
 /**
  * Bundle the real renderer (`src/render.ts`) on every call and import it.
  * Re-bundling keeps document previews in sync with edits to src/**, and the
- * output lands in .rv-cache so bare imports resolve to this project's deps —
+ * output lands in .mdxr-cache so bare imports resolve to this project's deps —
  * the same trick `loadUserModule` uses for user components.
  */
 const loadRenderer = async (): Promise<RenderFile> => {
@@ -66,7 +66,7 @@ const loadRenderer = async (): Promise<RenderFile> => {
       ? mod.renderFile
       : undefined;
   if (typeof renderFile !== "function") {
-    throw new TypeError("rv: renderer module did not export renderFile");
+    throw new TypeError("mdxr: renderer module did not export renderFile");
   }
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion
   return renderFile as RenderFile;
@@ -74,16 +74,16 @@ const loadRenderer = async (): Promise<RenderFile> => {
 
 const errorPage = (err: unknown): string => {
   const msg = err instanceof Error ? err.message : String(err);
-  return `<!doctype html><meta charset="utf-8"><body style="font-family:monospace;background:#1c1917;color:#fca5a5;padding:2rem"><h1>rv render error</h1><pre>${msg.replaceAll("<", "&lt;")}</pre></body>`;
+  return `<!doctype html><meta charset="utf-8"><body style="font-family:monospace;background:#1c1917;color:#fca5a5;padding:2rem"><h1>mdxr render error</h1><pre>${msg.replaceAll("<", "&lt;")}</pre></body>`;
 };
 
 /**
- * Exposes `virtual:rv-documents`: every .mdx file under examples/ rendered
+ * Exposes `virtual:mdxr-documents`: every .mdx file under examples/ rendered
  * through the real `renderFile` pipeline (frontmatter, project components,
  * Tailwind) as a standalone HTML string. Stories display them in an iframe
  * via srcdoc.
  */
-const rvDocuments = (): Plugin => ({
+const mdxrDocuments = (): Plugin => ({
   configureServer: (server) => {
     server.watcher.add(docsDir);
     server.watcher.add(srcDir);
@@ -126,7 +126,7 @@ const rvDocuments = (): Plugin => ({
     );
     return `export default ${JSON.stringify(docs)};`;
   },
-  name: "rv-documents",
+  name: "mdxr-documents",
   resolveId: (id) => (id === VIRTUAL_ID ? RESOLVED_ID : undefined),
 });
 
@@ -135,7 +135,7 @@ const config: StorybookConfig = {
   stories: ["../stories/**/*.stories.@(ts|tsx)"],
   viteFinal: (viteConfig) =>
     mergeConfig(viteConfig, {
-      plugins: [tailwindcss(), rvDocuments()],
+      plugins: [tailwindcss(), mdxrDocuments()],
       resolve: { alias: { "@": srcDir } },
     }),
 };

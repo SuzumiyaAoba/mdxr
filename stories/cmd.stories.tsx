@@ -13,7 +13,7 @@ type Story = StoryObj<typeof meta>;
 export const InlineInText: Story = {
   render: () => (
     <p>
-      Run <Cmd>pnpm build</Cmd> then <Cmd>rv render plan.mdx</Cmd>.
+      Run <Cmd>pnpm build</Cmd> then <Cmd>mdxr render plan.mdx</Cmd>.
     </p>
   ),
 };

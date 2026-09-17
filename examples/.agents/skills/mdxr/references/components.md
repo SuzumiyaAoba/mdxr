@@ -1,10 +1,10 @@
-# rv component reference
+# mdxr component reference
 
 MDX attributes are always strings (`status="done"`). `children` is Markdown.
 
-This file is an index: each group lists what its components do and links to a detail file with full signatures and examples. Read only the detail file(s) the document needs. `rv catalog --json` is the machine-readable source of truth for component names and attributes.
+This file is an index: each group lists what its components do and links to a detail file with full signatures and examples. Read only the detail file(s) the document needs. `mdxr catalog --json` is the machine-readable source of truth for component names and attributes.
 
-**File links.** Components carrying `path` (`FileRef`, `SymbolRef`, `File`, `TraceFrame`, `FlowStep`, `Change`) and fenced-code filename headers become editor links — `vscode://file/…` by default — when the file exists on disk (paths resolve relative to the document). Frontmatter `editor:` or `editor` in `rv.config.ts` picks another editor: `cursor`, `zed`, `vscode-insiders`, `windsurf`, `sublime`, `textmate`, `idea`, a custom `{path}`/`{line}` URL template, or `none` to disable. `href="…"` on a component overrides the URL entirely.
+**File links.** Components carrying `path` (`FileRef`, `SymbolRef`, `File`, `TraceFrame`, `FlowStep`, `Change`) and fenced-code filename headers become editor links — `vscode://file/…` by default — when the file exists on disk (paths resolve relative to the document). Frontmatter `editor:` or `editor` in `mdxr.config.ts` picks another editor: `cursor`, `zed`, `vscode-insiders`, `windsurf`, `sublime`, `textmate`, `idea`, a custom `{path}`/`{line}` URL template, or `none` to disable. `href="…"` on a component overrides the URL entirely.
 
 ## Document scaffolding — details: [components/document.md](components/document.md)
 
@@ -52,7 +52,7 @@ This file is an index: each group lists what its components do and links to a de
 | `<Deps>` / `<Dep>` | Dependency-edge list — `:::deps` |
 | `<Changes>` / `<Change>` | Change-set list (add/modify/delete/rename) |
 | `<Flow>` / `<FlowStep>` | Numbered call/execution chain — `:::flow` |
-| `<Tree>` | File tree from a nested list, automatic icons |
+| `<Tree>` | File tree from a nested list — collapsible folders, `…` placeholders, bold highlights, automatic icons |
 | `<FileRef>` | Inline file-reference chip with copy button |
 | `<SymbolRef>` | Inline symbol chip (fn/type/class/…) |
 | `<CodeFile>` | Embeds a real file from disk as a code block |
@@ -78,4 +78,4 @@ The full shadcn/ui (Base UI) set is registered (`Button`, `Card`, `Table`, `Tabs
 
 ## Project-defined components — details: [extending.md](extending.md)
 
-Projects can register their own components via `rv.config.ts` + `defineComponent`; a same-name component overrides the built-in.
+Projects can register their own components via `mdxr.config.ts` + `defineComponent`; a same-name component overrides the built-in.

@@ -13,10 +13,8 @@
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
     "paths": {
-      "@suzumiyaaoba/rv": ["./src/index.ts"],
-      "@suzumiyaaoba/rv/components": ["./src/components.ts"],
-      "rv": ["./src/index.ts"],
-      "rv/components": ["./src/components.ts"],
+      "mdxr": ["./src/index.ts"],
+      "mdxr/components": ["./src/components.ts"],
       "@/*": ["./src/*"]
     }
   },

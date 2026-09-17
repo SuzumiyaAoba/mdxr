@@ -5,7 +5,7 @@ import { safeParse } from "valibot";
 
 import { isRecord } from "./guards.js";
 
-/** Metadata attached to a component for `rv catalog` and prop validation. */
+/** Metadata attached to a component for `mdxr catalog` and prop validation. */
 export interface ComponentMeta {
   description?: string;
   /** Valibot schema for props (MDX attributes arrive as strings; `children` is passed through). */
@@ -18,18 +18,18 @@ export interface DocProps extends Record<string, unknown> {
 }
 
 /**
- * A component usable in an rv document. Props are intentionally loose —
+ * A component usable in an mdxr document. Props are intentionally loose —
  * documents are data, and prop validation happens via `defineComponent`
  * schemas at render time. Only ever invoked by MDX/React.
  */
 export type AnyComponent = ((props: DocProps) => ReactNode) & {
-  __rv?: ComponentMeta;
+  __mdxr?: ComponentMeta;
 };
 
 /** Name → component map passed to MDX's `components` prop. */
 export type ComponentMap = Record<string, AnyComponent>;
 
-export type RvComponent = AnyComponent;
+export type MdxrComponent = AnyComponent;
 
 type PropsOf<S> = S extends GenericSchema
   ? InferOutput<S>
@@ -46,7 +46,7 @@ export const defineComponent = <
 >(
   meta: { description?: string; schema?: S },
   render: (props: PropsOf<S> & { children?: ReactNode }) => ReactElement | null
-): RvComponent => {
+): MdxrComponent => {
   const Comp = (props: DocProps): ReactElement | null => {
     let parsed: unknown = props;
     if (meta.schema !== undefined) {
@@ -66,7 +66,7 @@ export const defineComponent = <
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     return render(parsed as PropsOf<S> & { children?: ReactNode });
   };
-  Comp.__rv = meta;
+  Comp.__mdxr = meta;
   return Comp;
 };
 

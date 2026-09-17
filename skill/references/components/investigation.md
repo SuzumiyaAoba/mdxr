@@ -77,14 +77,19 @@ Numbered call/execution chain — "how a request travels through the code". Each
 
 File tree rendered from a nested Markdown list. Items ending in `/` or with children get a folder icon; `name — note` or `name # note` adds a muted note. Icons are picked automatically from the file extension or directory name (VS Code-style `vscode-icons` set, e.g. `.ts` → TypeScript logo, `src/` → src folder).
 
+Starlight-style extras: directories are collapsible (click to fold; works without JS), `open="false"` starts every folder collapsed, a `...` or `…` entry renders a placeholder for omitted files, and a `**bold**` name highlights the entry.
+
 ```mdx
-<Tree root="rv/">
+<Tree root="mdxr/">
 
 - src/
   - render.ts — pipeline entry
   - ui/
-    - plan.tsx
+    - **plan.tsx**
+    - steps.tsx
+    - …
 - package.json
+- ...
 
 </Tree>
 ```
@@ -172,7 +177,7 @@ Stack/call trace for error and crash investigations. `error` renders the excepti
     kind="lib"
   />
   <TraceFrame
-    name="remarkRvDirectives"
+    name="remarkMdxrDirectives"
     path="src/remark/directives.ts"
     lines="91"
   />

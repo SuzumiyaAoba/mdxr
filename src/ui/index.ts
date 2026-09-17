@@ -89,7 +89,7 @@ export { FRAME_KINDS, Trace, TraceFrame } from "./trace.js";
 export { Tree } from "./tree.js";
 
 /**
- * The built-in component catalog available inside rv documents.
+ * The built-in component catalog available inside mdxr documents.
  * `pre` overrides fenced code blocks; the rest are usable as MDX JSX elements.
  * shadcn/ui (Base UI) primitives are included — interactive parts render
  * their initial state since documents have no client-side hydration.

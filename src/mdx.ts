@@ -18,11 +18,11 @@ import { DocContext } from "./doc-context.js";
 import { editorUrl } from "./editor.js";
 import { isRecord } from "./guards.js";
 import { rehypeShiki } from "./rehype/shiki.js";
-import { remarkRvAlerts } from "./remark/alerts.js";
+import { remarkMdxrAlerts } from "./remark/alerts.js";
 import { remarkCodeFile } from "./remark/code-file.js";
 import { remarkCodeMeta } from "./remark/code-meta.js";
-import { remarkRvDirectives } from "./remark/directives.js";
-import { remarkRvHeadings } from "./remark/headings.js";
+import { remarkMdxrDirectives } from "./remark/directives.js";
+import { remarkMdxrHeadings } from "./remark/headings.js";
 import { remarkNoJs } from "./remark/no-js.js";
 
 export interface MdxResult {
@@ -71,7 +71,7 @@ const enhanceRenderError = (
       ? ` Did you mean <${nearest.n}>?`
       : "";
   return new Error(
-    `Unknown component <${name}>.${hint} Available: ${names.join(", ")}. Add custom components via rv.config.ts.`,
+    `Unknown component <${name}>.${hint} Available: ${names.join(", ")}. Add custom components via mdxr.config.ts.`,
     { cause: err }
   );
 };
@@ -88,7 +88,7 @@ export const mdxToHtml = async (
   const fmRaw: unknown = isRecord(file.data) ? file.data.matter : undefined;
   const frontmatter: Record<string, unknown> = isRecord(fmRaw) ? fmRaw : {};
 
-  // Frontmatter `editor:` overrides the rv.config.ts default; "none" or an
+  // Frontmatter `editor:` overrides the mdxr.config.ts default; "none" or an
   // unresolvable path disables the link. Only existing files get links.
   const editor =
     typeof frontmatter.editor === "string" && frontmatter.editor !== ""
@@ -110,10 +110,10 @@ export const mdxToHtml = async (
       remarkGfm,
       remarkMath,
       remarkDirective,
-      remarkRvDirectives,
-      remarkRvAlerts,
+      remarkMdxrDirectives,
+      remarkMdxrAlerts,
       remarkNoJs,
-      remarkRvHeadings,
+      remarkMdxrHeadings,
       remarkCodeFile,
       remarkCodeMeta,
     ],

@@ -218,6 +218,25 @@ describe(mdxToHtml, () => {
     );
   });
 
+  it("groups inline components in a flex-wrap Row with a gap", async () => {
+    const { body } = await render(
+      "<Row><Button>a</Button><Button>b</Button></Row>"
+    );
+    expect(body).toContain("flex-wrap");
+    expect(body).toContain("items-center");
+    expect(body).toContain("gap-2");
+    expect(body).toContain("my-6");
+  });
+
+  it("stacks components vertically in Stack with a gap", async () => {
+    const { body } = await render(
+      '<Stack gap="lg"><Input /><Textarea /></Stack>'
+    );
+    expect(body).toContain("flex-col");
+    expect(body).toContain("gap-6");
+    expect(body).toContain("my-6");
+  });
+
   it("renders Risk with level pill and mitigation line", async () => {
     const { body } = await render(
       '<Risk level="high" title="Drift" mitigation="Pin deps">eval changed</Risk>'

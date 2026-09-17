@@ -78,6 +78,8 @@ This file is an index: each group lists what its components do and links to a de
 | --- | --- |
 | `<Columns>` / `<Column>` | Simple side-by-side grid (2–4 columns) |
 | `<Grid>` / `<Cell>` | 12-track grid — spans, dense flow, auto-fit card grids |
+| `<Row>` | Horizontal flex-wrap row — groups inline components (`Button`, `Badge`, …) that MDX would otherwise render glued together |
+| `<Stack>` | Vertical stack with `gap` — for margin-less components (`Input`, `Textarea`, `Progress`, …) |
 | `<Before>` / `<After>` | Red/green compare panels |
 
 ## Reader input — details: [components/forms.md](components/forms.md)
@@ -88,7 +90,7 @@ This file is an index: each group lists what its components do and links to a de
 
 ## shadcn/ui — details: [components/shadcn.md](components/shadcn.md)
 
-The full shadcn/ui (Base UI) set is registered (`Button`, `Card`, `Table`, `Tabs`, …). Documents have no client-side hydration, so stateful primitives render their initial state only — prefer `Card`/`Alert`/`Badge`/`Table` and the native-element built-ins (`<Ask>`, `<Details>`, `<Toc>`) for interactivity.
+The full shadcn/ui (Base UI) set is registered (`Button`, `Card`, `Table`, `Tabs`, …). Rendered documents carry a hydration bundle, so stateful primitives (`Tabs`, `Accordion`, `Switch`, …) are interactive in the browser — pass `--no-hydrate` for purely static output.
 
 ## Project-defined components — details: [extending.md](extending.md)
 

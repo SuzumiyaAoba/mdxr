@@ -39,6 +39,7 @@ import { Req, Reqs } from "./req.js";
 import { Risk } from "./risk.js";
 import { Search, Searches } from "./search.js";
 import { shadcnComponents } from "./shadcn.js";
+import { Row, Stack } from "./stack.js";
 import { Stat, Stats } from "./stats.js";
 import { StatusBadge } from "./status-badge.js";
 import { Step, Steps } from "./steps.js";
@@ -93,6 +94,7 @@ export { Commit, Issue, PR, Ref } from "./ref.js";
 export { Req, Reqs } from "./req.js";
 export { Risk, RISK_LEVELS } from "./risk.js";
 export { Search, Searches } from "./search.js";
+export { Row, Stack } from "./stack.js";
 export { Stat, Stats } from "./stats.js";
 export { StatusBadge, STATUSES } from "./status-badge.js";
 export { Step, Steps } from "./steps.js";
@@ -177,9 +179,11 @@ export const builtinComponents: ComponentMap = {
   Req,
   Reqs,
   Risk,
+  Row,
   Search,
   Searches,
   Span,
+  Stack,
   Stat,
   Stats,
   StatusBadge,

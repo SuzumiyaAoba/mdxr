@@ -20,7 +20,7 @@ Highlighted block. `:::note`, `:::warning`, `> [!NOTE]` produce the same output.
 
 ### `<Details summary="…" open>`
 
-Collapsible section on a native `<details>` element — opens/closes without client JS (unlike the shadcn `Collapsible`, which renders its initial state only). `open` starts it expanded.
+Collapsible section on a native `<details>` element — opens/closes even without client JS (unlike the shadcn `Collapsible`, which needs the hydration bundle). `open` starts it expanded.
 
 ### `<Toc depth="3" min="2" title="Contents" open />` / `:::toc`
 

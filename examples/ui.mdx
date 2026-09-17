@@ -8,13 +8,19 @@ Rendered documents hydrate on load — the interactive primitives below (tabs, a
 
 ## Buttons and badges
 
-<Button>Default</Button> <Button variant="secondary">Secondary</Button>
-<Button variant="outline">Outline</Button>
-<Button variant="destructive">Destructive</Button>
+<Row>
+  <Button>Default</Button>
+  <Button variant="secondary">Secondary</Button>
+  <Button variant="outline">Outline</Button>
+  <Button variant="destructive">Destructive</Button>
+</Row>
 
-<Badge>stable</Badge> <Badge variant="secondary">beta</Badge>
-<Badge variant="outline">outline</Badge>
-<Badge variant="destructive">breaking</Badge>
+<Row>
+  <Badge>stable</Badge>
+  <Badge variant="secondary">beta</Badge>
+  <Badge variant="outline">outline</Badge>
+  <Badge variant="destructive">breaking</Badge>
+</Row>
 
 ## Alert
 
@@ -57,19 +63,41 @@ Rendered documents hydrate on load — the interactive primitives below (tabs, a
 
 ## Form controls
 
-<Label htmlFor="name">Name</Label>
-<Input id="name" placeholder="Ada Lovelace" />
-<Textarea placeholder="Notes" />
-<Switch /> <Checkbox /> <Slider defaultValue="40" />
+<FieldGroup>
+  <Field>
+    <FieldLabel htmlFor="name">Name</FieldLabel>
+    <Input id="name" placeholder="Ada Lovelace" />
+  </Field>
+  <Field>
+    <FieldLabel htmlFor="notes">Notes</FieldLabel>
+    <Textarea id="notes" placeholder="Notes" />
+  </Field>
+  <Field orientation="horizontal">
+    <Switch id="notifications" />
+    <FieldLabel htmlFor="notifications">Notifications</FieldLabel>
+  </Field>
+  <Field orientation="horizontal">
+    <Checkbox id="terms" />
+    <FieldLabel htmlFor="terms">Accept terms</FieldLabel>
+  </Field>
+  <Field>
+    <FieldLabel>Volume</FieldLabel>
+    <Slider defaultValue="40" />
+  </Field>
+</FieldGroup>
 
 ## Progress and skeleton
 
-<Progress value="60" />
+<Stack>
+  <Progress value="60" />
+  <Skeleton className="h-4 w-40" />
+</Stack>
 
-<Skeleton className="h-4 w-40" />
+<Separator className="my-6" />
 
-<Separator />
-
-<Kbd>⌘K</Kbd> <Spinner />
+<Row>
+  <Kbd>⌘K</Kbd>
+  <Spinner />
+</Row>
 
 </Plan>

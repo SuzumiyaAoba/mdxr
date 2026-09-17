@@ -78,6 +78,8 @@ This file is an index: each group lists what its components do and links to a de
 | --- | --- |
 | `<Columns>` / `<Column>` | Simple side-by-side grid (2–4 columns) |
 | `<Grid>` / `<Cell>` | 12-track grid — spans, dense flow, auto-fit card grids |
+| `<Row>` | Horizontal flex-wrap row — groups inline components (`Button`, `Badge`, …) that MDX would otherwise render glued together |
+| `<Stack>` | Vertical stack with `gap` — for margin-less components (`Input`, `Textarea`, `Progress`, …) |
 | `<Before>` / `<After>` | Red/green compare panels |
 
 ## Reader input — details: [components/forms.md](components/forms.md)

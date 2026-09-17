@@ -44,4 +44,5 @@ export const LinkCard = defineComponent(
 - Tailwind classes in custom components are compiled automatically.
 - `import { Callout, StatusBadge } from 'mdxr/components'` to compose built-ins (or from `mdxr/components` shorthand).
 - A project component with the same name as a built-in overrides it (a warning is printed).
-- Components must be synchronous — no Suspense / data fetching.
+- Project components join the hydration bundle — hooks (`useState`, `useContext`, …) work, so they can be interactive in the rendered HTML (e.g. a counter). With `--no-hydrate` they render initial state only.
+- Components must still be synchronous — no Suspense / data fetching.

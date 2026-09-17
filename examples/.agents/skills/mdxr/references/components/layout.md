@@ -43,6 +43,26 @@ Flexible 12-track grid for anything `<Columns>` can't express: asymmetric splits
 </Grid>
 ```
 
+### `<Row gap items>` / `<Stack gap items>`
+
+Flex containers for grouping components. Adjacent JSX elements render with no whitespace between them — margin-less primitives (the shadcn/ui set: `Button`, `Badge`, `Input`, `Switch`, …) end up glued together unless wrapped in `<Row>` or `<Stack>`.
+
+- `<Row>`: `flex flex-wrap items-center` — button/badge rows and other inline groups. `gap` default `sm`.
+- `<Stack>`: `flex flex-col` — vertical rhythm for stacked controls. `gap` default `md`.
+- `gap`: `none|xs|sm|md|lg|xl`. `items`: `stretch|start|center|end|baseline`. `className` adds arbitrary utilities.
+
+```mdx
+<Row>
+  <Button>Default</Button>
+  <Button variant="outline">Outline</Button>
+</Row>
+
+<Stack gap="sm">
+  <Progress value="60" />
+  <Skeleton className="h-4 w-40" />
+</Stack>
+```
+
 ### `<Before>` / `<After>`
 
 Semantic before/after panels (red / green header). Wrap in `<Columns>` for side-by-side; `title` overrides the label ("Current" / "Proposed").

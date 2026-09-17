@@ -1,4 +1,5 @@
 import { isValidElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import * as v from "valibot";
 
 import { defineComponent, flattenChildren } from "../define.js";
@@ -78,6 +79,35 @@ export const Search = defineComponent(
   }
 );
 
+const isSearchEl = (node: ReactNode): node is ReactElement =>
+  isValidElement(node) && node.type === Search;
+
+/** A <Search> child's parsed hit count (0 when the badge is absent). */
+const searchHits = (el: ReactElement): number => {
+  const h = isRecord(el.props) ? el.props.hits : undefined;
+  return typeof h === "string" || typeof h === "number"
+    ? (hitsBadge(h)?.n ?? 0)
+    : 0;
+};
+
+const summarizeSearches = (
+  children: ReactNode
+): { count: number; hits: number } => {
+  let count = 0;
+  let hits = 0;
+  for (const node of flattenChildren(children)) {
+    if (!isSearchEl(node)) {
+      continue;
+    }
+    count += 1;
+    hits += searchHits(node);
+  }
+  return { count, hits };
+};
+
+const searchSummary = (count: number, hits: number): string =>
+  `${count} search${count === 1 ? "" : "es"}${hits > 0 ? ` · ${hits} hits` : ""}`;
+
 export const Searches = defineComponent(
   {
     description:
@@ -87,19 +117,7 @@ export const Searches = defineComponent(
     }),
   },
   ({ title, children }) => {
-    let count = 0;
-    let hits = 0;
-    for (const node of flattenChildren(children)) {
-      if (!isValidElement(node) || node.type !== Search) {
-        continue;
-      }
-      count += 1;
-      const h = isRecord(node.props) ? node.props.hits : undefined;
-      const badge = hitsBadge(
-        typeof h === "string" || typeof h === "number" ? h : undefined
-      );
-      hits += badge?.n ?? 0;
-    }
+    const { count, hits } = summarizeSearches(children);
     return (
       <figure className="not-prose my-6 divide-y divide-neutral-200 overflow-hidden rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
         {nonEmpty(title) ? (
@@ -109,8 +127,7 @@ export const Searches = defineComponent(
         ) : null}
         {count > 0 ? (
           <div className="bg-neutral-50 px-4 py-1.5 text-xs text-neutral-500 dark:bg-neutral-900 dark:text-neutral-400">
-            {count} search{count === 1 ? "" : "es"}
-            {hits > 0 ? ` · ${hits} hits` : ""}
+            {searchSummary(count, hits)}
           </div>
         ) : null}
         {children}

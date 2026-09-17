@@ -38,26 +38,33 @@ const describeSchema = (schema: unknown): string => {
   return typeof schema.type === "string" ? schema.type : "unknown";
 };
 
+// Wrapper schema types that mark a prop as non-required and may carry a
+// `default` (valibot's optional/nullish/nullable).
+const WRAPPER_TYPES = new Set(["nullable", "nullish", "optional"]);
+
+const unwrapProp = (
+  raw: unknown
+): { def: unknown; required: boolean; s: Record<string, unknown> } => {
+  let s: Record<string, unknown> = isRecord(raw) ? raw : {};
+  let required = true;
+  let def: unknown;
+  while (typeof s.type === "string" && WRAPPER_TYPES.has(s.type)) {
+    required = false;
+    if (s.default !== undefined) {
+      def = s.default;
+    }
+    s = isRecord(s.wrapped) ? s.wrapped : {};
+  }
+  return { def, required, s };
+};
+
 const propsOf = (schema: unknown): Record<string, PropInfo> => {
   if (!isRecord(schema) || !isRecord(schema.entries)) {
     return {};
   }
   const out: Record<string, PropInfo> = {};
   for (const [key, raw] of Object.entries(schema.entries)) {
-    let s: Record<string, unknown> = isRecord(raw) ? raw : {};
-    let required = true;
-    let def: unknown;
-    while (
-      s.type === "optional" ||
-      s.type === "nullish" ||
-      s.type === "nullable"
-    ) {
-      required = false;
-      if (s.default !== undefined) {
-        def = s.default;
-      }
-      s = isRecord(s.wrapped) ? s.wrapped : {};
-    }
+    const { def, required, s } = unwrapProp(raw);
     out[key] = {
       required,
       type: describeSchema(s),

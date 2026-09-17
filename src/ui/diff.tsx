@@ -170,6 +170,43 @@ const looseLine = (st: ParseState, line: string): void => {
   }
 };
 
+/** One input line of `parseDiff`: git/file headers, `@@` hunk headers, and
+ * hunk/loose content each consume the line and update `st`. */
+const parseLine = (st: ParseState, line: string, nextLine: string): void => {
+  const git = GIT_RE.exec(line);
+  if (git?.groups !== undefined) {
+    st.cur = newFile();
+    st.files.push(st.cur);
+    st.cur.raw.push(line);
+    st.cur.oldPath = cleanPath(git.groups.aq ?? git.groups.a);
+    st.cur.newPath = cleanPath(git.groups.bq ?? git.groups.b);
+    st.hunk = undefined;
+    st.seenHeader = false;
+    return;
+  }
+
+  // A `---`/`+++` pair is a file header even mid-"hunk" (loose diffs).
+  const pair = OLD_RE.test(line) && NEW_RE.test(nextLine);
+  if ((st.hunk === undefined || pair) && fileHeader(st, line)) {
+    return;
+  }
+
+  const hunkM = HUNK_RE.exec(line);
+  if (hunkM?.groups !== undefined) {
+    st.hunk = { header: line, rows: [] };
+    push(st, line).hunks.push(st.hunk);
+    st.oldNo = Number(hunkM.groups.o);
+    st.newNo = Number(hunkM.groups.n);
+    return;
+  }
+
+  if (st.hunk === undefined) {
+    looseLine(st, line);
+    return;
+  }
+  hunkRow(st, line);
+};
+
 /**
  * Parse unified-diff text into per-file structures. `--- `/`+++ ` count as
  * file headers only outside hunks (or when they form a `---`/`+++` pair —
@@ -181,40 +218,7 @@ export const parseDiff = (text: string): FileDiff[] => {
   const lines = text.replace(/\n+$/u, "").split("\n");
   const st: ParseState = { files: [], newNo: 0, oldNo: 0, seenHeader: false };
   for (let i = 0; i < lines.length; i += 1) {
-    const line = lines[i] ?? "";
-
-    const git = GIT_RE.exec(line);
-    if (git?.groups !== undefined) {
-      st.cur = newFile();
-      st.files.push(st.cur);
-      st.cur.raw.push(line);
-      st.cur.oldPath = cleanPath(git.groups.aq ?? git.groups.a);
-      st.cur.newPath = cleanPath(git.groups.bq ?? git.groups.b);
-      st.hunk = undefined;
-      st.seenHeader = false;
-      continue;
-    }
-
-    // A `---`/`+++` pair is a file header even mid-"hunk" (loose diffs).
-    const pair = OLD_RE.test(line) && NEW_RE.test(lines[i + 1] ?? "");
-    if ((st.hunk === undefined || pair) && fileHeader(st, line)) {
-      continue;
-    }
-
-    const hunkM = HUNK_RE.exec(line);
-    if (hunkM?.groups !== undefined) {
-      st.hunk = { header: line, rows: [] };
-      push(st, line).hunks.push(st.hunk);
-      st.oldNo = Number(hunkM.groups.o);
-      st.newNo = Number(hunkM.groups.n);
-      continue;
-    }
-
-    if (st.hunk === undefined) {
-      looseLine(st, line);
-    } else {
-      hunkRow(st, line);
-    }
+    parseLine(st, lines[i] ?? "", lines[i + 1] ?? "");
   }
   return st.files;
 };

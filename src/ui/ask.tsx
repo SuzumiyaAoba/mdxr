@@ -96,6 +96,169 @@ export const Choice = defineComponent(
 const isCheckedChoice = (node: ReactNode): node is ReactElement<DocProps> =>
   isValidElement<DocProps>(node) && truthy(node.props.checked);
 
+/** Label/description/data-attrs chrome shared by every question frame. */
+interface QuestionChrome {
+  descEl: ReactNode;
+  id: string;
+  labelEl: ReactNode;
+  qAttrs: {
+    readonly "data-mdxr-q": "";
+    readonly "data-q-label": string;
+    readonly "data-q-type": QuestionType;
+  };
+}
+
+interface ChoiceCtx {
+  mode: ChoiceKind;
+  name: string;
+}
+
+// choice/multi: each <Choice> renders its own card under a shared <fieldset>.
+const ChoiceField = ({
+  children,
+  chrome,
+  ctx,
+}: {
+  children?: ReactNode;
+  chrome: QuestionChrome;
+  ctx: ChoiceCtx;
+}): ReactElement => (
+  // <legend> sits at the fieldset's top edge regardless of the
+  // fieldset's padding-top, so the top padding lives on the legend.
+  <fieldset className="mdxr-q m-0 px-4 pb-3.5" {...chrome.qAttrs}>
+    <legend className="p-0 pt-4.5 text-sm font-medium">{chrome.labelEl}</legend>
+    {chrome.descEl}
+    <div className="mt-2 space-y-1.5">
+      <ChoiceMode.Provider value={ctx}>{children}</ChoiceMode.Provider>
+    </div>
+  </fieldset>
+);
+
+const ToggleField = ({
+  checked,
+  chrome,
+  name,
+}: {
+  checked: boolean | string | undefined;
+  chrome: QuestionChrome;
+  name: string;
+}): ReactElement => (
+  <div className="mdxr-q px-4 py-3.5" {...chrome.qAttrs}>
+    <label
+      className="flex cursor-pointer items-center justify-between gap-3"
+      htmlFor={chrome.id}
+    >
+      <span className="text-sm font-medium">
+        {chrome.labelEl}
+        {chrome.descEl}
+      </span>
+      <input
+        className="sr-only"
+        defaultChecked={truthy(checked)}
+        id={chrome.id}
+        name={name}
+        type="checkbox"
+        value="yes"
+      />
+      <span aria-hidden className="mdxr-switch" />
+    </label>
+  </div>
+);
+
+/** label + description + control wrapper used by the text-like types. */
+const FieldFrame = ({
+  children,
+  chrome,
+}: {
+  children?: ReactNode;
+  chrome: QuestionChrome;
+}): ReactElement => (
+  <div className="mdxr-q px-4 py-3.5" {...chrome.qAttrs}>
+    <label className="text-sm font-medium" htmlFor={chrome.id}>
+      {chrome.labelEl}
+    </label>
+    {chrome.descEl}
+    <div className="mt-2">{children}</div>
+  </div>
+);
+
+const SelectControl = ({
+  children,
+  ctx,
+  id,
+  name,
+  placeholder,
+}: {
+  children?: ReactNode;
+  ctx: ChoiceCtx;
+  id: string;
+  name: string;
+  placeholder: string | undefined;
+}): ReactElement => {
+  const sel = flattenChildren(children).find(isCheckedChoice);
+  const selValue = nonEmpty(sel?.props.value) ? sel.props.value : "";
+  return (
+    <select className={CONTROL_CLS} defaultValue={selValue} id={id} name={name}>
+      {nonEmpty(placeholder) ? (
+        <option disabled value="">
+          {placeholder}
+        </option>
+      ) : null}
+      <ChoiceMode.Provider value={ctx}>{children}</ChoiceMode.Provider>
+    </select>
+  );
+};
+
+const FieldControl = ({
+  children,
+  ctx,
+  id,
+  name,
+  placeholder,
+  rows,
+  t,
+  value,
+}: {
+  children?: ReactNode;
+  ctx: ChoiceCtx;
+  id: string;
+  name: string;
+  placeholder: string | undefined;
+  rows: string | undefined;
+  t: QuestionType;
+  value: string | undefined;
+}): ReactElement => {
+  if (t === "textarea") {
+    return (
+      <textarea
+        className={CONTROL_CLS}
+        defaultValue={nonEmpty(value) ? value : undefined}
+        id={id}
+        name={name}
+        placeholder={nonEmpty(placeholder) ? placeholder : undefined}
+        rows={Number(rows) || 3}
+      />
+    );
+  }
+  if (t === "select") {
+    return (
+      <SelectControl ctx={ctx} id={id} name={name} placeholder={placeholder}>
+        {children}
+      </SelectControl>
+    );
+  }
+  return (
+    <input
+      className={CONTROL_CLS}
+      defaultValue={nonEmpty(value) ? value : undefined}
+      id={id}
+      name={name}
+      placeholder={nonEmpty(placeholder) ? placeholder : undefined}
+      type="text"
+    />
+  );
+};
+
 /**
  * One question inside `<Ask>`. `name` is the answer key; the Markdown answer
  * sheet shows `label` (falling back to `name`). Types: `choice` (radio
@@ -134,119 +297,55 @@ export const Question = defineComponent(
     const t: QuestionType =
       type ?? (flattenChildren(children).length > 0 ? "choice" : "text");
     const ctx = useMemo(() => ({ mode: CHOICE_MODE[t], name }), [t, name]);
-    const id = `mdxr-q-${name}`;
     // Resolved label + type ride on the wrapper so the client handler can
     // pair every control with the text the reader saw (Markdown sheet).
     const labelText = nonEmpty(label) ? label : name;
-    const qAttrs = {
-      "data-mdxr-q": "",
-      "data-q-label": labelText,
-      "data-q-type": t,
-    } as const;
-    const labelEl = (
-      <>
-        {labelText}
-        {truthy(required) ? (
-          <span className="ml-0.5 text-red-500">*</span>
-        ) : null}
-      </>
-    );
-    const descEl = nonEmpty(description) ? (
-      <p className="mt-0.5 text-xs font-normal text-neutral-500 dark:text-neutral-400">
-        {description}
-      </p>
-    ) : null;
-    const frame = (control: ReactElement): ReactElement => (
-      <div className="mdxr-q px-4 py-3.5" {...qAttrs}>
-        <label className="text-sm font-medium" htmlFor={id}>
-          {labelEl}
-        </label>
-        {descEl}
-        <div className="mt-2">{control}</div>
-      </div>
-    );
+    const chrome: QuestionChrome = {
+      descEl: nonEmpty(description) ? (
+        <p className="mt-0.5 text-xs font-normal text-neutral-500 dark:text-neutral-400">
+          {description}
+        </p>
+      ) : null,
+      id: `mdxr-q-${name}`,
+      labelEl: (
+        <>
+          {labelText}
+          {truthy(required) ? (
+            <span className="ml-0.5 text-red-500">*</span>
+          ) : null}
+        </>
+      ),
+      qAttrs: {
+        "data-mdxr-q": "",
+        "data-q-label": labelText,
+        "data-q-type": t,
+      } as const,
+    };
 
     if (t === "choice" || t === "multi") {
       return (
-        // <legend> sits at the fieldset's top edge regardless of the
-        // fieldset's padding-top, so the top padding lives on the legend.
-        <fieldset className="mdxr-q m-0 px-4 pb-3.5" {...qAttrs}>
-          <legend className="p-0 pt-4.5 text-sm font-medium">{labelEl}</legend>
-          {descEl}
-          <div className="mt-2 space-y-1.5">
-            <ChoiceMode.Provider value={ctx}>{children}</ChoiceMode.Provider>
-          </div>
-        </fieldset>
+        <ChoiceField chrome={chrome} ctx={ctx}>
+          {children}
+        </ChoiceField>
       );
     }
-
     if (t === "toggle") {
-      return (
-        <div className="mdxr-q px-4 py-3.5" {...qAttrs}>
-          <label
-            className="flex cursor-pointer items-center justify-between gap-3"
-            htmlFor={id}
-          >
-            <span className="text-sm font-medium">
-              {labelEl}
-              {descEl}
-            </span>
-            <input
-              className="sr-only"
-              defaultChecked={truthy(checked)}
-              id={id}
-              name={name}
-              type="checkbox"
-              value="yes"
-            />
-            <span aria-hidden className="mdxr-switch" />
-          </label>
-        </div>
-      );
+      return <ToggleField checked={checked} chrome={chrome} name={name} />;
     }
-
-    if (t === "textarea") {
-      return frame(
-        <textarea
-          className={CONTROL_CLS}
-          defaultValue={nonEmpty(value) ? value : undefined}
-          id={id}
+    return (
+      <FieldFrame chrome={chrome}>
+        <FieldControl
+          ctx={ctx}
+          id={chrome.id}
           name={name}
-          placeholder={nonEmpty(placeholder) ? placeholder : undefined}
-          rows={Number(rows) || 3}
-        />
-      );
-    }
-
-    if (t === "select") {
-      const sel = flattenChildren(children).find(isCheckedChoice);
-      const selValue = nonEmpty(sel?.props.value) ? sel.props.value : "";
-      return frame(
-        <select
-          className={CONTROL_CLS}
-          defaultValue={selValue}
-          id={id}
-          name={name}
+          placeholder={placeholder}
+          rows={rows}
+          t={t}
+          value={value}
         >
-          {nonEmpty(placeholder) ? (
-            <option disabled value="">
-              {placeholder}
-            </option>
-          ) : null}
-          <ChoiceMode.Provider value={ctx}>{children}</ChoiceMode.Provider>
-        </select>
-      );
-    }
-
-    return frame(
-      <input
-        className={CONTROL_CLS}
-        defaultValue={nonEmpty(value) ? value : undefined}
-        id={id}
-        name={name}
-        placeholder={nonEmpty(placeholder) ? placeholder : undefined}
-        type="text"
-      />
+          {children}
+        </FieldControl>
+      </FieldFrame>
     );
   }
 );

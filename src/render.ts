@@ -26,6 +26,20 @@ export interface LoadedComponents {
   code?: string;
 }
 
+// A default-exported object is treated as a { Name: Component } map.
+const componentsFromDefault = (val: unknown): ComponentMap => {
+  if (!isRecord(val)) {
+    return {};
+  }
+  const out: ComponentMap = {};
+  for (const [k, v] of Object.entries(val)) {
+    if (isComponent(v)) {
+      out[k] = v;
+    }
+  }
+  return out;
+};
+
 /** Load a user components module (file or directory with an index file). */
 export const loadComponents = async (
   componentsPath: string
@@ -35,14 +49,7 @@ export const loadComponents = async (
   const components: ComponentMap = {};
   for (const [key, val] of Object.entries(mod)) {
     if (key === "default") {
-      // A default-exported object is treated as a { Name: Component } map.
-      if (isRecord(val)) {
-        for (const [k, v] of Object.entries(val)) {
-          if (isComponent(v)) {
-            components[k] = v;
-          }
-        }
-      }
+      Object.assign(components, componentsFromDefault(val));
     } else if (isComponent(val) && /^[A-Z]/u.test(key)) {
       components[key] = val;
     }

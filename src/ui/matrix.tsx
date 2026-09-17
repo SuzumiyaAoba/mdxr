@@ -101,6 +101,70 @@ const rowCells = (li: El): string[] => {
   return text.split("|").map((c) => c.trim());
 };
 
+/** Nested <ul>/<li> children → one cells array per list item. */
+const collectRows = (children: ReactNode): string[][] => {
+  const rows: string[][] = [];
+  for (const child of flattenChildren(children)) {
+    if (!isEl(child, "ul")) {
+      continue;
+    }
+    for (const li of flattenChildren(child.props.children)) {
+      if (isEl(li, "li")) {
+        rows.push(rowCells(li));
+      }
+    }
+  }
+  return rows;
+};
+
+interface GridStyle {
+  gridTemplateColumns: string;
+}
+
+const MatrixHeader = ({
+  colCount,
+  grid,
+  headers,
+}: {
+  colCount: number;
+  grid: GridStyle;
+  headers: string[];
+}): ReactElement => (
+  <div
+    className="grid border-b border-neutral-200 bg-neutral-50/50 dark:border-neutral-800 dark:bg-neutral-900/40"
+    style={grid}
+  >
+    <div className="px-4 py-2" />
+    {Array.from({ length: colCount }, (_, i) => (
+      <div
+        className="px-2 py-2 text-center text-xs font-semibold text-neutral-600 dark:text-neutral-300"
+        key={i}
+      >
+        {headers[i] ?? ""}
+      </div>
+    ))}
+  </div>
+);
+
+const MatrixRow = ({
+  cells,
+  colCount,
+  grid,
+}: {
+  cells: string[];
+  colCount: number;
+  grid: GridStyle;
+}): ReactElement => (
+  <div className="grid items-center" style={grid}>
+    <div className="px-4 py-2 text-sm font-medium">{cells[0]}</div>
+    {Array.from({ length: colCount }, (_, j) => (
+      <div className="px-2 py-2 text-center" key={j}>
+        <Cell cell={cells[j + 1] ?? ""} />
+      </div>
+    ))}
+  </div>
+);
+
 export const Matrix = defineComponent(
   {
     description:
@@ -115,17 +179,7 @@ export const Matrix = defineComponent(
       .split(",")
       .map((c) => c.trim())
       .filter((c) => c !== "");
-    const rows: string[][] = [];
-    for (const child of flattenChildren(children)) {
-      if (!isEl(child, "ul")) {
-        continue;
-      }
-      for (const li of flattenChildren(child.props.children)) {
-        if (isEl(li, "li")) {
-          rows.push(rowCells(li));
-        }
-      }
-    }
+    const rows = collectRows(children);
     const colCount = Math.max(
       headers.length,
       ...rows.map((r) => Math.max(0, r.length - 1)),
@@ -142,31 +196,11 @@ export const Matrix = defineComponent(
           </figcaption>
         ) : null}
         {headers.length > 0 ? (
-          <div
-            className="grid border-b border-neutral-200 bg-neutral-50/50 dark:border-neutral-800 dark:bg-neutral-900/40"
-            style={grid}
-          >
-            <div className="px-4 py-2" />
-            {Array.from({ length: colCount }, (_, i) => (
-              <div
-                className="px-2 py-2 text-center text-xs font-semibold text-neutral-600 dark:text-neutral-300"
-                key={i}
-              >
-                {headers[i] ?? ""}
-              </div>
-            ))}
-          </div>
+          <MatrixHeader colCount={colCount} grid={grid} headers={headers} />
         ) : null}
         <div className="divide-y divide-neutral-100 dark:divide-neutral-800/60">
           {rows.map((cells, i) => (
-            <div className="grid items-center" key={i} style={grid}>
-              <div className="px-4 py-2 text-sm font-medium">{cells[0]}</div>
-              {Array.from({ length: colCount }, (_, j) => (
-                <div className="px-2 py-2 text-center" key={j}>
-                  <Cell cell={cells[j + 1] ?? ""} />
-                </div>
-              ))}
-            </div>
+            <MatrixRow cells={cells} colCount={colCount} grid={grid} key={i} />
           ))}
         </div>
       </figure>

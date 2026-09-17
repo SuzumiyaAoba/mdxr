@@ -1,4 +1,5 @@
 import { isValidElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 import * as v from "valibot";
 
 import { defineComponent, flattenChildren } from "../define.js";
@@ -137,6 +138,79 @@ export const Test = defineComponent(
   }
 );
 
+interface TestSummary {
+  counts: Map<TestStatus, number>;
+  /** False when any <Test> carried an unparseable duration — hides the total. */
+  durationOk: boolean;
+  total: number;
+  totalMs: number;
+}
+
+/** Aggregates status counts and total duration over <Test> children. */
+const summarizeTests = (children: ReactNode): TestSummary => {
+  const counts = new Map<TestStatus, number>();
+  let totalMs = 0;
+  let total = 0;
+  let durationOk = true;
+  for (const node of flattenChildren(children)) {
+    if (!isValidElement(node) || node.type !== Test) {
+      continue;
+    }
+    const props = isRecord(node.props) ? node.props : {};
+    const st = isTestStatus(props.status) ? props.status : "pass";
+    counts.set(st, (counts.get(st) ?? 0) + 1);
+    total += 1;
+    const d = parseDuration(props.duration);
+    if (d !== undefined) {
+      totalMs += d;
+      continue;
+    }
+    if (props.duration !== undefined && props.duration !== "") {
+      durationOk = false;
+    }
+  }
+  return { counts, durationOk, total, totalMs };
+};
+
+const TestsCaption = ({
+  summary,
+  title,
+  tool,
+}: {
+  summary: TestSummary;
+  title: string | undefined;
+  tool: string | undefined;
+}): ReactElement => (
+  <figcaption className="flex flex-wrap items-center gap-x-2.5 gap-y-1 border-b border-neutral-200 bg-neutral-50 px-4 py-2 text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+    <Icon className="h-3.5 w-3.5" name="lucide:flask-conical" />
+    {nonEmpty(title) ? (
+      <span className="font-medium">{title}</span>
+    ) : (
+      <span className="font-medium">Tests</span>
+    )}
+    {nonEmpty(tool) ? (
+      <span className="rounded bg-neutral-200/70 px-1.5 py-px font-mono text-[0.68rem] text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
+        {tool}
+      </span>
+    ) : null}
+    <span className="ml-auto flex items-center gap-x-2 font-medium">
+      {TEST_STATUSES.map((st) => {
+        const c = summary.counts.get(st);
+        return c === undefined ? null : (
+          <span className={STYLES[st].cls} key={st}>
+            {c} {STYLES[st].label}
+          </span>
+        );
+      })}
+      {summary.durationOk && summary.totalMs > 0 ? (
+        <span className="font-mono tabular-nums">
+          {formatDuration(summary.totalMs)}
+        </span>
+      ) : null}
+    </span>
+  </figcaption>
+);
+
 export const Tests = defineComponent(
   {
     description:
@@ -147,59 +221,12 @@ export const Tests = defineComponent(
     }),
   },
   ({ title, tool, children }) => {
-    const counts = new Map<TestStatus, number>();
-    let totalMs = 0;
-    let total = 0;
-    let durationOk = true;
-    for (const node of flattenChildren(children)) {
-      if (!isValidElement(node) || node.type !== Test) {
-        continue;
-      }
-      const props = isRecord(node.props) ? node.props : {};
-      const st = isTestStatus(props.status) ? props.status : "pass";
-      counts.set(st, (counts.get(st) ?? 0) + 1);
-      total += 1;
-      const d = parseDuration(props.duration);
-      if (d === undefined) {
-        if (props.duration !== undefined && props.duration !== "") {
-          durationOk = false;
-        }
-      } else {
-        totalMs += d;
-      }
-    }
-    const caption = nonEmpty(title) || nonEmpty(tool) || total > 0;
+    const summary = summarizeTests(children);
+    const caption = nonEmpty(title) || nonEmpty(tool) || summary.total > 0;
     return (
       <figure className="not-prose my-6 divide-y divide-neutral-200 overflow-hidden rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
         {caption ? (
-          <figcaption className="flex flex-wrap items-center gap-x-2.5 gap-y-1 border-b border-neutral-200 bg-neutral-50 px-4 py-2 text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
-            <Icon className="h-3.5 w-3.5" name="lucide:flask-conical" />
-            {nonEmpty(title) ? (
-              <span className="font-medium">{title}</span>
-            ) : (
-              <span className="font-medium">Tests</span>
-            )}
-            {nonEmpty(tool) ? (
-              <span className="rounded bg-neutral-200/70 px-1.5 py-px font-mono text-[0.68rem] text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
-                {tool}
-              </span>
-            ) : null}
-            <span className="ml-auto flex items-center gap-x-2 font-medium">
-              {TEST_STATUSES.map((st) => {
-                const c = counts.get(st);
-                return c === undefined ? null : (
-                  <span className={STYLES[st].cls} key={st}>
-                    {c} {STYLES[st].label}
-                  </span>
-                );
-              })}
-              {durationOk && totalMs > 0 ? (
-                <span className="font-mono tabular-nums">
-                  {formatDuration(totalMs)}
-                </span>
-              ) : null}
-            </span>
-          </figcaption>
+          <TestsCaption summary={summary} title={title} tool={tool} />
         ) : null}
         {children}
       </figure>

@@ -119,6 +119,32 @@ const Entry = ({
 
 const nestedListCls = "mt-0.5 ml-[7px] list-none space-y-0.5 p-0 pl-3";
 
+/** A list item's pieces: label/note text, nested <ul>s, inline row content. */
+const rowParts = (
+  child: El
+): {
+  label: string;
+  name: string | null;
+  nested: El[];
+  note: string | null;
+  row: ReactNode[];
+} => {
+  const kids = flattenChildren(child.props.children);
+  const nested = kids.filter((k): k is El => isEl(k, "ul"));
+  const nestedSet = new Set<ReactNode>(nested);
+  const row = kids
+    .filter((k) => !nestedSet.has(k))
+    .flatMap((k): ReactNode[] =>
+      isEl(k, "p") ? flattenChildren(k.props.children) : [k]
+    );
+
+  const full = textOf(row);
+  const m = NOTE_RE.exec(full);
+  const name = m === null ? null : full.slice(0, m.index).trimEnd();
+  const note = m === null ? null : full.slice(m.index + m[0].length).trim();
+  return { label: (name ?? full).trim(), name, nested, note, row };
+};
+
 /** Render a `<ul>` element (and its nested lists) as file-tree rows. */
 const renderList = (
   node: El,
@@ -126,20 +152,7 @@ const renderList = (
   expanded: boolean
 ): ReactElement => {
   const renderItem = (child: El, last: boolean): ReactElement => {
-    const kids = flattenChildren(child.props.children);
-    const nested = kids.filter((k): k is El => isEl(k, "ul"));
-    const nestedSet = new Set<ReactNode>(nested);
-    const row = kids
-      .filter((k) => !nestedSet.has(k))
-      .flatMap((k): ReactNode[] =>
-        isEl(k, "p") ? flattenChildren(k.props.children) : [k]
-      );
-
-    const full = textOf(row);
-    const m = NOTE_RE.exec(full);
-    const name = m === null ? null : full.slice(0, m.index).trimEnd();
-    const note = m === null ? null : full.slice(m.index + m[0].length).trim();
-    const label = (name ?? full).trim();
+    const { label, name, nested, note, row } = rowParts(child);
 
     // A `...`/`…` entry marks omitted files — no icon, not collapsible.
     if (PLACEHOLDER_RE.test(label)) {

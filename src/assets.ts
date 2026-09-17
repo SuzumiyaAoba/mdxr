@@ -321,6 +321,281 @@ details[open] > summary .mdxr-chev { transform: rotate(90deg); }
 }
 `;
 
+/* The helpers below are inlined into documents via `CLIENT_JS` (`toString`)
+ * and shared by the Storybook preview's live `handleDocEvent` binding, so
+ * each must stay self-contained — no imports, no outer-scope references.
+ * They live at module scope and are emitted one by one (`CLIENT_FNS`), which
+ * keeps the emitted script identical in behavior while keeping every unit
+ * small enough to stay readable.
+ */
+
+// Flashes a feedback state on a button: swaps to the .mdxr-copy-done icon /
+// label and tints it via .copied (success) or shakes it red via
+// .copy-failed. A repeat click restarts the pop (reflow) and the timer.
+const flash = (
+  b: HTMLElement,
+  cls: "copied" | "copy-failed",
+  label?: string
+): void => {
+  const ex = b as HTMLElement & {
+    mdxrLabel?: null | string;
+    mdxrTimer?: ReturnType<typeof setTimeout>;
+  };
+  clearTimeout(ex.mdxrTimer);
+  if (label !== undefined) {
+    ex.mdxrLabel ??= b.getAttribute("aria-label");
+    b.setAttribute("aria-label", label);
+  }
+  b.classList.remove("copied", "copy-failed");
+  void b.offsetWidth;
+  b.classList.add(cls);
+  ex.mdxrTimer = setTimeout(() => {
+    b.classList.remove(cls);
+    if (ex.mdxrLabel !== undefined) {
+      if (ex.mdxrLabel === null) {
+        b.removeAttribute("aria-label");
+      } else {
+        b.setAttribute("aria-label", ex.mdxrLabel);
+      }
+      ex.mdxrLabel = undefined;
+    }
+  }, 1600);
+};
+
+const writeClipboard = (
+  text: string,
+  done: () => void,
+  fail: () => void
+): void => {
+  const legacy = (): boolean => {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;top:0;left:0;opacity:0";
+    document.body.append(ta);
+    ta.select();
+    let ok = false;
+    try {
+      // oxlint-disable-next-line typescript/no-deprecated -- only fallback outside secure contexts
+      ok = document.execCommand("copy");
+    } catch {
+      ok = false;
+    }
+    ta.remove();
+    return ok;
+  };
+  // navigator.clipboard is absent outside secure contexts (e.g. file://).
+  const clip = navigator.clipboard as Clipboard | undefined;
+  if (clip === undefined) {
+    if (legacy()) {
+      done();
+    } else {
+      fail();
+    }
+    return;
+  }
+  void (async () => {
+    try {
+      await clip.writeText(text);
+      done();
+    } catch {
+      if (legacy()) {
+        done();
+      } else {
+        fail();
+      }
+    }
+  })();
+};
+
+// Writes `text` to the clipboard and flashes `btn` accordingly; labels are
+// optional so icon-only buttons can omit them.
+const copyWithFeedback = (
+  btn: HTMLElement,
+  text: string,
+  doneLabel?: string,
+  failLabel?: string
+): void => {
+  writeClipboard(
+    text,
+    () => {
+      flash(btn, "copied", doneLabel);
+    },
+    () => {
+      flash(btn, "copy-failed", failLabel);
+    }
+  );
+};
+
+// The text a reader actually selected for a choice/select answer: the
+// choice card's visible label minus its description, or the <option> text.
+// Falls back to the control's value when no text can be read.
+const choiceText = (f: Element): string => {
+  if (f instanceof HTMLOptionElement) {
+    const t = (f.textContent ?? "").trim();
+    return t === "" ? f.value : t;
+  }
+  const fallback = f instanceof HTMLInputElement ? f.value : "";
+  const body = f.closest("label")?.querySelector(".mdxr-choice-text");
+  if (!(body instanceof HTMLElement)) {
+    return fallback;
+  }
+  let t = "";
+  for (const n of body.childNodes) {
+    if (n instanceof HTMLElement && n.classList.contains("mdxr-choice-desc")) {
+      continue;
+    }
+    t += n.textContent ?? "";
+  }
+  t = t.replaceAll(/\s+/gu, " ").trim();
+  return t === "" ? fallback : t;
+};
+
+const multiAnswer = (q: HTMLElement): string => {
+  const vals: string[] = [];
+  for (const f of q.querySelectorAll("input:checked")) {
+    const v = choiceText(f);
+    if (v !== "") {
+      vals.push(v);
+    }
+  }
+  return vals.join(", ");
+};
+
+const choiceAnswer = (q: HTMLElement): string => {
+  const f = q.querySelector("input:checked");
+  return f === null ? "" : choiceText(f);
+};
+
+const selectAnswer = (q: HTMLElement): string => {
+  const s = q.querySelector("select");
+  const [opt] =
+    s instanceof HTMLSelectElement && s.value !== "" ? s.selectedOptions : [];
+  return opt === undefined ? "" : choiceText(opt);
+};
+
+const fieldAnswer = (q: HTMLElement): string => {
+  const f = q.querySelector("input, textarea");
+  if (f instanceof HTMLTextAreaElement) {
+    return f.value.trim();
+  }
+  if (!(f instanceof HTMLInputElement)) {
+    return "";
+  }
+  if (f.type === "checkbox") {
+    // Toggle questions are checkboxes — always answered, yes or no.
+    return f.checked ? "yes" : "no";
+  }
+  return f.value.trim();
+};
+
+// One question's answer: checked choices read as their visible text,
+// selects as the chosen option's text, toggles as yes/no, free-form
+// fields as their raw value. "" means unanswered.
+const answerOf = (q: HTMLElement): string => {
+  const t = q.dataset.qType;
+  if (t === "multi") {
+    return multiAnswer(q);
+  }
+  if (t === "choice") {
+    return choiceAnswer(q);
+  }
+  if (t === "select") {
+    return selectAnswer(q);
+  }
+  return fieldAnswer(q);
+};
+
+// Serializes an [data-ask] block into the Markdown answer sheet shown in
+// [data-ask-output]: `# title` then one `- **label**: answer` line per
+// question, in DOM order. Unanswered fields stay blank; toggles are
+// always answered (yes/no). Multi-line answers indent under their item.
+const askMarkdown = (box: HTMLElement): string => {
+  const lines: string[] = [];
+  for (const q of box.querySelectorAll("[data-mdxr-q]")) {
+    if (!(q instanceof HTMLElement)) {
+      continue;
+    }
+    const answer = answerOf(q).replaceAll("\n", "\n  ");
+    lines.push(
+      `- **${q.dataset.qLabel ?? ""}**:${answer === "" ? "" : ` ${answer}`}`
+    );
+  }
+  const title = box.dataset.askTitle ?? "Answers";
+  return `# ${title}\n\n${lines.length === 0 ? "(no questions)" : lines.join("\n")}`;
+};
+
+// Re-renders the answer sheet into the block's [data-ask-output] pane.
+const syncAsk = (box: HTMLElement): void => {
+  const out = box.querySelector("[data-ask-output]");
+  if (out !== null) {
+    out.textContent = askMarkdown(box);
+  }
+};
+
+// Downloads the answer sheet as `<slug>.md` via a temporary blob link.
+const saveAsk = (box: HTMLElement, btn: HTMLElement): void => {
+  syncAsk(box);
+  const slug = (box.dataset.askTitle ?? "answers")
+    .toLowerCase()
+    .replaceAll(/[^\p{L}\p{N}]+/gu, "-")
+    .replaceAll(/^-+|-+$/gu, "");
+  const url = URL.createObjectURL(
+    new Blob([askMarkdown(box)], { type: "text/markdown;charset=utf-8" })
+  );
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${slug === "" ? "answers" : slug}.md`;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 1000);
+  flash(btn, "copied");
+};
+
+// Cycles auto → light → dark, persists the choice, and repaints every
+// toggle's icon/label to match.
+const cycleTheme = (): void => {
+  let stored: string | null = null;
+  try {
+    // localStorage can throw on file:// or in hardened contexts.
+    stored = localStorage.getItem("mdxr-theme");
+  } catch {
+    stored = null;
+  }
+  const mode = stored === "light" || stored === "dark" ? stored : "auto";
+  let next = "auto";
+  if (mode === "auto") {
+    next = "light";
+  } else if (mode === "light") {
+    next = "dark";
+  }
+  try {
+    if (next === "auto") {
+      localStorage.removeItem("mdxr-theme");
+    } else {
+      localStorage.setItem("mdxr-theme", next);
+    }
+  } catch {
+    // Persistence is best-effort; the toggle still applies for this view.
+  }
+  const dark =
+    next === "dark" ||
+    (next === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+  document.documentElement.classList.toggle("dark", dark);
+  const title = `Theme: ${next}`;
+  for (const b of document.querySelectorAll("[data-mdxr-theme]")) {
+    if (!(b instanceof HTMLElement)) {
+      continue;
+    }
+    b.dataset.mode = next;
+    b.setAttribute("title", title);
+    b.setAttribute("aria-label", `Switch theme (current: ${next})`);
+  }
+};
+
 /**
  * Delegated handler for the document's interactive bits. On `input`/`change`
  * inside an `[data-ask]` block it rewrites the block's `[data-ask-output]`
@@ -331,244 +606,14 @@ details[open] > summary .mdxr-chev { transform: rotate(90deg); }
  * cycles the document theme auto → light → dark (persisted to localStorage,
  * so THEME_JS can restore it before first paint). Inlined into documents via
  * `CLIENT_JS` (`toString`) and registered by the Storybook preview, so it
- * must stay self-contained — no imports, no outer-scope references. Helpers
- * stay nested for `toString` inlining even though they capture nothing.
+ * must stay self-contained — no imports, no outer-scope references beyond
+ * the `CLIENT_FNS` helpers.
  */
-/* oxlint-disable unicorn/consistent-function-scoping -- toString() requires self-containment */
 export const handleDocEvent = (e: Event): void => {
   const el = e.target;
   if (!(el instanceof Element)) {
     return;
   }
-  // Flashes a feedback state on a button: swaps to the .mdxr-copy-done icon /
-  // label and tints it via .copied (success) or shakes it red via
-  // .copy-failed. A repeat click restarts the pop (reflow) and the timer.
-  const flash = (
-    b: HTMLElement,
-    cls: "copied" | "copy-failed",
-    label?: string
-  ): void => {
-    const ex = b as HTMLElement & {
-      mdxrLabel?: null | string;
-      mdxrTimer?: ReturnType<typeof setTimeout>;
-    };
-    clearTimeout(ex.mdxrTimer);
-    if (label !== undefined) {
-      ex.mdxrLabel ??= b.getAttribute("aria-label");
-      b.setAttribute("aria-label", label);
-    }
-    b.classList.remove("copied", "copy-failed");
-    void b.offsetWidth;
-    b.classList.add(cls);
-    ex.mdxrTimer = setTimeout(() => {
-      b.classList.remove(cls);
-      if (ex.mdxrLabel !== undefined) {
-        if (ex.mdxrLabel === null) {
-          b.removeAttribute("aria-label");
-        } else {
-          b.setAttribute("aria-label", ex.mdxrLabel);
-        }
-        ex.mdxrLabel = undefined;
-      }
-    }, 1600);
-  };
-  const writeClipboard = (
-    text: string,
-    done: () => void,
-    fail: () => void
-  ): void => {
-    const legacy = (): boolean => {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.setAttribute("readonly", "");
-      ta.style.cssText = "position:fixed;top:0;left:0;opacity:0";
-      document.body.append(ta);
-      ta.select();
-      let ok = false;
-      try {
-        // oxlint-disable-next-line typescript/no-deprecated -- only fallback outside secure contexts
-        ok = document.execCommand("copy");
-      } catch {
-        ok = false;
-      }
-      ta.remove();
-      return ok;
-    };
-    // navigator.clipboard is absent outside secure contexts (e.g. file://).
-    const clip = navigator.clipboard as Clipboard | undefined;
-    if (clip === undefined) {
-      if (legacy()) {
-        done();
-      } else {
-        fail();
-      }
-      return;
-    }
-    void (async () => {
-      try {
-        await clip.writeText(text);
-        done();
-      } catch {
-        if (legacy()) {
-          done();
-        } else {
-          fail();
-        }
-      }
-    })();
-  };
-  // The text a reader actually selected for a choice/select answer: the
-  // choice card's visible label minus its description, or the <option> text.
-  // Falls back to the control's value when no text can be read.
-  const choiceText = (f: Element): string => {
-    if (f instanceof HTMLOptionElement) {
-      const t = (f.textContent ?? "").trim();
-      return t === "" ? f.value : t;
-    }
-    const fallback = f instanceof HTMLInputElement ? f.value : "";
-    const body = f.closest("label")?.querySelector(".mdxr-choice-text");
-    if (!(body instanceof HTMLElement)) {
-      return fallback;
-    }
-    let t = "";
-    for (const n of body.childNodes) {
-      if (
-        n instanceof HTMLElement &&
-        n.classList.contains("mdxr-choice-desc")
-      ) {
-        continue;
-      }
-      t += n.textContent ?? "";
-    }
-    t = t.replaceAll(/\s+/gu, " ").trim();
-    return t === "" ? fallback : t;
-  };
-  // One question's answer: checked choices read as their visible text,
-  // selects as the chosen option's text, toggles as yes/no, free-form
-  // fields as their raw value. "" means unanswered.
-  const answerOf = (q: HTMLElement): string => {
-    const t = q.dataset.qType;
-    if (t === "multi") {
-      const vals: string[] = [];
-      for (const f of q.querySelectorAll("input:checked")) {
-        const v = choiceText(f);
-        if (v !== "") {
-          vals.push(v);
-        }
-      }
-      return vals.join(", ");
-    }
-    if (t === "choice") {
-      const f = q.querySelector("input:checked");
-      return f === null ? "" : choiceText(f);
-    }
-    if (t === "select") {
-      const s = q.querySelector("select");
-      const [opt] =
-        s instanceof HTMLSelectElement && s.value !== ""
-          ? s.selectedOptions
-          : [];
-      return opt === undefined ? "" : choiceText(opt);
-    }
-    const f = q.querySelector("input, textarea");
-    if (f instanceof HTMLTextAreaElement) {
-      return f.value.trim();
-    }
-    if (!(f instanceof HTMLInputElement)) {
-      return "";
-    }
-    if (f.type === "checkbox") {
-      // Toggle questions are checkboxes — always answered, yes or no.
-      return f.checked ? "yes" : "no";
-    }
-    return f.value.trim();
-  };
-  // Serializes an [data-ask] block into the Markdown answer sheet shown in
-  // [data-ask-output]: `# title` then one `- **label**: answer` line per
-  // question, in DOM order. Unanswered fields stay blank; toggles are
-  // always answered (yes/no). Multi-line answers indent under their item.
-  const askMarkdown = (box: HTMLElement): string => {
-    const lines: string[] = [];
-    for (const q of box.querySelectorAll("[data-mdxr-q]")) {
-      if (!(q instanceof HTMLElement)) {
-        continue;
-      }
-      const answer = answerOf(q).replaceAll("\n", "\n  ");
-      lines.push(
-        `- **${q.dataset.qLabel ?? ""}**:${answer === "" ? "" : ` ${answer}`}`
-      );
-    }
-    const title = box.dataset.askTitle ?? "Answers";
-    return `# ${title}\n\n${lines.length === 0 ? "(no questions)" : lines.join("\n")}`;
-  };
-  // Re-renders the answer sheet into the block's [data-ask-output] pane.
-  const syncAsk = (box: HTMLElement): void => {
-    const out = box.querySelector("[data-ask-output]");
-    if (out !== null) {
-      out.textContent = askMarkdown(box);
-    }
-  };
-  // Downloads the answer sheet as `<slug>.md` via a temporary blob link.
-  const saveAsk = (box: HTMLElement, btn: HTMLElement): void => {
-    syncAsk(box);
-    const slug = (box.dataset.askTitle ?? "answers")
-      .toLowerCase()
-      .replaceAll(/[^\p{L}\p{N}]+/gu, "-")
-      .replaceAll(/^-+|-+$/gu, "");
-    const url = URL.createObjectURL(
-      new Blob([askMarkdown(box)], { type: "text/markdown;charset=utf-8" })
-    );
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${slug === "" ? "answers" : slug}.md`;
-    document.body.append(a);
-    a.click();
-    a.remove();
-    setTimeout(() => {
-      URL.revokeObjectURL(url);
-    }, 1000);
-    flash(btn, "copied");
-  };
-  // Cycles auto → light → dark, persists the choice, and repaints every
-  // toggle's icon/label to match.
-  const cycleTheme = (): void => {
-    let stored: string | null = null;
-    try {
-      // localStorage can throw on file:// or in hardened contexts.
-      stored = localStorage.getItem("mdxr-theme");
-    } catch {
-      stored = null;
-    }
-    const mode = stored === "light" || stored === "dark" ? stored : "auto";
-    let next = "auto";
-    if (mode === "auto") {
-      next = "light";
-    } else if (mode === "light") {
-      next = "dark";
-    }
-    try {
-      if (next === "auto") {
-        localStorage.removeItem("mdxr-theme");
-      } else {
-        localStorage.setItem("mdxr-theme", next);
-      }
-    } catch {
-      // Persistence is best-effort; the toggle still applies for this view.
-    }
-    const dark =
-      next === "dark" ||
-      (next === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
-    document.documentElement.classList.toggle("dark", dark);
-    const title = `Theme: ${next}`;
-    for (const b of document.querySelectorAll("[data-mdxr-theme]")) {
-      if (!(b instanceof HTMLElement)) {
-        continue;
-      }
-      b.dataset.mode = next;
-      b.setAttribute("title", title);
-      b.setAttribute("aria-label", `Switch theme (current: ${next})`);
-    }
-  };
   // Field edits keep the Markdown pane live; the init pass in CLIENT_JS
   // seeds it by bubbling a synthetic `input` event off each [data-ask].
   if (e.type === "input" || e.type === "change") {
@@ -580,14 +625,11 @@ export const handleDocEvent = (e: Event): void => {
   }
   const copyBtn = el.closest("[data-copy]");
   if (copyBtn instanceof HTMLElement) {
-    writeClipboard(
+    copyWithFeedback(
+      copyBtn,
       copyBtn.dataset.copy ?? "",
-      () => {
-        flash(copyBtn, "copied", "Copied");
-      },
-      () => {
-        flash(copyBtn, "copy-failed", "Copy failed");
-      }
+      "Copied",
+      "Copy failed"
     );
     return;
   }
@@ -599,15 +641,7 @@ export const handleDocEvent = (e: Event): void => {
     }
     // Re-collect on click too: autofill/programmatic edits fire no events.
     syncAsk(box);
-    writeClipboard(
-      askMarkdown(box),
-      () => {
-        flash(askBtn, "copied");
-      },
-      () => {
-        flash(askBtn, "copy-failed");
-      }
-    );
+    copyWithFeedback(askBtn, askMarkdown(box));
     return;
   }
   const askSaveBtn = el.closest("[data-ask-save]");
@@ -623,14 +657,36 @@ export const handleDocEvent = (e: Event): void => {
     cycleTheme();
   }
 };
-/* oxlint-enable unicorn/consistent-function-scoping */
+
+// Everything the emitted document script needs beyond `handleDocEvent`:
+// helpers are emitted as top-level `const <name> = <fn>` declarations, in
+// dependency order, so the handler's references resolve identically in the
+// inlined script and in the Storybook preview's module scope.
+const CLIENT_FNS = [
+  flash,
+  writeClipboard,
+  copyWithFeedback,
+  choiceText,
+  multiAnswer,
+  choiceAnswer,
+  selectAnswer,
+  fieldAnswer,
+  answerOf,
+  askMarkdown,
+  syncAsk,
+  saveAsk,
+  cycleTheme,
+];
 
 /** Small vanilla JS inlined into every document: copy/answer/save buttons,
  * the live Markdown answer sheet, and theme. The trailing pass seeds each
  * Ask output pane (default-checked fields count as answers) by bubbling a
  * synthetic `input` event off the block — the delegated handler's own
  * input branch does the render, so no code is duplicated. */
-export const CLIENT_JS = `document.addEventListener('click', ${handleDocEvent.toString()});
+export const CLIENT_JS = `${CLIENT_FNS.map(
+  (f) => `const ${f.name} = ${f.toString()};`
+).join("\n")}
+document.addEventListener('click', ${handleDocEvent.toString()});
 document.addEventListener('input', ${handleDocEvent.toString()});
 document.addEventListener('change', ${handleDocEvent.toString()});
 for (const b of document.querySelectorAll('[data-ask]')) {

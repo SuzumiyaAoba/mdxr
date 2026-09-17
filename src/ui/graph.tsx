@@ -270,6 +270,135 @@ const GraphNode = ({
   );
 };
 
+/** Splits children into <Node>/<Edge> specs and leftover content. */
+const collectSpecs = (
+  children: ReactNode
+): { edges: EdgeSpec[]; nodes: NodeSpec[]; rest: ReactNode[] } => {
+  const nodes: NodeSpec[] = [];
+  const edges: EdgeSpec[] = [];
+  const rest: ReactNode[] = [];
+  for (const child of flattenChildren(children)) {
+    if (isValidElement(child) && child.type === Node) {
+      nodes.push(parseSpec(NODE_SCHEMA, child.props, "Node"));
+    } else if (isValidElement(child) && child.type === Edge) {
+      edges.push(parseSpec(EDGE_SCHEMA, child.props, "Edge"));
+    } else {
+      rest.push(child);
+    }
+  }
+  return { edges, nodes, rest };
+};
+
+type DagreGraph = graphlib.Graph<GraphLabel, NodeLabel, EdgeLabel>;
+
+/** dagre layout pass: nodes in spec order (dupes skipped), live edges only. */
+const layoutGraph = (
+  nodes: NodeSpec[],
+  edges: EdgeSpec[],
+  direction: keyof typeof RANKDIRS
+): { g: DagreGraph; height: number; liveEdges: EdgeSpec[]; width: number } => {
+  const g: DagreGraph = new graphlib.Graph();
+  g.setGraph({
+    marginx: 10,
+    marginy: 10,
+    nodesep: 18,
+    rankdir: RANKDIRS[direction],
+    ranksep: 54,
+  });
+  g.setDefaultEdgeLabel(() => ({}));
+  const seen = new Set<string>();
+  for (const n of nodes) {
+    if (seen.has(n.id)) {
+      continue;
+    }
+    seen.add(n.id);
+    g.setNode(n.id, nodeSize(n));
+  }
+  const liveEdges = edges.filter((e) => g.hasNode(e.from) && g.hasNode(e.to));
+  for (const e of liveEdges) {
+    g.setEdge(e.from, e.to);
+  }
+  layout(g);
+  const { width = 0, height = 0 } = g.graph();
+  return { g, height, liveEdges, width };
+};
+
+/** Routed edge: smoothed path plus its arrowhead, tinted via EDGE_COLORS. */
+const EdgePath = ({
+  e,
+  g,
+}: {
+  e: EdgeSpec;
+  g: DagreGraph;
+}): ReactElement | null => {
+  const pts = g.edge(e.from, e.to)?.points;
+  if (pts === undefined || pts.length < 2) {
+    return null;
+  }
+  const cls = EDGE_COLORS[e.kind ?? "imports"] ?? EDGE_COLORS.imports;
+  return (
+    <g className={cls}>
+      <path
+        d={smoothPath(pts)}
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+      />
+      <path
+        d={arrowPath(pts)}
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+      />
+    </g>
+  );
+};
+
+/** Edge label chip, positioned at the route's midpoint. */
+const EdgeLabelChip = ({
+  e,
+  g,
+}: {
+  e: EdgeSpec;
+  g: DagreGraph;
+}): ReactElement | null => {
+  if (!nonEmpty(e.label)) {
+    return null;
+  }
+  const pts = g.edge(e.from, e.to)?.points;
+  if (pts === undefined || pts.length === 0) {
+    return null;
+  }
+  const p = labelPoint(pts);
+  return (
+    <span
+      className="absolute z-10 -translate-x-1/2 -translate-y-1/2 rounded border border-neutral-200 bg-white px-1.5 py-px font-mono text-[0.65rem] whitespace-nowrap text-neutral-500 shadow-sm dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400"
+      style={{ left: p.x, top: p.y }}
+    >
+      {e.label}
+    </span>
+  );
+};
+
+/** Node card at its laid-out position; null while dagre has no position. */
+const PlacedNode = ({
+  g,
+  n,
+}: {
+  g: DagreGraph;
+  n: NodeSpec;
+}): ReactElement | null => {
+  const pos = g.node(n.id);
+  if (pos?.x === undefined || pos.y === undefined) {
+    return null;
+  }
+  return <GraphNode spec={n} x={pos.x} y={pos.y} />;
+};
+
 export const Graph = defineComponent(
   {
     description:
@@ -283,18 +412,7 @@ export const Graph = defineComponent(
     }),
   },
   ({ title, direction, children }) => {
-    const nodes: NodeSpec[] = [];
-    const edges: EdgeSpec[] = [];
-    const rest: ReactNode[] = [];
-    for (const child of flattenChildren(children)) {
-      if (isValidElement(child) && child.type === Node) {
-        nodes.push(parseSpec(NODE_SCHEMA, child.props, "Node"));
-      } else if (isValidElement(child) && child.type === Edge) {
-        edges.push(parseSpec(EDGE_SCHEMA, child.props, "Edge"));
-      } else {
-        rest.push(child);
-      }
-    }
+    const { edges, nodes, rest } = collectSpecs(children);
 
     if (nodes.length === 0) {
       // No <Node> children: render content as-is (standalone Node/Edge views).
@@ -306,30 +424,11 @@ export const Graph = defineComponent(
       );
     }
 
-    const g = new graphlib.Graph<GraphLabel, NodeLabel, EdgeLabel>();
-    g.setGraph({
-      marginx: 10,
-      marginy: 10,
-      nodesep: 18,
-      rankdir: RANKDIRS[direction],
-      ranksep: 54,
-    });
-    g.setDefaultEdgeLabel(() => ({}));
-    const seen = new Set<string>();
-    for (const n of nodes) {
-      if (seen.has(n.id)) {
-        continue;
-      }
-      seen.add(n.id);
-      g.setNode(n.id, nodeSize(n));
-    }
-    const liveEdges = edges.filter((e) => g.hasNode(e.from) && g.hasNode(e.to));
-    for (const e of liveEdges) {
-      g.setEdge(e.from, e.to);
-    }
-    layout(g);
-
-    const { width = 0, height = 0 } = g.graph();
+    const { g, height, liveEdges, width } = layoutGraph(
+      nodes,
+      edges,
+      direction
+    );
     return (
       <figure className="not-prose my-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
         {nonEmpty(title) ? (
@@ -346,61 +445,16 @@ export const Graph = defineComponent(
               height={height}
               width={width}
             >
-              {liveEdges.map((e, i) => {
-                const pts = g.edge(e.from, e.to)?.points;
-                if (pts === undefined || pts.length < 2) {
-                  return null;
-                }
-                const cls =
-                  EDGE_COLORS[e.kind ?? "imports"] ?? EDGE_COLORS.imports;
-                return (
-                  <g className={cls} key={i}>
-                    <path
-                      d={smoothPath(pts)}
-                      fill="none"
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                    />
-                    <path
-                      d={arrowPath(pts)}
-                      fill="none"
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                    />
-                  </g>
-                );
-              })}
+              {liveEdges.map((e, i) => (
+                <EdgePath e={e} g={g} key={i} />
+              ))}
             </svg>
-            {liveEdges.map((e, i) => {
-              if (!nonEmpty(e.label)) {
-                return null;
-              }
-              const pts = g.edge(e.from, e.to)?.points;
-              if (pts === undefined || pts.length === 0) {
-                return null;
-              }
-              const p = labelPoint(pts);
-              return (
-                <span
-                  className="absolute z-10 -translate-x-1/2 -translate-y-1/2 rounded border border-neutral-200 bg-white px-1.5 py-px font-mono text-[0.65rem] whitespace-nowrap text-neutral-500 shadow-sm dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400"
-                  key={`label-${i}`}
-                  style={{ left: p.x, top: p.y }}
-                >
-                  {e.label}
-                </span>
-              );
-            })}
-            {nodes.map((n) => {
-              const pos = g.node(n.id);
-              if (pos?.x === undefined || pos.y === undefined) {
-                return null;
-              }
-              return <GraphNode key={n.id} spec={n} x={pos.x} y={pos.y} />;
-            })}
+            {liveEdges.map((e, i) => (
+              <EdgeLabelChip e={e} g={g} key={`label-${i}`} />
+            ))}
+            {nodes.map((n) => (
+              <PlacedNode g={g} key={n.id} n={n} />
+            ))}
           </div>
         </div>
         {rest.length > 0 ? <div className="px-4 py-2">{rest}</div> : null}

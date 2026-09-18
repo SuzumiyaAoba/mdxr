@@ -3,9 +3,10 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { FILE_LINK_PROPS } from "./attrs.js";
+import { LocLink, Section } from "./bits.js";
 import { indexChildren, useChildIndex } from "./child-index.js";
-import { linkTarget, useFileLink } from "./file-link.js";
 import { Icon } from "./icon.js";
+import { TEXT, TRIM_CLS } from "./tones.js";
 
 export const Flow = defineComponent(
   {
@@ -16,10 +17,9 @@ export const Flow = defineComponent(
     }),
   },
   ({ title, children }) => (
-    <section className="my-6">
-      {nonEmpty(title) ? <h3 className="mt-0">{title}</h3> : null}
+    <Section title={title}>
       <ol className="not-prose m-0 list-none p-0">{indexChildren(children)}</ol>
-    </section>
+    </Section>
   )
 );
 
@@ -34,26 +34,6 @@ export const FlowStep = defineComponent(
   },
   ({ name, path, lines, href, children }) => {
     const { n, last } = useChildIndex();
-    const link = useFileLink(path, lines, href);
-    const loc = (
-      <>
-        {path}
-        {nonEmpty(lines) ? `:${lines}` : ""}
-      </>
-    );
-    const locCls = "font-mono text-xs text-neutral-400 dark:text-neutral-500";
-    const locEl =
-      link === undefined ? (
-        <span className={locCls}>{loc}</span>
-      ) : (
-        <a
-          className={`${locCls} no-underline hover:underline`}
-          href={link}
-          {...linkTarget(link)}
-        >
-          {loc}
-        </a>
-      );
     return (
       <li className="relative pt-1 pb-4 pl-10 last:pb-0">
         {last ? null : (
@@ -75,15 +55,19 @@ export const FlowStep = defineComponent(
         {nonEmpty(name) || nonEmpty(path) ? (
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
             {nonEmpty(name) ? (
-              <code className="font-mono text-[0.9em] font-semibold text-neutral-900 dark:text-neutral-100">
+              <code
+                className={`font-mono text-[0.9em] font-semibold ${TEXT.strong}`}
+              >
                 {name}
               </code>
             ) : null}
-            {nonEmpty(path) ? locEl : null}
+            {nonEmpty(path) ? (
+              <LocLink href={href} lines={lines} path={path} />
+            ) : null}
           </div>
         ) : null}
         {children === undefined ? null : (
-          <div className="mt-1.5 text-sm text-neutral-600 dark:text-neutral-300 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+          <div className={`mt-1.5 text-sm ${TEXT.body} ${TRIM_CLS}`}>
             {children}
           </div>
         )}

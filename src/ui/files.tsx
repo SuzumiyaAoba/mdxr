@@ -3,10 +3,18 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { FILE_LINK_PROPS } from "./attrs.js";
-import { CaptionBar } from "./bits.js";
+import {
+  ListPanel,
+  ListRow,
+  MaybeLink,
+  PathLabel,
+  RowIcon,
+  RowNote,
+  Tag,
+} from "./bits.js";
 import { fileIcon } from "./file-icon.js";
-import { linkTarget, useFileLink } from "./file-link.js";
-import { Icon } from "./icon.js";
+import { useFileLink } from "./file-link.js";
+import { MONO_CLS, TEXT } from "./tones.js";
 
 export const FILE_KINDS = [
   "config",
@@ -20,7 +28,7 @@ export const FILE_KINDS = [
 
 const KINDS: Record<string, { cls: string; icon: string }> = {
   config: {
-    cls: "text-neutral-500 dark:text-neutral-400",
+    cls: TEXT.muted,
     icon: "lucide:settings",
   },
   core: {
@@ -28,7 +36,7 @@ const KINDS: Record<string, { cls: string; icon: string }> = {
     icon: "lucide:layers",
   },
   docs: {
-    cls: "text-neutral-500 dark:text-neutral-400",
+    cls: TEXT.muted,
     icon: "lucide:book-open",
   },
   entry: {
@@ -36,7 +44,7 @@ const KINDS: Record<string, { cls: string; icon: string }> = {
     icon: "lucide:log-in",
   },
   generated: {
-    cls: "text-neutral-500 dark:text-neutral-400",
+    cls: TEXT.muted,
     icon: "lucide:bot",
   },
   test: {
@@ -50,7 +58,7 @@ const KINDS: Record<string, { cls: string; icon: string }> = {
 };
 
 const FALLBACK_KIND = {
-  cls: "text-neutral-500 dark:text-neutral-400",
+  cls: TEXT.muted,
   icon: "lucide:tag",
 };
 
@@ -62,16 +70,7 @@ export const Files = defineComponent(
       title: v.optional(v.string()),
     }),
   },
-  ({ title, children }) => (
-    <figure className="not-prose my-6 divide-y divide-neutral-200 overflow-hidden rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
-      {nonEmpty(title) ? (
-        <CaptionBar border={false} className="font-medium">
-          {title}
-        </CaptionBar>
-      ) : null}
-      {children}
-    </figure>
-  )
+  ({ title, children }) => <ListPanel title={title}>{children}</ListPanel>
 );
 
 export const File = defineComponent(
@@ -88,46 +87,26 @@ export const File = defineComponent(
     const r = nonEmpty(kind) ? (KINDS[kind] ?? FALLBACK_KIND) : undefined;
     const link = useFileLink(path, lines, href);
     const label = (
-      <code className="font-mono text-[0.85em] text-neutral-800 dark:text-neutral-200">
-        {path}
-        {nonEmpty(lines) ? (
-          <span className="text-neutral-400 dark:text-neutral-500">
-            :{lines}
-          </span>
-        ) : null}
+      <code className={MONO_CLS}>
+        <PathLabel lines={lines} linesClassName={TEXT.faint} path={path} />
       </code>
     );
     return (
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-2.5">
-        <Icon
-          className="h-3.5 w-3.5 shrink-0 self-center text-neutral-400 dark:text-neutral-500"
-          name={fileIcon(path)}
-        />
-        {link === undefined ? (
-          label
-        ) : (
-          <a
-            className="text-inherit no-underline hover:underline"
-            href={link}
-            {...linkTarget(link)}
-          >
-            {label}
-          </a>
-        )}
+      <ListRow>
+        <RowIcon name={fileIcon(path)} />
+        <MaybeLink
+          className="text-inherit no-underline hover:underline"
+          href={link}
+        >
+          {label}
+        </MaybeLink>
         {r === undefined ? null : (
-          <span
-            className={`inline-flex shrink-0 items-center gap-1 text-xs font-medium ${r.cls}`}
-          >
-            <Icon className="h-3.5 w-3.5" name={r.icon} />
+          <Tag className={r.cls} icon={r.icon}>
             {kind}
-          </span>
+          </Tag>
         )}
-        {children === undefined ? null : (
-          <span className="min-w-0 flex-1 text-sm text-neutral-500 dark:text-neutral-400">
-            {children}
-          </span>
-        )}
-      </div>
+        <RowNote>{children}</RowNote>
+      </ListRow>
     );
   }
 );

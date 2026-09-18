@@ -18,3 +18,36 @@ export const TONE = {
 } as const;
 
 export type Tone = keyof typeof TONE;
+
+/**
+ * Neutral text-tone pairs, strongest→faintest. Use these instead of open-
+ * coding `text-neutral-* dark:text-neutral-*` so the muted-text hierarchy
+ * stays consistent across the catalog.
+ */
+export const TEXT = {
+  /** Secondary body text (neutral-600/300). */
+  body: "text-neutral-600 dark:text-neutral-300",
+  /** Code/mono-context body (neutral-800/200). */
+  code: "text-neutral-800 dark:text-neutral-200",
+  /** Faint placeholders, locations, icons (neutral-400/500). */
+  faint: "text-neutral-400 dark:text-neutral-500",
+  /** Ghosted context lines, empty cells (neutral-300/600). */
+  ghost: "text-neutral-300 dark:text-neutral-600",
+  /** Muted annotations, captions, meta (neutral-500/400). */
+  muted: "text-neutral-500 dark:text-neutral-400",
+  /** Headings, term names, primary labels (neutral-900/100). */
+  strong: "text-neutral-900 dark:text-neutral-100",
+} as const;
+
+/** Muted mono chip text — the `path:lines` location label shared by
+ * file-referencing components (Flow, Trace, Tests, Search, Approvals). */
+export const LOC_CLS = `font-mono text-xs ${TEXT.faint}`;
+
+/** Inline `<code>` look inside list rows — `font-mono` on the body text color. */
+export const MONO_CLS = `font-mono text-[0.85em] ${TEXT.code}`;
+
+/** Trim first/last child margins inside MDX-rendered body regions. */
+export const TRIM_CLS = "[&>*:first-child]:mt-0 [&>*:last-child]:mb-0";
+
+/** Standard neutral border — panels, cards, dividers (neutral-200/800). */
+export const BORDER_CLS = "border-neutral-200 dark:border-neutral-800";

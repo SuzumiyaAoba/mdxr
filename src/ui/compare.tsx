@@ -3,6 +3,7 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { Icon } from "./icon.js";
+import { TRIM_CLS } from "./tones.js";
 
 const panel = (
   cls: { border: string; head: string },
@@ -18,9 +19,7 @@ const panel = (
       <Icon className="h-3.5 w-3.5" name={icon} />
       {title ?? label}
     </div>
-    <div className="px-4 py-2.5 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-      {children}
-    </div>
+    <div className={`px-4 py-2.5 ${TRIM_CLS}`}>{children}</div>
   </div>
 );
 

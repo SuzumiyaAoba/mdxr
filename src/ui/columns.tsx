@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
+import { TRIM_CLS } from "./tones.js";
 
 const COLS: Record<string, string> = {
   "1": "",
@@ -26,9 +27,5 @@ export const Column = defineComponent(
   {
     description: "<Columns> 内の1カラム",
   },
-  ({ children }) => (
-    <div className="min-w-0 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-      {children}
-    </div>
-  )
+  ({ children }) => <div className={`min-w-0 ${TRIM_CLS}`}>{children}</div>
 );

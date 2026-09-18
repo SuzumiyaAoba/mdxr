@@ -1,13 +1,13 @@
 import type { ReactElement } from "react";
 
 import { nonEmpty } from "../guards.js";
-import { CaptionBar, CopyButton } from "./bits.js";
+import { CaptionBar, CopyButton, MaybeLink, Panel } from "./bits.js";
 import type { DiffRow, FileDiff } from "./diff-parse.js";
 import { parseDiff } from "./diff-parse.js";
 import { fileIcon } from "./file-icon.js";
-import { linkTarget, useFileLink } from "./file-link.js";
+import { useFileLink } from "./file-link.js";
 import { Icon } from "./icon.js";
-import { TONE } from "./tones.js";
+import { TEXT, TONE } from "./tones.js";
 
 export { parseDiff } from "./diff-parse.js";
 export type { FileDiff } from "./diff-parse.js";
@@ -82,14 +82,14 @@ const ROW_CLS: Record<DiffRow["kind"], string> = {
   add: "bg-emerald-500/10 dark:bg-emerald-500/15",
   ctx: "",
   del: "bg-red-500/10 dark:bg-red-500/15",
-  note: "text-neutral-400 italic dark:text-neutral-500",
+  note: `${TEXT.faint} italic`,
 };
 
 const SIGN_CLS: Record<DiffRow["kind"], string> = {
   add: "text-emerald-600 dark:text-emerald-400",
-  ctx: "text-neutral-300 dark:text-neutral-600",
+  ctx: TEXT.ghost,
   del: "text-red-600 dark:text-red-400",
-  note: "text-neutral-300 dark:text-neutral-600",
+  note: TEXT.ghost,
 };
 
 const SIGNS: Record<DiffRow["kind"], string> = {
@@ -106,16 +106,16 @@ const DiffRows = ({ rows }: { rows: DiffRow[] }): ReactElement => (
         className={`grid grid-cols-[2.5rem_2.5rem_1.25rem_minmax(0,1fr)] ${ROW_CLS[row.kind]}`}
         key={i}
       >
-        <span className="px-2 text-right text-neutral-400 select-none dark:text-neutral-500">
+        <span className={`px-2 text-right select-none ${TEXT.faint}`}>
           {row.oldLine ?? ""}
         </span>
-        <span className="px-2 text-right text-neutral-400 select-none dark:text-neutral-500">
+        <span className={`px-2 text-right select-none ${TEXT.faint}`}>
           {row.newLine ?? ""}
         </span>
         <span className={`text-center select-none ${SIGN_CLS[row.kind]}`}>
           {SIGNS[row.kind]}
         </span>
-        <span className="pr-4 wrap-anywhere whitespace-pre-wrap text-neutral-800 dark:text-neutral-200">
+        <span className={`pr-4 wrap-anywhere whitespace-pre-wrap ${TEXT.code}`}>
           {nonEmpty(row.text) ? row.text : " "}
         </span>
       </div>
@@ -140,23 +140,18 @@ const FileCard = ({
       ? `${file.oldPath} → ${file.newPath}`
       : (path ?? "diff");
   return (
-    <figure className="not-prose my-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
+    <Panel>
       <CaptionBar className="flex items-center gap-2">
         <Icon
           className="h-3.5 w-3.5 shrink-0"
           name={fileIcon(path ?? "x.diff")}
         />
-        {link === undefined ? (
-          <span className="min-w-0 truncate font-mono">{label}</span>
-        ) : (
-          <a
-            className="min-w-0 truncate font-mono text-inherit no-underline hover:underline"
-            href={link}
-            {...linkTarget(link)}
-          >
-            {label}
-          </a>
-        )}
+        <MaybeLink
+          className="min-w-0 truncate font-mono text-inherit no-underline hover:underline"
+          href={link}
+        >
+          {label}
+        </MaybeLink>
         {kind === undefined ? null : (
           <span
             className={`shrink-0 rounded-full px-1.5 py-px text-[0.65rem] font-medium ${KINDS[kind].cls}`}
@@ -176,7 +171,9 @@ const FileCard = ({
         </span>
       </CaptionBar>
       {file.meta.length > 0 ? (
-        <div className="border-b border-neutral-100 px-4 py-1.5 font-mono text-[0.7rem] text-neutral-400 dark:border-neutral-800/60 dark:text-neutral-500">
+        <div
+          className={`border-b border-neutral-100 px-4 py-1.5 font-mono text-[0.7rem] dark:border-neutral-800/60 ${TEXT.faint}`}
+        >
           {file.meta.map((m, i) => (
             <div className="truncate" key={i}>
               {m}
@@ -196,7 +193,7 @@ const FileCard = ({
           </div>
         ))}
       </div>
-    </figure>
+    </Panel>
   );
 };
 

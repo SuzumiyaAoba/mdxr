@@ -2,9 +2,9 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
-import { Pill } from "./bits.js";
+import { ListPanel, ListRow, Pill, RowNote } from "./bits.js";
 import { Owner } from "./owner.js";
-import { TONE } from "./tones.js";
+import { LOC_CLS, TONE } from "./tones.js";
 
 export const APPROVAL_STATUSES = [
   "approved",
@@ -44,11 +44,7 @@ export const Approvals = defineComponent(
   {
     description: "承認/レビュー一覧のコンテナ。<Approval> を並べる",
   },
-  ({ children }) => (
-    <div className="not-prose my-6 divide-y divide-neutral-200 rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
-      {children}
-    </div>
-  )
+  ({ children }) => <ListPanel as="div">{children}</ListPanel>
 );
 
 export const Approval = defineComponent(
@@ -65,24 +61,16 @@ export const Approval = defineComponent(
   ({ name, role, status, date, children }) => {
     const s = STYLES[status];
     return (
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5">
+      <ListRow align="center">
         <Owner name={name} role={role} />
-        {children === undefined ? null : (
-          <span className="min-w-0 flex-1 text-sm text-neutral-500 dark:text-neutral-400">
-            {children}
-          </span>
-        )}
+        <RowNote>{children}</RowNote>
         <span className="ml-auto flex items-baseline gap-2">
-          {nonEmpty(date) ? (
-            <time className="font-mono text-xs text-neutral-400 dark:text-neutral-500">
-              {date}
-            </time>
-          ) : null}
+          {nonEmpty(date) ? <time className={LOC_CLS}>{date}</time> : null}
           <Pill className={s.cls} icon={s.icon}>
             {s.label}
           </Pill>
         </span>
-      </div>
+      </ListRow>
     );
   }
 );

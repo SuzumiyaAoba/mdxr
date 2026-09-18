@@ -3,6 +3,7 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { hasIcon, Icon, normalizeIconName } from "./icon.js";
+import { TEXT } from "./tones.js";
 
 export const MetaItem = defineComponent(
   {
@@ -25,16 +26,12 @@ export const MetaItem = defineComponent(
     <span className="inline-flex items-baseline gap-1">
       {icon === undefined ? null : (
         <Icon
-          className="h-3.5 w-3.5 self-center text-neutral-400 dark:text-neutral-500"
+          className={`h-3.5 w-3.5 self-center ${TEXT.faint}`}
           name={normalizeIconName(icon)}
         />
       )}
-      {nonEmpty(label) ? (
-        <span className="text-neutral-400 dark:text-neutral-500">{label}:</span>
-      ) : null}
-      <span className="font-medium text-neutral-600 dark:text-neutral-300">
-        {children}
-      </span>
+      {nonEmpty(label) ? <span className={TEXT.faint}>{label}:</span> : null}
+      <span className={`font-medium ${TEXT.body}`}>{children}</span>
     </span>
   )
 );

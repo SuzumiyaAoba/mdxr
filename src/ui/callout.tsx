@@ -2,6 +2,7 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { Icon } from "./icon.js";
+import { TRIM_CLS } from "./tones.js";
 
 export const CALLOUT_KINDS = [
   "note",
@@ -100,9 +101,7 @@ export const Callout = defineComponent(
           ) : null}
         </div>
         {children === undefined ? null : (
-          <div className="mt-1.5 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-            {children}
-          </div>
+          <div className={`mt-1.5 ${TRIM_CLS}`}>{children}</div>
         )}
       </aside>
     );

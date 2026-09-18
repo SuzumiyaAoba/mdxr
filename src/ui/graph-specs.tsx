@@ -9,6 +9,7 @@ import { DEP_KINDS } from "./deps.js";
 import { fileIcon } from "./file-icon.js";
 import { hasIcon, Icon } from "./icon.js";
 import { STATUS_ICONS, STATUSES } from "./status-badge.js";
+import { TEXT } from "./tones.js";
 
 /**
  * `<Graph>` child specs: the `Node`/`Edge` prop schemas, their standalone
@@ -65,7 +66,9 @@ export const Edge = defineComponent(
   },
   // Standalone use renders a plain `from → to` line.
   ({ from, to, label, kind }): ReactElement => (
-    <div className="not-prose flex items-center gap-2 py-0.5 font-mono text-xs text-neutral-500 dark:text-neutral-400">
+    <div
+      className={`not-prose flex items-center gap-2 py-0.5 font-mono text-xs ${TEXT.muted}`}
+    >
       <span>{from}</span>
       <Icon className="h-3 w-3" name="lucide:arrow-right" />
       <span>{to}</span>

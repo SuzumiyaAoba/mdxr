@@ -8,6 +8,7 @@ import { attrFalse } from "./attrs.js";
 import { isEl } from "./children.js";
 import { fileIcon, folderIcon } from "./file-icon.js";
 import { Icon } from "./icon.js";
+import { BORDER_CLS, TEXT } from "./tones.js";
 
 type El = ReactElement<{ children?: ReactNode }>;
 
@@ -27,7 +28,7 @@ const NodeIcon = ({
   name: string;
 }): ReactElement => (
   <Icon
-    className={`h-3.5 w-3.5 shrink-0 self-center ${dir ? "text-amber-500" : "text-neutral-400 dark:text-neutral-500"}`}
+    className={`h-3.5 w-3.5 shrink-0 self-center ${dir ? "text-amber-500" : TEXT.faint}`}
     name={dir ? folderIcon(name) : fileIcon(name)}
   />
 );
@@ -80,7 +81,7 @@ const Row = ({
 const PlaceholderRow = ({ depth }: { depth: number }): ReactElement => (
   <Row depth={depth}>
     <Spacer />
-    <span className="text-neutral-400 dark:text-neutral-500">…</span>
+    <span className={TEXT.faint}>…</span>
   </Row>
 );
 
@@ -171,9 +172,7 @@ const renderList = (
     );
     const noteEl =
       note === null ? null : (
-        <span className="text-[0.85em] text-neutral-400 dark:text-neutral-500">
-          {note}
-        </span>
+        <span className={`text-[0.85em] ${TEXT.faint}`}>{note}</span>
       );
 
     if (!isDir) {
@@ -198,7 +197,7 @@ const renderList = (
           <summary className="group flex cursor-pointer items-baseline gap-1.5 py-px select-none">
             {depth > 0 ? <Tick /> : null}
             <Icon
-              className="mdxr-chev h-3 w-3 shrink-0 self-center text-neutral-400 group-hover:text-neutral-600 dark:text-neutral-500 dark:group-hover:text-neutral-300"
+              className={`mdxr-chev h-3 w-3 shrink-0 self-center ${TEXT.faint} group-hover:text-neutral-600 dark:group-hover:text-neutral-300`}
               name="lucide:chevron-right"
             />
             {entry}
@@ -253,7 +252,9 @@ export const Tree = defineComponent(
     }),
   },
   ({ root, open, children }) => (
-    <div className="mdxr-tree not-prose my-6 overflow-x-auto rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 font-mono text-sm dark:border-neutral-800 dark:bg-neutral-900/60">
+    <div
+      className={`mdxr-tree not-prose my-6 overflow-x-auto rounded-lg border bg-neutral-50 px-4 py-3 font-mono text-sm dark:bg-neutral-900/60 ${BORDER_CLS}`}
+    >
       {nonEmpty(root) ? (
         <div className="mb-1.5 flex items-center gap-1.5 font-semibold">
           <NodeIcon dir name={root} />

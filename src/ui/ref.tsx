@@ -3,6 +3,7 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { Icon } from "./icon.js";
+import { BORDER_CLS, TEXT } from "./tones.js";
 
 export const Ref = defineComponent(
   {
@@ -17,18 +18,18 @@ export const Ref = defineComponent(
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="group not-prose my-6 flex items-start gap-3 rounded-lg border border-neutral-200 px-4 py-3 text-inherit no-underline transition-colors hover:bg-neutral-50 active:bg-neutral-100 dark:border-neutral-800 dark:hover:bg-neutral-900 dark:active:bg-neutral-800"
+      className={`group not-prose my-6 flex items-start gap-3 rounded-lg border px-4 py-3 text-inherit no-underline transition-colors hover:bg-neutral-50 active:bg-neutral-100 dark:hover:bg-neutral-900 dark:active:bg-neutral-800 ${BORDER_CLS}`}
     >
       <Icon
         className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
         name="lucide:external-link"
       />
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-medium text-neutral-900 dark:text-neutral-100">
+        <span className={`block text-sm font-medium ${TEXT.strong}`}>
           {title}
         </span>
         {children === undefined ? null : (
-          <span className="mt-0.5 block text-sm text-neutral-500 dark:text-neutral-400">
+          <span className={`mt-0.5 block text-sm ${TEXT.muted}`}>
             {children}
           </span>
         )}
@@ -81,7 +82,7 @@ const refChip = (
     />
     <span className="font-mono">#{number}</span>
     {children === undefined ? null : (
-      <span className="text-neutral-600 dark:text-neutral-300">{children}</span>
+      <span className={TEXT.body}>{children}</span>
     )}
   </a>
 );
@@ -137,9 +138,7 @@ export const Commit = defineComponent(
       />
       <span className="font-mono">{sha.slice(0, 7)}</span>
       {children === undefined ? null : (
-        <span className="text-neutral-600 dark:text-neutral-300">
-          {children}
-        </span>
+        <span className={TEXT.body}>{children}</span>
       )}
     </a>
   )

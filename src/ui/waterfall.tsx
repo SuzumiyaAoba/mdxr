@@ -4,10 +4,11 @@ import * as v from "valibot";
 
 import { defineComponent, flattenChildren } from "../define.js";
 import { nonEmpty } from "../guards.js";
-import { CaptionBar } from "./bits.js";
+import { CaptionBar, Panel } from "./bits.js";
 import { indexChildren, useChildIndex } from "./child-index.js";
 import { isEl, propOf } from "./children.js";
 import { Icon } from "./icon.js";
+import { TEXT } from "./tones.js";
 
 /**
  * Timing waterfall — horizontal span bars like an OTel trace view. `start`
@@ -65,9 +66,7 @@ export const Span = defineComponent(
         <div className="min-w-0">
           <div className="truncate text-sm">{name}</div>
           {nonEmpty(note) ? (
-            <div className="truncate text-[0.7rem] text-neutral-400 dark:text-neutral-500">
-              {note}
-            </div>
+            <div className={`truncate text-[0.7rem] ${TEXT.faint}`}>{note}</div>
           ) : null}
         </div>
         <div className="relative h-4.5 rounded bg-neutral-100 dark:bg-neutral-800">
@@ -76,7 +75,9 @@ export const Span = defineComponent(
             style={{ left: `${left}%`, width: `${width}%` }}
           />
         </div>
-        <div className="text-right font-mono text-xs text-neutral-500 tabular-nums dark:text-neutral-400">
+        <div
+          className={`text-right font-mono text-xs tabular-nums ${TEXT.muted}`}
+        >
           {String(duration)}
         </div>
       </div>
@@ -116,7 +117,7 @@ export const Waterfall = defineComponent(
     const totalNum = num(total) ?? maxEnd;
     const scale = totalNum > 0 ? totalNum : 1;
     return (
-      <figure className="not-prose my-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <Panel>
         {nonEmpty(title) ? (
           <CaptionBar className="flex items-center gap-2 font-medium">
             <Icon className="h-3.5 w-3.5" name="lucide:chart-bar" />
@@ -143,7 +144,7 @@ export const Waterfall = defineComponent(
             {indexChildren(children)}
           </ScaleCtx.Provider>
         </div>
-      </figure>
+      </Panel>
     );
   }
 );

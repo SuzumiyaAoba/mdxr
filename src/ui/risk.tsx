@@ -3,7 +3,7 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { Pill } from "./bits.js";
-import { TONE } from "./tones.js";
+import { TONE, TRIM_CLS } from "./tones.js";
 
 export const RISK_LEVELS = ["low", "medium", "high"] as const;
 export type RiskLevel = (typeof RISK_LEVELS)[number];
@@ -57,9 +57,7 @@ export const Risk = defineComponent(
           ) : null}
         </div>
         {children === undefined ? null : (
-          <div className="mt-1.5 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-            {children}
-          </div>
+          <div className={`mt-1.5 ${TRIM_CLS}`}>{children}</div>
         )}
         {nonEmpty(mitigation) ? (
           <div className="mt-2 border-t border-neutral-200 pt-2 text-xs dark:border-neutral-700">

@@ -1,13 +1,13 @@
-import { createHash } from "node:crypto";
-import { mkdir, readdir, writeFile } from "node:fs/promises";
+import { readdir } from "node:fs/promises";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
 
 import type { StorybookConfig } from "@storybook/react-vite";
 import tailwindcss from "@tailwindcss/vite";
 import { build } from "esbuild";
 import type { Plugin } from "vite";
 import { mergeConfig } from "vite";
+
+import { importBundledCode } from "../src/load-user-module.js";
 
 const VIRTUAL_ID = "virtual:mdxr-documents";
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
@@ -16,7 +16,6 @@ const rootDir = process.cwd();
 const docsDir = path.join(rootDir, "examples");
 const srcDir = path.join(rootDir, "src");
 const rendererEntry = path.join(srcDir, "render.ts");
-const cacheDir = path.join(rootDir, ".mdxr-cache");
 
 const listFiles = async (dir: string): Promise<string[]> => {
   try {
@@ -36,9 +35,8 @@ type RenderFile = (mdxPath: string) => Promise<string>;
 
 /**
  * Bundle the real renderer (`src/render.ts`) on every call and import it.
- * Re-bundling keeps document previews in sync with edits to src/**, and the
- * output lands in .mdxr-cache so bare imports resolve to this project's deps —
- * the same trick `loadUserModule` uses for user components.
+ * Re-bundling keeps document previews in sync with edits to src/**; the
+ * content-hashed cache write + import is shared with `loadUserModule`.
  */
 const loadRenderer = async (): Promise<RenderFile> => {
   const result = await build({
@@ -53,18 +51,11 @@ const loadRenderer = async (): Promise<RenderFile> => {
     target: "node20",
     write: false,
   });
-  const code = result.outputFiles[0]?.text ?? "";
-  await mkdir(cacheDir, { recursive: true });
-  const hash = createHash("sha256").update(code).digest("hex").slice(0, 12);
-  const out = path.join(cacheDir, `storybook-${hash}.mjs`);
-  await writeFile(out, code);
-  const mod: unknown = await import(
-    `${pathToFileURL(out).href}?t=${Date.now()}`
+  const mod = await importBundledCode(
+    result.outputFiles[0]?.text ?? "",
+    "storybook"
   );
-  const renderFile =
-    typeof mod === "object" && mod !== null && "renderFile" in mod
-      ? mod.renderFile
-      : undefined;
+  const { renderFile } = mod;
   if (typeof renderFile !== "function") {
     throw new TypeError("mdxr: renderer module did not export renderFile");
   }

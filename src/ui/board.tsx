@@ -2,27 +2,22 @@ import * as v from "valibot";
 
 import { defineComponent, flattenChildren } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { Section } from "./bits.js";
 import { isEl } from "./children.js";
 import { Due } from "./due.js";
 import { EFFORT_SIZES, Effort } from "./effort.js";
 import { Icon } from "./icon.js";
 import { Owner } from "./owner.js";
 import { PRIORITY_LEVELS, Priority } from "./priority.js";
-import { STATUSES } from "./status-badge.js";
+import { STATUS_ICON_CLS, STATUS_ICONS, STATUSES } from "./status-badge.js";
 import type { Status } from "./status-badge.js";
+import { BORDER_CLS, TEXT, TRIM_CLS } from "./tones.js";
 
 const DOT: Record<Status, string> = {
   blocked: "bg-red-500",
   doing: "bg-sky-500",
   done: "bg-emerald-500",
   todo: "bg-neutral-400",
-};
-
-const CARD_STATUS: Record<Status, { cls: string; icon: string }> = {
-  blocked: { cls: "text-red-500", icon: "lucide:circle-x" },
-  doing: { cls: "text-sky-500", icon: "lucide:loader-circle" },
-  done: { cls: "text-emerald-500", icon: "lucide:circle-check" },
-  todo: { cls: "text-neutral-400", icon: "lucide:circle" },
 };
 
 export const BoardCard = defineComponent(
@@ -46,13 +41,15 @@ export const BoardCard = defineComponent(
       nonEmpty(due) ||
       status !== undefined;
     return (
-      <div className="rounded-md border border-neutral-200 bg-white p-2.5 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+      <div
+        className={`rounded-md border bg-white p-2.5 shadow-sm dark:bg-neutral-950 ${BORDER_CLS}`}
+      >
         <div className="flex items-start gap-1.5">
           {status === undefined ? null : (
             <Icon
-              className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${CARD_STATUS[status].cls}`}
+              className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${STATUS_ICON_CLS[status]}`}
               label={status}
-              name={CARD_STATUS[status].icon}
+              name={STATUS_ICONS[status]}
             />
           )}
           <div className="min-w-0 flex-1 text-sm leading-snug font-medium">
@@ -60,7 +57,7 @@ export const BoardCard = defineComponent(
           </div>
         </div>
         {children === undefined ? null : (
-          <div className="mt-1 text-xs text-neutral-500 dark:text-neutral-400 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+          <div className={`mt-1 text-xs ${TEXT.muted} ${TRIM_CLS}`}>
             {children}
           </div>
         )}
@@ -92,7 +89,9 @@ export const Lane = defineComponent(
     ).length;
     return (
       <section className="w-64 shrink-0 rounded-xl bg-neutral-100/70 p-2 dark:bg-neutral-900/70">
-        <header className="flex items-center gap-2 px-1.5 py-1.5 text-xs font-semibold text-neutral-600 dark:text-neutral-300">
+        <header
+          className={`flex items-center gap-2 px-1.5 py-1.5 text-xs font-semibold ${TEXT.body}`}
+        >
           {status === undefined ? null : (
             <span
               aria-hidden
@@ -121,11 +120,10 @@ export const Board = defineComponent(
     }),
   },
   ({ title, children }) => (
-    <section className="my-6">
-      {nonEmpty(title) ? <h3 className="mt-0">{title}</h3> : null}
+    <Section title={title}>
       <div className="not-prose flex items-start gap-3 overflow-x-auto pb-1">
         {children}
       </div>
-    </section>
+    </Section>
   )
 );

@@ -3,6 +3,7 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { attrTrue } from "./attrs.js";
 import { Icon } from "./icon.js";
+import { BORDER_CLS, TRIM_CLS } from "./tones.js";
 
 /**
  * Collapsible section on native `<details>` — opens/closes without client
@@ -21,7 +22,7 @@ export const Details = defineComponent(
     const isOpen = attrTrue(open);
     return (
       <details
-        className="mdxr-details my-6 rounded-lg border border-neutral-200 dark:border-neutral-800"
+        className={`mdxr-details my-6 rounded-lg border ${BORDER_CLS}`}
         open={isOpen}
       >
         <summary className="flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-neutral-700 transition-colors select-none hover:bg-neutral-50 active:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-900 dark:active:bg-neutral-800">
@@ -31,7 +32,7 @@ export const Details = defineComponent(
           />
           {summary ?? "Details"}
         </summary>
-        <div className="border-t border-neutral-200 px-4 py-3 dark:border-neutral-800 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+        <div className={`border-t px-4 py-3 ${BORDER_CLS} ${TRIM_CLS}`}>
           {children}
         </div>
       </details>

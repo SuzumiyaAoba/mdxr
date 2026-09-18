@@ -1,9 +1,8 @@
 import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
-import { nonEmpty } from "../guards.js";
-import { CaptionBar } from "./bits.js";
-import { Icon } from "./icon.js";
+import { ListPanel, ListRow, RowIcon, RowNote, Tag } from "./bits.js";
+import { MONO_CLS, TEXT } from "./tones.js";
 
 export const DEP_KINDS = [
   "calls",
@@ -29,11 +28,11 @@ const KINDS: Record<DepKind, { cls: string; icon: string }> = {
     icon: "lucide:layers",
   },
   imports: {
-    cls: "text-neutral-500 dark:text-neutral-400",
+    cls: TEXT.muted,
     icon: "lucide:package",
   },
   reads: {
-    cls: "text-neutral-500 dark:text-neutral-400",
+    cls: TEXT.muted,
     icon: "lucide:eye",
   },
   writes: {
@@ -50,16 +49,7 @@ export const Deps = defineComponent(
       title: v.optional(v.string()),
     }),
   },
-  ({ title, children }) => (
-    <figure className="not-prose my-6 divide-y divide-neutral-200 overflow-hidden rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
-      {nonEmpty(title) ? (
-        <CaptionBar border={false} className="font-medium">
-          {title}
-        </CaptionBar>
-      ) : null}
-      {children}
-    </figure>
-  )
+  ({ title, children }) => <ListPanel title={title}>{children}</ListPanel>
 );
 
 export const Dep = defineComponent(
@@ -75,29 +65,15 @@ export const Dep = defineComponent(
   ({ from, to, kind, children }) => {
     const k = KINDS[kind];
     return (
-      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 px-4 py-2.5">
-        <code className="font-mono text-[0.85em] text-neutral-800 dark:text-neutral-200">
-          {from}
-        </code>
-        <Icon
-          className="h-3.5 w-3.5 shrink-0 self-center text-neutral-400 dark:text-neutral-500"
-          name="lucide:arrow-right"
-        />
-        <code className="font-mono text-[0.85em] text-neutral-800 dark:text-neutral-200">
-          {to}
-        </code>
-        <span
-          className={`inline-flex shrink-0 items-center gap-1 text-xs font-medium ${k.cls}`}
-        >
-          <Icon className="h-3.5 w-3.5" name={k.icon} />
+      <ListRow gapX="2">
+        <code className={MONO_CLS}>{from}</code>
+        <RowIcon name="lucide:arrow-right" />
+        <code className={MONO_CLS}>{to}</code>
+        <Tag className={k.cls} icon={k.icon}>
           {kind}
-        </span>
-        {children === undefined ? null : (
-          <span className="min-w-0 flex-1 text-sm text-neutral-500 dark:text-neutral-400">
-            {children}
-          </span>
-        )}
-      </div>
+        </Tag>
+        <RowNote>{children}</RowNote>
+      </ListRow>
     );
   }
 );

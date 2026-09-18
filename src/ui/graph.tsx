@@ -4,10 +4,10 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { attrTrue } from "./attrs.js";
-import { CaptionBar } from "./bits.js";
+import { CaptionBar, MaybeLink, Panel, Section } from "./bits.js";
 import type { DepKind } from "./deps.js";
 import { fileIcon } from "./file-icon.js";
-import { linkTarget, useFileLink } from "./file-link.js";
+import { useFileLink } from "./file-link.js";
 import type { DagreGraph } from "./graph-layout.js";
 import {
   arrowPath,
@@ -19,8 +19,8 @@ import {
 import type { EdgeSpec, NodeSpec } from "./graph-specs.js";
 import { collectSpecs } from "./graph-specs.js";
 import { hasIcon, Icon } from "./icon.js";
-import { STATUS_ICONS } from "./status-badge.js";
-import type { Status } from "./status-badge.js";
+import { STATUS_ICON_CLS, STATUS_ICONS } from "./status-badge.js";
+import { TEXT } from "./tones.js";
 
 export { Edge, Node } from "./graph-specs.js";
 
@@ -38,16 +38,9 @@ const EDGE_COLORS: Record<DepKind, string> = {
   calls: "text-sky-500 dark:text-sky-400",
   extends: "text-violet-500 dark:text-violet-400",
   implements: "text-teal-500 dark:text-teal-400",
-  imports: "text-neutral-400 dark:text-neutral-500",
-  reads: "text-neutral-400 dark:text-neutral-500",
+  imports: TEXT.faint,
+  reads: TEXT.faint,
   writes: "text-amber-500 dark:text-amber-400",
-};
-
-const STATUS_DOT: Record<Status, string> = {
-  blocked: "text-red-500",
-  doing: "text-sky-500",
-  done: "text-emerald-500",
-  todo: "text-neutral-400",
 };
 
 /** Explicit `icon` wins; a `path` falls back to the file-type icon. */
@@ -81,24 +74,21 @@ const GraphNode = ({
     >
       <div className="flex min-w-0 items-center gap-1.5">
         {icon === undefined ? null : (
-          <Icon
-            className="h-3.5 w-3.5 shrink-0 text-neutral-500 dark:text-neutral-400"
-            name={icon}
-          />
+          <Icon className={`h-3.5 w-3.5 shrink-0 ${TEXT.muted}`} name={icon} />
         )}
-        <span className="truncate font-mono text-xs font-medium text-neutral-800 dark:text-neutral-200">
+        <span className={`truncate font-mono text-xs font-medium ${TEXT.code}`}>
           {nonEmpty(spec.label) ? spec.label : spec.id}
         </span>
         {spec.status === undefined ? null : (
           <Icon
-            className={`h-3 w-3 shrink-0 ${STATUS_DOT[spec.status]}`}
+            className={`h-3 w-3 shrink-0 ${STATUS_ICON_CLS[spec.status]}`}
             label={spec.status}
             name={STATUS_ICONS[spec.status]}
           />
         )}
       </div>
       {nonEmpty(spec.note) ? (
-        <div className="mt-0.5 truncate text-[0.68rem] text-neutral-400 dark:text-neutral-500">
+        <div className={`mt-0.5 truncate text-[0.68rem] ${TEXT.faint}`}>
           {spec.note}
         </div>
       ) : null}
@@ -114,17 +104,12 @@ const GraphNode = ({
         width,
       }}
     >
-      {link === undefined ? (
-        card
-      ) : (
-        <a
-          className="block h-full text-inherit no-underline transition-transform hover:-translate-y-px"
-          href={link}
-          {...linkTarget(link)}
-        >
-          {card}
-        </a>
-      )}
+      <MaybeLink
+        className="block h-full text-inherit no-underline transition-transform hover:-translate-y-px"
+        href={link}
+      >
+        {card}
+      </MaybeLink>
     </div>
   );
 };
@@ -222,12 +207,7 @@ export const Graph = defineComponent(
 
     if (nodes.length === 0) {
       // No <Node> children: render content as-is (standalone Node/Edge views).
-      return (
-        <section className="my-6">
-          {nonEmpty(title) ? <h3 className="mt-0">{title}</h3> : null}
-          {rest}
-        </section>
-      );
+      return <Section title={title}>{rest}</Section>;
     }
 
     const { g, height, liveEdges, width } = layoutGraph(
@@ -236,7 +216,7 @@ export const Graph = defineComponent(
       direction
     );
     return (
-      <figure className="not-prose my-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <Panel>
         {nonEmpty(title) ? (
           <CaptionBar className="flex items-center gap-2 font-medium">
             <Icon className="h-3.5 w-3.5" name="lucide:workflow" />
@@ -264,7 +244,7 @@ export const Graph = defineComponent(
           </div>
         </div>
         {rest.length > 0 ? <div className="px-4 py-2">{rest}</div> : null}
-      </figure>
+      </Panel>
     );
   }
 );

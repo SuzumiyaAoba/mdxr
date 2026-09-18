@@ -2,7 +2,9 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { PANEL_CLS } from "./bits.js";
 import { Icon } from "./icon.js";
+import { BORDER_CLS, TEXT } from "./tones.js";
 
 export { Choice, Question, QUESTION_TYPES } from "./ask-question.js";
 export type { QuestionType } from "./ask-question.js";
@@ -27,38 +29,44 @@ export const Ask = defineComponent(
   },
   ({ title, description, children }) => (
     <section
-      className="mdxr-ask not-prose my-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800"
+      className={`mdxr-ask ${PANEL_CLS}`}
       data-ask
       data-ask-title={nonEmpty(title) ? title : undefined}
     >
-      <div className="border-b border-neutral-200 bg-neutral-50 px-4 py-2.5 dark:border-neutral-800 dark:bg-neutral-900">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-500 dark:text-neutral-400">
+      <div
+        className={`border-b bg-neutral-50 px-4 py-2.5 dark:bg-neutral-900 ${BORDER_CLS}`}
+      >
+        <div
+          className={`flex items-center gap-1.5 text-xs font-semibold ${TEXT.muted}`}
+        >
           <Icon className="h-3.5 w-3.5" name="lucide:list-checks" />
           {nonEmpty(title) ? title : "Questions"}
         </div>
         {nonEmpty(description) ? (
-          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-            {description}
-          </p>
+          <p className={`mt-1 text-xs ${TEXT.muted}`}>{description}</p>
         ) : null}
       </div>
       <div className="divide-y divide-neutral-100 dark:divide-neutral-800/70">
         {children}
       </div>
-      <div className="border-t border-neutral-200 dark:border-neutral-800">
-        <div className="flex items-center gap-1.5 px-4 pt-2.5 text-xs font-medium text-neutral-400 dark:text-neutral-500">
+      <div className={`border-t ${BORDER_CLS}`}>
+        <div
+          className={`flex items-center gap-1.5 px-4 pt-2.5 text-xs font-medium ${TEXT.faint}`}
+        >
           <Icon className="h-3 w-3" name="lucide:file-text" />
           Markdown
         </div>
         <pre
-          className="m-0 max-h-64 overflow-auto px-4 pt-1 pb-3 font-mono text-xs leading-relaxed break-words whitespace-pre-wrap text-neutral-600 dark:text-neutral-300"
+          className={`m-0 max-h-64 overflow-auto px-4 pt-1 pb-3 font-mono text-xs leading-relaxed break-words whitespace-pre-wrap ${TEXT.body}`}
           data-ask-output
         >
           (answers appear here as Markdown)
         </pre>
       </div>
-      <div className="flex items-center justify-between gap-3 border-t border-neutral-200 bg-neutral-50 px-4 py-2 dark:border-neutral-800 dark:bg-neutral-900">
-        <span className="text-xs text-neutral-400 dark:text-neutral-500">
+      <div
+        className={`flex items-center justify-between gap-3 border-t bg-neutral-50 px-4 py-2 dark:bg-neutral-900 ${BORDER_CLS}`}
+      >
+        <span className={`text-xs ${TEXT.faint}`}>
           Updates live as you answer — copy or save it.
         </span>
         <div className="flex shrink-0 items-center gap-2">

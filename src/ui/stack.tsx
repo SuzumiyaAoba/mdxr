@@ -2,6 +2,7 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { GAPS } from "./layout.js";
+import { TRIM_CLS } from "./tones.js";
 
 const ITEMS: Record<string, string> = {
   baseline: "items-baseline",
@@ -26,7 +27,7 @@ export const Stack = defineComponent(
   },
   ({ gap, items, className, children }) => (
     <div
-      className={`my-6 flex flex-col ${GAPS[gap]} ${ITEMS[items]} ${className ?? ""} [&>*:first-child]:mt-0 [&>*:last-child]:mb-0`}
+      className={`my-6 flex flex-col ${GAPS[gap]} ${ITEMS[items]} ${className ?? ""} ${TRIM_CLS}`}
     >
       {children}
     </div>
@@ -48,7 +49,7 @@ export const Row = defineComponent(
   },
   ({ gap, items, className, children }) => (
     <div
-      className={`my-6 flex flex-wrap ${ITEMS[items]} ${GAPS[gap]} ${className ?? ""} [&>*:first-child]:mt-0 [&>*:last-child]:mb-0`}
+      className={`my-6 flex flex-wrap ${ITEMS[items]} ${GAPS[gap]} ${className ?? ""} ${TRIM_CLS}`}
     >
       {children}
     </div>

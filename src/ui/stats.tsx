@@ -3,6 +3,7 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { Icon } from "./icon.js";
+import { BORDER_CLS, TEXT } from "./tones.js";
 
 export const Stats = defineComponent(
   {
@@ -29,7 +30,7 @@ const deltaStyle = (delta: string): { cls: string; icon: string } => {
     };
   }
   return {
-    cls: "text-neutral-500 dark:text-neutral-400",
+    cls: TEXT.muted,
     icon: "lucide:minus",
   };
 };
@@ -45,11 +46,9 @@ export const Stat = defineComponent(
     }),
   },
   ({ value, label, delta }) => (
-    <div className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-800">
+    <div className={`rounded-lg border p-4 ${BORDER_CLS}`}>
       <div className="text-2xl font-semibold tabular-nums">{value}</div>
-      <div className="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">
-        {label}
-      </div>
+      <div className={`mt-0.5 text-sm ${TEXT.muted}`}>{label}</div>
       {nonEmpty(delta) ? (
         <div
           className={`mt-1.5 flex items-center gap-1 text-xs font-medium ${deltaStyle(delta).cls}`}

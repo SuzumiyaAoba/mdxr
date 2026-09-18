@@ -4,9 +4,12 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { attrTrue } from "./attrs.js";
-import { CaptionBar } from "./bits.js";
+import { CaptionBar, ListPanel, ListRow, RowNote } from "./bits.js";
 import { Icon } from "./icon.js";
-import { TONE } from "./tones.js";
+import { MONO_CLS, TEXT, TONE, TRIM_CLS } from "./tones.js";
+
+/** Tiny rounded chip (Deprecated/auth) inside an endpoint row. */
+const MINI_CHIP = `inline-flex shrink-0 items-center gap-1 rounded-full bg-neutral-100 px-1.5 py-px text-[0.65rem] font-medium ${TEXT.muted} dark:bg-neutral-800`;
 
 export const HTTP_METHODS = [
   "GET",
@@ -31,8 +34,6 @@ const METHODS: Record<string, string> = {
 /** `base` prefix from <Endpoints>, prepended (muted) to each endpoint path. */
 const BaseCtx = createContext("");
 
-const isTruthy = attrTrue;
-
 export const Endpoint = defineComponent(
   {
     description:
@@ -49,41 +50,29 @@ export const Endpoint = defineComponent(
   },
   ({ method, path, auth, deprecated, children }) => {
     const base = useContext(BaseCtx);
-    const isDeprecated = isTruthy(deprecated);
+    const isDeprecated = attrTrue(deprecated);
     return (
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-2.5">
+      <ListRow>
         <span
           className={`inline-flex w-15 shrink-0 items-center justify-center rounded px-1 py-0.5 font-mono text-[0.68rem] font-bold tracking-wide ${METHODS[method] ?? METHODS.GET}`}
         >
           {method}
         </span>
         <code
-          className={`font-mono text-[0.85em] text-neutral-800 dark:text-neutral-200 ${isDeprecated ? "line-through opacity-60" : ""}`}
+          className={`${MONO_CLS} ${isDeprecated ? "line-through opacity-60" : ""}`}
         >
-          {nonEmpty(base) ? (
-            <span className="text-neutral-400 dark:text-neutral-500">
-              {base}
-            </span>
-          ) : null}
+          {nonEmpty(base) ? <span className={TEXT.faint}>{base}</span> : null}
           {path}
         </code>
-        {isDeprecated ? (
-          <span className="inline-flex shrink-0 items-center rounded-full bg-neutral-100 px-1.5 py-px text-[0.65rem] font-medium text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
-            Deprecated
-          </span>
-        ) : null}
+        {isDeprecated ? <span className={MINI_CHIP}>Deprecated</span> : null}
         {nonEmpty(auth) ? (
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-neutral-100 px-1.5 py-px text-[0.65rem] font-medium text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+          <span className={MINI_CHIP}>
             <Icon className="h-2.5 w-2.5" name="lucide:lock" />
             {auth}
           </span>
         ) : null}
-        {children === undefined ? null : (
-          <span className="min-w-0 flex-1 text-sm text-neutral-500 dark:text-neutral-400 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-            {children}
-          </span>
-        )}
-      </div>
+        <RowNote className={TRIM_CLS}>{children}</RowNote>
+      </ListRow>
     );
   }
 );
@@ -98,13 +87,15 @@ export const Endpoints = defineComponent(
     }),
   },
   ({ title, base, children }) => (
-    <figure className="not-prose my-6 divide-y divide-neutral-200 overflow-hidden rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
+    <ListPanel>
       {nonEmpty(title) || nonEmpty(base) ? (
         <CaptionBar className="flex items-center gap-2 font-medium">
           <Icon className="h-3.5 w-3.5" name="lucide:route" />
           {nonEmpty(title) ? title : "Endpoints"}
           {nonEmpty(base) ? (
-            <code className="ml-auto font-mono text-[0.7rem] font-normal text-neutral-400 dark:text-neutral-500">
+            <code
+              className={`ml-auto font-mono text-[0.7rem] font-normal ${TEXT.faint}`}
+            >
               {base}
             </code>
           ) : null}
@@ -113,6 +104,6 @@ export const Endpoints = defineComponent(
       <BaseCtx.Provider value={nonEmpty(base) ? base : ""}>
         {children}
       </BaseCtx.Provider>
-    </figure>
+    </ListPanel>
   )
 );

@@ -1,16 +1,14 @@
 import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
+import { ListPanel } from "./bits.js";
+import { TEXT, TRIM_CLS } from "./tones.js";
 
 export const Glossary = defineComponent(
   {
     description: "用語集コンテナ。<Term> を並べる",
   },
-  ({ children }) => (
-    <dl className="not-prose my-6 divide-y divide-neutral-200 rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
-      {children}
-    </dl>
-  )
+  ({ children }) => <ListPanel as="dl">{children}</ListPanel>
 );
 
 export const Term = defineComponent(
@@ -22,12 +20,10 @@ export const Term = defineComponent(
   },
   ({ name, children }) => (
     <div className="px-4 py-2.5">
-      <dt className="font-mono text-[0.85em] font-semibold text-neutral-900 dark:text-neutral-100">
+      <dt className={`font-mono text-[0.85em] font-semibold ${TEXT.strong}`}>
         {name}
       </dt>
-      <dd className="mt-0.5 text-sm text-neutral-600 dark:text-neutral-300 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-        {children}
-      </dd>
+      <dd className={`mt-0.5 text-sm ${TEXT.body} ${TRIM_CLS}`}>{children}</dd>
     </div>
   )
 );

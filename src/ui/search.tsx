@@ -3,10 +3,9 @@ import * as v from "valibot";
 
 import { defineComponent, flattenChildren } from "../define.js";
 import { nonEmpty } from "../guards.js";
-import { CaptionBar } from "./bits.js";
+import { ListPanel, ListRow, RowIcon, RowNote } from "./bits.js";
 import { isEl, propOf } from "./children.js";
-import { Icon } from "./icon.js";
-import { TONE } from "./tones.js";
+import { LOC_CLS, MONO_CLS, TONE } from "./tones.js";
 
 interface HitsBadge {
   label: string;
@@ -42,19 +41,10 @@ export const Search = defineComponent(
   ({ pattern, path, tool, hits, children }) => {
     const badge = hitsBadge(hits);
     return (
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-2.5">
-        <Icon
-          className="h-3.5 w-3.5 shrink-0 self-center text-neutral-400 dark:text-neutral-500"
-          name="lucide:search"
-        />
-        <code className="font-mono text-[0.85em] text-neutral-800 dark:text-neutral-200">
-          {pattern}
-        </code>
-        {nonEmpty(path) ? (
-          <span className="font-mono text-xs text-neutral-400 dark:text-neutral-500">
-            in {path}
-          </span>
-        ) : null}
+      <ListRow>
+        <RowIcon name="lucide:search" />
+        <code className={MONO_CLS}>{pattern}</code>
+        {nonEmpty(path) ? <span className={LOC_CLS}>in {path}</span> : null}
         {nonEmpty(tool) ? (
           <span className="inline-flex shrink-0 items-center rounded border border-neutral-200 px-1.5 py-0.5 font-mono text-[0.7rem] text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
             {tool}
@@ -69,12 +59,8 @@ export const Search = defineComponent(
             {badge.label}
           </span>
         )}
-        {children === undefined ? null : (
-          <span className="min-w-0 flex-1 text-sm text-neutral-500 dark:text-neutral-400">
-            {children}
-          </span>
-        )}
-      </div>
+        <RowNote>{children}</RowNote>
+      </ListRow>
     );
   }
 );
@@ -119,19 +105,14 @@ export const Searches = defineComponent(
   ({ title, children }) => {
     const { count, hits } = summarizeSearches(children);
     return (
-      <figure className="not-prose my-6 divide-y divide-neutral-200 overflow-hidden rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
-        {nonEmpty(title) ? (
-          <CaptionBar border={false} className="font-medium">
-            {title}
-          </CaptionBar>
-        ) : null}
+      <ListPanel title={title}>
         {count > 0 ? (
           <div className="bg-neutral-50 px-4 py-1.5 text-xs text-neutral-500 dark:bg-neutral-900 dark:text-neutral-400">
             {searchSummary(count, hits)}
           </div>
         ) : null}
         {children}
-      </figure>
+      </ListPanel>
     );
   }
 );

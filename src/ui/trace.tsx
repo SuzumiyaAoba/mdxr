@@ -3,10 +3,10 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { FILE_LINK_PROPS } from "./attrs.js";
-import { CaptionBar } from "./bits.js";
+import { ListPanel, ListRow, LocLink, RowNote, Tag } from "./bits.js";
 import { indexChildren, useChildIndex } from "./child-index.js";
-import { linkTarget, useFileLink } from "./file-link.js";
 import { Icon } from "./icon.js";
+import { LOC_CLS, MONO_CLS, TEXT } from "./tones.js";
 
 export const FRAME_KINDS = ["app", "lib"] as const;
 export type FrameKind = (typeof FRAME_KINDS)[number];
@@ -21,12 +21,7 @@ export const Trace = defineComponent(
     }),
   },
   ({ error, title, children }) => (
-    <figure className="not-prose my-6 divide-y divide-neutral-200 overflow-hidden rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
-      {nonEmpty(title) ? (
-        <CaptionBar border={false} className="font-medium">
-          {title}
-        </CaptionBar>
-      ) : null}
+    <ListPanel title={title}>
       {nonEmpty(error) ? (
         <div className="flex items-center gap-2 bg-red-50 px-4 py-2 font-mono text-[0.85em] font-medium text-red-700 dark:bg-red-950/40 dark:text-red-300">
           <Icon className="h-3.5 w-3.5 shrink-0" name="lucide:circle-alert" />
@@ -34,7 +29,7 @@ export const Trace = defineComponent(
         </div>
       ) : null}
       {indexChildren(children)}
-    </figure>
+    </ListPanel>
   )
 );
 
@@ -51,49 +46,22 @@ export const TraceFrame = defineComponent(
   ({ name, path, lines, kind, href, children }) => {
     const { n } = useChildIndex();
     const lib = kind === "lib";
-    const link = useFileLink(path, lines, href);
-    const loc = (
-      <>
-        {path}
-        {nonEmpty(lines) ? `:${lines}` : ""}
-      </>
-    );
-    const locCls = "font-mono text-xs text-neutral-400 dark:text-neutral-500";
-    const locEl =
-      link === undefined ? (
-        <span className={locCls}>{loc}</span>
-      ) : (
-        <a
-          className={`${locCls} no-underline hover:underline`}
-          href={link}
-          {...linkTarget(link)}
-        >
-          {loc}
-        </a>
-      );
     return (
-      <div
-        className={`flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-2.5 ${lib ? "opacity-60" : ""}`}
-      >
-        <span className="w-7 shrink-0 font-mono text-xs text-neutral-400 dark:text-neutral-500">
+      <ListRow className={lib ? "opacity-60" : ""}>
+        <span className={`${LOC_CLS} w-7 shrink-0`}>
           {n > 0 ? `#${n - 1}` : "·"}
         </span>
-        <code className="font-mono text-[0.85em] text-neutral-800 dark:text-neutral-200">
-          {name}
-        </code>
-        {nonEmpty(path) ? locEl : null}
-        {lib ? (
-          <span className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-neutral-400 dark:text-neutral-500">
-            <Icon className="h-3 w-3" name="lucide:package" />
-            lib
-          </span>
+        <code className={MONO_CLS}>{name}</code>
+        {nonEmpty(path) ? (
+          <LocLink href={href} lines={lines} path={path} />
         ) : null}
-        {children === undefined ? null : (
-          <span className="min-w-0 flex-1 text-sm text-neutral-500 dark:text-neutral-400">
-            {children}
-          </span>
-        )}
-      </div>
+        {lib ? (
+          <Tag className={TEXT.faint} icon="lucide:package">
+            lib
+          </Tag>
+        ) : null}
+        <RowNote>{children}</RowNote>
+      </ListRow>
     );
   }
 );

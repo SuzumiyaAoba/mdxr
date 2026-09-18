@@ -2,6 +2,7 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { TEXT } from "./tones.js";
 
 const initials = (name: string): string => {
   const clean = name.replace(/^@+/u, "").trim();
@@ -30,9 +31,7 @@ export const Owner = defineComponent(
         {initials(name)}
       </span>
       <span className="font-medium">{name}</span>
-      {nonEmpty(role) ? (
-        <span className="text-neutral-400 dark:text-neutral-500">{role}</span>
-      ) : null}
+      {nonEmpty(role) ? <span className={TEXT.faint}>{role}</span> : null}
     </span>
   )
 );

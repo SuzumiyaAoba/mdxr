@@ -3,7 +3,7 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { Pill } from "./bits.js";
-import { TONE } from "./tones.js";
+import { BORDER_CLS, TONE, TRIM_CLS } from "./tones.js";
 
 export const OPTION_STATUSES = [
   "considered",
@@ -17,7 +17,7 @@ const STYLES: Record<
   { card: string; chip: string; icon: string; label: string }
 > = {
   considered: {
-    card: "border-neutral-200 dark:border-neutral-800",
+    card: BORDER_CLS,
     chip: TONE.neutral,
     icon: "lucide:minus",
     label: "Considered",
@@ -29,7 +29,7 @@ const STYLES: Record<
     label: "Recommended",
   },
   rejected: {
-    card: "border-neutral-200 opacity-70 dark:border-neutral-800",
+    card: `${BORDER_CLS} opacity-70`,
     chip: TONE.red,
     icon: "lucide:thumbs-down",
     label: "Rejected",
@@ -58,9 +58,7 @@ export const Option = defineComponent(
           </Pill>
         </div>
         {children === undefined ? null : (
-          <div className="mt-1.5 text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-            {children}
-          </div>
+          <div className={`mt-1.5 text-sm ${TRIM_CLS}`}>{children}</div>
         )}
       </div>
     );

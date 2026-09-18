@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
 import { icons as lucide } from "@iconify-json/lucide";
@@ -23,25 +23,17 @@ const SRC = path.join(pkgRoot, "src");
 
 let moduleMapCache: Map<string, string> | undefined;
 
-/**
- * export name → module specifier for every name the catalog can produce.
- * Built from the catalog's own surface — the re-export lines of
- * `src/ui/index.ts` plus the shadcn module table — so newly added components
- * resolve automatically. Specifiers keep their `.js` spelling; esbuild maps
- * them onto the `.ts(x)` sources.
- */
-const exportModuleMap = async (): Promise<Map<string, string>> => {
-  if (moduleMapCache !== undefined) {
-    return moduleMapCache;
-  }
-  const uiDir = path.join(SRC, "ui");
-  const map = new Map<string, string>([
-    ["DocContext", path.join(SRC, "doc-context.js")],
-  ]);
-  const indexSource = await readFile(path.join(uiDir, "index.ts"), "utf-8");
-  for (const m of indexSource.matchAll(
-    /export\s*\{(?<names>[^}]*)\}\s*from\s*"(?<mod>\.[^"]+)"/gu
-  )) {
+const DECLARE_RE = /export\s+(?:const|function|class)\s+(?<name>\w+)/gu;
+const REEXPORT_RE =
+  /export\s+(?!type\b)\{(?<names>[^}]*)\}\s*from\s*"(?<mod>\.[^"]+)"/gu;
+
+/** `[exportName, target]` pairs a leaf module re-exports (`export {X as Y} from "./z"`). */
+const reexportTargets = (
+  source: string,
+  uiDir: string
+): (readonly [string, string])[] => {
+  const pairs: (readonly [string, string])[] = [];
+  for (const m of source.matchAll(REEXPORT_RE)) {
     const mod = path.join(uiDir, m.groups?.mod ?? "");
     for (const part of (m.groups?.names ?? "").split(",")) {
       const name = part
@@ -51,10 +43,46 @@ const exportModuleMap = async (): Promise<Map<string, string>> => {
         .pop()
         ?.trim();
       if (name !== undefined && name !== "") {
-        map.set(name, mod);
+        pairs.push([name, mod]);
       }
     }
   }
+  return pairs;
+};
+
+/**
+ * export name → module specifier for every name the catalog can produce.
+ * Derived by scanning the leaf modules under `src/ui/` rather than parsing
+ * `index.ts`: any export form in the barrel (`export *`, `export const`,
+ * re-export chains like ask→ask-question) resolves correctly, and new leaf
+ * files self-register. `export {X} from "./y"` inside a leaf maps the name
+ * straight to the target module; type-only exports are skipped.
+ */
+const exportModuleMap = async (): Promise<Map<string, string>> => {
+  if (moduleMapCache !== undefined) {
+    return moduleMapCache;
+  }
+  const uiDir = path.join(SRC, "ui");
+  const entries = await readdir(uiDir);
+  const files = entries.filter((f) => /\.tsx?$/u.test(f) && f !== "index.ts");
+  const map = new Map<string, string>([
+    ["DocContext", path.join(SRC, "doc-context.js")],
+  ]);
+  await Promise.all(
+    files.map(async (file) => {
+      const filePath = path.join(uiDir, file);
+      const source = await readFile(filePath, "utf-8");
+      for (const m of source.matchAll(DECLARE_RE)) {
+        const name = m.groups?.name;
+        if (name !== undefined) {
+          map.set(name, filePath);
+        }
+      }
+      for (const [name, mod] of reexportTargets(source, uiDir)) {
+        map.set(name, mod);
+      }
+    })
+  );
   for (const [name, mod] of Object.entries(shadcnModules)) {
     map.set(name, path.join(uiDir, mod));
   }

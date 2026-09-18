@@ -4,10 +4,10 @@ import * as v from "valibot";
 import { defineComponent, flattenChildren } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { LINK_LINES_PROPS } from "./attrs.js";
-import { CaptionBar } from "./bits.js";
+import { CaptionBar, ListPanel, LocLink } from "./bits.js";
 import { isEl, propOf } from "./children.js";
-import { linkTarget, useFileLink } from "./file-link.js";
 import { Icon } from "./icon.js";
+import { LOC_CLS, TEXT, TRIM_CLS } from "./tones.js";
 
 export const TEST_STATUSES = ["pass", "fail", "skip", "todo"] as const;
 export type TestStatus = (typeof TEST_STATUSES)[number];
@@ -86,27 +86,6 @@ export const Test = defineComponent(
   },
   ({ name, status, duration, file, lines, href, children }) => {
     const s = STYLES[status];
-    const link = useFileLink(file, lines, href);
-    const loc = (
-      <>
-        {file}
-        {nonEmpty(lines) ? `:${lines}` : ""}
-      </>
-    );
-    const locEl =
-      link === undefined ? (
-        <span className="font-mono text-xs text-neutral-400 dark:text-neutral-500">
-          {loc}
-        </span>
-      ) : (
-        <a
-          className="font-mono text-xs text-neutral-400 no-underline hover:underline dark:text-neutral-500"
-          href={link}
-          {...linkTarget(link)}
-        >
-          {loc}
-        </a>
-      );
     return (
       <div className="px-4 py-2.5">
         <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
@@ -116,16 +95,18 @@ export const Test = defineComponent(
             name={s.icon}
           />
           <span className="text-sm">{name}</span>
-          {nonEmpty(file) ? locEl : null}
+          {nonEmpty(file) ? (
+            <LocLink href={href} lines={lines} path={file} />
+          ) : null}
           {duration === undefined || duration === "" ? null : (
-            <span className="ml-auto font-mono text-xs text-neutral-400 tabular-nums dark:text-neutral-500">
+            <span className={`${LOC_CLS} ml-auto tabular-nums`}>
               {String(duration)}
             </span>
           )}
         </div>
         {children === undefined ? null : (
           <div
-            className={`mt-1.5 rounded-md border-l-2 px-3 py-2 text-xs text-neutral-600 dark:text-neutral-300 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 ${
+            className={`mt-1.5 rounded-md border-l-2 px-3 py-2 text-xs ${TEXT.body} ${TRIM_CLS} ${
               status === "fail"
                 ? "border-red-400/60 bg-red-500/5"
                 : "border-neutral-300 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900/50"
@@ -226,12 +207,12 @@ export const Tests = defineComponent(
     const summary = summarizeTests(children);
     const caption = nonEmpty(title) || nonEmpty(tool) || summary.total > 0;
     return (
-      <figure className="not-prose my-6 divide-y divide-neutral-200 overflow-hidden rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
+      <ListPanel>
         {caption ? (
           <TestsCaption summary={summary} title={title} tool={tool} />
         ) : null}
         {children}
-      </figure>
+      </ListPanel>
     );
   }
 );

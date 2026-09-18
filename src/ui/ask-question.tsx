@@ -8,6 +8,7 @@ import { nonEmpty } from "../guards.js";
 import { attrTrue } from "./attrs.js";
 import { propOf } from "./children.js";
 import { Icon } from "./icon.js";
+import { TEXT } from "./tones.js";
 
 /**
  * `<Ask>` question internals: the `Choice`/`Question` components plus the
@@ -92,7 +93,9 @@ export const Choice = defineComponent(
         <span className="mdxr-choice-text min-w-0 flex-1 leading-snug">
           {children}
           {nonEmpty(description) ? (
-            <span className="mdxr-choice-desc mt-0.5 block text-xs text-neutral-500 dark:text-neutral-400">
+            <span
+              className={`mdxr-choice-desc mt-0.5 block text-xs ${TEXT.muted}`}
+            >
               {description}
             </span>
           ) : null}
@@ -311,7 +314,7 @@ export const Question = defineComponent(
     const labelText = nonEmpty(label) ? label : name;
     const chrome: QuestionChrome = {
       descEl: nonEmpty(description) ? (
-        <p className="mt-0.5 text-xs font-normal text-neutral-500 dark:text-neutral-400">
+        <p className={`mt-0.5 text-xs font-normal ${TEXT.muted}`}>
           {description}
         </p>
       ) : null,

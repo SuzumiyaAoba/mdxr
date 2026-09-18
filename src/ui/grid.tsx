@@ -3,6 +3,7 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { GAPS } from "./layout.js";
+import { TRIM_CLS } from "./tones.js";
 
 const COLS: Record<string, string> = {
   "1": "sm:grid-cols-1",
@@ -110,7 +111,7 @@ export const Cell = defineComponent(
   },
   ({ span, rowSpan, className, children }) => (
     <div
-      className={`min-w-0 ${SPANS[span]} ${ROW_SPANS[rowSpan]} ${className ?? ""} [&>*:first-child]:mt-0 [&>*:last-child]:mb-0`}
+      className={`min-w-0 ${SPANS[span]} ${ROW_SPANS[rowSpan]} ${className ?? ""} ${TRIM_CLS}`}
     >
       {children}
     </div>

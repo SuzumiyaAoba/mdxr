@@ -4,17 +4,14 @@ import type { ReactElement, ReactNode } from "react";
 import type { DocProps } from "../define.js";
 import { textOf } from "../define.js";
 import { DocContext } from "../doc-context.js";
-import { isRecord, nonEmpty } from "../guards.js";
+import { asString, isRecord, nonEmpty } from "../guards.js";
 import { firstLine, splitPathLines } from "../lines.js";
-import { CaptionBar, CopyButton } from "./bits.js";
+import { CaptionBar, CopyButton, MaybeLink, Panel } from "./bits.js";
 import { DiffView } from "./diff.js";
 import { fileIcon } from "./file-icon.js";
-import { linkTarget } from "./file-link.js";
 import { Icon } from "./icon.js";
 import { TERMINAL_LANGS, Transcript } from "./terminal.js";
-
-const str = (v: unknown): string | undefined =>
-  typeof v === "string" ? v : undefined;
+import { BORDER_CLS } from "./tones.js";
 
 /** "src/x.ts:40-52" → { path: "src/x.ts", line: "40" }; labels stay untouched. */
 const splitFileLine = (filename: string): { line?: string; path: string } => {
@@ -50,19 +47,12 @@ const CodeHeader = (props: {
   );
   return (
     <CaptionBar className="flex items-center justify-between">
-      {link === undefined ? (
-        <span className="inline-flex items-center gap-1.5 font-mono">
-          {label}
-        </span>
-      ) : (
-        <a
-          className="inline-flex items-center gap-1.5 font-mono text-inherit no-underline hover:underline"
-          href={link}
-          {...linkTarget(link)}
-        >
-          {label}
-        </a>
-      )}
+      <MaybeLink
+        className="inline-flex items-center gap-1.5 font-mono text-inherit no-underline hover:underline"
+        href={link}
+      >
+        {label}
+      </MaybeLink>
       <CopyButton copy={props.text} title="Copy code" />
     </CaptionBar>
   );
@@ -109,7 +99,9 @@ const specialView = (
 ): ReactElement | undefined => {
   if (lang === "mermaid") {
     return (
-      <pre className="mermaid my-6 flex justify-center rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-900">
+      <pre
+        className={`mermaid my-6 flex justify-center rounded-lg border bg-neutral-50 p-4 dark:bg-neutral-900 ${BORDER_CLS}`}
+      >
         {text}
       </pre>
     );
@@ -129,10 +121,14 @@ export const Pre = (props: DocProps): ReactElement => {
   const code = props.children;
   const codeProps: Record<string, unknown> =
     isRecord(code) && isRecord(code.props) ? code.props : {};
-  const lang = /language-(?<lang>[\w-]+)/u.exec(str(codeProps.className) ?? "")
-    ?.groups?.lang;
+  const lang = /language-(?<lang>[\w-]+)/u.exec(
+    asString(codeProps.className) ?? ""
+  )?.groups?.lang;
   const meta =
-    str(props.meta) ?? str(codeProps.meta) ?? str(codeProps.metastring) ?? "";
+    asString(props.meta) ??
+    asString(codeProps.meta) ??
+    asString(codeProps.metastring) ??
+    "";
   const filename =
     /(?:title|filename)="(?<name>[^"]+)"/u.exec(meta)?.groups?.name ??
     /(?:title|filename)=(?<name>[^\s"']+)/u.exec(meta)?.groups?.name;
@@ -149,17 +145,19 @@ export const Pre = (props: DocProps): ReactElement => {
     children?: ReactNode;
     className?: unknown;
   }>(code) ? (
-    <code className={str(code.props.className)}>{code.props.children}</code>
+    <code className={asString(code.props.className)}>
+      {code.props.children}
+    </code>
   ) : (
     code
   );
 
   return (
-    <figure className="not-prose my-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
+    <Panel>
       <CodeHeader filename={filename} lang={lang} text={text} />
       <pre className="m-0 overflow-x-auto bg-white p-4 text-sm dark:bg-neutral-950">
         {cleanCode}
       </pre>
-    </figure>
+    </Panel>
   );
 };

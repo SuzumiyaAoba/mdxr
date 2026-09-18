@@ -3,7 +3,8 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { attrTrue } from "./attrs.js";
-import { CaptionBar } from "./bits.js";
+import { CaptionBar, Panel } from "./bits.js";
+import { BORDER_CLS, TEXT, TRIM_CLS } from "./tones.js";
 
 export const Props = defineComponent(
   {
@@ -14,13 +15,15 @@ export const Props = defineComponent(
     }),
   },
   ({ of, children }) => (
-    <figure className="not-prose my-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
+    <Panel>
       {nonEmpty(of) ? (
         <CaptionBar className="font-mono">{of}</CaptionBar>
       ) : null}
       <table className="m-0 w-full text-sm">
         <thead>
-          <tr className="border-b border-neutral-200 text-left text-xs text-neutral-500 dark:border-neutral-800 dark:text-neutral-400">
+          <tr
+            className={`border-b text-left text-xs ${BORDER_CLS} ${TEXT.muted}`}
+          >
             <th className="py-2 pr-3 pl-4 font-medium">Name</th>
             <th className="px-3 py-2 font-medium">Type</th>
             <th className="px-3 py-2 font-medium">Default</th>
@@ -31,7 +34,7 @@ export const Props = defineComponent(
           {children}
         </tbody>
       </table>
-    </figure>
+    </Panel>
   )
 );
 
@@ -58,13 +61,17 @@ export const Prop = defineComponent(
           </span>
         ) : null}
       </td>
-      <td className="px-3 py-2 align-top font-mono text-[0.85em] text-neutral-500 dark:text-neutral-400">
+      <td
+        className={`px-3 py-2 align-top font-mono text-[0.85em] ${TEXT.muted}`}
+      >
         {type ?? ""}
       </td>
-      <td className="px-3 py-2 align-top font-mono text-[0.85em] text-neutral-500 dark:text-neutral-400">
+      <td
+        className={`px-3 py-2 align-top font-mono text-[0.85em] ${TEXT.muted}`}
+      >
         {nonEmpty(def) ? def : "—"}
       </td>
-      <td className="py-2 pr-4 pl-3 align-top text-neutral-600 dark:text-neutral-300 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+      <td className={`py-2 pr-4 pl-3 align-top ${TEXT.body} ${TRIM_CLS}`}>
         {children}
       </td>
     </tr>

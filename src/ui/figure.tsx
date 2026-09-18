@@ -2,6 +2,7 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { BORDER_CLS, TEXT, TRIM_CLS } from "./tones.js";
 
 export const Figure = defineComponent(
   {
@@ -21,10 +22,12 @@ export const Figure = defineComponent(
           src={src}
           alt={alt ?? ""}
           loading="lazy"
-          className="w-full rounded-lg border border-neutral-200 dark:border-neutral-800"
+          className={`w-full rounded-lg border ${BORDER_CLS}`}
         />
         {cap === undefined ? null : (
-          <figcaption className="mt-2 text-center text-sm text-neutral-500 dark:text-neutral-400 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+          <figcaption
+            className={`mt-2 text-center text-sm ${TEXT.muted} ${TRIM_CLS}`}
+          >
             {cap}
           </figcaption>
         )}

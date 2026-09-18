@@ -3,8 +3,8 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { FILE_LINK_PROPS } from "./attrs.js";
-import { CopyButton } from "./bits.js";
-import { linkTarget, useFileLink } from "./file-link.js";
+import { CodeChip, CopyButton, MaybeLink, PathLabel } from "./bits.js";
+import { useFileLink } from "./file-link.js";
 import { Icon } from "./icon.js";
 
 export const SYMBOL_KINDS = [
@@ -48,34 +48,28 @@ export const SymbolRef = defineComponent(
         {nonEmpty(path) ? (
           <span className="opacity-60">
             {" "}
-            · {path}
-            {nonEmpty(lines) ? `:${lines}` : ""}
+            · <PathLabel lines={lines} path={path} />
           </span>
         ) : null}
       </>
     );
     return (
-      <code className="not-prose mx-0.5 inline-flex items-center gap-1.5 rounded-md border border-neutral-300 bg-neutral-100 px-1.5 py-0.5 align-baseline font-mono text-[0.85em] text-neutral-800 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
+      <CodeChip>
         {kind === undefined ? null : (
           <Icon className="h-3.5 w-3.5 opacity-60" name={KIND_ICONS[kind]} />
         )}
-        {link === undefined ? (
-          <span>{label}</span>
-        ) : (
-          <a
-            className="text-inherit no-underline hover:underline"
-            href={link}
-            {...linkTarget(link)}
-          >
-            {label}
-          </a>
-        )}
+        <MaybeLink
+          className="text-inherit no-underline hover:underline"
+          href={link}
+        >
+          {label}
+        </MaybeLink>
         <CopyButton
           className="-mr-0.5 opacity-40"
           copy={nonEmpty(path) ? path : name}
           title="Copy"
         />
-      </code>
+      </CodeChip>
     );
   }
 );

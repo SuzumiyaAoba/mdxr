@@ -5,6 +5,7 @@ import { nonEmpty } from "../guards.js";
 import { Due } from "./due.js";
 import { Owner } from "./owner.js";
 import { STATUSES, StatusBadge } from "./status-badge.js";
+import { BORDER_CLS } from "./tones.js";
 
 export const Phase = defineComponent(
   {
@@ -21,7 +22,9 @@ export const Phase = defineComponent(
     const hasChips = status !== undefined || nonEmpty(owner) || nonEmpty(due);
     return (
       <section className="my-10">
-        <h2 className="mt-0 flex flex-wrap items-center gap-3 border-b border-neutral-200 pb-2 dark:border-neutral-800">
+        <h2
+          className={`mt-0 flex flex-wrap items-center gap-3 border-b pb-2 ${BORDER_CLS}`}
+        >
           {title}
           {hasChips ? (
             <span className="inline-flex items-center gap-2">

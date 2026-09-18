@@ -3,9 +3,10 @@ import * as v from "valibot";
 
 import { defineComponent, flattenChildren, textOf } from "../define.js";
 import { nonEmpty } from "../guards.js";
-import { CaptionBar } from "./bits.js";
+import { CaptionBar, Panel } from "./bits.js";
 import { isEl } from "./children.js";
 import { Icon } from "./icon.js";
+import { BORDER_CLS, TEXT } from "./tones.js";
 
 /**
  * Comparison matrix — rows come from a nested Markdown list, cells are
@@ -76,13 +77,9 @@ const Cell = ({ cell }: { cell: string }): ReactElement => {
     );
   }
   if (kind === "empty") {
-    return <span className="text-neutral-300 dark:text-neutral-600">—</span>;
+    return <span className={TEXT.ghost}>—</span>;
   }
-  return (
-    <span className="text-xs text-neutral-600 dark:text-neutral-300">
-      {cell.trim()}
-    </span>
-  );
+  return <span className={`text-xs ${TEXT.body}`}>{cell.trim()}</span>;
 };
 
 type El = ReactElement<{ children?: ReactNode }>;
@@ -129,13 +126,13 @@ const MatrixHeader = ({
   headers: string[];
 }): ReactElement => (
   <div
-    className="grid border-b border-neutral-200 bg-neutral-50/50 dark:border-neutral-800 dark:bg-neutral-900/40"
+    className={`grid border-b bg-neutral-50/50 dark:bg-neutral-900/40 ${BORDER_CLS}`}
     style={grid}
   >
     <div className="px-4 py-2" />
     {Array.from({ length: colCount }, (_, i) => (
       <div
-        className="px-2 py-2 text-center text-xs font-semibold text-neutral-600 dark:text-neutral-300"
+        className={`px-2 py-2 text-center text-xs font-semibold ${TEXT.body}`}
         key={i}
       >
         {headers[i] ?? ""}
@@ -187,7 +184,7 @@ export const Matrix = defineComponent(
       gridTemplateColumns: `minmax(8rem,1.4fr) repeat(${colCount}, minmax(4.5rem,1fr))`,
     };
     return (
-      <figure className="not-prose my-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <Panel>
         {nonEmpty(title) ? (
           <CaptionBar className="font-medium">{title}</CaptionBar>
         ) : null}
@@ -199,7 +196,7 @@ export const Matrix = defineComponent(
             <MatrixRow cells={cells} colCount={colCount} grid={grid} key={i} />
           ))}
         </div>
-      </figure>
+      </Panel>
     );
   }
 );

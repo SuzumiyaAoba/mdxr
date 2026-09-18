@@ -5,6 +5,7 @@ import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { Meta } from "./meta.js";
 import { STATUSES, StatusBadge } from "./status-badge.js";
+import { BORDER_CLS } from "./tones.js";
 
 interface PlanHeaderProps {
   date?: string | undefined;
@@ -23,7 +24,7 @@ const hasMeta = (p: PlanHeaderProps): boolean =>
  * header in render.ts. `status` is validated by StatusBadge's own schema.
  */
 export const PlanHeader = (p: PlanHeaderProps): ReactElement => (
-  <header className="mb-8 border-b border-neutral-200 pb-4 dark:border-neutral-800">
+  <header className={`mb-8 border-b pb-4 ${BORDER_CLS}`}>
     <div className="flex flex-wrap items-center gap-3">
       {nonEmpty(p.title) ? <h1 className="m-0">{p.title}</h1> : null}
       {nonEmpty(p.status) ? <StatusBadge status={p.status} /> : null}

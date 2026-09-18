@@ -3,7 +3,7 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { Pill } from "./bits.js";
-import { TONE } from "./tones.js";
+import { TEXT, TONE, TRIM_CLS } from "./tones.js";
 
 export const DECISION_STATUSES = [
   "accepted",
@@ -67,15 +67,11 @@ export const Decision = defineComponent(
             {s.label}
           </Pill>
           {nonEmpty(date) ? (
-            <time className="font-mono text-xs text-neutral-500 dark:text-neutral-400">
-              {date}
-            </time>
+            <time className={`font-mono text-xs ${TEXT.muted}`}>{date}</time>
           ) : null}
         </div>
         {children === undefined ? null : (
-          <div className="mt-1.5 text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-            {children}
-          </div>
+          <div className={`mt-1.5 text-sm ${TRIM_CLS}`}>{children}</div>
         )}
       </section>
     );

@@ -18,6 +18,14 @@ export const STATUS_ICONS: Record<Status, string> = {
   todo: "lucide:circle",
 };
 
+/** `text-*` color for status icons used standalone (Step, Event, Graph nodes). */
+export const STATUS_ICON_CLS: Record<Status, string> = {
+  blocked: "text-red-500",
+  doing: "text-sky-500",
+  done: "text-emerald-500",
+  todo: "text-neutral-400",
+};
+
 const STYLES: Record<Status, { label: string; cls: string }> = {
   blocked: {
     cls: TONE.red,

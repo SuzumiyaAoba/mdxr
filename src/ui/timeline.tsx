@@ -2,16 +2,15 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { Section } from "./bits.js";
 import { Icon } from "./icon.js";
-import { STATUS_ICONS, STATUSES, StatusBadge } from "./status-badge.js";
-import type { Status } from "./status-badge.js";
-
-const ICON_CLS: Record<Status, string> = {
-  blocked: "text-red-500",
-  doing: "text-sky-500",
-  done: "text-emerald-500",
-  todo: "text-neutral-400",
-};
+import {
+  STATUS_ICON_CLS,
+  STATUS_ICONS,
+  STATUSES,
+  StatusBadge,
+} from "./status-badge.js";
+import { TEXT } from "./tones.js";
 
 export const Timeline = defineComponent(
   {
@@ -21,12 +20,11 @@ export const Timeline = defineComponent(
     }),
   },
   ({ title, children }) => (
-    <section className="my-6">
-      {nonEmpty(title) ? <h3 className="mt-0">{title}</h3> : null}
+    <Section title={title}>
       <div className="space-y-4 border-l-2 border-neutral-300 pl-4 dark:border-neutral-700">
         {children}
       </div>
-    </section>
+    </Section>
   )
 );
 
@@ -49,14 +47,12 @@ export const Event = defineComponent(
         />
       ) : (
         <Icon
-          className={`bg-background absolute top-0.5 -left-[1.61rem] h-4 w-4 ${ICON_CLS[status]}`}
+          className={`bg-background absolute top-0.5 -left-[1.61rem] h-4 w-4 ${STATUS_ICON_CLS[status]}`}
           name={STATUS_ICONS[status]}
         />
       )}
       <div className="flex flex-wrap items-baseline gap-2">
-        <time className="font-mono text-xs text-neutral-500 dark:text-neutral-400">
-          {date}
-        </time>
+        <time className={`font-mono text-xs ${TEXT.muted}`}>{date}</time>
         {status === undefined ? null : <StatusBadge status={status} />}
         {nonEmpty(title) ? <span className="font-medium">{title}</span> : null}
       </div>

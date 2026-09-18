@@ -4,8 +4,9 @@ import * as v from "valibot";
 import { defineComponent, textOf } from "../define.js";
 import { isRecord, nonEmpty } from "../guards.js";
 import { attrFalse } from "./attrs.js";
-import { CaptionBar, CopyButton } from "./bits.js";
+import { CaptionBar, CopyButton, Panel } from "./bits.js";
 import { Icon } from "./icon.js";
+import { BORDER_CLS, TEXT } from "./tones.js";
 
 /**
  * Collapsible JSON tree — objects/arrays fold via nested native <details>
@@ -57,7 +58,7 @@ const Key = ({ name }: { name: number | string }): ReactElement => (
     <span className="text-sky-700 dark:text-sky-300">
       {typeof name === "string" ? JSON.stringify(name) : name}
     </span>
-    <span className="text-neutral-400 dark:text-neutral-500">:</span>
+    <span className={TEXT.faint}>:</span>
   </>
 );
 
@@ -104,7 +105,7 @@ const NodeView = ({
     return (
       <div className="flex items-baseline gap-1.5 py-px">
         {keyEl}
-        <span className="text-neutral-400 dark:text-neutral-500">
+        <span className={TEXT.faint}>
           {openB}
           {closeB}
         </span>
@@ -115,16 +116,18 @@ const NodeView = ({
     <details className="group" open={openAll}>
       <summary className="flex cursor-pointer list-none items-baseline gap-1.5 py-px select-none">
         <Icon
-          className="mdxr-chev h-3 w-3 shrink-0 self-center text-neutral-400 dark:text-neutral-500"
+          className={`mdxr-chev h-3 w-3 shrink-0 self-center ${TEXT.faint}`}
           name="lucide:chevron-right"
         />
         {keyEl}
-        <span className="text-neutral-400 dark:text-neutral-500">{openB}</span>
-        <span className="mdxr-count rounded bg-neutral-200/70 px-1 text-[0.65rem] text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+        <span className={TEXT.faint}>{openB}</span>
+        <span
+          className={`mdxr-count rounded bg-neutral-200/70 px-1 text-[0.65rem] ${TEXT.muted} dark:bg-neutral-800`}
+        >
           {entries.length} {isArr ? "items" : "keys"}
         </span>
       </summary>
-      <div className="ml-[1.05rem] border-l border-neutral-200 pl-2.5 dark:border-neutral-800">
+      <div className={`ml-[1.05rem] border-l pl-2.5 ${BORDER_CLS}`}>
         {entries.map(([k, item]) => (
           <NodeView
             depth={depth + 1}
@@ -135,9 +138,7 @@ const NodeView = ({
           />
         ))}
       </div>
-      <div className="ml-[1.05rem] text-neutral-400 dark:text-neutral-500">
-        {closeB}
-      </div>
+      <div className={`ml-[1.05rem] ${TEXT.faint}`}>{closeB}</div>
     </details>
   );
 };
@@ -167,7 +168,7 @@ export const Json = defineComponent(
       throw new Error(`<Json> invalid JSON: ${msg}`, { cause: error });
     }
     return (
-      <figure className="mdxr-json not-prose my-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <Panel className="mdxr-json">
         {nonEmpty(title) ? (
           <CaptionBar className="flex items-center gap-2">
             <Icon className="h-3.5 w-3.5" name="lucide:braces" />
@@ -178,7 +179,7 @@ export const Json = defineComponent(
         <div className="overflow-x-auto bg-neutral-50 px-4 py-3 font-mono text-[0.8125rem] leading-relaxed dark:bg-neutral-900/60">
           <NodeView depth={0} openAll={!closed(open)} value={data} />
         </div>
-      </figure>
+      </Panel>
     );
   }
 );

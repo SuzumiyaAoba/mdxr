@@ -2,7 +2,8 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 
 import { compile } from "@mdx-js/mdx";
-import { createElement } from "react";
+import { createElement, Fragment } from "react";
+import type { ReactElement } from "react";
 import { renderToStaticMarkup, renderToString } from "react-dom/server";
 import rehypeKatex from "rehype-katex";
 import remarkDirective from "remark-directive";
@@ -70,6 +71,19 @@ export interface MdxResult {
   context: DocContextValue;
   /** True when the body was rendered for hydration (renderToString). */
   hydrated: boolean;
+  /**
+   * Re-render the document with `header` as the first child of the same
+   * Provider > Fragment > [header|null, doc] tree the hydration client
+   * mounts (hydrate-runtime's mountDocument). useId() encodes tree position,
+   * so the header must be rendered inside that shape — prepending separately
+   * rendered markup would shift every hydrated id/name/htmlFor. Returns
+   * fresh snapshots too: the pass replays every fileLink/icon lookup.
+   */
+  renderWithHeader: (header: ReactElement) => {
+    fileLinks: Record<string, string>;
+    html: string;
+    usedIcons: string[];
+  };
 }
 
 /**
@@ -185,15 +199,26 @@ export const mdxToHtml = async (
   // static documents use it.
   const hydrated = (opts.hydrate ?? true) && used.length > 0;
   const renderToMarkup = hydrated ? renderToString : renderToStaticMarkup;
-  let body: string;
-  try {
-    body = renderToMarkup(
+  // The client mounts Provider > Fragment > [header|null, doc]. SSR must emit
+  // that exact shape: useId() seeds encode a component's position in the
+  // tree, so rendering `doc` directly would diverge from hydration even with
+  // no header (the extra Fragment level changes the generated ids).
+  const renderDocument = (header: ReactElement | null): string =>
+    renderToMarkup(
       createElement(
         DocContext.Provider,
         { value: context },
-        createElement(docComponent, { components })
+        createElement(
+          Fragment,
+          null,
+          header,
+          createElement(docComponent, { components })
+        )
       )
     );
+  let body: string;
+  try {
+    body = renderDocument(null);
   } catch (error) {
     throw enhanceRenderError(error, Object.keys(components));
   }
@@ -204,6 +229,18 @@ export const mdxToHtml = async (
     fileLinks: Object.fromEntries(fileLinks),
     frontmatter,
     hydrated,
+    renderWithHeader: (header) => {
+      try {
+        const html = renderDocument(header);
+        return {
+          fileLinks: Object.fromEntries(fileLinks),
+          html,
+          usedIcons: takeUsedIcons(),
+        };
+      } catch (error) {
+        throw enhanceRenderError(error, Object.keys(components));
+      }
+    },
     renderedAt: renderedAt.toISOString(),
     usedComponents: used,
     usedIcons: takeUsedIcons(),

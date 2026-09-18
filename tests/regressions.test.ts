@@ -2,18 +2,24 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
+import { createElement, Fragment } from "react";
+import type { ReactElement } from "react";
+import { renderToStaticMarkup, renderToString } from "react-dom/server";
 import { afterAll, describe, expect, it, vi } from "vitest";
 
 import { mergeUserComponents } from "../src/component-map.js";
 import { ChartStyle } from "../src/components/ui/chart.js";
+import type { AnyComponent } from "../src/define.js";
+import type { DocContextValue } from "../src/doc-context.js";
+import { DocContext } from "../src/doc-context.js";
 import { isComponent, safeHref } from "../src/guards.js";
 import { htmlDocument } from "../src/html.js";
+import { importBundledCode } from "../src/load-user-module.js";
 import { mdxToHtml } from "../src/mdx.js";
 import { render } from "../src/render.js";
 import { buildCss } from "../src/tailwind.js";
 import { builtinComponents } from "../src/ui/index.js";
+import { PlanHeader } from "../src/ui/plan.js";
 
 const tmpDirs: string[] = [];
 
@@ -440,5 +446,178 @@ export const Note = defineComponent(
     expect(warnings).not.toContain("hydration bundle skipped");
     expect(html).toContain("hydrateRoot");
     expect(html).toContain("data-note");
+  });
+});
+
+const ASK_DOC = `<Ask title="Decisions">
+  <Question name="a" label="Pick" type="choice">
+    <Choice value="x">X</Choice>
+    <Choice value="y" checked>Y</Choice>
+  </Question>
+</Ask>
+`;
+
+// The exact tree mountDocument hydrates on the client.
+const clientTree = (
+  ctx: DocContextValue,
+  doc: AnyComponent,
+  header: ReactElement | null
+): string =>
+  renderToString(
+    createElement(
+      DocContext.Provider,
+      { value: ctx },
+      createElement(
+        Fragment,
+        null,
+        header,
+        createElement(doc, { components: builtinComponents })
+      )
+    )
+  );
+
+const docComponent = async (code: string): Promise<AnyComponent> => {
+  const mod = await importBundledCode(code, "doc");
+  if (!isComponent(mod.default)) {
+    throw new Error("compiled doc has no default component");
+  }
+  return mod.default;
+};
+
+// useId-derived attributes: element ids, radio names, htmlFor.
+const uidAttrs = (html: string): string[] =>
+  [
+    ...html.matchAll(
+      /(?:id|name|for)="(?<attr>[^"]*mdxr-q[^"]*|[^"]*_R_[^"]*)"/gu
+    ),
+  ].map((m) => m.groups?.attr ?? "");
+
+const askSheetOf = async (doc: string): Promise<string | undefined> => {
+  const { body } = await mdxToHtml(doc, builtinComponents, "doc.mdx", {
+    hydrate: false,
+  });
+  return /data-ask-output[^>]*>(?<sheet>[\s\S]*?)<\/pre>/u.exec(body)?.groups
+    ?.sheet;
+};
+
+describe("hydration vnode parity", () => {
+  it("SSR body matches the client tree when no header exists", async () => {
+    const r = await mdxToHtml(ASK_DOC, builtinComponents, "doc.mdx", {
+      hydrate: true,
+    });
+    expect(r.hydrated).toBeTruthy();
+    const doc = await docComponent(r.code);
+    expect(clientTree(r.context, doc, null)).toBe(r.body);
+    // Radio names carry the useId() suffix — they must exist and match.
+    expect(r.body).toContain('name="a_R_');
+  });
+
+  it("renderWithHeader matches the client tree with a frontmatter header", async () => {
+    const r = await mdxToHtml(ASK_DOC, builtinComponents, "doc.mdx", {
+      hydrate: true,
+    });
+    const doc = await docComponent(r.code);
+    const headerProps = { status: "doing", title: "My Plan" };
+    const pass = r.renderWithHeader(createElement(PlanHeader, headerProps));
+    const client = clientTree(
+      r.context,
+      doc,
+      createElement(PlanHeader, headerProps)
+    );
+    expect(client).toBe(pass.html);
+    // ids must be identical whether or not the header was prepended.
+    expect(uidAttrs(pass.html)).toStrictEqual(uidAttrs(client));
+    expect(uidAttrs(pass.html).length).toBeGreaterThan(0);
+  });
+
+  it("render() ships markup identical to the hydrated tree", async () => {
+    const dir = await makeDir();
+    const src = `---\ntitle: My Plan\n---\n\n${ASK_DOC}`;
+    const [html, r] = await Promise.all([
+      render(src, { dir, hydrate: true }),
+      mdxToHtml(src, builtinComponents, path.join(dir, "document.mdx"), {
+        hydrate: true,
+      }),
+    ]);
+    const doc = await docComponent(r.code);
+    const headerProps = { title: "My Plan" };
+    const pass = r.renderWithHeader(createElement(PlanHeader, headerProps));
+    const mainStart = html.indexOf('id="mdxr-root"');
+    const open = html.indexOf(">", mainStart) + 1;
+    const inner = html.slice(open, html.lastIndexOf("</main>"));
+    expect(inner).toBe(pass.html);
+    expect(inner).toBe(
+      clientTree(r.context, doc, createElement(PlanHeader, headerProps))
+    );
+  });
+});
+
+/**
+ * The answer sheet used to be rendered only by client JS after SSR emitted a
+ * placeholder — the pre-hydration seed then disagreed with the vnode tree and
+ * hydrateRoot patched the pane back. SSR now emits the seeded sheet itself,
+ * so both sides render the same text.
+ */
+describe("Ask SSR-seeded answer sheet", () => {
+  it("renders default answers for every question type", async () => {
+    const sheet = await askSheetOf(`<Ask title="Decisions">
+  <Question name="arch" label="Architecture" type="choice">
+    <Choice value="mono">Monolith</Choice>
+    <Choice value="micro" checked>Microservices</Choice>
+  </Question>
+  <Question name="tags" type="multi" label="Tags">
+    <Choice value="a" checked>Alpha</Choice>
+    <Choice value="b">Beta</Choice>
+    <Choice value="c" checked>Gamma</Choice>
+  </Question>
+  <Question name="lang" type="select" label="Lang">
+    <Choice value="ts">TypeScript</Choice>
+    <Choice value="rs" checked>Rust</Choice>
+  </Question>
+  <Question name="pick" type="select" label="Pick" placeholder="choose one">
+    <Choice value="x">X</Choice>
+  </Question>
+  <Question name="first" type="select" label="Defaulted">
+    <Choice value="d1">First option</Choice>
+    <Choice value="d2">Second</Choice>
+  </Question>
+  <Question name="flag" type="toggle" checked label="Enabled" />
+  <Question name="off" type="toggle" label="Disabled" />
+  <Question name="note" type="text" value="draft notes" label="Note" />
+  <Question name="empty" type="text" label="Blank" />
+  <Question name="ml" type="textarea" value="line1&#10;line2" label="Multi" />
+  <Question name="emptyv" type="select" label="EmptyVal">
+    <Choice value="" checked>Nothing</Choice>
+    <Choice value="v">Vee</Choice>
+  </Question>
+</Ask>`);
+    expect(sheet).toBe(
+      "# Decisions\n\n" +
+        "- **Architecture**: Microservices\n" +
+        "- **Tags**: Alpha, Gamma\n" +
+        "- **Lang**: Rust\n" +
+        "- **Pick**:\n" +
+        "- **Defaulted**: First option\n" +
+        "- **Enabled**: yes\n" +
+        "- **Disabled**: no\n" +
+        "- **Note**: draft notes\n" +
+        "- **Blank**:\n" +
+        "- **Multi**: line1\n  line2\n" +
+        "- **EmptyVal**:"
+    );
+  });
+
+  it("escapes labels and falls back to the question name", async () => {
+    const sheet = await askSheetOf(`<Ask>
+  <Question name="q*star" type="choice">
+    <Choice value="x" checked>Yes</Choice>
+  </Question>
+</Ask>`);
+    expect(sheet).toBe("# Answers\n\n- **q\\*star**: Yes");
+  });
+
+  it("renders the no-questions fallback", async () => {
+    const sheet = await askSheetOf('<Ask title="Empty" />');
+    expect(sheet).toBe("# Empty\n\n(no questions)");
   });
 });

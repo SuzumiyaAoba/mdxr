@@ -81,9 +81,7 @@ ${o.needsKatex === true ? `<link rel="stylesheet" href="${KATEX_CDN_URL}">` : ""
 </head>
 <body class="bg-white text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100">
 ${THEME_TOGGLE_HTML}
-<main id="mdxr-root" class="prose prose-neutral dark:prose-invert mx-auto max-w-3xl px-6 py-10">
-${o.body}
-</main>
+<main id="mdxr-root" class="prose prose-neutral dark:prose-invert mx-auto max-w-3xl px-6 py-10">${o.body}</main>
 <script>${inlineScript(o.clientJs)}</script>
 ${o.needsMermaid ? `<script type="module">${inlineScript(MERMAID_JS)}</script>` : ""}
 ${o.liveReload === true ? `<script>${inlineScript(LIVE_RELOAD_JS)}</script>` : ""}

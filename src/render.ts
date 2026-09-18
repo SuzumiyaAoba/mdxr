@@ -3,14 +3,12 @@ import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 
 import { createElement } from "react";
-import { renderToStaticMarkup, renderToString } from "react-dom/server";
 
 import { clientJs } from "./client-js.js";
 import { mergeUserComponents } from "./component-map.js";
 import type { ResolvedConfig } from "./config.js";
 import { loadConfig } from "./config.js";
 import type { ComponentMap } from "./define.js";
-import { DocContext } from "./doc-context.js";
 import { formatError } from "./format-error.js";
 import { nonEmpty } from "./guards.js";
 import { htmlDocument } from "./html.js";
@@ -20,7 +18,6 @@ import { mdxToHtml } from "./mdx.js";
 import { pkgRoot } from "./paths.js";
 import type { CssSource } from "./tailwind.js";
 import { buildCss } from "./tailwind.js";
-import { takeUsedIcons } from "./ui/icon.js";
 import { builtinComponents } from "./ui/index.js";
 import { PlanHeader } from "./ui/plan.js";
 
@@ -194,41 +191,16 @@ export const render = async (
   const {
     body,
     code,
-    context,
     fileLinks,
     frontmatter,
-    hydrated,
     renderedAt,
+    renderWithHeader,
     usedComponents,
     usedIcons,
   } = await mdxToHtml(source, components, filePath, {
     editor: config.editor,
     hydrate: opts.hydrate,
   });
-
-  // Read once for the candidate scan; the build imports the theme by path so
-  // relative `@import`s inside it resolve against the theme's own directory.
-  const themeCss =
-    config.themePath === undefined
-      ? undefined
-      : await readFile(config.themePath, "utf-8");
-
-  // Every class that made it into the rendered output is a candidate;
-  // scanning the body covers both built-in and user components.
-  const sources: CssSource[] = [
-    { content: body, extension: "html" },
-    { content: source, extension: "mdx" },
-    { content: themeCss ?? "", extension: "css" },
-    ...(await ownSources()),
-    ...(user.code === undefined
-      ? []
-      : [{ content: user.code, extension: "js" }]),
-    ...(config.componentsCode === undefined
-      ? []
-      : [{ content: config.componentsCode, extension: "js" }]),
-  ];
-  const { css, dependencies } = await buildCss(sources, config.themePath);
-  opts.onDependencies?.(dependencies);
 
   const fmStr = (key: string): string | undefined => {
     const val: unknown = frontmatter[key];
@@ -258,45 +230,66 @@ export const render = async (
     fmTitle ?? (nonEmpty(h1Text) ? h1Text : undefined) ?? "mdxr document";
 
   const headerProps = frontmatterHeader(fmStr, body);
-  // Same Provider + renderer as the body — the client hydrates the header
-  // inside DocContext, and renderToString's text-boundary comments must be
-  // present or hydrateRoot sees different markup.
-  const header =
-    headerProps === undefined
-      ? ""
-      : (hydrated ? renderToString : renderToStaticMarkup)(
-          createElement(
-            DocContext.Provider,
-            { value: context },
-            createElement(PlanHeader, headerProps)
-          )
-        );
+  // The header must be part of the body's vnode tree, not concatenated HTML:
+  // the hydration client mounts Provider > Fragment > [header|null, doc] and
+  // useId() encodes tree position — separately rendered markup would shift
+  // every id/name/htmlFor hydration compares.
+  let docBody = body;
+  let docFileLinks = fileLinks;
+  let docIcons = usedIcons;
+  if (headerProps !== undefined) {
+    const pass = renderWithHeader(createElement(PlanHeader, headerProps));
+    docBody = pass.html;
+    docFileLinks = pass.fileLinks;
+    docIcons = pass.usedIcons;
+  }
 
-  // Icon recording spans both SSR passes (body inside mdxToHtml, header here).
-  usedIcons.push(...takeUsedIcons());
+  // Read once for the candidate scan; the build imports the theme by path so
+  // relative `@import`s inside it resolve against the theme's own directory.
+  const themeCss =
+    config.themePath === undefined
+      ? undefined
+      : await readFile(config.themePath, "utf-8");
+
+  // Every class that made it into the rendered output is a candidate;
+  // scanning the body covers both built-in and user components.
+  const sources: CssSource[] = [
+    { content: docBody, extension: "html" },
+    { content: source, extension: "mdx" },
+    { content: themeCss ?? "", extension: "css" },
+    ...(await ownSources()),
+    ...(user.code === undefined
+      ? []
+      : [{ content: user.code, extension: "js" }]),
+    ...(config.componentsCode === undefined
+      ? []
+      : [{ content: config.componentsCode, extension: "js" }]),
+  ];
+  const { css, dependencies } = await buildCss(sources, config.themePath);
+  opts.onDependencies?.(dependencies);
 
   const [js, hydrateJs] = await Promise.all([
     clientJs(),
     buildHydrateBundle({
       code,
       config,
-      fileLinks,
+      fileLinks: docFileLinks,
       headerProps,
       hydrate: opts.hydrate,
       now: renderedAt,
       usedComponents,
-      usedIcons,
+      usedIcons: docIcons,
     }),
   ]);
 
   return htmlDocument({
-    body: header + body,
+    body: docBody,
     clientJs: js,
     css,
     hydrateJs,
     liveReload: opts.liveReload,
-    needsKatex: /class="[^"]*katex/u.test(body),
-    needsMermaid: /class="[^"]*mermaid/u.test(body),
+    needsKatex: /class="[^"]*katex/u.test(docBody),
+    needsMermaid: /class="[^"]*mermaid/u.test(docBody),
     title,
   });
 };

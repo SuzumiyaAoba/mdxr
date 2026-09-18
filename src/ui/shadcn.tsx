@@ -73,7 +73,16 @@ import { isComponent, safeHref } from "../guards.js";
  * `looseObject` props mean `<BreadcrumbLink href="javascript:…">` would
  * otherwise land on `<a href>` unchecked.
  */
-const URL_PROPS = new Set(["action", "formaction", "href", "src"]);
+const URL_PROPS = new Set([
+  "action",
+  "background",
+  "data",
+  "formaction",
+  "href",
+  "poster",
+  "src",
+  "xlinkhref",
+]);
 
 const sanitizeProps = (props: Record<string, unknown>): DocProps => {
   const out: Record<string, unknown> = { ...props };

@@ -12,7 +12,7 @@ import type { DocProps } from "../define.js";
 import { defineComponent, flattenChildren } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { attrTrue } from "./attrs.js";
-import { propOf } from "./children.js";
+import { isEl, propOf } from "./children.js";
 import { Icon } from "./icon.js";
 import { TEXT } from "./tones.js";
 
@@ -316,8 +316,13 @@ export const Question = defineComponent(
     checked,
     children,
   }) => {
+    // "Has <Choice> children" — not just any child: a stray text/element
+    // child under a text question must not flip it into choice mode.
     const t: QuestionType =
-      type ?? (flattenChildren(children).length > 0 ? "choice" : "text");
+      type ??
+      (flattenChildren(children).some((c) => isEl(c, Choice))
+        ? "choice"
+        : "text");
     // Radio inputs sharing `name` form one group — two questions reusing a
     // name would clobber each other's selection. Suffix a useId so the group
     // is per-question (stable across SSR/hydration) rather than per-key.

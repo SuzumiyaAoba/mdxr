@@ -2,9 +2,12 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, describe, expect, it, vi } from "vitest";
 
 import { mergeUserComponents } from "../src/component-map.js";
+import { ChartStyle } from "../src/components/ui/chart.js";
 import { isComponent, safeHref } from "../src/guards.js";
 import { htmlDocument } from "../src/html.js";
 import { mdxToHtml } from "../src/mdx.js";
@@ -138,6 +141,16 @@ describe("prototype-named inputs", () => {
     const { body } = await ssr("```toString\nx\n```");
     expect(body).toContain("x");
   });
+
+  it("renders Matrix cells named constructor/toString as plain text", async () => {
+    // CELL_KINDS[key] must not read prototype members — "constructor" is a
+    // data value, not an icon kind.
+    const { body } = await ssr(
+      "<Matrix>\n\n- F | constructor | toString\n\n</Matrix>"
+    );
+    expect(body).toContain("constructor");
+    expect(body).toContain("toString");
+  });
 });
 
 describe(safeHref, () => {
@@ -224,6 +237,17 @@ describe("editor links", () => {
 });
 
 describe("Ask questions", () => {
+  it("a text child does not flip a question into choice mode", async () => {
+    // Default inference is "has <Choice> children", not "has children" —
+    // explanatory text under a text question used to render a fieldset of
+    // zero radios instead of a text input.
+    const { body } = await ssr(
+      '<Ask><Question name="q">why the change?</Question></Ask>'
+    );
+    expect(body).toContain('data-q-type="text"');
+    expect(body).not.toContain('type="radio"');
+  });
+
   it("same-named choice questions get distinct radio groups", async () => {
     const { body } = await ssr(
       '<Ask><Question name="q"><Choice value="a">A</Choice><Choice value="b">B</Choice></Question><Question name="q"><Choice value="c">C</Choice><Choice value="d">D</Choice></Question></Ask>'
@@ -281,6 +305,28 @@ describe(htmlDocument, () => {
     });
     expect(html).not.toContain('content:"</style>"');
     expect(html).toContain("content:");
+  });
+});
+
+describe(ChartStyle, () => {
+  it("neutralizes </style> breakouts in the id, config keys, and colors", () => {
+    // Config keys/values reach a raw <style> element — a `</style>` sequence
+    // would end the element early regardless of CSS string quoting.
+    const html = renderToStaticMarkup(
+      createElement(ChartStyle, {
+        config: {
+          'a";</style><script>alert(1)</script>': {
+            color: "red;</style><script>",
+          },
+        },
+        id: 'c"></style><script>',
+      })
+    );
+    expect(html).not.toContain("<script");
+    // Exactly one closing tag: the element's own — nothing broke out.
+    expect(html.match(/<\/style/gu)).toHaveLength(1);
+    // Sanitized identifiers/values still emit the custom property.
+    expect(html).toContain("--color-");
   });
 });
 
@@ -360,5 +406,39 @@ export const Flag = defineComponent(
     expect(warnings).not.toContain("hydration bundle skipped");
     expect(html).toContain("hydrateRoot");
     expect(html).toContain("data-flag");
+  });
+
+  it("ignores comments inside the import clause", async () => {
+    const dir = await makeDir();
+    await writeFile(
+      path.join(dir, "mdxr.config.ts"),
+      'export default { components: "./components.tsx" };\n'
+    );
+    // A comment inside the braces is legal JS — it must not pollute the
+    // parsed import names and fail the hydration build.
+    await writeFile(
+      path.join(dir, "components.tsx"),
+      `import {
+  defineComponent, /* wraps + validates */
+  v,
+} from "mdxr";
+export const Note = defineComponent(
+  { schema: v.looseObject({ t: v.optional(v.string()) }) },
+  ({ t }) => <i data-note>{t}</i>
+);
+`
+    );
+    const spy = vi.spyOn(process.stderr, "write").mockReturnValue(true);
+    let html = "";
+    let warnings = "";
+    try {
+      html = await render('<Note t="ok" />', { dir });
+      warnings = spy.mock.calls.flat().join("");
+    } finally {
+      spy.mockRestore();
+    }
+    expect(warnings).not.toContain("hydration bundle skipped");
+    expect(html).toContain("hydrateRoot");
+    expect(html).toContain("data-note");
   });
 });

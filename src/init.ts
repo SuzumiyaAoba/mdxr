@@ -24,7 +24,9 @@ export const installSkill = async (opts: InitOptions): Promise<string[]> => {
 
   const tools = tool === "all" ? Object.keys(SKILL_DIRS) : [tool];
   const destFor = (t: string): string => {
-    const dirs = SKILL_DIRS[t];
+    // hasOwn: `--tool toString` would otherwise pull a function off the
+    // prototype and crash on `path.join(base, undefined)`.
+    const dirs = Object.hasOwn(SKILL_DIRS, t) ? SKILL_DIRS[t] : undefined;
     if (dirs === undefined) {
       throw new Error(`unknown tool: ${t} (expected agents|claude|devin|all)`);
     }

@@ -49,9 +49,13 @@ const CELL_KINDS: Record<string, CellKind> = {
   "？": "empty",
 };
 
-const cellKind = (cell: string): CellKind =>
-  CELL_KINDS[cell.trim().toLowerCase()] ??
-  (cell.trim() === "" ? "empty" : "text");
+const cellKind = (cell: string): CellKind => {
+  const key = cell.trim().toLowerCase();
+  if (Object.hasOwn(CELL_KINDS, key)) {
+    return CELL_KINDS[key] ?? "text";
+  }
+  return key === "" ? "empty" : "text";
+};
 
 const Cell = ({ cell }: { cell: string }): ReactElement => {
   const kind = cellKind(cell);

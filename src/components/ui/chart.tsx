@@ -78,6 +78,12 @@ function ChartContainer({
   );
 }
 
+// Interpolated values land inside a <style> element — `<`/`>`/`&` must never
+// survive (`</style>` breaks out of the element at the HTML level, regardless
+// of CSS string quoting), and idents can't contain quotes/braces either.
+const cssIdent = (s: string): string => s.replaceAll(/[^\w-]/gu, "");
+const cssValue = (s: string): string => s.replaceAll(/[<>&'"\\{};]/gu, "");
+
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
     ([, config]) => config.theme ?? config.color
@@ -93,13 +99,13 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
         __html: Object.entries(THEMES)
           .map(
             ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
+${prefix} [data-chart="${cssValue(id)}"] {
 ${colorConfig
   .map(([key, itemConfig]) => {
     const color =
       itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ??
       itemConfig.color;
-    return color ? `  --color-${key}: ${color};` : null;
+    return color ? `  --color-${cssIdent(key)}: ${cssValue(color)};` : null;
   })
   .join("\n")}
 }

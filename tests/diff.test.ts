@@ -106,6 +106,28 @@ describe(parseDiff, () => {
     ]);
   });
 
+  it("does not number rows in an implicit hunk after a counted one", () => {
+    // The counted hunk closes on +b; the trailing bare rows open an implicit
+    // hunk. Its rows must not inherit the previous hunk's stale line counters.
+    const [f] = parseDiff(
+      [
+        "--- a/x.ts",
+        "+++ b/x.ts",
+        "@@ -1 +1 @@",
+        "-a",
+        "+b",
+        "+extra",
+        " ctx",
+      ].join("\n")
+    );
+    const [counted, implicit] = f?.hunks ?? [];
+    expect(counted?.rows[1]).toMatchObject({ kind: "add", newLine: 1 });
+    expect(implicit?.rows.map((r) => r.kind)).toStrictEqual(["add", "ctx"]);
+    expect(implicit?.rows[0]?.newLine).toBeUndefined();
+    expect(implicit?.rows[1]?.oldLine).toBeUndefined();
+    expect(implicit?.rows[1]?.newLine).toBeUndefined();
+  });
+
   it("keeps \\ No newline markers as note rows", () => {
     const [f] = parseDiff(
       [

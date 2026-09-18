@@ -69,15 +69,23 @@ const createWatchSet = () => {
     }
   };
 
-  /** Recursive fallback: a watcher on `dir` plus every directory under it. */
+  /**
+   * Recursive fallback: a watcher on `dir` plus every directory under it.
+   * The `armed` check guards only the watcher install — the descent still
+   * runs on an already-armed root, so directories created mid-session get
+   * picked up on the next rebuild (armDeps re-arms the tree for this).
+   */
   const arm = (dir: string, onEvent: () => void): void => {
-    if (armed.has(dir) || SKIP_DIRS.has(path.basename(dir))) {
+    if (SKIP_DIRS.has(path.basename(dir))) {
       return;
     }
-    try {
-      track(fs.watch(dir, onEvent), dir);
-    } catch {
-      return;
+    if (!armed.has(dir)) {
+      try {
+        track(fs.watch(dir, onEvent), dir);
+      } catch {
+        // Watch failed (dir gone, fd limit) — children may still be
+        // watchable, so keep descending.
+      }
     }
     let ents: fs.Dirent[];
     try {
@@ -224,7 +232,10 @@ const servePreview = async (
 
   await rebuild(notify);
 
-  server.listen(port);
+  // Bind loopback only — the startup log says localhost, and a preview
+  // server has no auth: listening on 0.0.0.0 would expose the document
+  // (and its file links) to the LAN.
+  server.listen(port, "127.0.0.1");
   try {
     // Rejects on 'error' (e.g. EADDRINUSE) before 'listening'.
     await once(server, "listening");

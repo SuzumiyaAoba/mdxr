@@ -78,4 +78,19 @@ describe(installSkill, () => {
     );
     await expect(readdir(dir)).resolves.toStrictEqual([]);
   });
+
+  it("rejects prototype names as tools (toString is not a directory map entry)", async () => {
+    // SKILL_DIRS["toString"] used to pull Object.prototype.toString off the
+    // prototype — the undefined check passed and path.join(base, undefined)
+    // crashed with a TypeError instead of the validation error.
+    const dir = await makeDir();
+    process.chdir(dir);
+    await expect(installSkill({ tool: "toString" })).rejects.toThrow(
+      /unknown tool/u
+    );
+    await expect(installSkill({ tool: "constructor" })).rejects.toThrow(
+      /unknown tool/u
+    );
+    await expect(readdir(dir)).resolves.toStrictEqual([]);
+  });
 });

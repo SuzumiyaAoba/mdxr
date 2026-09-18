@@ -121,26 +121,38 @@ const hunkRow = (st: ParseState, line: string): void => {
   if (hunk === undefined) {
     return;
   }
+  // Line numbers come from the `@@` tallies — an implicit hunk (bare +/-
+  // stream) has none, so its rows must not inherit stale counters from the
+  // previous counted hunk.
+  const numbered = hunk.header !== undefined;
   const f = push(st, line);
   if (line.startsWith("\\")) {
     hunk.rows.push({ kind: "note", text: line });
   } else if (line.startsWith("+")) {
     f.adds += 1;
     st.newLeft -= 1;
-    hunk.rows.push({ kind: "add", newLine: st.newNo, text: line.slice(1) });
+    hunk.rows.push({
+      kind: "add",
+      newLine: numbered ? st.newNo : undefined,
+      text: line.slice(1),
+    });
     st.newNo += 1;
   } else if (line.startsWith("-")) {
     f.dels += 1;
     st.oldLeft -= 1;
-    hunk.rows.push({ kind: "del", oldLine: st.oldNo, text: line.slice(1) });
+    hunk.rows.push({
+      kind: "del",
+      oldLine: numbered ? st.oldNo : undefined,
+      text: line.slice(1),
+    });
     st.oldNo += 1;
   } else {
     st.oldLeft -= 1;
     st.newLeft -= 1;
     hunk.rows.push({
       kind: "ctx",
-      newLine: st.newNo,
-      oldLine: st.oldNo,
+      newLine: numbered ? st.newNo : undefined,
+      oldLine: numbered ? st.oldNo : undefined,
       text: line.startsWith(" ") ? line.slice(1) : line,
     });
     st.oldNo += 1;

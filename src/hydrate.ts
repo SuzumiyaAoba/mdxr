@@ -153,33 +153,39 @@ interface ExportIndex {
   surfaces: { components: Set<string>; mdxr: Set<string> };
 }
 
-/** All names a leaf file exports — declarations plus every re-export form. */
+/**
+ * All `name → module` pairs a leaf file claims — declarations plus every
+ * re-export form. Returned rather than written into a shared map: callers
+ * merge in sorted filename order, so a duplicated export name resolves
+ * deterministically instead of racing whichever `readFile` finished last.
+ */
 const scanLeaf = async (
-  filePath: string,
-  map: Map<string, string>
-): Promise<void> => {
+  filePath: string
+): Promise<(readonly [string, string])[]> => {
   const source = await readFile(filePath, "utf-8");
   const dir = path.dirname(filePath);
+  const pairs: (readonly [string, string])[] = [];
   for (const m of source.matchAll(DECLARE_RE)) {
     const name = m.groups?.name;
     if (name !== undefined) {
-      map.set(name, filePath);
+      pairs.push([name, filePath]);
     }
   }
   for (const [name, mod] of reexportTargets(source, dir)) {
-    map.set(name, mod);
+    pairs.push([name, mod]);
   }
   for (const m of source.matchAll(LOCAL_EXPORT_RE)) {
     for (const name of exportedNames(m.groups?.names)) {
-      map.set(name, filePath);
+      pairs.push([name, filePath]);
     }
   }
   for (const m of source.matchAll(STAR_AS_RE)) {
     const name = m.groups?.name;
     if (name !== undefined) {
-      map.set(name, filePath);
+      pairs.push([name, filePath]);
     }
   }
+  return pairs;
 };
 
 /**
@@ -200,19 +206,24 @@ export const exportIndex = async (): Promise<ExportIndex> => {
     ["DocContext", path.join(SRC, "doc-context.js")],
   ]);
   const leafDirs = [path.join(SRC, "ui"), path.join(SRC, "components/ui")];
-  await Promise.all(
+  const scanned = await Promise.all(
     leafDirs.map(async (dir) => {
       const entries = await readdir(dir);
-      const files = entries.filter(
-        (f) => /\.tsx?$/u.test(f) && f !== "index.ts"
-      );
-      await Promise.all(
-        files.map(async (f) => {
-          await scanLeaf(path.join(dir, f), map);
-        })
+      const files = entries
+        .filter((f) => /\.tsx?$/u.test(f) && f !== "index.ts")
+        .toSorted();
+      return await Promise.all(
+        files.map(async (f) => await scanLeaf(path.join(dir, f)))
       );
     })
   );
+  // Serial merge in sorted order — the parallel scans above must not make
+  // a name collision's winner depend on I/O timing.
+  for (const pairs of scanned.flat()) {
+    for (const [name, mod] of pairs) {
+      map.set(name, mod);
+    }
+  }
   for (const [name, mod] of Object.entries(shadcnModules)) {
     map.set(name, path.join(SRC, "ui", mod));
   }
@@ -319,13 +330,22 @@ const scanVProps = (stripped: string, alias: string): Set<string> | "all" => {
   return new RegExp(`\\b${esc}\\b`, "u").test(leftover) ? "all" : props;
 };
 
+/**
+ * `/* … *\/` and `// …` are legal inside a multiline import clause, and a
+ * name polluted with comment text would silently fail the surface check and
+ * kill the hydration build. Clauses never contain string literals, so a
+ * regex strip is safe here.
+ */
+const stripComments = (s: string): string =>
+  s.replaceAll(/\/\*[\s\S]*?\*\//gu, "").replaceAll(/\/\/[^\n]*/gu, "");
+
 /** Parse `{ a, b as c, type T }` import specifiers into names + `v` aliases. */
 const parseClause = (
   clause: string,
   names: Set<string>,
   vAliases: string[]
 ): void => {
-  for (const part of clause.slice(1, -1).split(",")) {
+  for (const part of stripComments(clause).slice(1, -1).split(",")) {
     const spec = part.trim().replace(/^type\s+/u, "");
     const [imported, local] = spec.split(/\s+as\s+/u).map((s) => s?.trim());
     if (imported === undefined || imported === "") {

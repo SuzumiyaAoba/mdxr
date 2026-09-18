@@ -68,6 +68,8 @@ describe(isComponent, () => {
   });
 });
 
+const ProtoComp = () => null;
+
 describe(mergeUserComponents, () => {
   it("merges PascalCase exports that are memo/forwardRef objects", () => {
     const MemoCard = { $$typeof: Symbol.for("react.memo"), type: () => null };
@@ -79,6 +81,21 @@ describe(mergeUserComponents, () => {
     expect(map.MemoCard).toBe(MemoCard);
     expect(map).not.toHaveProperty("NotAComponent");
     expect(map).not.toHaveProperty("lowercase");
+  });
+
+  it("keeps __proto__ as a data key instead of mutating the map's prototype", () => {
+    // `into["__proto__"] = comp` assigns the *prototype*, not an own property:
+    // the component would silently vanish and the map's prototype would change.
+    const source: Record<string, unknown> = {};
+    Object.defineProperty(source, "__proto__", {
+      enumerable: true,
+      value: ProtoComp,
+    });
+    const map = mergeUserComponents({ default: source });
+    expect(Object.getOwnPropertyDescriptor(map, "__proto__")?.value).toBe(
+      ProtoComp
+    );
+    expect(Object.getPrototypeOf(map)).toBe(Object.prototype);
   });
 });
 
@@ -105,6 +122,21 @@ describe("Summary", () => {
     expect(body).not.toContain("NaN");
     expect(body).toContain("0/0");
     expect(body).toContain("width:0%");
+  });
+});
+
+describe("prototype-named inputs", () => {
+  it('falls back to generic styling for File kind="toString"', async () => {
+    // A bare KINDS[kind] index pulled Object.prototype.toString — `r.icon`
+    // became undefined and <Icon name={undefined}> crashed the render.
+    const { body } = await ssr('<File kind="toString" path="x.ts" />');
+    expect(body).toContain("toString");
+  });
+
+  it("renders an unknown-language fence without touching prototype members", async () => {
+    // ```toString must not hand Object.prototype.toString to loadLanguage.
+    const { body } = await ssr("```toString\nx\n```");
+    expect(body).toContain("x");
   });
 });
 

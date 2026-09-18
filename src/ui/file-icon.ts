@@ -970,10 +970,17 @@ const DIR_NAMES: Record<string, string> = {
 const basename = (path: string): string =>
   (path.split(/[\\/]/u).pop() ?? path).trim().toLowerCase();
 
+/**
+ * `table[key]` for own keys only — prototype members ("constructor",
+ * "toString") are valid file/dir names but not icon keys.
+ */
+const own = (table: Record<string, string>, key: string): string | undefined =>
+  Object.hasOwn(table, key) ? table[key] : undefined;
+
 /** Iconify name for a file path, picked from its name and extension. */
 export const fileIcon = (path: string): string => {
   const base = basename(path);
-  const named = FILE_NAMES[base];
+  const named = own(FILE_NAMES, base);
   if (named !== undefined) {
     return fileType(named);
   }
@@ -984,7 +991,7 @@ export const fileIcon = (path: string): string => {
   }
   const tool = CONFIG_RE.exec(base)?.groups?.tool;
   if (tool !== undefined) {
-    return fileType(CONFIG_TOOLS[tool] ?? "config");
+    return fileType(own(CONFIG_TOOLS, tool) ?? "config");
   }
   const dot = base.lastIndexOf(".");
   // `.gitignore`-style dotfiles carry no extension; an extensionless name is
@@ -996,7 +1003,7 @@ export const fileIcon = (path: string): string => {
     ext = base.slice(dot + 1);
   }
   if (ext !== "") {
-    const key = EXT_ICONS[ext];
+    const key = own(EXT_ICONS, ext);
     if (key !== undefined) {
       return fileType(key);
     }
@@ -1011,7 +1018,7 @@ export const fileIcon = (path: string): string => {
 /** Iconify name for a directory, picked from its name. */
 export const folderIcon = (name: string): string => {
   const base = basename(name.replace(/\/+$/u, ""));
-  const key = DIR_NAMES[base] ?? base;
+  const key = own(DIR_NAMES, base) ?? base;
   const probed = folderType(key);
   return hasIcon(probed) ? probed : DEFAULT_FOLDER;
 };

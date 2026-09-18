@@ -65,11 +65,18 @@ const propsOf = (schema: unknown): Record<string, PropInfo> => {
   const out: Record<string, PropInfo> = {};
   for (const [key, raw] of Object.entries(schema.entries)) {
     const { def, required, s } = unwrapProp(raw);
-    out[key] = {
-      required,
-      type: describeSchema(s),
-      ...(def === undefined ? {} : { default: def }),
-    };
+    // defineProperty, not assignment: a prop literally named "__proto__"
+    // would otherwise replace `out`'s prototype instead of being recorded.
+    Object.defineProperty(out, key, {
+      configurable: true,
+      enumerable: true,
+      value: {
+        required,
+        type: describeSchema(s),
+        ...(def === undefined ? {} : { default: def }),
+      },
+      writable: true,
+    });
   }
   return out;
 };
@@ -83,16 +90,19 @@ export const catalogEntries = (project: ComponentMap = {}): CatalogEntry[] => {
     }
     // A project override wins the slot wholesale: describe its schema, not
     // the builtin's — the catalog documents what the document actually gets.
-    const shown = project[name] ?? comp;
+    // hasOwn, not `in`: prototype names ("toString", "constructor") must not
+    // count as overrides via the prototype chain.
+    const overridden = Object.hasOwn(project, name);
+    const shown = overridden ? (project[name] ?? comp) : comp;
     entries.push({
       description: shown.__mdxr?.description,
       name,
       props: propsOf(shown.__mdxr?.schema),
-      source: name in project ? "project" : "builtin",
+      source: overridden ? "project" : "builtin",
     });
   }
   for (const [name, comp] of Object.entries(project)) {
-    if (name in builtinComponents) {
+    if (Object.hasOwn(builtinComponents, name)) {
       continue;
     }
     entries.push({

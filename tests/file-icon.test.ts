@@ -64,6 +64,17 @@ describe(fileIcon, () => {
     expect(fileIcon("python")).toBe("vscode-icons:file-type-python");
   });
 
+  it("treats prototype member names as ordinary unknown names", () => {
+    // "constructor"/"toString" are legal file names — a bare table index
+    // would pull Object.prototype members (functions) and crash on
+    // `.includes` inside fileType.
+    expect(fileIcon("constructor")).toBe("vscode-icons:default-file");
+    expect(fileIcon("x.toString")).toBe("vscode-icons:default-file");
+    expect(fileIcon("constructor.config.ts")).toBe(
+      "vscode-icons:file-type-config"
+    );
+  });
+
   it.each([
     "a.b",
     "x.unknownext",
@@ -90,7 +101,7 @@ describe(folderIcon, () => {
     expect(folderIcon(name)).toBe(expected);
   });
 
-  it.each(["whatever/", "deep/nested/", "x"])(
+  it.each(["whatever/", "deep/nested/", "x", "toString", "constructor"])(
     "always resolves to a registered icon: %s",
     (name) => {
       expect(hasIcon(folderIcon(name))).toBeTruthy();

@@ -1,5 +1,18 @@
-import type { ComponentMap } from "./define.js";
+import type { ComponentMap, MdxrComponent } from "./define.js";
 import { isComponent, isRecord } from "./guards.js";
+
+/**
+ * `into[k] = v` with `k === "__proto__"` would silently replace the map's
+ * prototype instead of registering the component — define it as data.
+ */
+const put = (into: ComponentMap, k: string, v: MdxrComponent): void => {
+  Object.defineProperty(into, k, {
+    configurable: true,
+    enumerable: true,
+    value: v,
+    writable: true,
+  });
+};
 
 /** A default-exported object is treated as a `{ Name: Component }` map. */
 const mergeDefaultMap = (val: unknown, into: ComponentMap): void => {
@@ -8,7 +21,7 @@ const mergeDefaultMap = (val: unknown, into: ComponentMap): void => {
   }
   for (const [k, v] of Object.entries(val)) {
     if (isComponent(v)) {
-      into[k] = v;
+      put(into, k, v);
     }
   }
 };
@@ -27,7 +40,7 @@ export const mergeUserComponents = (
     if (key === "default") {
       mergeDefaultMap(val, into);
     } else if (isComponent(val) && /^[A-Z]/u.test(key)) {
-      into[key] = val;
+      put(into, key, val);
     }
   }
   return into;

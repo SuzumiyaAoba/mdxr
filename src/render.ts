@@ -175,8 +175,10 @@ export const render = async (
       ? { components: {} }
       : await loadComponents(config.componentsPath);
 
-  const collisions = Object.keys(user.components).filter(
-    (k) => k in builtinComponents
+  // hasOwn, not `in`: prototype names ("toString", "constructor") are not
+  // catalog collisions.
+  const collisions = Object.keys(user.components).filter((k) =>
+    Object.hasOwn(builtinComponents, k)
   );
   for (const k of collisions) {
     process.stderr.write(

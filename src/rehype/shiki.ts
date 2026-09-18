@@ -161,7 +161,9 @@ const ensureLanguage = async (
   const load = (async () => {
     const bundled: Record<string, LanguageInput> =
       highlighter.getBundledLanguages();
-    const loader = bundled[lang];
+    // hasOwn: a fence like ```toString would otherwise hand
+    // Object.prototype.toString to loadLanguage.
+    const loader = Object.hasOwn(bundled, lang) ? bundled[lang] : undefined;
     if (loader === undefined) {
       return false;
     }

@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -21,73 +22,209 @@ import { shadcnModules } from "./ui/shadcn.js";
  */
 const SRC = path.join(pkgRoot, "src");
 
-let moduleMapCache: Map<string, string> | undefined;
+let exportIndexCache: ExportIndex | undefined;
 
 const DECLARE_RE = /export\s+(?:const|function|class)\s+(?<name>\w+)/gu;
 const REEXPORT_RE =
   /export\s+(?!type\b)\{(?<names>[^}]*)\}\s*from\s*"(?<mod>\.[^"]+)"/gu;
+/** `export * as name from "x"` — the exported name is `name`. */
+const STAR_AS_RE = /export\s+\*\s+as\s+(?<name>\w+)\s+from\s*"[^"]+"/gu;
+/** `export * from "./x.js"` — the surface walk follows relative targets. */
+const STAR_RE = /export\s+\*\s+from\s*"(?<mod>\.[^"]+)"/gu;
+/** `export { A, B as C }` with no `from` — local re-export list (shadcn style). */
+const LOCAL_EXPORT_RE = /export\s+(?!type\b)\{(?<names>[^}]*)\}(?!\s*from\b)/gu;
+
+/**
+ * `{ A, type B, C as D }` clause → runtime names importers see (`A`, `D`).
+ * `type`-marked parts are erased at runtime — emitting `export { B } from "m"`
+ * for one would explode the whole bundle with "no matching export".
+ */
+const exportedNames = (names: string | undefined): string[] =>
+  (names ?? "")
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part) => part !== "" && !part.startsWith("type "))
+    .map(
+      (part) =>
+        part
+          .split(/\s+as\s+/u)
+          .pop()
+          ?.trim() ?? ""
+    )
+    .filter((name) => name !== "");
 
 /** `[exportName, target]` pairs a leaf module re-exports (`export {X as Y} from "./z"`). */
 const reexportTargets = (
   source: string,
-  uiDir: string
+  dir: string
 ): (readonly [string, string])[] => {
   const pairs: (readonly [string, string])[] = [];
   for (const m of source.matchAll(REEXPORT_RE)) {
-    const mod = path.join(uiDir, m.groups?.mod ?? "");
-    for (const part of (m.groups?.names ?? "").split(",")) {
-      const name = part
-        .trim()
-        .replace(/^type\s+/u, "")
-        .split(/\s+as\s+/u)
-        .pop()
-        ?.trim();
-      if (name !== undefined && name !== "") {
-        pairs.push([name, mod]);
-      }
+    const mod = path.join(dir, m.groups?.mod ?? "");
+    for (const name of exportedNames(m.groups?.names)) {
+      pairs.push([name, mod]);
     }
   }
   return pairs;
 };
 
-/**
- * export name → module specifier for every name the catalog can produce.
- * Derived by scanning the leaf modules under `src/ui/` rather than parsing
- * `index.ts`: any export form in the barrel (`export *`, `export const`,
- * re-export chains like ask→ask-question) resolves correctly, and new leaf
- * files self-register. `export {X} from "./y"` inside a leaf maps the name
- * straight to the target module; type-only exports are skipped.
- */
-const exportModuleMap = async (): Promise<Map<string, string>> => {
-  if (moduleMapCache !== undefined) {
-    return moduleMapCache;
+/** A `./x.js` specifier in our sources maps to `./x.ts`/`.tsx` on disk. */
+const sourceFile = (spec: string, dir: string): string | undefined => {
+  const stem = path.resolve(dir, spec).replace(/\.js$/u, "");
+  for (const ext of [".ts", ".tsx", ".js"]) {
+    const p = `${stem}${ext}`;
+    if (existsSync(p)) {
+      return p;
+    }
   }
-  const uiDir = path.join(SRC, "ui");
-  const entries = await readdir(uiDir);
-  const files = entries.filter((f) => /\.tsx?$/u.test(f) && f !== "index.ts");
+  return undefined;
+};
+
+/** Every runtime-exported name in `source` lands in `out`. */
+const collectNames = (source: string, out: Set<string>): void => {
+  for (const m of source.matchAll(DECLARE_RE)) {
+    const name = m.groups?.name;
+    if (name !== undefined) {
+      out.add(name);
+    }
+  }
+  for (const m of source.matchAll(STAR_AS_RE)) {
+    const name = m.groups?.name;
+    if (name !== undefined) {
+      out.add(name);
+    }
+  }
+  for (const re of [REEXPORT_RE, LOCAL_EXPORT_RE]) {
+    for (const m of source.matchAll(re)) {
+      for (const name of exportedNames(m.groups?.names)) {
+        out.add(name);
+      }
+    }
+  }
+};
+
+/**
+ * Every name `entry` re-exports, chasing `export *` targets — the surface the
+ * real package shows importers. Type-only exports never match the regexes
+ * (`export type`, `type X` parts), so the set holds runtime names only.
+ */
+const collectSurface = async (entry: string): Promise<Set<string>> => {
+  const out = new Set<string>();
+  const seen = new Set<string>();
+  const walk = async (file: string): Promise<void> => {
+    if (seen.has(file)) {
+      return;
+    }
+    seen.add(file);
+    let source: string;
+    try {
+      source = await readFile(file, "utf-8");
+    } catch {
+      return;
+    }
+    collectNames(source, out);
+    const dir = path.dirname(file);
+    const starTargets: string[] = [];
+    for (const m of source.matchAll(STAR_RE)) {
+      const mod = m.groups?.mod;
+      if (mod === undefined) {
+        continue;
+      }
+      const target = sourceFile(mod, dir);
+      if (target !== undefined) {
+        starTargets.push(target);
+      }
+    }
+    await Promise.all(starTargets.map(walk));
+  };
+  await walk(entry);
+  return out;
+};
+
+interface ExportIndex {
+  /** export name → leaf module, for every name a public entry can produce. */
+  map: Map<string, string>;
+  /**
+   * Names each public specifier actually exports — the virtual module must
+   * not resolve beyond this, or the client would see a real value where SSR's
+   * import failed or bound `undefined` (e.g. `mountDocument`, leaf internals
+   * like `fileIcon` under `mdxr`, or `v` under `mdxr/components`).
+   */
+  surfaces: { components: Set<string>; mdxr: Set<string> };
+}
+
+/** All names a leaf file exports — declarations plus every re-export form. */
+const scanLeaf = async (
+  filePath: string,
+  map: Map<string, string>
+): Promise<void> => {
+  const source = await readFile(filePath, "utf-8");
+  const dir = path.dirname(filePath);
+  for (const m of source.matchAll(DECLARE_RE)) {
+    const name = m.groups?.name;
+    if (name !== undefined) {
+      map.set(name, filePath);
+    }
+  }
+  for (const [name, mod] of reexportTargets(source, dir)) {
+    map.set(name, mod);
+  }
+  for (const m of source.matchAll(LOCAL_EXPORT_RE)) {
+    for (const name of exportedNames(m.groups?.names)) {
+      map.set(name, filePath);
+    }
+  }
+  for (const m of source.matchAll(STAR_AS_RE)) {
+    const name = m.groups?.name;
+    if (name !== undefined) {
+      map.set(name, filePath);
+    }
+  }
+};
+
+/**
+ * export name → module specifier for every name the catalog can produce,
+ * plus the real export surface of each public specifier. Derived by scanning
+ * the leaf modules under `src/ui/` + `src/components/ui/` rather than parsing
+ * barrels: any export form (`export *`, `export const`, `export {X}` lists,
+ * re-export chains like ask→ask-question) resolves correctly, and new leaf
+ * files self-register.
+ */
+// Exported for tests — the surface contract is what keeps SSR and the
+// hydration bundle in agreement; it deserves direct assertions.
+export const exportIndex = async (): Promise<ExportIndex> => {
+  if (exportIndexCache !== undefined) {
+    return exportIndexCache;
+  }
   const map = new Map<string, string>([
     ["DocContext", path.join(SRC, "doc-context.js")],
   ]);
+  const leafDirs = [path.join(SRC, "ui"), path.join(SRC, "components/ui")];
   await Promise.all(
-    files.map(async (file) => {
-      const filePath = path.join(uiDir, file);
-      const source = await readFile(filePath, "utf-8");
-      for (const m of source.matchAll(DECLARE_RE)) {
-        const name = m.groups?.name;
-        if (name !== undefined) {
-          map.set(name, filePath);
-        }
-      }
-      for (const [name, mod] of reexportTargets(source, uiDir)) {
-        map.set(name, mod);
-      }
+    leafDirs.map(async (dir) => {
+      const entries = await readdir(dir);
+      const files = entries.filter(
+        (f) => /\.tsx?$/u.test(f) && f !== "index.ts"
+      );
+      await Promise.all(
+        files.map(async (f) => {
+          await scanLeaf(path.join(dir, f), map);
+        })
+      );
     })
   );
   for (const [name, mod] of Object.entries(shadcnModules)) {
-    map.set(name, path.join(uiDir, mod));
+    map.set(name, path.join(SRC, "ui", mod));
   }
-  moduleMapCache = map;
-  return map;
+  const index: ExportIndex = {
+    map,
+    surfaces: {
+      components: await collectSurface(path.join(SRC, "components.ts")),
+      mdxr: await collectSurface(path.join(SRC, "index.ts")),
+    },
+  };
+  exportIndexCache = index;
+  return index;
 };
 
 /**
@@ -256,6 +393,34 @@ const scanMdxrImports = async (importer: string): Promise<MdxrImports> => {
 };
 
 /**
+ * The virtual module's `v` export. `export * as v` would materialize the
+ * entire valibot namespace — a plain object built from named imports ships
+ * only the schemas actually written. Unknown `v.x` accesses stay absent,
+ * matching `undefined` semantics. The `surface` gate keeps `mdxr/components`
+ * honest: that specifier has no `v` export, so shipping one would diverge
+ * from SSR.
+ */
+const vExportLines = (imports: MdxrImports, surface: Set<string>): string[] => {
+  if (!surface.has("v") || imports.vProps === null) {
+    return [];
+  }
+  if (imports.vProps === "all" || imports.names === "all") {
+    return ['export * as v from "valibot";'];
+  }
+  const props: string[] = [];
+  for (const p of imports.vProps) {
+    if (p in valibot) {
+      props.push(p);
+    }
+  }
+  return [
+    props.length > 0
+      ? `import { ${props.join(", ")} } from "valibot";\nexport const v = { ${props.join(", ")} };`
+      : "export const v = {};",
+  ];
+};
+
+/**
  * Virtual stand-in for `mdxr` / `mdxr/components` inside the bundle. A fresh
  * module is generated per importer containing only the re-exports that
  * importer requests: esbuild eagerly resolves every `export { x } from "m"`
@@ -263,35 +428,28 @@ const scanMdxrImports = async (importer: string): Promise<MdxrImports> => {
  * as side effects — so a module exporting the whole catalog would drag the
  * whole catalog into the bundle.
  */
-const runtimeModuleContents = (
+// Exported for tests — pure codegen, so the emitted export list is easy to
+// assert without running esbuild.
+export const runtimeModuleContents = (
   map: Map<string, string>,
-  imports: MdxrImports
+  imports: MdxrImports,
+  surface: Set<string>
 ): string => {
   const lines = [
     `export { defineComponent, textOf } from ${JSON.stringify(path.join(SRC, "define.js"))};`,
+    ...vExportLines(imports, surface),
   ];
-  // `export * as v` would materialize the entire valibot namespace — a plain
-  // object built from named imports ships only the schemas actually written.
-  // Unknown `v.x` accesses simply stay absent, matching `undefined` semantics.
-  if (imports.vProps === "all" || imports.names === "all") {
-    lines.push('export * as v from "valibot";');
-  } else if (imports.vProps !== null) {
-    const props = [...imports.vProps].filter((p) => p in valibot);
-    lines.push(
-      props.length > 0
-        ? `import { ${props.join(", ")} } from "valibot";\nexport const v = { ${props.join(", ")} };`
-        : "export const v = {};"
-    );
-  }
-  // "all" (namespace/default/dynamic imports) must cover EXTRA_MODULES too —
-  // a user touching `mdxr.builtinComponents` in the browser would otherwise
-  // see undefined where SSR saw the catalog.
-  const wanted =
-    imports.names === "all"
-      ? [...map.keys(), ...Object.keys(EXTRA_MODULES)]
-      : [...imports.names];
+  // "all" (namespace/default/dynamic imports) exports exactly the specifier's
+  // real surface — leaf internals and EXTRA names like `mountDocument` stay
+  // hidden, matching what the actual package would hand SSR. Named imports
+  // beyond the surface are skipped: SSR's link error is then mirrored by an
+  // esbuild "no matching export" failure instead of a silent divergence.
+  const wanted = imports.names === "all" ? [...surface] : [...imports.names];
   const byModule = new Map<string, string[]>();
   for (const name of wanted) {
+    if (!surface.has(name)) {
+      continue;
+    }
     const mod = map.get(name) ?? EXTRA_MODULES[name];
     if (mod === undefined) {
       continue;
@@ -307,23 +465,38 @@ const runtimeModuleContents = (
 };
 
 /* oxlint-disable require-unicode-regexp -- esbuild onResolve/onLoad filters forbid `u` */
-const runtimeModule = (map: Map<string, string>): Plugin => ({
+const runtimeModule = (index: ExportIndex): Plugin => ({
   name: "mdxr:runtime",
   setup(b) {
-    const importers = new Map<string, string>();
+    const importers = new Map<
+      string,
+      { importer: string; surface: Set<string> }
+    >();
     let seq = 0;
     b.onResolve({ filter: /^mdxr(?:\/components)?$/ }, (args) => {
       const virtual = `mdxr:runtime:${seq}`;
       seq += 1;
-      importers.set(virtual, args.importer);
+      importers.set(virtual, {
+        importer: args.importer,
+        // Each specifier gets its own real surface — `mdxr` (config API) and
+        // `mdxr/components` (the catalog) are deliberately different sets.
+        surface:
+          args.path === "mdxr"
+            ? index.surfaces.mdxr
+            : index.surfaces.components,
+      });
       return { namespace: "mdxr-runtime", path: virtual };
     });
     b.onLoad(
       { filter: /^mdxr:runtime:/, namespace: "mdxr-runtime" },
       async (args) => {
-        const importer = importers.get(args.path) ?? "";
+        const v = importers.get(args.path);
         return {
-          contents: runtimeModuleContents(map, await scanMdxrImports(importer)),
+          contents: runtimeModuleContents(
+            index.map,
+            await scanMdxrImports(v?.importer ?? ""),
+            v?.surface ?? index.surfaces.components
+          ),
           loader: "js",
           resolveDir: SRC,
         };
@@ -366,16 +539,18 @@ const iconSets = (usedIcons: readonly string[]): Plugin => ({
           if (prefix !== set.prefix || name === undefined) {
             continue;
           }
-          const data = set.icons[name];
-          if (data !== undefined) {
-            icons[name] = data;
+          // hasOwn: names like "toString" must not pull prototype members —
+          // a function would serialize as `{}` and ship a phantom icon.
+          if (Object.hasOwn(set.icons, name)) {
+            icons[name] = set.icons[name];
           }
-          const alias = set.aliases?.[name];
+          const alias = Object.hasOwn(set.aliases ?? {}, name)
+            ? set.aliases?.[name]
+            : undefined;
           if (alias !== undefined) {
             aliases[name] = alias;
-            const parent = set.icons[alias.parent];
-            if (parent !== undefined) {
-              icons[alias.parent] = parent;
+            if (Object.hasOwn(set.icons, alias.parent)) {
+              icons[alias.parent] = set.icons[alias.parent];
             }
           }
         }
@@ -416,7 +591,8 @@ export interface HydrateSpec {
 export const buildHydrateScript = async (
   spec: HydrateSpec
 ): Promise<string> => {
-  const map = await exportModuleMap();
+  const index = await exportIndex();
+  const { map } = index;
   const imports: string[] = [];
   const entries: string[] = [];
   let seq = 0;
@@ -490,7 +666,7 @@ ${mountDocument}({
     plugins: [
       pinShared,
       docModule(spec.code),
-      runtimeModule(map),
+      runtimeModule(index),
       iconSets(spec.usedIcons),
     ],
     stdin: {

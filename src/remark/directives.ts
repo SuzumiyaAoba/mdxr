@@ -66,18 +66,23 @@ export const remarkMdxrDirectives = () => (tree: Node, file: VFile) => {
       const directive = node;
       const name = normalizeCalloutKind(directive.name);
       const isContainer = directive.type === "containerDirective";
-      if (CALLOUT_KINDS.has(name) || CONTAINER_COMPONENTS[name] !== undefined) {
-        if (!isContainer) {
-          file.message(
-            `:::${directive.name} is a container directive — use three colons`,
-            directive,
-            "mdxr:directives"
-          );
-          return;
-        }
-      } else {
+      // hasOwn, not a bare index: `:::toString` would otherwise resolve to
+      // Object.prototype.toString and be "rendered" as a component name.
+      const container = Object.hasOwn(CONTAINER_COMPONENTS, name)
+        ? CONTAINER_COMPONENTS[name]
+        : undefined;
+      const component = CALLOUT_KINDS.has(name) ? "Callout" : container;
+      if (component === undefined) {
         file.message(
           `Unknown directive ":::${directive.name}"`,
+          directive,
+          "mdxr:directives"
+        );
+        return;
+      }
+      if (!isContainer) {
+        file.message(
+          `:::${directive.name} is a container directive — use three colons`,
           directive,
           "mdxr:directives"
         );
@@ -96,18 +101,13 @@ export const remarkMdxrDirectives = () => (tree: Node, file: VFile) => {
         directive.children.shift();
       }
 
-      if (CALLOUT_KINDS.has(name)) {
+      if (component === "Callout") {
         toMdxElement(directive, "mdxJsxFlowElement", "Callout", {
           kind: name,
           ...attrs,
         });
       } else {
-        toMdxElement(
-          directive,
-          "mdxJsxFlowElement",
-          CONTAINER_COMPONENTS[name],
-          attrs
-        );
+        toMdxElement(directive, "mdxJsxFlowElement", component, attrs);
       }
     }
   );

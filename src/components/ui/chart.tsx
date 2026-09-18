@@ -342,20 +342,25 @@ function getPayloadConfigFromPayload(
 
   let configLabelKey: string = key;
 
+  // hasOwn, not `in`: prototype members ("toString", "constructor") are not
+  // data — `config["toString"]` would hand React a function to render.
   if (
-    key in payload &&
+    Object.hasOwn(payload, key) &&
     typeof payload[key as keyof typeof payload] === "string"
   ) {
     configLabelKey = payload[key as keyof typeof payload];
   } else if (
     payloadPayload &&
-    key in payloadPayload &&
+    Object.hasOwn(payloadPayload, key) &&
     typeof payloadPayload[key as keyof typeof payloadPayload] === "string"
   ) {
     configLabelKey = payloadPayload[key as keyof typeof payloadPayload];
   }
 
-  return configLabelKey in config ? config[configLabelKey] : config[key];
+  const fallback = Object.hasOwn(config, key) ? config[key] : undefined;
+  return Object.hasOwn(config, configLabelKey)
+    ? config[configLabelKey]
+    : fallback;
 }
 
 export {

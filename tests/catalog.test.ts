@@ -54,6 +54,14 @@ describe(catalogEntries, () => {
     });
     expect(thing?.props.note?.required).toBeFalsy();
   });
+
+  it("does not mistake prototype names for builtin overrides", () => {
+    // A default-exported map can carry keys like `constructor` — `in` would
+    // see the inherited Object.prototype member and drop it from the catalog.
+    const entries = catalogEntries({ constructor: Custom });
+    const ctor = entries.find((e) => e.name === "constructor");
+    expect(ctor?.source).toBe("project");
+  });
 });
 
 describe(formatCatalog, () => {

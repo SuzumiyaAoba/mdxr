@@ -141,6 +141,17 @@ describe(remarkMdxrDirectives, () => {
     );
   });
 
+  it("does not mistake prototype member names for container components", () => {
+    // `:::toString` must not resolve to Object.prototype.toString — a bare
+    // index into CONTAINER_COMPONENTS would hand a function to toMdxElement
+    // as the JSX tag name.
+    const { file, node } = runDirectives(directive("toString"));
+    expect(node?.type).toBe("containerDirective");
+    expect(file.messages.map(String).join("\n")).toMatch(
+      /Unknown directive ":::toString"/u
+    );
+  });
+
   it("warns when a container component is used as a leaf directive", () => {
     const { file, node } = runDirectives(directive("phase", "leafDirective"));
     expect(node?.type).toBe("leafDirective");

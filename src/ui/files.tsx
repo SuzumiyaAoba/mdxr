@@ -84,7 +84,12 @@ export const File = defineComponent(
     }),
   },
   ({ path, lines, kind, href, children }) => {
-    const r = nonEmpty(kind) ? (KINDS[kind] ?? FALLBACK_KIND) : undefined;
+    // hasOwn: `kind` is a free-form string — "toString" would otherwise pull
+    // a function off the prototype instead of the fallback styling.
+    let r: { cls: string; icon: string } | undefined;
+    if (nonEmpty(kind)) {
+      r = Object.hasOwn(KINDS, kind) ? KINDS[kind] : FALLBACK_KIND;
+    }
     const link = useFileLink(path, lines, href);
     const label = (
       <code className={MONO_CLS}>

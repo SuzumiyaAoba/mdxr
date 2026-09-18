@@ -1,3 +1,17 @@
+/**
+ * Validate the `--format` flag: omitted and "text" mean human-readable
+ * errors, "json" switches failure output to a machine-readable object.
+ */
+export const parseErrorFormat = (format?: string): "text" | "json" => {
+  if (format === undefined || format === "text") {
+    return "text";
+  }
+  if (format === "json") {
+    return "json";
+  }
+  throw new Error(`invalid --format "${format}" (expected text|json)`);
+};
+
 export const formatError = (err: unknown): string => {
   if (err instanceof Error) {
     // vfile-style messages carry line/column for agent self-repair.

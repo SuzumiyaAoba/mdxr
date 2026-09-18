@@ -37,6 +37,10 @@ jobs:
       - run: pnpm check
         if: matrix.node-version != 20
 
+      # tsgolint (via `pnpm check`) runs type-aware lint rules but is not a
+      # full typecheck — keep a real tsc pass on every matrix leg.
+      - run: pnpm typecheck
+
       - run: pnpm test
 
       - run: pnpm build

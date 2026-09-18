@@ -6,7 +6,7 @@ import { cac } from "cac";
 
 import { catalogEntries, formatCatalog, CONVENTIONS } from "./catalog.js";
 import { loadConfig } from "./config.js";
-import { formatError } from "./format-error.js";
+import { formatError, parseErrorFormat } from "./format-error.js";
 import { installSkill } from "./init.js";
 import { loadComponents, render, renderFile } from "./render.js";
 import { serve, serveSource } from "./serve.js";
@@ -55,6 +55,7 @@ cli
     ) => {
       const json = opts.format === "json";
       try {
+        parseErrorFormat(opts.format);
         const fromStdin = file === undefined || file === "-";
         if (fromStdin) {
           requireStdinSource();

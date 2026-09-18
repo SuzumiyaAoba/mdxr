@@ -1,10 +1,9 @@
 minimumReleaseAge: 4320
+# pnpm 11 consolidated the build-approval settings into allowBuilds; the old
+# onlyBuiltDependencies list is ignored, so only this map matters.
 allowBuilds:
   esbuild: true
   lefthook: true
-onlyBuiltDependencies:
-  - esbuild
-  - "@tailwindcss/oxide"
 minimumReleaseAgeExclude:
   - "@oxfmt/binding-android-arm-eabi@0.68.0"
   - "@oxfmt/binding-android-arm64@0.68.0"

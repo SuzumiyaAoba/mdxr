@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { existsSync, statSync } from "node:fs";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readdir, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -45,6 +45,52 @@ export interface BundledModule {
 
 const INDEX_FILES = ["index.tsx", "index.ts", "index.jsx", "index.js"];
 
+/** Files written but not yet imported — a prune must never unlink these. */
+const inFlight = new Set<string>();
+
+/**
+ * `mdxr serve` writes a fresh `doc-<hash>.mjs` on every rebuild, so the cache
+ * would grow unboundedly over a session. Keep only the newest few files per
+ * prefix — imported modules live in the module registry, not on disk, so
+ * deleting an already-imported file is safe. Best-effort: failures are fine.
+ */
+const pruneCache = async (prefix: string): Promise<void> => {
+  try {
+    const KEEP = 8;
+    // Never touch files younger than this: another process may have written
+    // one and not yet called import() (inFlight only guards this process).
+    const STALE_MS = 10_000;
+    const now = Date.now();
+    const ents = await readdir(cacheDir);
+    const mine = ents.filter(
+      (f) =>
+        f.startsWith(`${prefix}-`) &&
+        f.endsWith(".mjs") &&
+        !inFlight.has(path.join(cacheDir, f))
+    );
+    if (mine.length <= KEEP) {
+      return;
+    }
+    const withMtime = await Promise.all(
+      mine.map(async (f) => {
+        const s = await stat(path.join(cacheDir, f));
+        return { f, mtime: s.mtimeMs };
+      })
+    );
+    withMtime.sort((a, b) => b.mtime - a.mtime);
+    const keep = new Set(withMtime.slice(0, KEEP).map(({ f }) => f));
+    await Promise.all(
+      withMtime
+        .filter(({ f, mtime }) => now - mtime > STALE_MS && !keep.has(f))
+        .map(async ({ f }) => {
+          await unlink(path.join(cacheDir, f));
+        })
+    );
+  } catch {
+    // Cache hygiene is best-effort — never fail a render over it.
+  }
+};
+
 /**
  * Write bundled ESM `code` into this package's cache dir (content-hashed, so
  * repeat imports are free) and import it. Living inside the package makes
@@ -58,10 +104,17 @@ export const importBundledCode = async (
   await mkdir(cacheDir, { recursive: true });
   const hash = createHash("sha256").update(code).digest("hex").slice(0, 12);
   const out = path.join(cacheDir, `${prefix}-${hash}.mjs`);
-  if (!existsSync(out)) {
-    await writeFile(out, code);
+  // Always rewrite: refreshing the mtime keeps the live file out of prune's
+  // reach (a stale-mtime hit could otherwise be unlinked while still in use).
+  await writeFile(out, code);
+  inFlight.add(out);
+  let raw: unknown;
+  try {
+    raw = await import(pathToFileURL(out).href);
+  } finally {
+    inFlight.delete(out);
   }
-  const raw: unknown = await import(pathToFileURL(out).href);
+  void pruneCache(prefix);
   return isRecord(raw) ? raw : {};
 };
 

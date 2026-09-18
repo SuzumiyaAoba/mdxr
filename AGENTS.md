@@ -4,9 +4,11 @@ This project uses **Ultracite**, a zero-config preset that enforces strict code 
 
 ## Quick Reference
 
-- **Format code**: `pnpm dlx ultracite fix`
-- **Check for issues**: `pnpm dlx ultracite check`
-- **Diagnose setup**: `pnpm dlx ultracite doctor`
+- **Format code**: `pnpm fix` (or `pnpm exec ultracite fix`)
+- **Check for issues**: `pnpm check` (or `pnpm exec ultracite check`)
+- **Diagnose setup**: `pnpm exec ultracite doctor`
+
+Use `pnpm exec`/`pnpm` scripts rather than `pnpm dlx` — ultracite is a pinned devDependency, and a `dlx` fetch would bypass the `minimumReleaseAge` supply-chain delay.
 
 Oxlint + Oxfmt (the underlying engine) provides robust linting and formatting. Most issues are automatically fixable.
 
@@ -123,7 +125,7 @@ Oxlint + Oxfmt's linter will catch most issues automatically. Focus your attenti
 
 ---
 
-Most formatting and common issues are automatically fixed by Oxlint + Oxfmt. Run `pnpm dlx ultracite fix` before committing to ensure compliance.
+Most formatting and common issues are automatically fixed by Oxlint + Oxfmt. Run `pnpm fix` before committing to ensure compliance.
 
 ---
 

@@ -2,7 +2,22 @@
   "name": "mdxr",
   "version": "0.1.0",
   "description": "Render agent-authored MDX documents (plans, reports) to standalone HTML with a semantic component catalog",
+  "keywords": [
+    "agents",
+    "cli",
+    "documentation",
+    "html",
+    "mdx",
+    "renderer",
+    "static-site"
+  ],
+  "homepage": "https://github.com/SuzumiyaAoba/mdxr#readme",
+  "bugs": "https://github.com/SuzumiyaAoba/mdxr/issues",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SuzumiyaAoba/mdxr.git"
+  },
   "bin": {
     "mdxr": "./dist/cli.mjs"
   },
@@ -27,6 +42,7 @@
     "build": "vp pack",
     "build:examples": "pnpm build && node scripts/render-examples.ts",
     "test": "vp test",
+    "typecheck": "tsc --noEmit",
     "check": "ultracite check",
     "fix": "ultracite fix",
     "storybook": "storybook dev -p 6006",

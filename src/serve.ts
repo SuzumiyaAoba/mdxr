@@ -8,7 +8,7 @@ import type { RenderSourceOptions } from "./render.js";
 import { render, renderFile } from "./render.js";
 
 const errorPage = (err: unknown): string =>
-  `<!doctype html><meta charset="utf-8"><body style="font-family:monospace;background:#1c1917;color:#fca5a5;padding:2rem"><h1>mdxr render error</h1><pre>${formatError(err).replaceAll("<", "&lt;")}</pre></body>`;
+  `<!doctype html><meta charset="utf-8"><body style="font-family:monospace;background:#1c1917;color:#fca5a5;padding:2rem"><h1>mdxr render error</h1><pre>${formatError(err).replaceAll("&", "&amp;").replaceAll("<", "&lt;")}</pre></body>`;
 
 interface PreviewTarget {
   /** Label shown in the startup log. */
@@ -20,6 +20,15 @@ interface PreviewTarget {
   /** Non-recursive fallback watch target (the document file). */
   watchFile?: string;
 }
+
+/** Dependency/build output dirs — never worth a watch fd. */
+const SKIP_DIRS = new Set([
+  ".git",
+  ".mdxr-cache",
+  "dist",
+  "node_modules",
+  "storybook-static",
+]);
 
 const servePreview = async (
   target: PreviewTarget,
@@ -48,40 +57,118 @@ const servePreview = async (
       req.on("close", () => {
         clients.delete(res);
       });
+      res.on("error", () => {
+        clients.delete(res);
+      });
       return;
     }
     res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
     res.end(html);
   });
 
-  const reload = async () => {
-    await rebuild();
-    for (const c of clients) {
-      c.write("event: reload\ndata: {}\n\n");
+  // Rebuilds chain onto each other: a change burst during a slow rebuild
+  // can't interleave two renders or serve an older result last. Every link
+  // swallows its own errors, so the stored tail can never reject — nothing
+  // awaits it, and an unhandled rejection would take the server down.
+  let reloading: Promise<void> = Promise.resolve();
+  const reload = (): void => {
+    const prev = reloading;
+    reloading = (async () => {
+      await prev;
+      try {
+        await rebuild();
+        for (const c of clients) {
+          try {
+            c.write("event: reload\ndata: {}\n\n");
+          } catch {
+            clients.delete(c);
+          }
+        }
+      } catch {
+        // Notified clients are best-effort; rebuild failures are already
+        // rendered into the error page by rebuild() itself.
+      }
+    })();
+  };
+
+  const watchers: fs.FSWatcher[] = [];
+  const armed = new Set<string>();
+  /** Non-recursive fallback: one watcher per directory under `root`. */
+  const arm = (dir: string, onEvent: () => void): void => {
+    if (armed.has(dir) || SKIP_DIRS.has(path.basename(dir))) {
+      return;
+    }
+    let w: fs.FSWatcher;
+    try {
+      w = fs.watch(dir, onEvent);
+    } catch {
+      return;
+    }
+    watchers.push(w);
+    armed.add(dir);
+    // A deleted dir kills its watcher — un-arm on close so a recreated dir
+    // gets picked up again by the next event's re-scan.
+    w.on("error", () => {
+      w.close();
+    });
+    w.on("close", () => {
+      armed.delete(dir);
+    });
+    let ents: fs.Dirent[];
+    try {
+      ents = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const e of ents) {
+      if (e.isDirectory()) {
+        arm(path.join(dir, e.name), onEvent);
+      }
     }
   };
+
+  let recursiveWatch = false;
   let timer: NodeJS.Timeout | undefined;
   const notify = () => {
     clearTimeout(timer);
     timer = setTimeout(() => {
-      void reload();
+      if (!recursiveWatch) {
+        // Pick up directories created mid-session.
+        arm(target.watchDir, notify);
+      }
+      reload();
     }, 80);
   };
 
-  const recursive =
-    process.platform === "darwin" || process.platform === "win32";
-  let watcher: fs.FSWatcher | undefined;
+  // fs.watch recursive mode exists only on darwin/win32. Elsewhere we arm one
+  // non-recursive watcher per directory — which also covers atomic saves
+  // (rename-over-file kills a watch aimed at the file itself).
   try {
-    watcher = fs.watch(target.watchDir, { recursive }, notify);
+    const w = fs.watch(target.watchDir, { recursive: true }, notify);
+    w.on("error", () => {
+      w.close();
+    });
+    watchers.push(w);
+    recursiveWatch = true;
   } catch {
+    arm(target.watchDir, notify);
+  }
+  if (watchers.length === 0 && target.watchFile !== undefined) {
     try {
-      watcher = fs.watch(target.watchFile ?? target.watchDir, notify);
+      const w = fs.watch(target.watchFile, notify);
+      w.on("error", () => {
+        w.close();
+      });
+      watchers.push(w);
     } catch {
-      watcher = undefined;
+      // Live reload just won't fire; the server still serves the document.
     }
   }
   server.on("close", () => {
-    watcher?.close();
+    clearTimeout(timer);
+    for (const w of watchers) {
+      w.close();
+    }
   });
 
   server.listen(port);

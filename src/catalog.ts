@@ -81,10 +81,13 @@ export const catalogEntries = (project: ComponentMap = {}): CatalogEntry[] => {
     if (!/^[A-Z]/u.test(name)) {
       continue;
     }
+    // A project override wins the slot wholesale: describe its schema, not
+    // the builtin's — the catalog documents what the document actually gets.
+    const shown = project[name] ?? comp;
     entries.push({
-      description: comp.__mdxr?.description,
+      description: shown.__mdxr?.description,
       name,
-      props: propsOf(comp.__mdxr?.schema),
+      props: propsOf(shown.__mdxr?.schema),
       source: name in project ? "project" : "builtin",
     });
   }

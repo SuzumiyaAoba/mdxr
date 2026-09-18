@@ -1,8 +1,8 @@
-import { isValidElement } from "react";
 import * as v from "valibot";
 
 import { defineComponent, flattenChildren } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { isEl } from "./children.js";
 import { Due } from "./due.js";
 import { EFFORT_SIZES, Effort } from "./effort.js";
 import { Icon } from "./icon.js";
@@ -87,8 +87,8 @@ export const Lane = defineComponent(
     }),
   },
   ({ title, status, children }) => {
-    const count = flattenChildren(children).filter(
-      (c) => isValidElement(c) && c.type === BoardCard
+    const count = flattenChildren(children).filter((c) =>
+      isEl(c, BoardCard)
     ).length;
     return (
       <section className="w-64 shrink-0 rounded-xl bg-neutral-100/70 p-2 dark:bg-neutral-900/70">

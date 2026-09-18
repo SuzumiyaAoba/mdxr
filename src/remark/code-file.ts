@@ -5,58 +5,15 @@ import type { Node } from "unist";
 import { visit } from "unist-util-visit";
 import type { VFile } from "vfile";
 
-import { isRecord } from "../guards.js";
+import { parseLineRange } from "../lines.js";
+import type { MdxTarget } from "./ast.js";
+import { isFlowElement, jsxAttr } from "./ast.js";
 
-/** An `mdxJsxFlowElement`, and (after mutation) a `code` node. */
-interface MutableNode extends Node {
-  attributes?: unknown;
-  children?: Node[];
+/** A flow element that becomes a `code` node after mutation. */
+interface CodeTarget extends MdxTarget {
   lang?: string;
   meta?: string;
-  name?: string;
-  value?: string;
 }
-
-const isFlowElement = (n: Node): n is MutableNode =>
-  n.type === "mdxJsxFlowElement";
-
-const attr = (node: MutableNode, name: string): string | undefined => {
-  if (!Array.isArray(node.attributes)) {
-    return undefined;
-  }
-  for (const a of node.attributes) {
-    if (
-      isRecord(a) &&
-      a.name === name &&
-      typeof a.value === "string" &&
-      a.value !== ""
-    ) {
-      return a.value;
-    }
-  }
-  return undefined;
-};
-
-/** `lines="40-52"`, `lines="40"`, `lines="40-"` → 1-based inclusive range. */
-const parseLines = (
-  spec: string
-): { end: number | undefined; start: number } | undefined => {
-  const m = /^(?<start>\d+)(?:-(?<end>\d*))?$/u.exec(spec.trim());
-  if (m?.groups === undefined) {
-    return undefined;
-  }
-  const start = Number(m.groups.start);
-  let end: number | undefined;
-  if (m.groups.end === undefined) {
-    end = start;
-  } else if (m.groups.end !== "") {
-    end = Number(m.groups.end);
-  }
-  if (start < 1 || (end !== undefined && end < start)) {
-    return undefined;
-  }
-  return { end, start };
-};
 
 /**
  * `<CodeFile path="src/foo.ts" lines="40-52" lang="ts" />` embeds a real file
@@ -71,7 +28,7 @@ export const remarkCodeFile = () => (tree: Node, file: VFile) => {
     if (!isFlowElement(node) || node.name !== "CodeFile") {
       return;
     }
-    const rel = attr(node, "path");
+    const rel = jsxAttr(node, "path");
     if (rel === undefined) {
       file.fail(
         "<CodeFile> requires a `path` attribute",
@@ -87,10 +44,10 @@ export const remarkCodeFile = () => (tree: Node, file: VFile) => {
       file.fail(`<CodeFile> cannot read ${rel}`, node, "mdxr:code-file");
     }
 
-    const rangeSpec = attr(node, "lines");
+    const rangeSpec = jsxAttr(node, "lines");
     let titleSuffix = "";
     if (rangeSpec !== undefined) {
-      const range = parseLines(rangeSpec);
+      const range = parseLineRange(rangeSpec);
       if (range === undefined) {
         file.fail(
           `<CodeFile> invalid lines range: ${rangeSpec}`,
@@ -110,13 +67,14 @@ export const remarkCodeFile = () => (tree: Node, file: VFile) => {
       titleSuffix = `:${rangeSpec}`;
     }
 
-    const lang = attr(node, "lang") ?? path.extname(abs).replace(/^\./u, "");
-    node.type = "code";
-    delete node.name;
-    delete node.attributes;
-    delete node.children;
-    node.lang = lang === "" ? undefined : lang;
-    node.meta = `title="${rel}${titleSuffix}"`;
-    node.value = content;
+    const lang = jsxAttr(node, "lang") ?? path.extname(abs).replace(/^\./u, "");
+    const target: CodeTarget = node;
+    target.type = "code";
+    delete target.name;
+    delete target.attributes;
+    delete target.children;
+    target.lang = lang === "" ? undefined : lang;
+    target.meta = `title="${rel}${titleSuffix}"`;
+    target.value = content;
   });
 };

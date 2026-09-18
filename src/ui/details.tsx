@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
+import { attrTrue } from "./attrs.js";
 import { Icon } from "./icon.js";
 
 /**
@@ -17,7 +18,7 @@ export const Details = defineComponent(
     }),
   },
   ({ summary, open, children }) => {
-    const isOpen = open === true || open === "" || open === "true";
+    const isOpen = attrTrue(open);
     return (
       <details
         className="mdxr-details my-6 rounded-lg border border-neutral-200 dark:border-neutral-800"

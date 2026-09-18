@@ -1,15 +1,7 @@
 import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
-
-const GAPS: Record<string, string> = {
-  lg: "gap-6",
-  md: "gap-4",
-  none: "gap-0",
-  sm: "gap-2",
-  xl: "gap-8",
-  xs: "gap-1",
-};
+import { GAPS } from "./layout.js";
 
 const ITEMS: Record<string, string> = {
   baseline: "items-baseline",

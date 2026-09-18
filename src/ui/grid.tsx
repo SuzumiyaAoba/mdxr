@@ -2,6 +2,7 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { GAPS } from "./layout.js";
 
 const COLS: Record<string, string> = {
   "1": "sm:grid-cols-1",
@@ -39,15 +40,6 @@ const ROW_SPANS: Record<string, string> = {
   "2": "sm:row-span-2",
   "3": "sm:row-span-3",
   "4": "sm:row-span-4",
-};
-
-const GAPS: Record<string, string> = {
-  lg: "gap-6",
-  md: "gap-4",
-  none: "gap-0",
-  sm: "gap-2",
-  xl: "gap-8",
-  xs: "gap-1",
 };
 
 const FLOWS: Record<string, string> = {

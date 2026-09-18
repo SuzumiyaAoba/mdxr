@@ -20,6 +20,12 @@ const readStdin = async (): Promise<string> => {
   return Buffer.concat(chunks).toString("utf-8");
 };
 
+const requireStdinSource = (): void => {
+  if (process.stdin.isTTY) {
+    throw new Error("no input: pass an .mdx file or pipe MDX source via stdin");
+  }
+};
+
 const fail = (err: unknown, json: boolean): never => {
   if (json) {
     console.log(JSON.stringify({ error: formatError(err), ok: false }));
@@ -50,10 +56,8 @@ cli
       const json = opts.format === "json";
       try {
         const fromStdin = file === undefined || file === "-";
-        if (fromStdin && process.stdin.isTTY) {
-          throw new Error(
-            "no input: pass an .mdx file or pipe MDX source via stdin"
-          );
+        if (fromStdin) {
+          requireStdinSource();
         }
 
         const html = fromStdin
@@ -68,7 +72,7 @@ cli
           opts.out === "-"
             ? undefined
             : (opts.out ??
-              (file === undefined || file === "-"
+              (fromStdin
                 ? undefined
                 : `${file.replace(/\.(?:mdx|md)$/u, "")}.html`));
 
@@ -102,11 +106,7 @@ cli
   .action(async (file: string | undefined, opts: { port: number }) => {
     try {
       if (file === undefined || file === "-") {
-        if (process.stdin.isTTY) {
-          throw new Error(
-            "no input: pass an .mdx file or pipe MDX source via stdin"
-          );
-        }
+        requireStdinSource();
         await serveSource(await readStdin(), opts.port, {
           dir: process.cwd(),
           filePath: "<stdin>",

@@ -2,6 +2,8 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { FILE_LINK_PROPS } from "./attrs.js";
+import { CaptionBar } from "./bits.js";
 import { indexChildren, useChildIndex } from "./child-index.js";
 import { linkTarget, useFileLink } from "./file-link.js";
 import { Icon } from "./icon.js";
@@ -21,9 +23,9 @@ export const Trace = defineComponent(
   ({ error, title, children }) => (
     <figure className="not-prose my-6 divide-y divide-neutral-200 overflow-hidden rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
       {nonEmpty(title) ? (
-        <figcaption className="bg-neutral-50 px-4 py-2 text-xs font-medium text-neutral-500 dark:bg-neutral-900 dark:text-neutral-400">
+        <CaptionBar border={false} className="font-medium">
           {title}
-        </figcaption>
+        </CaptionBar>
       ) : null}
       {nonEmpty(error) ? (
         <div className="flex items-center gap-2 bg-red-50 px-4 py-2 font-mono text-[0.85em] font-medium text-red-700 dark:bg-red-950/40 dark:text-red-300">
@@ -41,11 +43,9 @@ export const TraceFrame = defineComponent(
     description:
       "スタックフレーム1行。#番号はコンテナ内で自動採番（先頭=#0）。name=シンボル名、path/lines=発生箇所（実在すればエディタリンク、href で上書き可）、kind=app|lib（lib は淡色+タグ）。children は注記",
     schema: v.looseObject({
-      href: v.optional(v.string()),
+      ...FILE_LINK_PROPS,
       kind: v.optional(v.picklist(FRAME_KINDS), "app"),
-      lines: v.optional(v.string()),
       name: v.string(),
-      path: v.optional(v.string()),
     }),
   },
   ({ name, path, lines, kind, href, children }) => {

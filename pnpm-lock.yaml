@@ -116,6 +116,9 @@ importers:
       unist-util-visit:
         specifier: ^5.0.0
         version: 5.1.0
+      unist-util-visit-parents:
+        specifier: 6.0.2
+        version: 6.0.2
       valibot:
         specifier: ^1.5.0
         version: 1.5.0(typescript@5.9.3)

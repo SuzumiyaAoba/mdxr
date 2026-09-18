@@ -1,10 +1,12 @@
-import { createContext, isValidElement, useContext } from "react";
+import { createContext, useContext } from "react";
 import type { ReactNode } from "react";
 import * as v from "valibot";
 
 import { defineComponent, flattenChildren } from "../define.js";
-import { isRecord, nonEmpty } from "../guards.js";
+import { nonEmpty } from "../guards.js";
+import { CaptionBar } from "./bits.js";
 import { indexChildren, useChildIndex } from "./child-index.js";
+import { isEl, propOf } from "./children.js";
 import { Icon } from "./icon.js";
 
 /**
@@ -83,15 +85,14 @@ export const Span = defineComponent(
 );
 
 const spanDuration = (node: ReactNode): number | undefined => {
-  if (!isValidElement(node) || node.type !== Span) {
+  if (!isEl(node, Span)) {
     return undefined;
   }
-  const props = isRecord(node.props) ? node.props : {};
-  const duration = num(props.duration);
+  const duration = num(propOf(node, "duration"));
   if (duration === undefined) {
     return undefined;
   }
-  return (num(props.start) ?? 0) + duration;
+  return (num(propOf(node, "start")) ?? 0) + duration;
 };
 
 export const Waterfall = defineComponent(
@@ -117,14 +118,14 @@ export const Waterfall = defineComponent(
     return (
       <figure className="not-prose my-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
         {nonEmpty(title) ? (
-          <figcaption className="flex items-center gap-2 border-b border-neutral-200 bg-neutral-50 px-4 py-2 text-xs font-medium text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+          <CaptionBar className="flex items-center gap-2 font-medium">
             <Icon className="h-3.5 w-3.5" name="lucide:chart-bar" />
             <span className="min-w-0 flex-1 truncate">{title}</span>
             <span className="font-mono font-normal tabular-nums">
               {totalNum}
               {unit}
             </span>
-          </figcaption>
+          </CaptionBar>
         ) : null}
         <div className="px-4 py-3">
           <div className="grid grid-cols-[minmax(6rem,9rem)_minmax(0,1fr)_4.5rem] gap-x-3 pb-1">

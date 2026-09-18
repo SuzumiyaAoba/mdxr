@@ -1,7 +1,7 @@
 import type { Node } from "unist";
 import { visit } from "unist-util-visit";
 
-import { isRecord } from "../guards.js";
+import { setHProperty } from "./ast.js";
 
 /**
  * The mdast→hast conversion drops the code fence info string (`meta`).
@@ -16,11 +16,6 @@ export const remarkCodeMeta = () => (tree: Node) => {
     ) {
       return;
     }
-    const data: Record<string, unknown> = isRecord(node.data) ? node.data : {};
-    node.data = data;
-    data.hProperties = {
-      ...(isRecord(data.hProperties) ? data.hProperties : {}),
-      meta: node.meta,
-    };
+    setHProperty(node, "meta", node.meta);
   });
 };

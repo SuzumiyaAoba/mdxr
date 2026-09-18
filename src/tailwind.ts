@@ -5,11 +5,25 @@ import path from "node:path";
 import { compile, optimize } from "@tailwindcss/node";
 import { Scanner } from "@tailwindcss/oxide";
 
-import { BASE_CSS } from "./assets.js";
+import { BASE_CSS } from "./assets/css.js";
 import { pkgRoot } from "./paths.js";
 
 const require = module.createRequire(import.meta.url);
 const tailwindDir = path.dirname(require.resolve("tailwindcss/package.json"));
+
+/** Resolve `id` against the document dir then this package; false if absent. */
+const tryResolve = async (
+  id: string,
+  base: string
+): Promise<string | false> => {
+  try {
+    const resolved = require.resolve(id, { paths: [base, pkgRoot] });
+    await access(resolved);
+    return resolved;
+  } catch {
+    return false;
+  }
+};
 
 const resolveCss = async (
   id: string,
@@ -25,23 +39,7 @@ const resolveCss = async (
   if (id.startsWith(".")) {
     return path.resolve(base, id);
   }
-  try {
-    const resolved = require.resolve(id, { paths: [base, pkgRoot] });
-    await access(resolved);
-    return resolved;
-  } catch {
-    return false;
-  }
-};
-
-const resolveJs = async (id: string, base: string): Promise<string | false> => {
-  try {
-    const resolved = require.resolve(id, { paths: [base, pkgRoot] });
-    await access(resolved);
-    return resolved;
-  } catch {
-    return false;
-  }
+  return await tryResolve(id, base);
 };
 
 export interface CssSource {
@@ -89,7 +87,7 @@ export const buildCss = async (
   const compiler = await compile(input, {
     base: pkgRoot,
     customCssResolver: resolveCss,
-    customJsResolver: resolveJs,
+    customJsResolver: tryResolve,
     onDependency: (file) => {
       dependencies.add(file);
     },

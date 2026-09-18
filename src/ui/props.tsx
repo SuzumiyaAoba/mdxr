@@ -2,6 +2,8 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { attrTrue } from "./attrs.js";
+import { CaptionBar } from "./bits.js";
 
 export const Props = defineComponent(
   {
@@ -14,9 +16,7 @@ export const Props = defineComponent(
   ({ of, children }) => (
     <figure className="not-prose my-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
       {nonEmpty(of) ? (
-        <figcaption className="border-b border-neutral-200 bg-neutral-50 px-4 py-2 font-mono text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
-          {of}
-        </figcaption>
+        <CaptionBar className="font-mono">{of}</CaptionBar>
       ) : null}
       <table className="m-0 w-full text-sm">
         <thead>
@@ -35,8 +35,7 @@ export const Props = defineComponent(
   )
 );
 
-const isTruthy = (x: unknown): boolean =>
-  x === true || x === "true" || x === "" || x === "required";
+const isTruthy = (x: unknown): boolean => attrTrue(x) || x === "required";
 
 export const Prop = defineComponent(
   {

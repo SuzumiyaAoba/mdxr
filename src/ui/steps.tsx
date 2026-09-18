@@ -1,8 +1,9 @@
-import { isValidElement } from "react";
 import * as v from "valibot";
 
 import { defineComponent, flattenChildren } from "../define.js";
-import { isRecord, nonEmpty } from "../guards.js";
+import { nonEmpty } from "../guards.js";
+import { attrTrue } from "./attrs.js";
+import { isEl, propOf } from "./children.js";
 import { Due } from "./due.js";
 import { EFFORT_SIZES, Effort } from "./effort.js";
 import { Icon } from "./icon.js";
@@ -64,10 +65,10 @@ export const Step = defineComponent(
 
 /** Resolve a child's effective status — only `<Step>` elements count. */
 const stepStatus = (node: unknown): Status | undefined => {
-  if (!isValidElement(node) || node.type !== Step) {
+  if (!isEl(node, Step)) {
     return undefined;
   }
-  const s = isRecord(node.props) ? node.props.status : undefined;
+  const s = propOf(node, "status");
   return isStatus(s) ? s : "todo";
 };
 
@@ -80,7 +81,7 @@ export const Steps = defineComponent(
     }),
   },
   ({ progress, children }) => {
-    const show = progress === true || progress === "true" || progress === "";
+    const show = attrTrue(progress);
     const items = flattenChildren(children)
       .map((node) => stepStatus(node))
       .filter((s): s is Status => s !== undefined);

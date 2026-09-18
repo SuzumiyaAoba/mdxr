@@ -1,7 +1,8 @@
 import type { Preview } from "@storybook/react-vite";
 import { useEffect } from "react";
 
-import { BASE_CSS, handleDocEvent } from "../src/assets.js";
+import { BASE_CSS } from "../src/assets/css.js";
+import { handleDocEvent } from "../src/client/doc-events.js";
 import { enhanceRenderedBlocks } from "./enhance.js";
 
 import "./preview.css";
@@ -12,7 +13,7 @@ if (typeof document !== "undefined") {
   const style = document.createElement("style");
   style.textContent = BASE_CSS;
   document.head.append(style);
-  // Rendered documents inline these listeners via CLIENT_JS.
+  // Rendered documents inline these listeners via the client bundle.
   document.addEventListener("click", handleDocEvent);
   document.addEventListener("input", handleDocEvent);
   document.addEventListener("change", handleDocEvent);

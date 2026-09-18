@@ -7,6 +7,7 @@ import { build } from "esbuild";
 import type { Plugin } from "esbuild";
 import * as valibot from "valibot";
 
+import { SHARED_PACKAGES } from "./load-user-module.js";
 import { pkgRoot } from "./paths.js";
 import { builtinComponents } from "./ui/index.js";
 import { shadcnModules } from "./ui/shadcn.js";
@@ -68,25 +69,24 @@ const exportModuleMap = async (): Promise<Map<string, string>> => {
  * (esbuild serializes onResolve filters to Go's RE2: no `u` flag.)
  */
 /* oxlint-disable require-unicode-regexp -- esbuild onResolve filters forbid `u` */
+const SHARED_RE = new RegExp(`^(?:${SHARED_PACKAGES.join("|")})(?:/.*)?$`);
+
 const pinShared: Plugin = {
   name: "mdxr:pin-shared",
   setup(b) {
-    b.onResolve(
-      { filter: /^(?:react(?:-dom)?|valibot)(?:\/.*)?$/ },
-      async (args) => {
-        // b.resolve re-enters this plugin — pluginData marks the inner call so
-        // the recursion stops after exactly one delegation.
-        if (args.pluginData === pinShared) {
-          return null;
-        }
-        const r = await b.resolve(args.path, {
-          kind: args.kind,
-          pluginData: pinShared,
-          resolveDir: pkgRoot,
-        });
-        return r.errors.length === 0 ? { path: r.path } : null;
+    b.onResolve({ filter: SHARED_RE }, async (args) => {
+      // b.resolve re-enters this plugin — pluginData marks the inner call so
+      // the recursion stops after exactly one delegation.
+      if (args.pluginData === pinShared) {
+        return null;
       }
-    );
+      const r = await b.resolve(args.path, {
+        kind: args.kind,
+        pluginData: pinShared,
+        resolveDir: pkgRoot,
+      });
+      return r.errors.length === 0 ? { path: r.path } : null;
+    });
   },
 };
 /* oxlint-enable require-unicode-regexp */
@@ -118,6 +118,7 @@ const docModule = (code: string): Plugin => ({
 const EXTRA_MODULES: Record<string, string> = {
   builtinComponents: path.join(SRC, "ui/index.js"),
   defineConfig: path.join(SRC, "config.js"),
+  mountDocument: path.join(SRC, "hydrate-runtime.js"),
 };
 
 interface MdxrImports {
@@ -379,7 +380,7 @@ export const buildHydrateScript = async (
   // One aliased named import per leaf module keeps the generated code simple
   // and collision-free; esbuild dedupes repeated module loads.
   const bind = (exported: string): string => {
-    const mod = map.get(exported);
+    const mod = map.get(exported) ?? EXTRA_MODULES[exported];
     if (mod === undefined) {
       throw new Error(
         `hydration: no module provides catalog export "${exported}"`
@@ -393,7 +394,7 @@ export const buildHydrateScript = async (
     return local;
   };
 
-  const docContext = bind("DocContext");
+  const mountDocument = bind("mountDocument");
   const planHeader = bind("PlanHeader");
 
   for (const name of spec.usedComponents) {
@@ -411,53 +412,20 @@ export const buildHydrateScript = async (
     spec.componentsPath === undefined
       ? ""
       : `import * as __mdxrUser from ${JSON.stringify(spec.componentsPath)};`;
-  const userMerge =
-    spec.componentsPath === undefined
-      ? ""
-      : `for (const [k, v] of Object.entries(__mdxrUser)) {
-  if (k === "default") {
-    if (v !== null && typeof v === "object") {
-      for (const [k2, v2] of Object.entries(v)) {
-        if (typeof v2 === "function") __mdxrComponents[k2] = v2;
-      }
-    }
-  } else if (typeof v === "function" && /^[A-Z]/.test(k)) {
-    __mdxrComponents[k] = v;
-  }
-}`;
-  const headerExpr =
-    spec.header === undefined
-      ? "null"
-      : `createElement(${planHeader}, ${JSON.stringify(spec.header)})`;
 
-  const entry = `import { createElement, Fragment } from "react";
-import { hydrateRoot } from "react-dom/client";
-${imports.join("\n")}
+  // Mount/merge details live in hydrate-runtime (a real, type-checked module
+  // bundled by esbuild); the generated entry only binds names and data.
+  const entry = `${imports.join("\n")}
 ${userImport}
 import __mdxrDoc from "mdxr:doc";
-const __mdxrLinks = ${JSON.stringify(spec.fileLinks)};
-const __mdxrComponents = { ${entries.join(", ")} };
-${userMerge}
-const __mdxrRoot = document.getElementById("mdxr-root");
-if (__mdxrRoot !== null) {
-  hydrateRoot(
-    __mdxrRoot,
-    createElement(
-      ${docContext}.Provider,
-      {
-        value: {
-          fileLink: (rel, line) => __mdxrLinks[rel + "\\u0000" + (line ?? "")],
-        },
-      },
-      createElement(
-        Fragment,
-        null,
-        ${headerExpr},
-        createElement(__mdxrDoc, { components: __mdxrComponents })
-      )
-    )
-  );
-}
+${mountDocument}({
+  components: { ${entries.join(", ")} },
+  doc: __mdxrDoc,
+  fileLinks: ${JSON.stringify(spec.fileLinks)},
+  headerProps: ${JSON.stringify(spec.header)},
+  planHeader: ${planHeader},
+  userModule: ${spec.componentsPath === undefined ? "undefined" : "__mdxrUser"},
+});
 `;
 
   const result = await build({
@@ -495,11 +463,7 @@ if (__mdxrRoot !== null) {
     );
     await writeFile(`${process.env.MDXR_BUNDLE_METAFILE}.entry.js`, entry);
   }
-  const js = result.outputFiles[0]?.text ?? "";
-  // `<` inside the bundle can only appear in strings/comments — `\u003C`
-  // keeps the meaning everywhere (incl. regex literals) while preventing the
-  // HTML parser from terminating the inline <script> early.
-  return js
-    .replaceAll(/<\/script/giu, "\\u003C/script")
-    .replaceAll("<!--", "\\u003C!--");
+  // htmlDocument applies `inlineScript` escaping at embed time — return the
+  // raw bundle here.
+  return result.outputFiles[0]?.text ?? "";
 };

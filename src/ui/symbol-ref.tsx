@@ -2,6 +2,8 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { FILE_LINK_PROPS } from "./attrs.js";
+import { CopyButton } from "./bits.js";
 import { linkTarget, useFileLink } from "./file-link.js";
 import { Icon } from "./icon.js";
 
@@ -33,11 +35,9 @@ export const SymbolRef = defineComponent(
     description:
       "コードシンボル (関数/型など) への参照チップ。kind でアイコンを出し分け、path/lines で定義場所を併記できる。実在する path はエディタリンク（既定 vscode://）になり、href で上書き可",
     schema: v.looseObject({
-      href: v.optional(v.string()),
+      ...FILE_LINK_PROPS,
       kind: v.optional(v.picklist(SYMBOL_KINDS)),
-      lines: v.optional(v.string()),
       name: v.string(),
-      path: v.optional(v.string()),
     }),
   },
   ({ name, kind, path, lines, href }) => {
@@ -70,20 +70,11 @@ export const SymbolRef = defineComponent(
             {label}
           </a>
         )}
-        <button
-          type="button"
-          data-copy={nonEmpty(path) ? path : name}
-          className="mdxr-copy -mr-0.5 cursor-pointer opacity-40"
+        <CopyButton
+          className="-mr-0.5 opacity-40"
+          copy={nonEmpty(path) ? path : name}
           title="Copy"
-          aria-label="Copy"
-        >
-          <span className="mdxr-copy-idle inline-flex">
-            <Icon className="h-3.5 w-3.5" name="lucide:copy" />
-          </span>
-          <span className="mdxr-copy-done hidden items-center text-emerald-600 dark:text-emerald-400">
-            <Icon className="h-3.5 w-3.5" name="lucide:check" />
-          </span>
-        </button>
+        />
       </code>
     );
   }

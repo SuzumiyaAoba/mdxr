@@ -4,8 +4,9 @@ import type { ReactElement, ReactNode } from "react";
 import type { DocProps } from "../define.js";
 import { textOf } from "../define.js";
 import { DocContext } from "../doc-context.js";
-import { firstLine } from "../editor.js";
 import { isRecord, nonEmpty } from "../guards.js";
+import { firstLine, splitPathLines } from "../lines.js";
+import { CaptionBar, CopyButton } from "./bits.js";
 import { DiffView } from "./diff.js";
 import { fileIcon } from "./file-icon.js";
 import { linkTarget } from "./file-link.js";
@@ -17,10 +18,8 @@ const str = (v: unknown): string | undefined =>
 
 /** "src/x.ts:40-52" → { path: "src/x.ts", line: "40" }; labels stay untouched. */
 const splitFileLine = (filename: string): { line?: string; path: string } => {
-  const m = /^(?<p>.+?):(?<ls>\d+(?:-\d*)?)$/u.exec(filename);
-  return m?.groups === undefined
-    ? { path: filename }
-    : { line: firstLine(m.groups.ls), path: m.groups.p };
+  const { lines, path } = splitPathLines(filename);
+  return { line: firstLine(lines), path };
 };
 
 /** Editor link for a code-header filename, when it resolves to a real file. */
@@ -50,7 +49,7 @@ const CodeHeader = (props: {
     </>
   );
   return (
-    <figcaption className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-4 py-2 text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+    <CaptionBar className="flex items-center justify-between">
       {link === undefined ? (
         <span className="inline-flex items-center gap-1.5 font-mono">
           {label}
@@ -64,21 +63,8 @@ const CodeHeader = (props: {
           {label}
         </a>
       )}
-      <button
-        type="button"
-        data-copy={props.text}
-        className="mdxr-copy cursor-pointer opacity-60"
-        title="Copy code"
-        aria-label="Copy code"
-      >
-        <span className="mdxr-copy-idle inline-flex">
-          <Icon className="h-3.5 w-3.5" name="lucide:copy" />
-        </span>
-        <span className="mdxr-copy-done hidden items-center text-emerald-600 dark:text-emerald-400">
-          <Icon className="h-3.5 w-3.5" name="lucide:check" />
-        </span>
-      </button>
-    </figcaption>
+      <CopyButton copy={props.text} title="Copy code" />
+    </CaptionBar>
   );
 };
 

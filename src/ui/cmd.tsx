@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import { defineComponent, textOf } from "../define.js";
+import { CopyButton } from "./bits.js";
 import { Icon } from "./icon.js";
 
 export const Cmd = defineComponent(
@@ -16,20 +17,11 @@ export const Cmd = defineComponent(
         name="lucide:terminal"
       />
       <span>{children}</span>
-      <button
-        type="button"
-        data-copy={textOf(children)}
-        className="mdxr-copy -mr-0.5 cursor-pointer opacity-40"
+      <CopyButton
+        className="-mr-0.5 opacity-40"
+        copy={textOf(children)}
         title="Copy command"
-        aria-label="Copy command"
-      >
-        <span className="mdxr-copy-idle inline-flex">
-          <Icon className="h-3.5 w-3.5" name="lucide:copy" />
-        </span>
-        <span className="mdxr-copy-done hidden items-center text-emerald-600 dark:text-emerald-400">
-          <Icon className="h-3.5 w-3.5" name="lucide:check" />
-        </span>
-      </button>
+      />
     </code>
   )
 );

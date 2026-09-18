@@ -1,33 +1,14 @@
 import type { Node, Parent } from "unist";
 import { visit } from "unist-util-visit";
 
-import { isRecord } from "../guards.js";
+import { isFlowElement, jsxAttr, setHProperty, textContent } from "./ast.js";
 
 interface HeadingNode extends Parent {
   depth: number;
   type: "heading";
 }
 
-interface FlowElement extends Node {
-  attributes?: unknown;
-  children?: Node[];
-  name?: string;
-}
-
 const isHeading = (n: Node): n is HeadingNode => n.type === "heading";
-
-const isFlowElement = (n: Node): n is FlowElement =>
-  n.type === "mdxJsxFlowElement";
-
-const textContent = (node: Node): string => {
-  let out = "";
-  visit(node, "text", (n: Node) => {
-    if ("value" in n && typeof n.value === "string") {
-      out += n.value;
-    }
-  });
-  return out;
-};
 
 /** GitHub-style slug: lowercase, punctuation stripped, spaces → `-`. */
 const slugify = (text: string): string =>
@@ -37,21 +18,15 @@ const slugify = (text: string): string =>
     .replaceAll(/[^\p{L}\p{N}_\s-]/gu, "")
     .replaceAll(/\s+/gu, "-");
 
-const attr = (node: FlowElement, name: string): string | undefined => {
-  if (!Array.isArray(node.attributes)) {
-    return undefined;
-  }
-  for (const a of node.attributes) {
-    if (
-      isRecord(a) &&
-      a.name === name &&
-      typeof a.value === "string" &&
-      a.value !== ""
-    ) {
-      return a.value;
-    }
-  }
-  return undefined;
+/** Positive-int attribute or fallback — "0"/"abc" both become `fallback`. */
+const depthAttr = (
+  node: Parameters<typeof jsxAttr>[0],
+  name: string,
+  fallback: number
+): number => {
+  const raw = jsxAttr(node, name);
+  const n = Number(raw);
+  return raw === undefined || !Number.isInteger(n) || n < 1 ? fallback : n;
 };
 
 interface TocItem {
@@ -120,7 +95,7 @@ export const remarkMdxrHeadings = () => (tree: Node) => {
   const seen = new Map<string, number>();
   const headings: TocItem[] = [];
 
-  visit(tree, (node: Node) => {
+  visit(tree, "heading", (node: Node) => {
     if (!isHeading(node)) {
       return;
     }
@@ -130,12 +105,7 @@ export const remarkMdxrHeadings = () => (tree: Node) => {
     seen.set(base, count + 1);
     const slug = count === 0 ? base : `${base}-${count}`;
 
-    const data: Record<string, unknown> = isRecord(node.data) ? node.data : {};
-    node.data = data;
-    data.hProperties = {
-      ...(isRecord(data.hProperties) ? data.hProperties : {}),
-      id: slug,
-    };
+    setHProperty(node, "id", slug);
     headings.push({ children: [], depth: node.depth, slug, text });
   });
 
@@ -143,8 +113,8 @@ export const remarkMdxrHeadings = () => (tree: Node) => {
     if (!isFlowElement(node) || node.name !== "Toc") {
       return;
     }
-    const minDepth = Number(attr(node, "min") ?? "2") || 2;
-    const maxDepth = Number(attr(node, "depth") ?? "3") || 3;
+    const minDepth = depthAttr(node, "min", 2);
+    const maxDepth = depthAttr(node, "depth", 3);
     const items = headings.filter(
       (h) => h.depth >= minDepth && h.depth <= maxDepth && h.text !== ""
     );

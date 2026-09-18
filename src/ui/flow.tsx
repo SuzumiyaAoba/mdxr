@@ -2,6 +2,7 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { FILE_LINK_PROPS } from "./attrs.js";
 import { indexChildren, useChildIndex } from "./child-index.js";
 import { linkTarget, useFileLink } from "./file-link.js";
 import { Icon } from "./icon.js";
@@ -27,10 +28,8 @@ export const FlowStep = defineComponent(
     description:
       "フローの1ホップ。name は関数名や処理名、path/lines で発生箇所を併記（実在すればエディタリンク、href で上書き可）。children はその処理の説明",
     schema: v.looseObject({
-      href: v.optional(v.string()),
-      lines: v.optional(v.string()),
+      ...FILE_LINK_PROPS,
       name: v.optional(v.string()),
-      path: v.optional(v.string()),
     }),
   },
   ({ name, path, lines, href, children }) => {

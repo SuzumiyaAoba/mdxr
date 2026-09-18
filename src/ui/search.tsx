@@ -1,10 +1,12 @@
-import { isValidElement } from "react";
 import type { ReactElement, ReactNode } from "react";
 import * as v from "valibot";
 
 import { defineComponent, flattenChildren } from "../define.js";
-import { isRecord, nonEmpty } from "../guards.js";
+import { nonEmpty } from "../guards.js";
+import { CaptionBar } from "./bits.js";
+import { isEl, propOf } from "./children.js";
 import { Icon } from "./icon.js";
+import { TONE } from "./tones.js";
 
 interface HitsBadge {
   label: string;
@@ -61,9 +63,7 @@ export const Search = defineComponent(
         {badge === undefined ? null : (
           <span
             className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-              badge.n !== undefined && badge.n > 0
-                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300"
-                : "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300"
+              badge.n !== undefined && badge.n > 0 ? TONE.emerald : TONE.neutral
             }`}
           >
             {badge.label}
@@ -80,11 +80,11 @@ export const Search = defineComponent(
 );
 
 const isSearchEl = (node: ReactNode): node is ReactElement =>
-  isValidElement(node) && node.type === Search;
+  isEl(node, Search);
 
 /** A <Search> child's parsed hit count (0 when the badge is absent). */
 const searchHits = (el: ReactElement): number => {
-  const h = isRecord(el.props) ? el.props.hits : undefined;
+  const h = propOf(el, "hits");
   return typeof h === "string" || typeof h === "number"
     ? (hitsBadge(h)?.n ?? 0)
     : 0;
@@ -121,9 +121,9 @@ export const Searches = defineComponent(
     return (
       <figure className="not-prose my-6 divide-y divide-neutral-200 overflow-hidden rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
         {nonEmpty(title) ? (
-          <figcaption className="bg-neutral-50 px-4 py-2 text-xs font-medium text-neutral-500 dark:bg-neutral-900 dark:text-neutral-400">
+          <CaptionBar border={false} className="font-medium">
             {title}
-          </figcaption>
+          </CaptionBar>
         ) : null}
         {count > 0 ? (
           <div className="bg-neutral-50 px-4 py-1.5 text-xs text-neutral-500 dark:bg-neutral-900 dark:text-neutral-400">

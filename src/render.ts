@@ -5,11 +5,12 @@ import path from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
+import { clientJs } from "./client-js.js";
+import { mergeUserComponents } from "./component-map.js";
 import type { ResolvedConfig } from "./config.js";
 import { loadConfig } from "./config.js";
 import type { ComponentMap } from "./define.js";
 import { formatError } from "./format-error.js";
-import { isComponent, isRecord } from "./guards.js";
 import { htmlDocument } from "./html.js";
 import { buildHydrateScript } from "./hydrate.js";
 import { loadUserModule, resolveModuleEntry } from "./load-user-module.js";
@@ -26,39 +27,23 @@ export interface LoadedComponents {
   code?: string;
 }
 
-// A default-exported object is treated as a { Name: Component } map.
-const componentsFromDefault = (val: unknown): ComponentMap => {
-  if (!isRecord(val)) {
-    return {};
-  }
-  const out: ComponentMap = {};
-  for (const [k, v] of Object.entries(val)) {
-    if (isComponent(v)) {
-      out[k] = v;
-    }
-  }
-  return out;
-};
-
 /** Load a user components module (file or directory with an index file). */
 export const loadComponents = async (
   componentsPath: string
 ): Promise<LoadedComponents> => {
   const entry = resolveModuleEntry(componentsPath);
   const { module: mod, code } = await loadUserModule(entry);
-  const components: ComponentMap = {};
-  for (const [key, val] of Object.entries(mod)) {
-    if (key === "default") {
-      Object.assign(components, componentsFromDefault(val));
-    } else if (isComponent(val) && /^[A-Z]/u.test(key)) {
-      components[key] = val;
-    }
-  }
-  return { code, components };
+  return { code, components: mergeUserComponents(mod) };
 };
 
-/** Read all of our own shipped JS so Tailwind can scan built-in classes. */
+/** Read all of our own shipped JS so Tailwind can scan built-in classes.
+ *  Memoized: package sources don't change within a process (serve rebuilds
+ *  would otherwise rescan dist+src on every keystroke). */
+let ownSourcesCache: CssSource[] | undefined;
 const ownSources = async (): Promise<CssSource[]> => {
+  if (ownSourcesCache !== undefined) {
+    return ownSourcesCache;
+  }
   const dirs = [path.join(pkgRoot, "dist"), path.join(pkgRoot, "src")];
   const out: CssSource[] = [];
   const walk = async (d: string): Promise<void> => {
@@ -78,6 +63,7 @@ const ownSources = async (): Promise<CssSource[]> => {
     );
   };
   await Promise.all(dirs.filter((d) => existsSync(d)).map(walk));
+  ownSourcesCache = out;
   return out;
 };
 
@@ -234,18 +220,22 @@ export const render = async (
   // Icon recording spans both SSR passes (body inside mdxToHtml, header here).
   usedIcons.push(...takeUsedIcons());
 
-  const hydrateJs = await buildHydrateBundle({
-    code,
-    config,
-    fileLinks,
-    headerProps,
-    hydrate: opts.hydrate,
-    usedComponents,
-    usedIcons,
-  });
+  const [js, hydrateJs] = await Promise.all([
+    clientJs(),
+    buildHydrateBundle({
+      code,
+      config,
+      fileLinks,
+      headerProps,
+      hydrate: opts.hydrate,
+      usedComponents,
+      usedIcons,
+    }),
+  ]);
 
   return htmlDocument({
     body: header + body,
+    clientJs: js,
     css,
     hydrateJs,
     liveReload: opts.liveReload,

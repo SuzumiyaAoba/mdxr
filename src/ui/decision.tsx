@@ -2,7 +2,8 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
-import { Icon } from "./icon.js";
+import { Pill } from "./bits.js";
+import { TONE } from "./tones.js";
 
 export const DECISION_STATUSES = [
   "accepted",
@@ -18,27 +19,27 @@ const STYLES: Record<
   { cls: string; icon: string; label: string }
 > = {
   accepted: {
-    cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300",
+    cls: TONE.emerald,
     icon: "lucide:check",
     label: "Accepted",
   },
   deprecated: {
-    cls: "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300",
+    cls: TONE.neutral,
     icon: "lucide:archive",
     label: "Deprecated",
   },
   proposed: {
-    cls: "bg-sky-100 text-sky-700 dark:bg-sky-900/60 dark:text-sky-300",
+    cls: TONE.sky,
     icon: "lucide:pen-line",
     label: "Proposed",
   },
   rejected: {
-    cls: "bg-red-100 text-red-700 dark:bg-red-900/60 dark:text-red-300",
+    cls: TONE.red,
     icon: "lucide:x",
     label: "Rejected",
   },
   superseded: {
-    cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300",
+    cls: TONE.amber,
     icon: "lucide:replace",
     label: "Superseded",
   },
@@ -62,12 +63,9 @@ export const Decision = defineComponent(
           <span className="font-semibold text-indigo-900 dark:text-indigo-100">
             {title}
           </span>
-          <span
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${s.cls}`}
-          >
-            <Icon className="h-3 w-3" name={s.icon} />
+          <Pill className={s.cls} icon={s.icon}>
             {s.label}
-          </span>
+          </Pill>
           {nonEmpty(date) ? (
             <time className="font-mono text-xs text-neutral-500 dark:text-neutral-400">
               {date}

@@ -2,6 +2,7 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { CaptionBar } from "./bits.js";
 import { Icon } from "./icon.js";
 
 export const DEP_KINDS = [
@@ -52,9 +53,9 @@ export const Deps = defineComponent(
   ({ title, children }) => (
     <figure className="not-prose my-6 divide-y divide-neutral-200 overflow-hidden rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
       {nonEmpty(title) ? (
-        <figcaption className="bg-neutral-50 px-4 py-2 text-xs font-medium text-neutral-500 dark:bg-neutral-900 dark:text-neutral-400">
+        <CaptionBar border={false} className="font-medium">
           {title}
-        </figcaption>
+        </CaptionBar>
       ) : null}
       {children}
     </figure>

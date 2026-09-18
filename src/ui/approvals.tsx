@@ -2,8 +2,9 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
-import { Icon } from "./icon.js";
+import { Pill } from "./bits.js";
 import { Owner } from "./owner.js";
+import { TONE } from "./tones.js";
 
 export const APPROVAL_STATUSES = [
   "approved",
@@ -18,22 +19,22 @@ const STYLES: Record<
   { cls: string; icon: string; label: string }
 > = {
   approved: {
-    cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300",
+    cls: TONE.emerald,
     icon: "lucide:check",
     label: "Approved",
   },
   "changes-requested": {
-    cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300",
+    cls: TONE.amber,
     icon: "lucide:message-square-warning",
     label: "Changes requested",
   },
   pending: {
-    cls: "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300",
+    cls: TONE.neutral,
     icon: "lucide:clock",
     label: "Pending",
   },
   rejected: {
-    cls: "bg-red-100 text-red-700 dark:bg-red-900/60 dark:text-red-300",
+    cls: TONE.red,
     icon: "lucide:x",
     label: "Rejected",
   },
@@ -77,12 +78,9 @@ export const Approval = defineComponent(
               {date}
             </time>
           ) : null}
-          <span
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${s.cls}`}
-          >
-            <Icon className="h-3 w-3" name={s.icon} />
+          <Pill className={s.cls} icon={s.icon}>
             {s.label}
-          </span>
+          </Pill>
         </span>
       </div>
     );

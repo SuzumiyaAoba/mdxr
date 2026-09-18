@@ -1,12 +1,24 @@
 import { icons as lucide } from "@iconify-json/lucide";
 
 import {
-  CLIENT_JS,
   KATEX_CDN_URL,
   LIVE_RELOAD_JS,
   MERMAID_JS,
   THEME_JS,
-} from "./assets.js";
+} from "./assets/scripts.js";
+
+/**
+ * JS destined for an inline `<script>` element: neutralize the two byte
+ * sequences the HTML parser treats specially (`</script` ends the element,
+ * `<!--` opens a comment escape). `\u003C` keeps the meaning in strings,
+ * comments, and regex literals alike. Applied centrally here so every
+ * snippet — authored constants, the client bundle, the hydrate bundle —
+ * is safe regardless of its producer.
+ */
+export const inlineScript = (js: string): string =>
+  js
+    .replaceAll(/<\/script/giu, "\\u003C/script")
+    .replaceAll("<!--", "\\u003C!--");
 
 const ESCAPES: Record<string, string> = {
   '"': "&quot;",
@@ -36,6 +48,8 @@ export interface DocumentOptions {
   title: string;
   body: string;
   css: string;
+  /** Vanilla client bundle from `clientJs()` (copy/ask/theme handlers). */
+  clientJs: string;
   needsMermaid: boolean;
   needsKatex?: boolean;
   liveReload?: boolean;
@@ -53,7 +67,7 @@ export const htmlDocument = (o: DocumentOptions): string => `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="generator" content="mdxr">
 <title>${escapeHtml(o.title)}</title>
-<script>${THEME_JS}</script>
+<script>${inlineScript(THEME_JS)}</script>
 ${o.needsKatex === true ? `<link rel="stylesheet" href="${KATEX_CDN_URL}">` : ""}
 <style>${o.css}</style>
 </head>
@@ -62,10 +76,10 @@ ${THEME_TOGGLE_HTML}
 <main id="mdxr-root" class="prose prose-neutral dark:prose-invert mx-auto max-w-3xl px-6 py-10">
 ${o.body}
 </main>
-<script>${CLIENT_JS}</script>
-${o.needsMermaid ? `<script type="module">${MERMAID_JS}</script>` : ""}
-${o.liveReload === true ? `<script>${LIVE_RELOAD_JS}</script>` : ""}
-${o.hydrateJs === undefined ? "" : `<script>${o.hydrateJs}</script>`}
+<script>${inlineScript(o.clientJs)}</script>
+${o.needsMermaid ? `<script type="module">${inlineScript(MERMAID_JS)}</script>` : ""}
+${o.liveReload === true ? `<script>${inlineScript(LIVE_RELOAD_JS)}</script>` : ""}
+${o.hydrateJs === undefined ? "" : `<script>${inlineScript(o.hydrateJs)}</script>`}
 </body>
 </html>
 `;

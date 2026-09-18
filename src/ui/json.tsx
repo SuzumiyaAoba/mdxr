@@ -3,6 +3,8 @@ import * as v from "valibot";
 
 import { defineComponent, textOf } from "../define.js";
 import { isRecord, nonEmpty } from "../guards.js";
+import { attrFalse } from "./attrs.js";
+import { CaptionBar, CopyButton } from "./bits.js";
 import { Icon } from "./icon.js";
 
 /**
@@ -14,7 +16,7 @@ import { Icon } from "./icon.js";
 const MAX_DEPTH = 32;
 const MAX_STRING = 160;
 
-const closed = (x: unknown): boolean => x === false || x === "false";
+const closed = attrFalse;
 
 const Leaf = ({ value }: { value: unknown }): ReactElement => {
   if (value === null) {
@@ -167,24 +169,11 @@ export const Json = defineComponent(
     return (
       <figure className="mdxr-json not-prose my-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
         {nonEmpty(title) ? (
-          <figcaption className="flex items-center gap-2 border-b border-neutral-200 bg-neutral-50 px-4 py-2 text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+          <CaptionBar className="flex items-center gap-2">
             <Icon className="h-3.5 w-3.5" name="lucide:braces" />
             <span className="min-w-0 flex-1 truncate font-medium">{title}</span>
-            <button
-              aria-label="Copy JSON"
-              className="mdxr-copy cursor-pointer opacity-60"
-              data-copy={text}
-              title="Copy JSON"
-              type="button"
-            >
-              <span className="mdxr-copy-idle inline-flex">
-                <Icon className="h-3.5 w-3.5" name="lucide:copy" />
-              </span>
-              <span className="mdxr-copy-done hidden items-center text-emerald-600 dark:text-emerald-400">
-                <Icon className="h-3.5 w-3.5" name="lucide:check" />
-              </span>
-            </button>
-          </figcaption>
+            <CopyButton copy={text} title="Copy JSON" />
+          </CaptionBar>
         ) : null}
         <div className="overflow-x-auto bg-neutral-50 px-4 py-3 font-mono text-[0.8125rem] leading-relaxed dark:bg-neutral-900/60">
           <NodeView depth={0} openAll={!closed(open)} value={data} />

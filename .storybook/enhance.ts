@@ -1,4 +1,4 @@
-import { MERMAID_CDN_URL } from "../src/assets.js";
+import { MERMAID_CDN_URL } from "../src/assets/scripts.js";
 import { isRecord } from "../src/guards.js";
 import { highlightToHtml } from "../src/rehype/shiki.js";
 
@@ -108,7 +108,7 @@ const tryRenderMermaid = async (root: ParentNode): Promise<void> => {
 };
 
 /**
- * CLIENT_JS init counterpart: seed each Ask block's Markdown answer pane by
+ * Client-bundle init counterpart: seed each Ask block's Markdown answer pane by
  * bubbling a synthetic `input` event off it — the delegated handler's input
  * branch does the render, so no serialization code is duplicated here.
  */

@@ -29,6 +29,12 @@ const SIDEBAR_WIDTH_MOBILE = "18rem";
 const SIDEBAR_WIDTH_ICON = "3rem";
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 
+// `style` can't name `--*` custom properties in its type, so the mobile
+// width goes through a string-keyed record instead.
+const MOBILE_WIDTH_STYLE: Record<string, string> = {
+  "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
+};
+
 interface SidebarContextProps {
   state: "expanded" | "collapsed";
   open: boolean;
@@ -187,9 +193,7 @@ function Sidebar({
           data-slot="sidebar"
           data-mobile="true"
           className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
-          style={{
-            "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
-          }}
+          style={MOBILE_WIDTH_STYLE}
           side={side}
         >
           <SheetHeader className="sr-only">

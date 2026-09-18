@@ -14,30 +14,16 @@ import type { Highlighter, LanguageInput, ShikiTransformer } from "shiki";
 import { visit } from "unist-util-visit";
 
 import { isRecord } from "../guards.js";
+import { SKIP_LANGS } from "../langs.js";
 
 /**
  * Fenced code blocks are syntax-highlighted with shiki at render time.
  * `defaultColor: false` emits `--shiki-light`/`--shiki-dark` CSS variables on
  * every token span; BASE_CSS switches between them via prefers-color-scheme.
+ * SKIP_LANGS (langs.ts) are left untouched: mermaid renders as a diagram,
+ * terminal langs as a transcript, plain-text aliases stay cheap.
  */
 const THEMES = { dark: "github-dark", light: "github-light" } as const;
-
-/**
- * Languages handled by other means (mermaid renders as a diagram, console
- * sessions render as a terminal transcript) or that have no grammar (plain
- * text aliases) — left untouched so `pre` stays cheap.
- */
-const SKIP_LANGS = new Set([
-  "console",
-  "mermaid",
-  "plain",
-  "plaintext",
-  "shell-session",
-  "shellsession",
-  "terminal",
-  "text",
-  "txt",
-]);
 
 /**
  * A middle ground between startup cost and coverage: grammars in this list are
@@ -148,8 +134,10 @@ const textContent = (node: Element | ElementContent): string => {
 };
 
 const languageOf = (code: Element): string | undefined =>
-  /language-(?<lang>[^\s]+)/u.exec((code.properties?.className ?? []).join(" "))
-    ?.groups?.lang;
+  /language-(?<lang>[^\s]+)/u.exec(classNames(code).join(" "))?.groups?.lang;
+
+/** In-flight grammar loads, deduplicated across concurrent code blocks. */
+const langLoads = new Map<string, Promise<boolean>>();
 
 /** Lazily loads a grammar; resolves false when shiki doesn't know the name. */
 const ensureLanguage = async (
@@ -159,14 +147,26 @@ const ensureLanguage = async (
   if (highlighter.getLoadedLanguages().includes(lang)) {
     return true;
   }
-  const bundled: Record<string, LanguageInput> =
-    highlighter.getBundledLanguages();
-  const loader = bundled[lang];
-  if (loader === undefined) {
-    return false;
+  const pending = langLoads.get(lang);
+  if (pending !== undefined) {
+    return await pending;
   }
-  await highlighter.loadLanguage(loader);
-  return highlighter.getLoadedLanguages().includes(lang);
+  const load = (async () => {
+    const bundled: Record<string, LanguageInput> =
+      highlighter.getBundledLanguages();
+    const loader = bundled[lang];
+    if (loader === undefined) {
+      return false;
+    }
+    await highlighter.loadLanguage(loader);
+    return highlighter.getLoadedLanguages().includes(lang);
+  })();
+  langLoads.set(lang, load);
+  try {
+    return await load;
+  } finally {
+    langLoads.delete(lang);
+  }
 };
 
 /**

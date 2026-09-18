@@ -1,8 +1,8 @@
 import { useContext } from "react";
 
 import { DocContext } from "../doc-context.js";
-import { firstLine } from "../editor.js";
 import { nonEmpty } from "../guards.js";
+import { firstLine } from "../lines.js";
 
 /**
  * Resolve a component's `href` override or doc-relative `path`/`lines` to a

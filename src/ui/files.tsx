@@ -2,6 +2,8 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { FILE_LINK_PROPS } from "./attrs.js";
+import { CaptionBar } from "./bits.js";
 import { fileIcon } from "./file-icon.js";
 import { linkTarget, useFileLink } from "./file-link.js";
 import { Icon } from "./icon.js";
@@ -63,9 +65,9 @@ export const Files = defineComponent(
   ({ title, children }) => (
     <figure className="not-prose my-6 divide-y divide-neutral-200 overflow-hidden rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
       {nonEmpty(title) ? (
-        <figcaption className="bg-neutral-50 px-4 py-2 text-xs font-medium text-neutral-500 dark:bg-neutral-900 dark:text-neutral-400">
+        <CaptionBar border={false} className="font-medium">
           {title}
-        </figcaption>
+        </CaptionBar>
       ) : null}
       {children}
     </figure>
@@ -77,9 +79,8 @@ export const File = defineComponent(
     description:
       "関連ファイル1行。path は必須、lines で行範囲を併記。実在ファイルはエディタリンク（既定 vscode://）になり、href で上書き可。アイコンはファイル名/拡張子から自動選択。kind は entry|core|types|config|test|docs|generated など（既知の値はアイコン/色付き、それ以外も表示可）。children は役割の注記",
     schema: v.looseObject({
-      href: v.optional(v.string()),
+      ...FILE_LINK_PROPS,
       kind: v.optional(v.string()),
-      lines: v.optional(v.string()),
       path: v.string(),
     }),
   },

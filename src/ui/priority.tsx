@@ -2,25 +2,26 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { Icon } from "./icon.js";
+import { TONE } from "./tones.js";
 
 export const PRIORITY_LEVELS = ["p0", "p1", "p2", "p3"] as const;
 export type PriorityLevel = (typeof PRIORITY_LEVELS)[number];
 
 const STYLES: Record<PriorityLevel, { cls: string; label: string }> = {
   p0: {
-    cls: "bg-red-100 text-red-700 dark:bg-red-900/60 dark:text-red-300",
+    cls: TONE.red,
     label: "P0",
   },
   p1: {
-    cls: "bg-orange-100 text-orange-700 dark:bg-orange-900/60 dark:text-orange-300",
+    cls: TONE.orange,
     label: "P1",
   },
   p2: {
-    cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300",
+    cls: TONE.amber,
     label: "P2",
   },
   p3: {
-    cls: "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300",
+    cls: TONE.neutral,
     label: "P3",
   },
 };

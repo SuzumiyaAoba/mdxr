@@ -1,8 +1,5 @@
-import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
-import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
 
 import { compile } from "@mdx-js/mdx";
 import { createElement } from "react";
@@ -15,11 +12,12 @@ import remarkMath from "remark-math";
 import { VFile } from "vfile";
 import { matter } from "vfile-matter";
 
-import type { AnyComponent, ComponentMap } from "./define.js";
+import type { ComponentMap } from "./define.js";
 import { DocContext } from "./doc-context.js";
 import { editorUrl } from "./editor.js";
-import { isRecord } from "./guards.js";
-import { cacheDir } from "./paths.js";
+import { enhanceRenderError, formatError } from "./format-error.js";
+import { isComponent, isRecord } from "./guards.js";
+import { importBundledCode } from "./load-user-module.js";
 import { rehypeShiki } from "./rehype/shiki.js";
 import { remarkMdxrAlerts } from "./remark/alerts.js";
 import { remarkCodeFile } from "./remark/code-file.js";
@@ -58,72 +56,6 @@ export interface MdxResult {
    */
   usedComponents: string[];
 }
-
-const isComponent = (v: unknown): v is AnyComponent => typeof v === "function";
-
-const levenshtein = (a: string, b: string): number => {
-  const dp = Array.from({ length: a.length + 1 }, (_, i) => [
-    i,
-    ...Array.from({ length: b.length }, () => 0),
-  ]);
-  for (let j = 1; j <= b.length; j += 1) {
-    dp[0][j] = j;
-  }
-  for (let i = 1; i <= a.length; i += 1) {
-    for (let j = 1; j <= b.length; j += 1) {
-      dp[i][j] = Math.min(
-        dp[i - 1][j] + 1,
-        dp[i][j - 1] + 1,
-        dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
-      );
-    }
-  }
-  return dp[a.length][b.length];
-};
-
-const enhanceRenderError = (
-  err: unknown,
-  components: ComponentMap
-): unknown => {
-  if (!(err instanceof Error)) {
-    return err;
-  }
-  const m = /Expected component [`"'](?<name>\w+)[`"']/u.exec(err.message);
-  const name = m?.groups?.name;
-  if (name === undefined) {
-    return err;
-  }
-  const names = Object.keys(components).filter((n) => /^[A-Z]/u.test(n));
-  const [nearest] = names
-    .map((n) => ({ d: levenshtein(name.toLowerCase(), n.toLowerCase()), n }))
-    .toSorted((x, y) => x.d - y.d);
-  const hint =
-    nearest !== undefined && nearest.d <= 3
-      ? ` Did you mean <${nearest.n}>?`
-      : "";
-  return new Error(
-    `Unknown component <${name}>.${hint} Available: ${names.join(", ")}. Add custom components via mdxr.config.ts.`,
-    { cause: err }
-  );
-};
-
-/**
- * Import a compiled MDX module. Written into this package's cache dir so its
- * `react/jsx-runtime` import resolves to our copy — the same instance the
- * hydration bundle pins via its resolve plugin.
- */
-const importCompiled = async (
-  code: string
-): Promise<Record<string, unknown>> => {
-  await mkdir(cacheDir, { recursive: true });
-  const hash = createHash("sha256").update(code).digest("hex").slice(0, 12);
-  const out = path.join(cacheDir, `doc-${hash}.mjs`);
-  if (!existsSync(out)) {
-    await writeFile(out, code);
-  }
-  const raw: unknown = await import(pathToFileURL(out).href);
-  return isRecord(raw) ? raw : {};
-};
 
 /**
  * Which catalog entries the document references is visible in the compiled
@@ -212,8 +144,15 @@ export const mdxToHtml = async (
       remarkFilePaths,
     ],
   });
+  // Non-fatal plugin diagnostics (unknown directives, …) reach the user here.
+  for (const m of compiled.messages) {
+    process.stderr.write(`mdxr: warning: ${formatError(m)}\n`);
+  }
   const code = String(compiled);
-  const mod = await importCompiled(code);
+  // The compiled module is imported from this package's cache dir so its
+  // `react/jsx-runtime` resolves to our copy — the same instance the
+  // hydration bundle pins via its resolve plugin.
+  const mod = await importBundledCode(code, "doc");
 
   const used = extractUsedComponents(code, components);
 
@@ -233,7 +172,7 @@ export const mdxToHtml = async (
       )
     );
   } catch (error) {
-    throw enhanceRenderError(error, components);
+    throw enhanceRenderError(error, Object.keys(components));
   }
   return {
     body,

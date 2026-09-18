@@ -27,8 +27,6 @@ export const EDITORS: Record<string, EditorLink> = {
   zed: atLine("zed"),
 };
 
-export const EDITOR_NAMES = Object.keys(EDITORS);
-
 /**
  * Editor URL for an absolute path. `editor` is a known name (see EDITORS),
  * `"none"` (no link), a URL template with `{path}`/`{line}` placeholders
@@ -55,7 +53,3 @@ export const editorUrl = (
   }
   return atLine(e)(absPath, line);
 };
-
-/** "40-52" → "40" — the first line of a range spec, used for link targets. */
-export const firstLine = (lines: string | undefined): string | undefined =>
-  /^(?<n>\d+)/u.exec(lines ?? "")?.groups?.n;

@@ -3,19 +3,15 @@ import * as v from "valibot";
 
 import { defineComponent, flattenChildren, textOf } from "../define.js";
 import { nonEmpty } from "../guards.js";
-import { Icon } from "./icon.js";
+import { CopyButton } from "./bits.js";
 
 /**
  * Fence languages rendered as a command transcript instead of highlighted
- * code: ` ```console `, ` ```terminal `, ` ```shellsession `. These are also
- * in rehype/shiki.ts SKIP_LANGS so the raw text reaches `Pre` untouched.
+ * code: ` ```console `, ` ```terminal `, ` ```shellsession `. Shared from
+ * langs.ts — rehype/shiki.ts SKIP_LANGS includes them so the raw text
+ * reaches `Pre` untouched.
  */
-export const TERMINAL_LANGS: ReadonlySet<string> = new Set([
-  "console",
-  "shell-session",
-  "shellsession",
-  "terminal",
-]);
+export { TERMINAL_LANGS } from "../langs.js";
 
 const PROMPT_RE = /^\$(?:\s|$)/u;
 
@@ -74,20 +70,12 @@ export const Transcript = ({
             exit {exit === "" ? "0" : exit}
           </span>
         )}
-        <button
-          type="button"
-          data-copy={body}
-          className="mdxr-copy shrink-0 cursor-pointer text-neutral-500 opacity-60"
+        <CopyButton
+          className="shrink-0 text-neutral-500 opacity-60"
+          copy={body}
+          doneClassName="text-emerald-400"
           title="Copy transcript"
-          aria-label="Copy transcript"
-        >
-          <span className="mdxr-copy-idle inline-flex">
-            <Icon className="h-3.5 w-3.5" name="lucide:copy" />
-          </span>
-          <span className="mdxr-copy-done hidden items-center text-emerald-400">
-            <Icon className="h-3.5 w-3.5" name="lucide:check" />
-          </span>
-        </button>
+        />
       </figcaption>
       <pre className="m-0 overflow-x-auto p-4 font-mono text-sm leading-relaxed">
         {lines.map((line, i) =>

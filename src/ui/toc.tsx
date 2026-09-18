@@ -1,9 +1,10 @@
 import * as v from "valibot";
 
 import { defineComponent, flattenChildren } from "../define.js";
+import { attrFalse } from "./attrs.js";
 import { Icon } from "./icon.js";
 
-const closed = (x: unknown): boolean => x === false || x === "false";
+const closed = attrFalse;
 
 /**
  * Table of contents. The `:::toc` directive / `<Toc>` element is a marker —

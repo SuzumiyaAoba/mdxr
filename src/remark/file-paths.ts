@@ -2,36 +2,12 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 
 import type { Node } from "unist";
+import { visitParents } from "unist-util-visit-parents";
 import type { VFile } from "vfile";
 
-/** An `inlineCode` node, and (after mutation) an `mdxJsxTextElement`. */
-interface MutableNode extends Node {
-  attributes?: unknown;
-  children?: Node[];
-  name?: string;
-  value?: string;
-}
-
-/** "`src/a.ts:40-52`" → path + lines spec, like a code-fence `title=`. */
-const splitLines = (value: string): { lines?: string; path: string } => {
-  const m = /^(?<p>.+):(?<ls>\d+(?:-\d*)?)$/u.exec(value);
-  return m?.groups === undefined
-    ? { path: value }
-    : { lines: m.groups.ls, path: m.groups.p };
-};
-
-const toFileRef = (node: MutableNode, rel: string, lines?: string): void => {
-  node.type = "mdxJsxTextElement";
-  node.name = "FileRef";
-  node.attributes = [
-    { name: "path", type: "mdxJsxAttribute", value: rel },
-    ...(lines === undefined
-      ? []
-      : [{ name: "lines", type: "mdxJsxAttribute", value: lines }]),
-  ];
-  node.children = [];
-  delete node.value;
-};
+import { splitPathLines } from "../lines.js";
+import type { MdxTarget } from "./ast.js";
+import { toMdxElement } from "./ast.js";
 
 /**
  * Inline code that names a real file path — `` `src/mdx.ts` `` — becomes a
@@ -50,7 +26,7 @@ export const remarkFilePaths = () => (tree: Node, file: VFile) => {
     if (!value.includes("/") || value.includes("://")) {
       return undefined;
     }
-    const target = splitLines(value);
+    const target = splitPathLines(value);
     if (existsSync(path.resolve(dir, target.path))) {
       return target;
     }
@@ -59,23 +35,23 @@ export const remarkFilePaths = () => (tree: Node, file: VFile) => {
       ? { path: value }
       : undefined;
   };
-  const walk = (node: Node, inLink: boolean): void => {
-    if (node.type === "inlineCode") {
-      const { value } = node as MutableNode;
-      const target = inLink || value === undefined ? undefined : resolve(value);
-      if (target !== undefined) {
-        toFileRef(node, target.path, target.lines);
-      }
+  visitParents(tree, "inlineCode", (node: Node, ancestors: Node[]) => {
+    const inLink = ancestors.some(
+      (a) => a.type === "link" || a.type === "linkReference"
+    );
+    if (inLink || !("value" in node) || typeof node.value !== "string") {
       return;
     }
-    const nested =
-      inLink || node.type === "link" || node.type === "linkReference";
-    const { children } = node as Node & { children?: Node[] };
-    if (children !== undefined) {
-      for (const child of children) {
-        walk(child, nested);
-      }
+    const target = resolve(node.value);
+    if (target === undefined) {
+      return;
     }
-  };
-  walk(tree, false);
+    const el: MdxTarget = node;
+    toMdxElement(el, "mdxJsxTextElement", "FileRef", {
+      lines: target.lines,
+      path: target.path,
+    });
+    el.children = [];
+    delete el.value;
+  });
 };

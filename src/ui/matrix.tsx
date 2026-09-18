@@ -1,9 +1,10 @@
-import { isValidElement } from "react";
 import type { ReactElement, ReactNode } from "react";
 import * as v from "valibot";
 
 import { defineComponent, flattenChildren, textOf } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { CaptionBar } from "./bits.js";
+import { isEl } from "./children.js";
 import { Icon } from "./icon.js";
 
 /**
@@ -85,9 +86,6 @@ const Cell = ({ cell }: { cell: string }): ReactElement => {
 };
 
 type El = ReactElement<{ children?: ReactNode }>;
-
-const isEl = (n: unknown, tag: string): n is El =>
-  isValidElement<{ children?: ReactNode }>(n) && n.type === tag;
 
 /** A list item → row cells: first `|`-segment is the label, rest are cells. */
 const rowCells = (li: El): string[] => {
@@ -191,9 +189,7 @@ export const Matrix = defineComponent(
     return (
       <figure className="not-prose my-6 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-800">
         {nonEmpty(title) ? (
-          <figcaption className="border-b border-neutral-200 bg-neutral-50 px-4 py-2 text-xs font-medium text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
-            {title}
-          </figcaption>
+          <CaptionBar className="font-medium">{title}</CaptionBar>
         ) : null}
         {headers.length > 0 ? (
           <MatrixHeader colCount={colCount} grid={grid} headers={headers} />

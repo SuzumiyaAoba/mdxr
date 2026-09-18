@@ -2,6 +2,8 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { FILE_LINK_PROPS } from "./attrs.js";
+import { CopyButton } from "./bits.js";
 import { fileIcon } from "./file-icon.js";
 import { linkTarget, useFileLink } from "./file-link.js";
 import { Icon } from "./icon.js";
@@ -11,8 +13,7 @@ export const FileRef = defineComponent(
     description:
       'ソースファイルへの参照チップ。lines="10-20" で行範囲を示せる。実在ファイルはエディタリンク（既定 vscode://）になり、href で上書き可。アイコンは拡張子から自動選択',
     schema: v.looseObject({
-      href: v.optional(v.string()),
-      lines: v.optional(v.string()),
+      ...FILE_LINK_PROPS,
       path: v.string(),
     }),
   },
@@ -38,20 +39,11 @@ export const FileRef = defineComponent(
             {label}
           </a>
         )}
-        <button
-          type="button"
-          data-copy={path}
-          className="mdxr-copy -mr-0.5 cursor-pointer opacity-40"
+        <CopyButton
+          className="-mr-0.5 opacity-40"
+          copy={path}
           title="Copy path"
-          aria-label="Copy path"
-        >
-          <span className="mdxr-copy-idle inline-flex">
-            <Icon className="h-3.5 w-3.5" name="lucide:copy" />
-          </span>
-          <span className="mdxr-copy-done hidden items-center text-emerald-600 dark:text-emerald-400">
-            <Icon className="h-3.5 w-3.5" name="lucide:check" />
-          </span>
-        </button>
+        />
       </code>
     );
   }

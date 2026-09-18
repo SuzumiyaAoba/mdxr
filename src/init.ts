@@ -5,16 +5,10 @@ import path from "node:path";
 
 import { pkgRoot } from "./paths.js";
 
-const LOCAL_DIRS: Record<string, string> = {
-  agents: ".agents/skills/mdxr",
-  claude: ".claude/skills/mdxr",
-  devin: ".devin/skills/mdxr",
-};
-
-const GLOBAL_DIRS: Record<string, string> = {
-  agents: ".agents/skills/mdxr",
-  claude: ".claude/skills/mdxr",
-  devin: ".config/devin/skills/mdxr",
+const SKILL_DIRS: Record<string, { global: string; local: string }> = {
+  agents: { global: ".agents/skills/mdxr", local: ".agents/skills/mdxr" },
+  claude: { global: ".claude/skills/mdxr", local: ".claude/skills/mdxr" },
+  devin: { global: ".config/devin/skills/mdxr", local: ".devin/skills/mdxr" },
 };
 
 export interface InitOptions {
@@ -25,23 +19,27 @@ export interface InitOptions {
 
 export const installSkill = async (opts: InitOptions): Promise<string[]> => {
   const tool = opts.tool ?? "agents";
-  const map = opts.global === true ? GLOBAL_DIRS : LOCAL_DIRS;
-  const base = opts.global === true ? os.homedir() : process.cwd();
+  const global = opts.global === true;
+  const base = global ? os.homedir() : process.cwd();
 
-  const tools = tool === "all" ? Object.keys(map) : [tool];
-  for (const t of tools) {
-    if (!map[t]) {
+  const tools = tool === "all" ? Object.keys(SKILL_DIRS) : [tool];
+  const destFor = (t: string): string => {
+    const dirs = SKILL_DIRS[t];
+    if (dirs === undefined) {
       throw new Error(`unknown tool: ${t} (expected agents|claude|devin|all)`);
     }
-    const dest = path.join(base, map[t]);
+    return path.join(base, global ? dirs.global : dirs.local);
+  };
+  for (const t of tools) {
+    const dest = destFor(t);
     if (fs.existsSync(dest) && opts.force !== true) {
       throw new Error(`${dest} already exists (use --force to overwrite)`);
     }
   }
 
-  const installed = await Promise.all(
+  return await Promise.all(
     tools.map(async (t) => {
-      const dest = path.join(base, map[t]);
+      const dest = destFor(t);
       await fsp.mkdir(path.dirname(dest), { recursive: true });
       await fsp.cp(path.join(pkgRoot, "skill"), dest, {
         force: true,
@@ -50,5 +48,4 @@ export const installSkill = async (opts: InitOptions): Promise<string[]> => {
       return dest;
     })
   );
-  return installed;
 };

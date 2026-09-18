@@ -44,17 +44,13 @@ export const loadConfig = async (dir: string): Promise<ResolvedConfig> => {
   }
   const { module: mod, code } = await loadUserModule(path.join(dir, name));
   const raw = isRecord(mod.default) ? mod.default : {};
-  const components =
-    typeof raw.components === "string" ? raw.components : undefined;
-  const editor = typeof raw.editor === "string" ? raw.editor : undefined;
-  const theme = typeof raw.theme === "string" ? raw.theme : undefined;
   return {
     componentsCode: code,
-    componentsPath: nonEmpty(components)
-      ? path.resolve(dir, components)
+    componentsPath: nonEmpty(raw.components)
+      ? path.resolve(dir, raw.components)
       : undefined,
     dir,
-    editor: nonEmpty(editor) ? editor : undefined,
-    themePath: nonEmpty(theme) ? path.resolve(dir, theme) : undefined,
+    editor: nonEmpty(raw.editor) ? raw.editor : undefined,
+    themePath: nonEmpty(raw.theme) ? path.resolve(dir, raw.theme) : undefined,
   };
 };

@@ -3,7 +3,10 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { attrTrue } from "./attrs.js";
+import { CaptionBar } from "./bits.js";
 import { Icon } from "./icon.js";
+import { TONE } from "./tones.js";
 
 export const HTTP_METHODS = [
   "GET",
@@ -16,21 +19,19 @@ export const HTTP_METHODS = [
 ] as const;
 
 const METHODS: Record<string, string> = {
-  DELETE: "bg-red-100 text-red-700 dark:bg-red-900/60 dark:text-red-300",
-  GET: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300",
-  HEAD: "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300",
-  OPTIONS:
-    "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300",
-  PATCH: "bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300",
-  POST: "bg-sky-100 text-sky-700 dark:bg-sky-900/60 dark:text-sky-300",
-  PUT: "bg-violet-100 text-violet-700 dark:bg-violet-900/60 dark:text-violet-300",
+  DELETE: TONE.red,
+  GET: TONE.emerald,
+  HEAD: TONE.neutral,
+  OPTIONS: TONE.neutral,
+  PATCH: TONE.amber,
+  POST: TONE.sky,
+  PUT: TONE.violet,
 };
 
 /** `base` prefix from <Endpoints>, prepended (muted) to each endpoint path. */
 const BaseCtx = createContext("");
 
-const isTruthy = (x: unknown): boolean =>
-  x === true || x === "true" || x === "";
+const isTruthy = attrTrue;
 
 export const Endpoint = defineComponent(
   {
@@ -99,7 +100,7 @@ export const Endpoints = defineComponent(
   ({ title, base, children }) => (
     <figure className="not-prose my-6 divide-y divide-neutral-200 overflow-hidden rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800">
       {nonEmpty(title) || nonEmpty(base) ? (
-        <figcaption className="flex items-center gap-2 border-b border-neutral-200 bg-neutral-50 px-4 py-2 text-xs font-medium text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+        <CaptionBar className="flex items-center gap-2 font-medium">
           <Icon className="h-3.5 w-3.5" name="lucide:route" />
           {nonEmpty(title) ? title : "Endpoints"}
           {nonEmpty(base) ? (
@@ -107,7 +108,7 @@ export const Endpoints = defineComponent(
               {base}
             </code>
           ) : null}
-        </figcaption>
+        </CaptionBar>
       ) : null}
       <BaseCtx.Provider value={nonEmpty(base) ? base : ""}>
         {children}

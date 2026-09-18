@@ -1,22 +1,16 @@
-import type { Node, Parent } from "unist";
+import type { Node } from "unist";
 import { visit } from "unist-util-visit";
 
-const ALERT_RE =
-  /^\[!(?<kind>note|tip|important|warning|caution|danger|decision|goal|non-?goal|question|answer)\]\s*/iu;
+import type { MdxTarget } from "./ast.js";
+import { isParent, toMdxElement } from "./ast.js";
+import { ALERT_RE, normalizeCalloutKind } from "./callouts.js";
 
-const isParent = (n: Node): n is Parent =>
-  "children" in n && Array.isArray(n.children);
-
-const textValue = (n: Node | undefined): { value: string } | undefined =>
+/** A text node with a mutable string `value` — callers edit it in place. */
+const isTextValue = (n: Node | undefined): n is MdxTarget & { value: string } =>
   n !== undefined &&
   n.type === "text" &&
   "value" in n &&
-  typeof n.value === "string"
-    ? { value: n.value }
-    : undefined;
-
-/** A node we mutate into an `mdxJsxFlowElement`. Optional fields accept any Node. */
-type MdxTarget = Node & { name?: string; attributes?: unknown };
+  typeof n.value === "string";
 
 /**
  * GitHub-style alerts become Callout components:
@@ -33,21 +27,18 @@ export const remarkMdxrAlerts = () => (tree: Node) => {
     if (first === undefined || first.type !== "paragraph" || !isParent(first)) {
       return;
     }
-    const text = textValue(first.children[0]);
-    if (text === undefined) {
+    const [text] = first.children;
+    if (!isTextValue(text)) {
       return;
     }
 
     const m = ALERT_RE.exec(text.value);
-    if (m === null) {
+    if (m === null || m.groups === undefined) {
       return;
     }
 
     const rest = text.value.slice(m[0].length);
-    const [textNode] = first.children;
-    if (textNode !== undefined && "value" in textNode) {
-      textNode.value = rest;
-    }
+    text.value = rest;
     if (rest === "") {
       first.children.shift();
     }
@@ -55,20 +46,8 @@ export const remarkMdxrAlerts = () => (tree: Node) => {
       node.children.shift();
     }
 
-    const kind = (m.groups?.kind.toLowerCase() ?? "note").replace(
-      /^non-goal$/u,
-      "nongoal"
-    );
-
-    const target: MdxTarget = node;
-    target.type = "mdxJsxFlowElement";
-    target.name = "Callout";
-    target.attributes = [
-      {
-        name: "kind",
-        type: "mdxJsxAttribute",
-        value: kind,
-      },
-    ];
+    toMdxElement(node, "mdxJsxFlowElement", "Callout", {
+      kind: normalizeCalloutKind(m.groups.kind),
+    });
   });
 };

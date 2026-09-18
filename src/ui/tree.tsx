@@ -1,16 +1,15 @@
-import { Fragment, isValidElement } from "react";
+import { Fragment } from "react";
 import type { ReactElement, ReactNode } from "react";
 import * as v from "valibot";
 
 import { defineComponent, flattenChildren, textOf } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { attrFalse } from "./attrs.js";
+import { isEl } from "./children.js";
 import { fileIcon, folderIcon } from "./file-icon.js";
 import { Icon } from "./icon.js";
 
 type El = ReactElement<{ children?: ReactNode }>;
-
-const isEl = (n: unknown, tag: string): n is El =>
-  isValidElement<{ children?: ReactNode }>(n) && n.type === tag;
 
 /** `name — note` or `name # note` inside a list item attaches a muted note. */
 const NOTE_RE = /\s+(?:—|#)\s+/u;
@@ -18,7 +17,7 @@ const NOTE_RE = /\s+(?:—|#)\s+/u;
 /** `...` or `…` as the whole name marks intentionally omitted entries. */
 const PLACEHOLDER_RE = /^(?:\.{3}|…)$/u;
 
-const closed = (x: unknown): boolean => x === false || x === "false";
+const closed = attrFalse;
 
 const NodeIcon = ({
   dir,

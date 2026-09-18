@@ -1,9 +1,11 @@
-import { isValidElement } from "react";
 import type { ReactElement, ReactNode } from "react";
 import * as v from "valibot";
 
 import { defineComponent, flattenChildren } from "../define.js";
-import { isRecord, nonEmpty } from "../guards.js";
+import { nonEmpty } from "../guards.js";
+import { LINK_LINES_PROPS } from "./attrs.js";
+import { CaptionBar } from "./bits.js";
+import { isEl, propOf } from "./children.js";
 import { linkTarget, useFileLink } from "./file-link.js";
 import { Icon } from "./icon.js";
 
@@ -75,10 +77,9 @@ export const Test = defineComponent(
     description:
       "テスト結果1行。name は必須、status は pass|fail|skip|todo。duration に所要時間、file/lines で実ファイルへのエディタリンク。children は失敗時の詳細 (エラー出力など)",
     schema: v.looseObject({
+      ...LINK_LINES_PROPS,
       duration: v.optional(v.union([v.string(), v.number()])),
       file: v.optional(v.string()),
-      href: v.optional(v.string()),
-      lines: v.optional(v.string()),
       name: v.string(),
       status: v.optional(v.picklist(TEST_STATUSES), "pass"),
     }),
@@ -153,19 +154,20 @@ const summarizeTests = (children: ReactNode): TestSummary => {
   let total = 0;
   let durationOk = true;
   for (const node of flattenChildren(children)) {
-    if (!isValidElement(node) || node.type !== Test) {
+    if (!isEl(node, Test)) {
       continue;
     }
-    const props = isRecord(node.props) ? node.props : {};
-    const st = isTestStatus(props.status) ? props.status : "pass";
-    counts.set(st, (counts.get(st) ?? 0) + 1);
+    const st = propOf(node, "status");
+    const status = isTestStatus(st) ? st : "pass";
+    counts.set(status, (counts.get(status) ?? 0) + 1);
     total += 1;
-    const d = parseDuration(props.duration);
+    const rawDuration = propOf(node, "duration");
+    const d = parseDuration(rawDuration);
     if (d !== undefined) {
       totalMs += d;
       continue;
     }
-    if (props.duration !== undefined && props.duration !== "") {
+    if (rawDuration !== undefined && rawDuration !== "") {
       durationOk = false;
     }
   }
@@ -181,7 +183,7 @@ const TestsCaption = ({
   title: string | undefined;
   tool: string | undefined;
 }): ReactElement => (
-  <figcaption className="flex flex-wrap items-center gap-x-2.5 gap-y-1 border-b border-neutral-200 bg-neutral-50 px-4 py-2 text-xs text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-400">
+  <CaptionBar className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
     <Icon className="h-3.5 w-3.5" name="lucide:flask-conical" />
     {nonEmpty(title) ? (
       <span className="font-medium">{title}</span>
@@ -208,7 +210,7 @@ const TestsCaption = ({
         </span>
       ) : null}
     </span>
-  </figcaption>
+  </CaptionBar>
 );
 
 export const Tests = defineComponent(

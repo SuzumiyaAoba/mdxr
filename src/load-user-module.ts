@@ -82,14 +82,31 @@ const pruneCache = async (prefix: string): Promise<void> => {
     await Promise.all(
       withMtime
         .filter(({ f, mtime }) => now - mtime > STALE_MS && !keep.has(f))
-        .map(async ({ f }) => {
-          await unlink(path.join(cacheDir, f));
+        .map(async ({ f, mtime }) => {
+          const p = path.join(cacheDir, f);
+          // TOCTOU: another process may have rewritten the file since our
+          // readdir/stat (a rewrite refreshes mtime, but we judged staleness
+          // on the old one). Re-stat right before unlinking.
+          const s = await stat(p);
+          if (s.mtimeMs !== mtime || now - s.mtimeMs <= STALE_MS) {
+            return;
+          }
+          await unlink(p);
         })
     );
   } catch {
     // Cache hygiene is best-effort — never fail a render over it.
   }
 };
+
+/** `await import` of a missing module: Node's ERR_MODULE_NOT_FOUND, possibly
+ *  wrapped by a module runner that only preserves the message. */
+const isModuleNotFound = (e: unknown): boolean =>
+  isRecord(e) &&
+  (e.code === "ERR_MODULE_NOT_FOUND" ||
+    e.code === "ENOENT" ||
+    (typeof e.message === "string" &&
+      e.message.includes("Cannot find module")));
 
 /**
  * Write bundled ESM `code` into this package's cache dir (content-hashed, so
@@ -110,7 +127,19 @@ export const importBundledCode = async (
   inFlight.add(out);
   let raw: unknown;
   try {
-    raw = await import(pathToFileURL(out).href);
+    try {
+      raw = await import(pathToFileURL(out).href);
+    } catch (error) {
+      if (!isModuleNotFound(error)) {
+        throw error;
+      }
+      // A concurrent process's pruneCache may have unlinked the file between
+      // our writeFile and the module runner's read (it judged staleness on a
+      // pre-rewrite mtime). Rewrite and retry once on a fresh URL — a `?`
+      // suffix also escapes any cached miss in the importing module runner.
+      await writeFile(out, code);
+      raw = await import(`${pathToFileURL(out).href}?retry`);
+    }
   } finally {
     inFlight.delete(out);
   }

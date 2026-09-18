@@ -15,6 +15,8 @@ interface PreviewTarget {
   label: string;
   /** Re-render the document; errors are served as an error page. */
   renderDoc: () => Promise<string>;
+  /** Dependency files the last render pulled in (theme CSS + its imports). */
+  deps?: () => string[];
   /** Directory watched for changes (config, components, theme, sources). */
   watchDir: string;
   /** Non-recursive fallback watch target (the document file). */
@@ -30,20 +32,86 @@ const SKIP_DIRS = new Set([
   "storybook-static",
 ]);
 
+/**
+ * The set of directories being watched. `fs.watch` recursive mode exists only
+ * on darwin/win32 — elsewhere `arm` puts one non-recursive watcher per
+ * directory, which also survives atomic saves (rename-over kills a watch
+ * aimed at the file itself).
+ */
+const createWatchSet = () => {
+  const watchers: fs.FSWatcher[] = [];
+  const armed = new Set<string>();
+
+  const track = (w: fs.FSWatcher, dir?: string): void => {
+    watchers.push(w);
+    if (dir !== undefined) {
+      armed.add(dir);
+      // A deleted dir kills its watcher — un-arm on close so a recreated
+      // dir is picked up again by the next event's re-scan.
+      w.on("close", () => {
+        armed.delete(dir);
+      });
+    }
+    w.on("error", () => {
+      w.close();
+    });
+  };
+
+  /** One watcher on `dir` itself (no descent). */
+  const armFlat = (dir: string, onEvent: () => void): void => {
+    if (armed.has(dir) || SKIP_DIRS.has(path.basename(dir))) {
+      return;
+    }
+    try {
+      track(fs.watch(dir, onEvent), dir);
+    } catch {
+      // Directory gone or unwatched — skip.
+    }
+  };
+
+  /** Recursive fallback: a watcher on `dir` plus every directory under it. */
+  const arm = (dir: string, onEvent: () => void): void => {
+    if (armed.has(dir) || SKIP_DIRS.has(path.basename(dir))) {
+      return;
+    }
+    try {
+      track(fs.watch(dir, onEvent), dir);
+    } catch {
+      return;
+    }
+    let ents: fs.Dirent[];
+    try {
+      ents = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const e of ents) {
+      if (e.isDirectory()) {
+        arm(path.join(dir, e.name), onEvent);
+      }
+    }
+  };
+
+  return {
+    arm,
+    armFlat,
+    close(): void {
+      for (const w of watchers) {
+        w.close();
+      }
+    },
+    get size(): number {
+      return watchers.length;
+    },
+    track,
+  };
+};
+
 const servePreview = async (
   target: PreviewTarget,
   port: number
 ): Promise<http.Server> => {
   let html = "";
-  const rebuild = async () => {
-    try {
-      html = await target.renderDoc();
-    } catch (error) {
-      html = errorPage(error);
-    }
-  };
-  await rebuild();
-
   const clients = new Set<http.ServerResponse>();
   const server = http.createServer((req, res) => {
     if (req.url === "/__mdxr_events") {
@@ -66,17 +134,53 @@ const servePreview = async (
     res.end(html);
   });
 
+  const watch = createWatchSet();
+  let recursiveWatch = false;
+  let timer: NodeJS.Timeout | undefined;
+
+  /**
+   * Dependency files (theme CSS, its nested imports) may live outside the
+   * watched document directory. Inside the watch dir the root watcher covers
+   * them; outside, a flat watcher on the file's own directory suffices —
+   * and avoids descending into a potentially huge ancestor tree. Also
+   * re-arms the tree so directories created mid-session are picked up.
+   */
+  const armDeps = (onEvent: () => void): void => {
+    if (!recursiveWatch) {
+      watch.arm(target.watchDir, onEvent);
+    }
+    for (const dep of target.deps?.() ?? []) {
+      const dir = path.dirname(dep);
+      const inside =
+        dir === target.watchDir ||
+        dir.startsWith(`${target.watchDir}${path.sep}`);
+      if (inside || dir.split(path.sep).includes("node_modules")) {
+        continue;
+      }
+      watch.armFlat(dir, onEvent);
+    }
+  };
+
+  const rebuild = async (onEvent: () => void): Promise<void> => {
+    try {
+      html = await target.renderDoc();
+    } catch (error) {
+      html = errorPage(error);
+    }
+    armDeps(onEvent);
+  };
+
   // Rebuilds chain onto each other: a change burst during a slow rebuild
   // can't interleave two renders or serve an older result last. Every link
   // swallows its own errors, so the stored tail can never reject — nothing
   // awaits it, and an unhandled rejection would take the server down.
   let reloading: Promise<void> = Promise.resolve();
-  const reload = (): void => {
+  const reload = (onEvent: () => void): void => {
     const prev = reloading;
     reloading = (async () => {
       await prev;
       try {
-        await rebuild();
+        await rebuild(onEvent);
         for (const c of clients) {
           try {
             c.write("event: reload\ndata: {}\n\n");
@@ -91,89 +195,45 @@ const servePreview = async (
     })();
   };
 
-  const watchers: fs.FSWatcher[] = [];
-  const armed = new Set<string>();
-  /** Non-recursive fallback: one watcher per directory under `root`. */
-  const arm = (dir: string, onEvent: () => void): void => {
-    if (armed.has(dir) || SKIP_DIRS.has(path.basename(dir))) {
-      return;
-    }
-    let w: fs.FSWatcher;
-    try {
-      w = fs.watch(dir, onEvent);
-    } catch {
-      return;
-    }
-    watchers.push(w);
-    armed.add(dir);
-    // A deleted dir kills its watcher — un-arm on close so a recreated dir
-    // gets picked up again by the next event's re-scan.
-    w.on("error", () => {
-      w.close();
-    });
-    w.on("close", () => {
-      armed.delete(dir);
-    });
-    let ents: fs.Dirent[];
-    try {
-      ents = fs.readdirSync(dir, { withFileTypes: true });
-    } catch {
-      return;
-    }
-    for (const e of ents) {
-      if (e.isDirectory()) {
-        arm(path.join(dir, e.name), onEvent);
-      }
-    }
-  };
-
-  let recursiveWatch = false;
-  let timer: NodeJS.Timeout | undefined;
-  const notify = () => {
+  const notify = (): void => {
     clearTimeout(timer);
     timer = setTimeout(() => {
-      if (!recursiveWatch) {
-        // Pick up directories created mid-session.
-        arm(target.watchDir, notify);
-      }
-      reload();
+      reload(notify);
     }, 80);
   };
 
-  // fs.watch recursive mode exists only on darwin/win32. Elsewhere we arm one
-  // non-recursive watcher per directory — which also covers atomic saves
-  // (rename-over-file kills a watch aimed at the file itself).
+  // fs.watch recursive mode exists only on darwin/win32; elsewhere `arm`
+  // installs the per-directory fallback.
   try {
-    const w = fs.watch(target.watchDir, { recursive: true }, notify);
-    w.on("error", () => {
-      w.close();
-    });
-    watchers.push(w);
+    watch.track(fs.watch(target.watchDir, { recursive: true }, notify));
     recursiveWatch = true;
   } catch {
-    arm(target.watchDir, notify);
+    watch.arm(target.watchDir, notify);
   }
-  if (watchers.length === 0 && target.watchFile !== undefined) {
+  if (watch.size === 0 && target.watchFile !== undefined) {
     try {
-      const w = fs.watch(target.watchFile, notify);
-      w.on("error", () => {
-        w.close();
-      });
-      watchers.push(w);
+      watch.track(fs.watch(target.watchFile, notify));
     } catch {
       // Live reload just won't fire; the server still serves the document.
     }
   }
   server.on("close", () => {
     clearTimeout(timer);
-    for (const w of watchers) {
-      w.close();
-    }
+    watch.close();
   });
 
+  await rebuild(notify);
+
   server.listen(port);
-  // Rejects on 'error' (e.g. EADDRINUSE) before 'listening'.
-  await once(server, "listening");
+  try {
+    // Rejects on 'error' (e.g. EADDRINUSE) before 'listening'.
+    await once(server, "listening");
+  } catch (error) {
+    // Close fires the 'close' handler above — without it a failed listen
+    // would leave the watchers armed and keep the process alive.
+    server.close();
+    throw error;
+  }
 
   const address = server.address();
   const boundPort =
@@ -189,10 +249,22 @@ export const serve = async (
   port: number
 ): Promise<http.Server> => {
   const abs = path.resolve(mdxPath);
+  let deps: string[] = [];
   return await servePreview(
     {
+      deps: () => deps,
       label: mdxPath,
-      renderDoc: async () => await renderFile(abs, { liveReload: true }),
+      renderDoc: async () => {
+        const collected: string[] = [];
+        const doc = await renderFile(abs, {
+          liveReload: true,
+          onDependencies: (d) => {
+            collected.push(...d);
+          },
+        });
+        deps = collected;
+        return doc;
+      },
       watchDir: path.dirname(abs),
       watchFile: abs,
     },
@@ -204,18 +276,27 @@ export const serve = async (
 export const serveSource = async (
   source: string,
   port: number,
-  opts: Omit<RenderSourceOptions, "liveReload"> = {}
+  opts: Omit<RenderSourceOptions, "liveReload" | "onDependencies"> = {}
 ): Promise<http.Server> => {
   const dir = path.resolve(opts.dir ?? process.cwd());
+  let deps: string[] = [];
   return await servePreview(
     {
+      deps: () => deps,
       label: opts.filePath ?? "stdin",
-      renderDoc: async () =>
-        await render(source, {
+      renderDoc: async () => {
+        const collected: string[] = [];
+        const doc = await render(source, {
           dir,
           filePath: opts.filePath,
           liveReload: true,
-        }),
+          onDependencies: (d) => {
+            collected.push(...d);
+          },
+        });
+        deps = collected;
+        return doc;
+      },
       watchDir: dir,
     },
     port

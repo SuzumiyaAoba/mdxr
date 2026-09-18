@@ -21,6 +21,8 @@ export interface MountSpec {
   fileLinks: Record<string, string>;
   /** PlanHeader props, present iff the document header was rendered. */
   headerProps?: Record<string, string | undefined>;
+  /** SSR render timestamp (ISO) — replayed into `DocContext.now`. */
+  now?: string;
   /** The PlanHeader component — only bound when `headerProps` is set. */
   planHeader?: AnyComponent;
   /** The user's components module namespace, when configured. */
@@ -49,6 +51,7 @@ export const mountDocument = (spec: MountSpec): void => {
         value: {
           fileLink: (rel: string, line?: string) =>
             spec.fileLinks[`${rel}\0${line ?? ""}`],
+          now: spec.now === undefined ? undefined : new Date(spec.now),
         },
       },
       createElement(

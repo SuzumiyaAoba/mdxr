@@ -104,17 +104,23 @@ cli
 cli
   .command("serve [file]", "Preview a document in the browser with live reload")
   .option("-p, --port <port>", "Port", { default: 3737 })
-  .action(async (file: string | undefined, opts: { port: number }) => {
+  .action(async (file: string | undefined, opts: { port: number | string }) => {
     try {
+      // mri leaves a non-numeric flag as a string; http.listen would treat
+      // that as a pipe path instead of a port.
+      const port = Number(opts.port);
+      if (!Number.isInteger(port) || port < 0 || port > 65_535) {
+        throw new Error(`invalid --port: ${opts.port}`);
+      }
       if (file === undefined || file === "-") {
         requireStdinSource();
-        await serveSource(await readStdin(), opts.port, {
+        await serveSource(await readStdin(), port, {
           dir: process.cwd(),
           filePath: "<stdin>",
         });
         return;
       }
-      await serve(file, opts.port);
+      await serve(file, port);
     } catch (error) {
       fail(error, false);
     }

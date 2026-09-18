@@ -24,10 +24,12 @@ export const isParent = (n: Node): n is Parent =>
 export const isFlowElement = (n: Node): n is MdxTarget =>
   n.type === "mdxJsxFlowElement";
 
-/** All `text` node values under `node`, concatenated in tree order. */
+/** All literal text under `node`, concatenated in tree order — `inlineCode`
+ * carries its code in `value` too, and dropping it would truncate heading
+ * slugs and directive labels at the first backtick span. */
 export const textContent = (node: Node): string => {
   let out = "";
-  visit(node, "text", (n: Node) => {
+  visit(node, ["text", "inlineCode"], (n: Node) => {
     if ("value" in n && typeof n.value === "string") {
       out += n.value;
     }

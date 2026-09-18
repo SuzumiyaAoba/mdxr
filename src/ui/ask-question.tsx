@@ -1,4 +1,10 @@
-import { createContext, isValidElement, useContext, useMemo } from "react";
+import {
+  createContext,
+  isValidElement,
+  useContext,
+  useId,
+  useMemo,
+} from "react";
 import type { ReactElement, ReactNode } from "react";
 import * as v from "valibot";
 
@@ -208,8 +214,12 @@ const SelectControl = ({
   placeholder: string | undefined;
 }): ReactElement => {
   const sel = flattenChildren(children).find(isCheckedChoice);
-  const selValue = nonEmpty(sel?.props.value) ? sel.props.value : "";
+  const selValue = nonEmpty(sel?.props.value) ? sel.props.value : undefined;
   return (
+    // No defaultValue when nothing is checked: the browser picks the first
+    // option on both SSR and hydration, so the two agree. (With a
+    // placeholder option present it is first, so it gets picked — same as
+    // the intended "unanswered" display.)
     <select className={CONTROL_CLS} defaultValue={selValue} id={id} name={name}>
       {nonEmpty(placeholder) ? (
         <option disabled value="">
@@ -248,7 +258,7 @@ const FieldControl = ({
         id={id}
         name={name}
         placeholder={nonEmpty(placeholder) ? placeholder : undefined}
-        rows={Number(rows) || 3}
+        rows={Math.max(1, Number(rows) || 3)}
       />
     );
   }
@@ -308,7 +318,14 @@ export const Question = defineComponent(
   }) => {
     const t: QuestionType =
       type ?? (flattenChildren(children).length > 0 ? "choice" : "text");
-    const ctx = useMemo(() => ({ mode: CHOICE_MODE[t], name }), [t, name]);
+    // Radio inputs sharing `name` form one group — two questions reusing a
+    // name would clobber each other's selection. Suffix a useId so the group
+    // is per-question (stable across SSR/hydration) rather than per-key.
+    const uid = useId();
+    const ctx = useMemo(
+      () => ({ mode: CHOICE_MODE[t], name: `${name}${uid}` }),
+      [t, name, uid]
+    );
     // Resolved label + type ride on the wrapper so the client handler can
     // pair every control with the text the reader saw (Markdown sheet).
     const labelText = nonEmpty(label) ? label : name;
@@ -318,7 +335,7 @@ export const Question = defineComponent(
           {description}
         </p>
       ) : null,
-      id: `mdxr-q-${name}`,
+      id: `mdxr-q${uid}`,
       labelEl: (
         <>
           {labelText}

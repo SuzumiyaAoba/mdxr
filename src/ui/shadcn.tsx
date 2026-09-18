@@ -64,9 +64,26 @@ import * as toast from "../components/ui/toast.js";
 import * as toggleGroup from "../components/ui/toggle-group.js";
 import * as toggle from "../components/ui/toggle.js";
 import * as tooltip from "../components/ui/tooltip.js";
-import type { AnyComponent, ComponentMap } from "../define.js";
+import type { AnyComponent, ComponentMap, DocProps } from "../define.js";
 import { defineComponent } from "../define.js";
-import { isComponent } from "../guards.js";
+import { isComponent, safeHref } from "../guards.js";
+
+/**
+ * URL-bearing props get a scriptable-scheme check before reaching the DOM —
+ * `looseObject` props mean `<BreadcrumbLink href="javascript:…">` would
+ * otherwise land on `<a href>` unchecked.
+ */
+const URL_PROPS = new Set(["action", "formaction", "href", "src"]);
+
+const sanitizeProps = (props: Record<string, unknown>): DocProps => {
+  const out: Record<string, unknown> = { ...props };
+  for (const k of Object.keys(out)) {
+    if (URL_PROPS.has(k.toLowerCase()) && typeof out[k] === "string") {
+      out[k] = safeHref(out[k]);
+    }
+  }
+  return out;
+};
 
 const MODULES: Record<string, Record<string, unknown>> = {
   accordion,
@@ -150,7 +167,7 @@ const wrap = (
       description: `shadcn/ui ${exportName} (${moduleName}) — Base UI; interactive after hydration.`,
       schema: v.looseObject({}),
     },
-    (props) => <Comp {...props} />
+    (props) => <Comp {...sanitizeProps(props)} />
   );
 
 /**

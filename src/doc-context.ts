@@ -7,6 +7,13 @@ export interface DocContextValue {
    * the file does not exist on disk.
    */
   fileLink?: (relPath: string, line?: string) => string | undefined;
+  /**
+   * The document's render timestamp. Relative-time components (`<Due>`) must
+   * read "now" from here: the value is serialized into the hydration payload,
+   * so client rendering sees the same instant SSR did — a render crossing
+   * midnight can't produce a hydration mismatch.
+   */
+  now?: Date;
 }
 
 /** Render-time document info shared with components. */

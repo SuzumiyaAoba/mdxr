@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { compile } from "@mdx-js/mdx";
 import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
+import { renderToStaticMarkup, renderToString } from "react-dom/server";
 import rehypeKatex from "rehype-katex";
 import remarkDirective from "remark-directive";
 import remarkFrontmatter from "remark-frontmatter";
@@ -13,6 +13,7 @@ import { VFile } from "vfile";
 import { matter } from "vfile-matter";
 
 import type { ComponentMap } from "./define.js";
+import type { DocContextValue } from "./doc-context.js";
 import { DocContext } from "./doc-context.js";
 import { editorUrl } from "./editor.js";
 import { enhanceRenderError, formatError } from "./format-error.js";
@@ -55,6 +56,20 @@ export interface MdxResult {
    * every catalog key.
    */
   usedComponents: string[];
+  /**
+   * ISO timestamp captured at render time and put in `DocContext.now` —
+   * serialized into the hydration spec so relative-time components render
+   * identically on the client.
+   */
+  renderedAt: string;
+  /**
+   * The context value the body was rendered under — anything rendered next to
+   * it (the frontmatter PlanHeader) must use the same Provider or hydration
+   * sees different context.
+   */
+  context: DocContextValue;
+  /** True when the body was rendered for hydration (renderToString). */
+  hydrated: boolean;
 }
 
 /**
@@ -95,7 +110,7 @@ export const mdxToHtml = async (
   source: string,
   components: ComponentMap,
   filePath = "document.mdx",
-  opts: { editor?: string } = {}
+  opts: { editor?: string; hydrate?: boolean } = {}
 ): Promise<MdxResult> => {
   const file = new VFile({ path: filePath, value: source });
   matter(file);
@@ -162,12 +177,20 @@ export const mdxToHtml = async (
   }
 
   takeUsedIcons();
+  const renderedAt = new Date();
+  const context: DocContextValue = { fileLink, now: renderedAt };
+  // hydrateRoot reconciles against markup produced by renderToString — its
+  // `<!-- -->` text-boundary comments keep adjacent text expressions from
+  // merging in the DOM. renderToStaticMarkup omits them, so only purely
+  // static documents use it.
+  const hydrated = (opts.hydrate ?? true) && used.length > 0;
+  const renderToMarkup = hydrated ? renderToString : renderToStaticMarkup;
   let body: string;
   try {
-    body = renderToStaticMarkup(
+    body = renderToMarkup(
       createElement(
         DocContext.Provider,
-        { value: { fileLink } },
+        { value: context },
         createElement(docComponent, { components })
       )
     );
@@ -177,8 +200,11 @@ export const mdxToHtml = async (
   return {
     body,
     code,
+    context,
     fileLinks: Object.fromEntries(fileLinks),
     frontmatter,
+    hydrated,
+    renderedAt: renderedAt.toISOString(),
     usedComponents: used,
     usedIcons: takeUsedIcons(),
   };

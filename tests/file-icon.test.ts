@@ -98,7 +98,8 @@ describe(folderIcon, () => {
   );
 });
 
-const render = async (src: string) => await mdxToHtml(src, builtinComponents);
+const render = async (src: string) =>
+  await mdxToHtml(src, builtinComponents, "document.mdx", { hydrate: false });
 
 describe("rendered file icons", () => {
   it("renders File rows with extension icons", async () => {

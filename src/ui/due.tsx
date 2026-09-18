@@ -1,7 +1,9 @@
 import { differenceInCalendarDays, isValid, parseISO } from "date-fns";
+import { useContext } from "react";
 import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
+import { DocContext } from "../doc-context.js";
 import { nonEmpty } from "../guards.js";
 import { Icon } from "./icon.js";
 
@@ -13,12 +15,15 @@ const CLASSES = {
   soon: "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
 };
 
-const dueState = (date: string): { cls: string; rel: string | null } => {
+const dueState = (
+  date: string,
+  now: Date
+): { cls: string; rel: string | null } => {
   const d = parseISO(date);
   if (!isValid(d)) {
     return { cls: CLASSES.neutral, rel: null };
   }
-  const days = differenceInCalendarDays(d, new Date());
+  const days = differenceInCalendarDays(d, now);
   if (days < 0) {
     return { cls: CLASSES.overdue, rel: `${-days}d overdue` };
   }
@@ -41,7 +46,10 @@ export const Due = defineComponent(
     }),
   },
   ({ date, label }) => {
-    const { cls, rel } = dueState(date);
+    // ctx.now is the SSR timestamp replayed by the hydration bundle; the
+    // fallback covers standalone use (Storybook, tests).
+    const { now } = useContext(DocContext);
+    const { cls, rel } = dueState(date, now ?? new Date());
     return (
       <span
         className={`not-prose inline-flex items-baseline gap-1 rounded-md border px-1.5 py-0.5 text-xs ${cls}`}

@@ -107,6 +107,10 @@ const specialView = (
     );
   }
   if (lang === "diff" || lang === "patch") {
+    // An empty diff fence renders as nothing — fall back to a code block.
+    if (text.trim() === "") {
+      return undefined;
+    }
     return <DiffView filename={filename} text={text} />;
   }
   return terminalView(lang, meta, text, filename);
@@ -129,9 +133,11 @@ export const Pre = (props: DocProps): ReactElement => {
     asString(codeProps.meta) ??
     asString(codeProps.metastring) ??
     "";
+  // Boundary-anchored: `data-title="x"` must not yield a filename header.
   const filename =
-    /(?:title|filename)="(?<name>[^"]+)"/u.exec(meta)?.groups?.name ??
-    /(?:title|filename)=(?<name>[^\s"']+)/u.exec(meta)?.groups?.name;
+    /(?:^|\s)(?:title|filename)="(?<name>[^"]+)"/u.exec(meta)?.groups?.name ??
+    /(?:^|\s)(?:title|filename)='(?<sq>[^']+)'/u.exec(meta)?.groups?.sq ??
+    /(?:^|\s)(?:title|filename)=(?<name>[^\s"']+)/u.exec(meta)?.groups?.name;
   const text = textOf(codeProps.children);
 
   const special = specialView(lang, meta, text, filename);

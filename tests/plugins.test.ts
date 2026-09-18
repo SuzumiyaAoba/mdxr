@@ -75,6 +75,11 @@ describe(remarkCodeFile, () => {
     expect(node).toHaveProperty("value", expect.stringContaining("export"));
   });
 
+  it("sanitizes a double-quote in the path so the title meta stays intact", () => {
+    const { node } = runCodeFile(codeFileEl({ path: 'fixtures/quo"te.ts' }));
+    expect(node).toHaveProperty("meta", 'title="fixtures/quo\'te.ts"');
+  });
+
   it("slices the content to the requested line range", () => {
     const { node } = runCodeFile(
       codeFileEl({ lines: "1-2", path: "fixtures/sample.ts" })

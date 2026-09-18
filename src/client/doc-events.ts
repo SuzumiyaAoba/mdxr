@@ -194,12 +194,19 @@ const askMarkdown = (box: HTMLElement): string => {
       continue;
     }
     const answer = answerOf(q).replaceAll("\n", "\n  ");
-    lines.push(
-      `- **${q.dataset.qLabel ?? ""}**:${answer === "" ? "" : ` ${answer}`}`
-    );
+    // A newline in the label would split the list item — collapse it; `\`/`*`
+    // are escaped so they can't break the surrounding `**…**` emphasis.
+    const label = (q.dataset.qLabel ?? "")
+      .replaceAll(/\s+/gu, " ")
+      .trim()
+      .replaceAll("\\", "\\\\")
+      .replaceAll("*", "\\*");
+    lines.push(`- **${label}**:${answer === "" ? "" : ` ${answer}`}`);
   }
-  const title = box.dataset.askTitle ?? "Answers";
-  return `# ${title}\n\n${lines.length === 0 ? "(no questions)" : lines.join("\n")}`;
+  const title = (box.dataset.askTitle ?? "Answers")
+    .replaceAll(/\s+/gu, " ")
+    .trim();
+  return `# ${title === "" ? "Answers" : title}\n\n${lines.length === 0 ? "(no questions)" : lines.join("\n")}`;
 };
 
 // Re-renders the answer sheet into the block's [data-ask-output] pane.

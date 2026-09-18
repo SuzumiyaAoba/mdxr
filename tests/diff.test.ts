@@ -121,6 +121,85 @@ describe(parseDiff, () => {
     expect(note?.text).toContain("No newline");
   });
 
+  it("treats ---/+++ lines inside a counted hunk as content, not headers", () => {
+    // Deleting `--- old` and adding `+++ new` inside a hunk emits lines that
+    // look exactly like file headers; the @@ counts prove they're content.
+    const files = parseDiff(
+      [
+        "--- a/x.md",
+        "+++ b/x.md",
+        "@@ -1,2 +1,2 @@",
+        "--- old: true",
+        "+++ new: true",
+      ].join("\n")
+    );
+    expect(files).toHaveLength(1);
+    const rows = files[0]?.hunks[0]?.rows ?? [];
+    expect(rows.map((r) => r.kind)).toStrictEqual(["del", "add"]);
+    expect(rows[0]?.text).toBe("-- old: true");
+    expect(rows[1]?.text).toBe("++ new: true");
+  });
+
+  it("keeps a \\ note line after a counted hunk exhausts its tallies", () => {
+    // Counters close the hunk on `+b`, but the trailing `\` line still
+    // belongs inside it — it annotates the previous row, not file meta.
+    const [f] = parseDiff(
+      [
+        "--- a/x.ts",
+        "+++ b/x.ts",
+        "@@ -1 +1 @@",
+        "-a",
+        "+b",
+        "\\ No newline at end of file",
+      ].join("\n")
+    );
+    const last = f?.hunks[0]?.rows.at(-1);
+    expect(last?.kind).toBe("note");
+    expect(last?.text).toContain("No newline");
+    expect(f?.meta).toHaveLength(0);
+  });
+
+  it("honours zero-count hunks (pure additions / deletions)", () => {
+    const [added] = parseDiff(
+      ["--- /dev/null", "+++ b/n.ts", "@@ -0,0 +1,2 @@", "+x", "+y"].join("\n")
+    );
+    expect(added?.hunks[0]?.rows.map((r) => r.kind)).toStrictEqual([
+      "add",
+      "add",
+    ]);
+    expect(added?.adds).toBe(2);
+  });
+
+  it("returns no file entries for empty input", () => {
+    expect(parseDiff("")).toStrictEqual([]);
+    expect(parseDiff("\n\n")).toStrictEqual([]);
+  });
+
+  it("does not split a file on 'diff --git' text mid-line", () => {
+    // A meta/comment line mentioning the header phrase must not open a file.
+    const [f] = parseDiff(
+      [
+        "--- a/x.ts",
+        "+++ b/x.ts",
+        "@@ -1 +1 @@",
+        "-a",
+        "+b",
+        "note: use diff --git a/x b/y to compare",
+      ].join("\n")
+    );
+    expect(f?.meta.some((m) => m.includes("diff --git"))).toBeTruthy();
+  });
+
+  it("normalizes CRLF input", () => {
+    const [f] = parseDiff(
+      "--- a/x.ts\r\n+++ b/x.ts\r\n@@ -1 +1 @@\r\n-a\r\n+b\r\n"
+    );
+    expect(f?.newPath).toBe("x.ts");
+    const rows = f?.hunks[0]?.rows ?? [];
+    expect(rows.map((r) => r.kind)).toStrictEqual(["del", "add"]);
+    expect(rows[1]?.text).toBe("b");
+  });
+
   it("starts a new file when --- appears after content without diff --git", () => {
     const files = parseDiff(
       [

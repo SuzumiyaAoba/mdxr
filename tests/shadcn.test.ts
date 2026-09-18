@@ -4,7 +4,10 @@ import { mdxToHtml } from "../src/mdx.js";
 import { buildCss } from "../src/tailwind.js";
 import { builtinComponents } from "../src/ui/index.js";
 
-const render = async (src: string) => await mdxToHtml(src, builtinComponents);
+// Static markup: hydrate renders with renderToString, whose `<!-- -->`
+// text-boundary comments break plain substring assertions.
+const render = async (src: string) =>
+  await mdxToHtml(src, builtinComponents, "document.mdx", { hydrate: false });
 
 describe("shadcn/ui components in documents", () => {
   it("renders Button with variant classes", async () => {
@@ -49,6 +52,15 @@ describe("shadcn/ui components in documents", () => {
     expect(body).toContain(">T</div>");
     expect(body).toContain("P");
     expect(body).toContain("F");
+  });
+
+  it("strips scriptable href props before they reach the DOM", async () => {
+    /* oxlint-disable no-script-url -- the probe is the attack */
+    const { body } = await render(
+      '<Pagination><PaginationContent><PaginationItem><PaginationLink href="javascript:alert(1)">1</PaginationLink></PaginationItem></PaginationContent></Pagination>'
+    );
+    expect(body).not.toContain("javascript:");
+    /* oxlint-enable no-script-url */
   });
 
   it("renders Fieldset with legend", async () => {

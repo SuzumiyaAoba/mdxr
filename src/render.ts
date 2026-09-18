@@ -3,14 +3,16 @@ import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 
 import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
+import { renderToStaticMarkup, renderToString } from "react-dom/server";
 
 import { clientJs } from "./client-js.js";
 import { mergeUserComponents } from "./component-map.js";
 import type { ResolvedConfig } from "./config.js";
 import { loadConfig } from "./config.js";
 import type { ComponentMap } from "./define.js";
+import { DocContext } from "./doc-context.js";
 import { formatError } from "./format-error.js";
+import { nonEmpty } from "./guards.js";
 import { htmlDocument } from "./html.js";
 import { buildHydrateScript } from "./hydrate.js";
 import { loadUserModule, resolveModuleEntry } from "./load-user-module.js";
@@ -75,6 +77,12 @@ export interface RenderOptions {
    * Default true; `false` emits purely static HTML.
    */
   hydrate?: boolean;
+  /**
+   * Files the render pulled in (theme CSS and its imports) — `mdxr serve`
+   * registers them as extra watch targets so edits outside the document's
+   * own directory still trigger a rebuild.
+   */
+  onDependencies?: (paths: string[]) => void;
 }
 
 export interface RenderSourceOptions extends RenderOptions {
@@ -102,6 +110,7 @@ const buildHydrateBundle = async (args: {
   fileLinks: Record<string, string>;
   headerProps?: Record<string, string | undefined>;
   hydrate?: boolean;
+  now: string;
   usedComponents: string[];
   usedIcons: string[];
 }): Promise<string | undefined> => {
@@ -117,6 +126,7 @@ const buildHydrateBundle = async (args: {
           : resolveModuleEntry(args.config.componentsPath),
       fileLinks: args.fileLinks,
       header: args.headerProps,
+      now: args.now,
       usedComponents: args.usedComponents,
       usedIcons: args.usedIcons,
     });
@@ -126,6 +136,29 @@ const buildHydrateBundle = async (args: {
     );
     return undefined;
   }
+};
+
+/**
+ * PlanHeader props from frontmatter — present only with a `title` and no
+ * `<Plan>`-style `<article>` root in the body (that would render a second
+ * header). Used for both the SSR header and the hydration payload.
+ */
+const frontmatterHeader = (
+  fm: (key: string) => string | undefined,
+  body: string
+): Record<string, string | undefined> | undefined => {
+  const title = fm("title");
+  if (title === undefined || title === "" || /<article/u.test(body)) {
+    return undefined;
+  }
+  return {
+    date: fm("date"),
+    owner: fm("owner"),
+    status: fm("status"),
+    title,
+    updated: fm("updated"),
+    version: fm("version"),
+  };
 };
 
 /** Render MDX source text to a standalone HTML document. */
@@ -156,11 +189,23 @@ export const render = async (
     ...user.components,
   };
 
-  const { body, code, fileLinks, frontmatter, usedComponents, usedIcons } =
-    await mdxToHtml(source, components, filePath, {
-      editor: config.editor,
-    });
+  const {
+    body,
+    code,
+    context,
+    fileLinks,
+    frontmatter,
+    hydrated,
+    renderedAt,
+    usedComponents,
+    usedIcons,
+  } = await mdxToHtml(source, components, filePath, {
+    editor: config.editor,
+    hydrate: opts.hydrate,
+  });
 
+  // Read once for the candidate scan; the build imports the theme by path so
+  // relative `@import`s inside it resolve against the theme's own directory.
   const themeCss =
     config.themePath === undefined
       ? undefined
@@ -180,14 +225,8 @@ export const render = async (
       ? []
       : [{ content: config.componentsCode, extension: "js" }]),
   ];
-  const { css } = await buildCss(sources, themeCss);
-
-  const fmTitle =
-    typeof frontmatter.title === "string" ? frontmatter.title : undefined;
-  const title =
-    fmTitle ??
-    /<h1[^>]*>(?<text>[^<]+)</u.exec(body)?.groups?.text ??
-    "mdxr document";
+  const { css, dependencies } = await buildCss(sources, config.themePath);
+  opts.onDependencies?.(dependencies);
 
   const fmStr = (key: string): string | undefined => {
     const val: unknown = frontmatter[key];
@@ -201,21 +240,35 @@ export const render = async (
     return typeof val === "number" ? String(val) : undefined;
   };
 
-  const headerProps =
-    fmTitle !== undefined && fmTitle !== "" && !/<article/u.test(body)
-      ? {
-          date: fmStr("date"),
-          owner: fmStr("owner"),
-          status: fmStr("status"),
-          title: fmTitle,
-          updated: fmStr("updated"),
-          version: fmStr("version"),
-        }
-      : undefined;
+  const fmTitle = fmStr("title");
+  // `<h1>` may hold inline elements — take the full inner HTML, drop the
+  // tags, and undo the entities React emitted (escapeHtml re-encodes).
+  const h1Text = /<h1[^>]*>(?<text>[\s\S]*?)<\/h1>/u
+    .exec(body)
+    ?.groups?.text.replaceAll(/<[^>]*>/gu, "")
+    .replaceAll("&#x27;", "'")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&amp;", "&")
+    .trim();
+  const title =
+    fmTitle ?? (nonEmpty(h1Text) ? h1Text : undefined) ?? "mdxr document";
+
+  const headerProps = frontmatterHeader(fmStr, body);
+  // Same Provider + renderer as the body — the client hydrates the header
+  // inside DocContext, and renderToString's text-boundary comments must be
+  // present or hydrateRoot sees different markup.
   const header =
     headerProps === undefined
       ? ""
-      : renderToStaticMarkup(createElement(PlanHeader, headerProps));
+      : (hydrated ? renderToString : renderToStaticMarkup)(
+          createElement(
+            DocContext.Provider,
+            { value: context },
+            createElement(PlanHeader, headerProps)
+          )
+        );
 
   // Icon recording spans both SSR passes (body inside mdxToHtml, header here).
   usedIcons.push(...takeUsedIcons());
@@ -228,6 +281,7 @@ export const render = async (
       fileLinks,
       headerProps,
       hydrate: opts.hydrate,
+      now: renderedAt,
       usedComponents,
       usedIcons,
     }),

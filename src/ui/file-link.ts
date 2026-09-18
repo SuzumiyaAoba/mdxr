@@ -1,7 +1,7 @@
 import { useContext } from "react";
 
 import { DocContext } from "../doc-context.js";
-import { nonEmpty } from "../guards.js";
+import { nonEmpty, safeHref } from "../guards.js";
 import { firstLine } from "../lines.js";
 
 /**
@@ -15,8 +15,9 @@ export const useFileLink = (
   href?: string
 ): string | undefined => {
   const { fileLink } = useContext(DocContext);
-  if (nonEmpty(href)) {
-    return href;
+  const override = safeHref(href);
+  if (override !== undefined) {
+    return override;
   }
   if (!nonEmpty(relPath) || fileLink === undefined) {
     return undefined;

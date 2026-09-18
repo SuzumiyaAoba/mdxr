@@ -111,7 +111,14 @@ const getHighlighter = async (): Promise<Highlighter> => {
     langs: [...PRELOADED_LANGS],
     themes: [THEMES.light, THEMES.dark],
   });
-  return await highlighterPromise;
+  try {
+    return await highlighterPromise;
+  } catch (error) {
+    // A rejected promise would otherwise poison every later render in this
+    // process — clear it so a transient init failure can retry.
+    highlighterPromise = undefined;
+    throw error;
+  }
 };
 
 const isElement = (node: unknown): node is Element =>
@@ -179,8 +186,14 @@ const readyHighlighter = async (
   if (SKIP_LANGS.has(lang)) {
     return undefined;
   }
-  const highlighter = await getHighlighter();
-  return (await ensureLanguage(highlighter, lang)) ? highlighter : undefined;
+  try {
+    const highlighter = await getHighlighter();
+    return (await ensureLanguage(highlighter, lang)) ? highlighter : undefined;
+  } catch {
+    // Highlighter init/grammar-load failure degrades to unhighlighted code
+    // rather than failing the whole document render.
+    return undefined;
+  }
 };
 
 /**
@@ -243,15 +256,22 @@ export const rehypeShiki = () => async (tree: Root) => {
       if (highlighter === undefined) {
         return;
       }
-      // mdast adds a trailing newline to code values; keep it out of the
-      // highlight input or it surfaces as a stray empty line.
-      const hast = highlighter.codeToHast(text.replace(/\n$/u, ""), {
-        defaultColor: false,
-        lang,
-        meta: { __raw: meta },
-        themes: THEMES,
-        transformers: TRANSFORMERS,
-      });
+      let hast: Root;
+      try {
+        // mdast adds a trailing newline to code values; keep it out of the
+        // highlight input or it surfaces as a stray empty line.
+        hast = highlighter.codeToHast(text.replace(/\n$/u, ""), {
+          defaultColor: false,
+          lang,
+          meta: { __raw: meta },
+          themes: THEMES,
+          transformers: TRANSFORMERS,
+        });
+      } catch {
+        // One broken grammar must not fail the whole document — the fence
+        // degrades to plain unhighlighted code.
+        return;
+      }
       const shikiPre = hast.children.find(
         (child): child is Element => isElement(child) && child.tagName === "pre"
       );

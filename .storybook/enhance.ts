@@ -71,7 +71,13 @@ const loadMermaid = async (): Promise<MermaidApi> => {
 
 const getMermaid = async (): Promise<MermaidApi> => {
   mermaidPromise ??= loadMermaid();
-  return await mermaidPromise;
+  try {
+    return await mermaidPromise;
+  } catch (error) {
+    // Don't poison every later enhance pass on one transient CDN failure.
+    mermaidPromise = undefined;
+    throw error;
+  }
 };
 
 /**

@@ -36,5 +36,12 @@ const buildClientJs = async (): Promise<string> => {
  */
 export const clientJs = async (): Promise<string> => {
   cache ??= buildClientJs();
-  return await cache;
+  try {
+    return await cache;
+  } catch (error) {
+    // A rejected bundle promise would otherwise poison every later render
+    // in this process (mdxr serve keeps failing on one transient error).
+    cache = undefined;
+    throw error;
+  }
 };

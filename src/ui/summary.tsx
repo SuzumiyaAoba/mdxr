@@ -13,8 +13,11 @@ export const Summary = defineComponent(
     }),
   },
   ({ done, total, label }) => {
-    const d = Number(done);
-    const t = Number(total);
+    // Unparseable values read as 0 — `NaN` would leak into the label text
+    // and produce an invalid `width: NaN%` style. Negative counts are
+    // clamped too: `width: -50%` is just as invalid.
+    const d = Math.max(0, Number.isFinite(Number(done)) ? Number(done) : 0);
+    const t = Math.max(0, Number.isFinite(Number(total)) ? Number(total) : 0);
     const pct = t > 0 ? Math.min(100, Math.round((d / t) * 100)) : 0;
     return (
       <div className="not-prose my-6">

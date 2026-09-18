@@ -29,6 +29,10 @@ const resolveCss = async (
   id: string,
   base: string
 ): Promise<string | false> => {
+  // Absolute ids (the theme file is @import'ed by path) resolve to themselves.
+  if (path.isAbsolute(id)) {
+    return id;
+  }
   // Tailwind v4 ships its CSS layers as files inside the package.
   if (id === "tailwindcss") {
     return path.join(tailwindDir, "index.css");
@@ -59,14 +63,21 @@ const decodeEntities = (html: string): string =>
     .replaceAll("&gt;", ">")
     .replaceAll("&amp;", "&");
 
+/** `@import "<path>"` — quoted, with Windows separators normalized. */
+const importLine = (absPath: string): string =>
+  `@import ${JSON.stringify(absPath.replaceAll("\\", "/"))};`;
+
 /**
  * Compile Tailwind v4 CSS covering every class candidate found in `sources`
  * (the rendered HTML, the .mdx source, bundled user components, our own dist).
+ * `themePath` is imported by path — not inlined — so `@import "./x.css"`
+ * inside a theme file resolves relative to the theme, and the file lands in
+ * `dependencies` (which `mdxr serve` turns into watch targets).
  * Returns minified CSS ready to inline into the HTML document.
  */
 export const buildCss = async (
   sources: CssSource[],
-  themeCss?: string
+  themePath?: string
 ): Promise<{ css: string; dependencies: string[] }> => {
   const input = [
     // globals.css holds the shadcn/Base UI theme tokens (@theme, :root/.dark
@@ -77,7 +88,7 @@ export const buildCss = async (
     // installed @iconify-json/* set works).
     '@plugin "@iconify/tailwind4";',
     BASE_CSS,
-    themeCss ?? "",
+    themePath === undefined ? "" : importLine(themePath),
   ].join("\n");
 
   // `onDependency` is optional in the types but invoked unconditionally

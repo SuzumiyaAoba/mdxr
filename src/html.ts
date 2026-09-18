@@ -20,6 +20,14 @@ export const inlineScript = (js: string): string =>
     .replaceAll(/<\/script/giu, "\\u003C/script")
     .replaceAll("<!--", "\\u003C!--");
 
+/**
+ * Inline `<style>` content: a `</style` byte sequence inside the CSS (e.g. a
+ * `content:` string in user theme CSS) would end the element early. `<\/`
+ * reads identically inside CSS strings/comments, so it's safe to emit.
+ */
+export const inlineStyle = (css: string): string =>
+  css.replaceAll(/<\/style/giu, "<\\/style");
+
 const ESCAPES: Record<string, string> = {
   '"': "&quot;",
   "&": "&amp;",
@@ -69,7 +77,7 @@ export const htmlDocument = (o: DocumentOptions): string => `<!doctype html>
 <title>${escapeHtml(o.title)}</title>
 <script>${inlineScript(THEME_JS)}</script>
 ${o.needsKatex === true ? `<link rel="stylesheet" href="${KATEX_CDN_URL}">` : ""}
-<style>${o.css}</style>
+<style>${inlineStyle(o.css)}</style>
 </head>
 <body class="bg-white text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100">
 ${THEME_TOGGLE_HTML}

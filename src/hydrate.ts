@@ -216,8 +216,9 @@ const scanMdxrImports = async (importer: string): Promise<MdxrImports> => {
   }
   const names = new Set<string>();
   const vAliases: string[] = [];
+  // `\s*` not `\s+`: `import{v}from"mdxr"` is legal and must still register.
   const fromRe =
-    /(?:import|export)\s+(?!type\b)(?<clause>[^;"']*?)\s+from\s+["']mdxr(?:\/components)?["']/gu;
+    /(?:import|export)\s*(?!type\b)(?<clause>[^;"']*?)\s*from\s*["']mdxr(?:\/components)?["']/gu;
   let stripped = source;
   for (const m of source.matchAll(fromRe)) {
     const clause = m.groups?.clause ?? "";
@@ -227,6 +228,12 @@ const scanMdxrImports = async (importer: string): Promise<MdxrImports> => {
     }
     parseClause(clause, names, vAliases);
   }
+  // Type-only imports don't run, but a leftover `import type { v }` would
+  // still trip the `\bv\b` leftover scan and force-ship all of valibot.
+  stripped = stripped.replaceAll(
+    /(?:import|export)\s+type\s[^;]*?(?:;|$)/gmu,
+    ""
+  );
   if (
     /import\s+["']mdxr(?:\/components)?["']/u.test(source) ||
     /import\s*\(\s*["']mdxr(?:\/components)?["']/u.test(source)
@@ -276,7 +283,13 @@ const runtimeModuleContents = (
         : "export const v = {};"
     );
   }
-  const wanted = imports.names === "all" ? map.keys() : imports.names;
+  // "all" (namespace/default/dynamic imports) must cover EXTRA_MODULES too —
+  // a user touching `mdxr.builtinComponents` in the browser would otherwise
+  // see undefined where SSR saw the catalog.
+  const wanted =
+    imports.names === "all"
+      ? [...map.keys(), ...Object.keys(EXTRA_MODULES)]
+      : [...imports.names];
   const byModule = new Map<string, string[]>();
   for (const name of wanted) {
     const mod = map.get(name) ?? EXTRA_MODULES[name];
@@ -385,6 +398,8 @@ export interface HydrateSpec {
   fileLinks: Record<string, string>;
   /** PlanHeader props, present iff the document header was rendered. */
   header?: Record<string, string | undefined>;
+  /** SSR render timestamp (ISO) — replayed into `DocContext.now`. */
+  now?: string;
   /** Catalog keys the document referenced — only these get imported. */
   usedComponents: string[];
   /** Iconify names (`prefix:name`) resolved during SSR. */
@@ -423,7 +438,11 @@ export const buildHydrateScript = async (
   };
 
   const mountDocument = bind("mountDocument");
-  const planHeader = bind("PlanHeader");
+  // PlanHeader is only needed when a frontmatter header was rendered —
+  // binding it unconditionally would drag Meta/Due/StatusBadge into every
+  // bundle.
+  const planHeader =
+    spec.header === undefined ? "undefined" : bind("PlanHeader");
 
   for (const name of spec.usedComponents) {
     // User components merge via their namespace below; the `hasOwn` check must
@@ -451,6 +470,7 @@ ${mountDocument}({
   doc: __mdxrDoc,
   fileLinks: ${JSON.stringify(spec.fileLinks)},
   headerProps: ${JSON.stringify(spec.header)},
+  now: ${JSON.stringify(spec.now)},
   planHeader: ${planHeader},
   userModule: ${spec.componentsPath === undefined ? "undefined" : "__mdxrUser"},
 });

@@ -5,11 +5,15 @@ import { describe, expect, it } from "vitest";
 import { mdxToHtml } from "../src/mdx.js";
 import { builtinComponents } from "../src/ui/index.js";
 
-const render = async (src: string) => await mdxToHtml(src, builtinComponents);
+// Assertions match against renderToStaticMarkup output — hydrated docs
+// render with renderToString instead, which emits `<!-- -->` text-boundary
+// comments that break plain substring checks.
+const render = async (src: string) =>
+  await mdxToHtml(src, builtinComponents, "document.mdx", { hydrate: false });
 
 /** A filePath inside tests/ so <CodeFile> resolves fixtures/ relatively. */
 const renderAt = async (src: string, docPath: string) =>
-  await mdxToHtml(src, builtinComponents, docPath);
+  await mdxToHtml(src, builtinComponents, docPath, { hydrate: false });
 
 const fixtureDoc = fileURLToPath(new URL("fixtures/doc.mdx", import.meta.url));
 
@@ -769,9 +773,11 @@ describe(mdxToHtml, () => {
     );
     expect(body).toContain("data-ask");
     expect(body).toContain('type="radio"');
-    expect(body).toContain('name="approach"');
+    // Choice groups carry the question name plus a per-question useId so two
+    // questions sharing `name` can't clobber each other's selection.
+    expect(body).toContain('name="approach_');
     expect(body).toContain('type="checkbox"');
-    expect(body).toContain('name="scope"');
+    expect(body).toContain('name="scope_');
   });
 
   it("renders text/textarea/select/toggle questions", async () => {

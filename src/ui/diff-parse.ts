@@ -27,7 +27,7 @@ export interface FileDiff {
 }
 
 const GIT_RE =
-  /^diff --git "(?<aq>[^"]+)" "(?<bq>[^"]+)"|diff --git (?<a>\S+) (?<b>\S+)/u;
+  /^diff --git (?:"(?<aq>[^"]+)" "(?<bq>[^"]+)"|(?<a>\S+) (?<b>\S+))/u;
 const OLD_RE = /^--- (?:"(?<q>[^"]+)"|(?<p>\S+))/u;
 const NEW_RE = /^\+\+\+ (?:"(?<q>[^"]+)"|(?<p>\S+))/u;
 const HUNK_RE =
@@ -56,13 +56,23 @@ interface ParseState {
   cur?: FileDiff;
   files: FileDiff[];
   hunk?: DiffHunk;
+  /** Rows the declared hunk still expects on each side (Infinity for implicit
+   * hunks — bare +/- streams have no header counts to bound them). */
+  newLeft: number;
   newNo: number;
+  oldLeft: number;
   oldNo: number;
   /** True once the current file consumed a `---`/`+++` header line — the
    * paths a `diff --git` line sets don't count (a `---` after it belongs to
    * the same file, not a new one). */
   seenHeader: boolean;
 }
+
+/** The active hunk still has rows to consume per its `@@` counts. */
+const hunkLive = (st: ParseState): boolean =>
+  st.hunk !== undefined &&
+  st.hunk.header !== undefined &&
+  (st.oldLeft > 0 || st.newLeft > 0);
 
 /** Current file already carries content → a new `---` starts a new file. */
 const hasContent = (st: ParseState): boolean =>
@@ -116,13 +126,17 @@ const hunkRow = (st: ParseState, line: string): void => {
     hunk.rows.push({ kind: "note", text: line });
   } else if (line.startsWith("+")) {
     f.adds += 1;
+    st.newLeft -= 1;
     hunk.rows.push({ kind: "add", newLine: st.newNo, text: line.slice(1) });
     st.newNo += 1;
   } else if (line.startsWith("-")) {
     f.dels += 1;
+    st.oldLeft -= 1;
     hunk.rows.push({ kind: "del", oldLine: st.oldNo, text: line.slice(1) });
     st.oldNo += 1;
   } else {
+    st.oldLeft -= 1;
+    st.newLeft -= 1;
     hunk.rows.push({
       kind: "ctx",
       newLine: st.newNo,
@@ -131,6 +145,11 @@ const hunkRow = (st: ParseState, line: string): void => {
     });
     st.oldNo += 1;
     st.newNo += 1;
+  }
+  // A counted hunk is done when its `@@` tallies run out — the next `---` /
+  // `diff --git` line is a file boundary again, not content.
+  if (hunk.header !== undefined && st.oldLeft <= 0 && st.newLeft <= 0) {
+    st.hunk = undefined;
   }
 };
 
@@ -150,10 +169,14 @@ const looseLine = (st: ParseState, line: string): void => {
   }
   if (line.startsWith("+")) {
     f.adds += 1;
+    st.oldLeft = Number.POSITIVE_INFINITY;
+    st.newLeft = Number.POSITIVE_INFINITY;
     st.hunk = { rows: [{ kind: "add", text: line.slice(1) }] };
     f.hunks.push(st.hunk);
   } else if (line.startsWith("-")) {
     f.dels += 1;
+    st.oldLeft = Number.POSITIVE_INFINITY;
+    st.newLeft = Number.POSITIVE_INFINITY;
     st.hunk = { rows: [{ kind: "del", text: line.slice(1) }] };
     f.hunks.push(st.hunk);
   } else if (line !== "") {
@@ -176,9 +199,15 @@ const parseLine = (st: ParseState, line: string, nextLine: string): void => {
     return;
   }
 
-  // A `---`/`+++` pair is a file header even mid-"hunk" (loose diffs).
+  // A `---`/`+++` pair is a file header — but only once the current counted
+  // hunk is exhausted. Inside a `@@` hunk body the pair is content: deleting
+  // a line like `-- a/x` and adding `++ b/x` emits exactly those rows (e.g.
+  // YAML frontmatter or nested diffs).
   const pair = OLD_RE.test(line) && NEW_RE.test(nextLine);
-  if ((st.hunk === undefined || pair) && fileHeader(st, line)) {
+  if (
+    (st.hunk === undefined || (pair && !hunkLive(st))) &&
+    fileHeader(st, line)
+  ) {
     return;
   }
 
@@ -188,10 +217,20 @@ const parseLine = (st: ParseState, line: string, nextLine: string): void => {
     push(st, line).hunks.push(st.hunk);
     st.oldNo = Number(hunkM.groups.o);
     st.newNo = Number(hunkM.groups.n);
+    st.oldLeft = Number(hunkM.groups.oc ?? "1");
+    st.newLeft = Number(hunkM.groups.nc ?? "1");
     return;
   }
 
   if (st.hunk === undefined) {
+    // `\ No newline at end of file` follows the row it annotates — the hunk's
+    // counters may already have closed it, but the note still belongs inside.
+    const last = st.cur?.hunks.at(-1);
+    if (line.startsWith("\\") && last !== undefined) {
+      push(st, line);
+      last.rows.push({ kind: "note", text: line });
+      return;
+    }
     looseLine(st, line);
     return;
   }
@@ -206,10 +245,27 @@ const parseLine = (st: ParseState, line: string, nextLine: string): void => {
  * headers collect into an implicit hunk.
  */
 export const parseDiff = (text: string): FileDiff[] => {
-  const lines = text.replace(/\n+$/u, "").split("\n");
-  const st: ParseState = { files: [], newNo: 0, oldNo: 0, seenHeader: false };
+  // Normalize CRLF — a trailing \r would leak into row text and break the
+  // regexes that test the *next* line's structure.
+  const lines = text.replaceAll("\r\n", "\n").replace(/\n+$/u, "").split("\n");
+  const st: ParseState = {
+    files: [],
+    newLeft: 0,
+    newNo: 0,
+    oldLeft: 0,
+    oldNo: 0,
+    seenHeader: false,
+  };
   for (let i = 0; i < lines.length; i += 1) {
     parseLine(st, lines[i] ?? "", lines[i + 1] ?? "");
   }
-  return st.files;
+  // Drop shells that never got content — an empty input would otherwise
+  // yield one blank file card.
+  return st.files.filter(
+    (f) =>
+      f.hunks.length > 0 ||
+      f.meta.length > 0 ||
+      f.oldPath !== undefined ||
+      f.newPath !== undefined
+  );
 };

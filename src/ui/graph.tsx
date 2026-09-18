@@ -205,13 +205,24 @@ export const Graph = defineComponent(
   ({ title, direction, children }) => {
     const { edges, nodes, rest } = collectSpecs(children);
 
-    if (nodes.length === 0) {
+    // Duplicate ids would stack at the same dagre position (and repeat a
+    // React key) — first wins, matching layoutGraph's own dedup.
+    const seen = new Set<string>();
+    const uniqueNodes = nodes.filter((n) => {
+      if (seen.has(n.id)) {
+        return false;
+      }
+      seen.add(n.id);
+      return true;
+    });
+
+    if (uniqueNodes.length === 0) {
       // No <Node> children: render content as-is (standalone Node/Edge views).
       return <Section title={title}>{rest}</Section>;
     }
 
     const { g, height, liveEdges, width } = layoutGraph(
-      nodes,
+      uniqueNodes,
       edges,
       direction
     );
@@ -238,7 +249,7 @@ export const Graph = defineComponent(
             {liveEdges.map((e, i) => (
               <EdgeLabelChip e={e} g={g} key={`label-${i}`} />
             ))}
-            {nodes.map((n) => (
+            {uniqueNodes.map((n) => (
               <PlacedNode g={g} key={n.id} n={n} />
             ))}
           </div>

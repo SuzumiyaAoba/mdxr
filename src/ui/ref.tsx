@@ -2,6 +2,7 @@ import type { ReactElement, ReactNode } from "react";
 import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
+import { safeHref } from "../guards.js";
 import { Icon } from "./icon.js";
 import { BORDER_CLS, TEXT } from "./tones.js";
 
@@ -15,7 +16,7 @@ export const Ref = defineComponent(
   },
   ({ href, title, children }) => (
     <a
-      href={href}
+      href={safeHref(href)}
       target="_blank"
       rel="noopener noreferrer"
       className={`group not-prose my-6 flex items-start gap-3 rounded-lg border px-4 py-3 text-inherit no-underline transition-colors hover:bg-neutral-50 active:bg-neutral-100 dark:hover:bg-neutral-900 dark:active:bg-neutral-800 ${BORDER_CLS}`}
@@ -44,13 +45,26 @@ const GH_PATH: Record<"commit" | "issue" | "pr", string> = {
   pr: "pull",
 };
 
+/** One repo/host path segment — GitHub names are alnum, `-`, `_`, `.`. */
+const REPO_SEG = /^[\w.-]+$/u;
+
 /** `o/r` → github.com; `host/o/r` or a full URL → that host (e.g. GHES). */
 const repoBase = (repo: string): string => {
   const r = repo.replace(/\/+$/u, "");
+  // A `proto://` value is used verbatim only for web schemes — a
+  // `javascript:`/`data:` repo would otherwise land in `href` unchecked.
   if (r.includes("://")) {
-    return r;
+    return /^https?:\/\//iu.test(r) ? r : `https://github.com/${r}`;
   }
-  return r.split("/").length > 2 ? `https://${r}` : `https://github.com/${r}`;
+  // The host/o/r form needs plausible segments — `javascript:alert(1)//x`
+  // has no `://` but is no repo either; treating its first piece as a host
+  // would mint `https://javascript:…` links. Degrade to a github.com path,
+  // which is at worst a broken link, never a scriptable one.
+  const segs = r.split("/");
+  if (!segs.every((s) => REPO_SEG.test(s))) {
+    return `https://github.com/${r}`;
+  }
+  return segs.length > 2 ? `https://${r}` : `https://github.com/${r}`;
 };
 
 const ghLink = (
@@ -70,7 +84,7 @@ const refChip = (
   children: ReactNode
 ): ReactElement => (
   <a
-    href={href ?? ghLink(kind, repo, number)}
+    href={safeHref(href) ?? ghLink(kind, repo, number)}
     target="_blank"
     rel="noopener noreferrer"
     className={CHIP_CLS}
@@ -126,7 +140,7 @@ export const Commit = defineComponent(
   },
   ({ repo, sha, href, children }) => (
     <a
-      href={href ?? ghLink("commit", repo, sha)}
+      href={safeHref(href) ?? ghLink("commit", repo, sha)}
       target="_blank"
       rel="noopener noreferrer"
       className={CHIP_CLS}

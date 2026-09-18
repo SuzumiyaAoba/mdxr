@@ -74,7 +74,9 @@ export const remarkCodeFile = () => (tree: Node, file: VFile) => {
     delete target.attributes;
     delete target.children;
     target.lang = lang === "" ? undefined : lang;
-    target.meta = `title="${rel}${titleSuffix}"`;
+    // `"` inside a path would close the title="…" meta early — quote it as `'`.
+    const title = rel.replaceAll('"', "'");
+    target.meta = `title="${title}${titleSuffix}"`;
     target.value = content;
   });
 };

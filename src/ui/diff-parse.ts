@@ -41,6 +41,20 @@ export interface DiffHlToken {
  */
 export type DiffHl = (DiffHlToken[] | null)[][][];
 
+/** JSON from the fence's `data-diffhl` attribute, or undefined when absent or
+ * malformed — malformed data degrades to unhighlighted rows, never a crash. */
+export const parseDiffHl = (raw: string | undefined): DiffHl | undefined => {
+  if (raw === undefined) {
+    return undefined;
+  }
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as DiffHl) : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 const GIT_RE =
   /^diff --git (?:"(?<aq>[^"]+)" "(?<bq>[^"]+)"|(?<a>\S+) (?<b>\S+))/u;
 const OLD_RE = /^--- (?:"(?<q>[^"]+)"|(?<p>\S+))/u;

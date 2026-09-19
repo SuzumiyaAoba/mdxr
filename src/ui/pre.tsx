@@ -8,6 +8,7 @@ import { asString, isRecord, nonEmpty } from "../guards.js";
 import { fenceFilename, firstLine, splitPathLines } from "../lines.js";
 import { CaptionBar, CopyButton, MaybeLink, Panel } from "./bits.js";
 import type { DiffHl } from "./diff-parse.js";
+import { parseDiffHl } from "./diff-parse.js";
 import { DiffView } from "./diff.js";
 import { fileIcon } from "./file-icon.js";
 import { Icon } from "./icon.js";
@@ -31,7 +32,7 @@ const useFilenameLink = (filename: string | undefined): string | undefined => {
 };
 
 /** Filename/language bar for a fenced block; links to the file when it exists. */
-const CodeHeader = (props: {
+export const CodeHeader = (props: {
   filename?: string;
   lang?: string;
   text: string;
@@ -84,20 +85,6 @@ const terminalView = (
       title={filename}
     />
   );
-};
-
-/** JSON from the fence's `data-diffhl` attribute, or undefined when absent or
- * malformed — malformed data degrades to unhighlighted rows, never a crash. */
-const parseDiffHl = (raw: string | undefined): DiffHl | undefined => {
-  if (raw === undefined) {
-    return undefined;
-  }
-  try {
-    const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as DiffHl) : undefined;
-  } catch {
-    return undefined;
-  }
 };
 
 /**

@@ -12,6 +12,7 @@ import { Change, Changes } from "./changes.js";
 import { Check, Checks } from "./checks.js";
 import { Cmd } from "./cmd.js";
 import { Column, Columns } from "./columns.js";
+import { Comments } from "./comments.js";
 import { After, Before } from "./compare.js";
 import { Decision } from "./decision.js";
 import { Dep, Deps } from "./deps.js";
@@ -96,13 +97,14 @@ export { Change, CHANGE_KINDS, Changes } from "./changes.js";
 export { Check, CHECK_STATUSES, Checks } from "./checks.js";
 export { Cmd } from "./cmd.js";
 export { Column, Columns } from "./columns.js";
+export { Comments } from "./comments.js";
 export { Board, BoardCard, Lane } from "./board.js";
 export { After, Before } from "./compare.js";
 export { Decision, DECISION_STATUSES } from "./decision.js";
 export { Dep, DEP_KINDS, Deps } from "./deps.js";
 export { Details } from "./details.js";
 export { DiffView, parseDiff } from "./diff.js";
-export type { FileDiff } from "./diff.js";
+export type { DiffCommentSpec, FileDiff } from "./diff.js";
 export { DiffStat } from "./diffstat.js";
 export { Due } from "./due.js";
 export { Effort, EFFORT_SIZES } from "./effort.js";
@@ -218,6 +220,7 @@ export const builtinComponents: ComponentMap = {
   Column,
   Columns,
   Comment,
+  Comments,
   Commit,
   Day,
   DbField,

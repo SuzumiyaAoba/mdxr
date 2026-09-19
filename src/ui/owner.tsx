@@ -4,7 +4,8 @@ import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { TEXT } from "./tones.js";
 
-const initials = (name: string): string => {
+/** `"Bob Tanaka"` → `"BT"`, `"@devin"` → `"D"` — avatar text from a name. */
+export const initials = (name: string): string => {
   const clean = name.replace(/^@+/u, "").trim();
   const parts = clean.split(/[\s._-]+/u).filter(Boolean);
   const chars =

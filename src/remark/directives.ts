@@ -18,6 +18,7 @@ const CONTAINER_COMPONENTS: Record<string, string> = {
   check: "Check",
   checks: "Checks",
   comment: "Comment",
+  comments: "Comments",
   day: "Day",
   dbfield: "DbField",
   dbtable: "DbTable",

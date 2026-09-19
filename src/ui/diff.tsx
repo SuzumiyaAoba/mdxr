@@ -1,7 +1,14 @@
+import { Fragment } from "react";
 import type { ReactElement, ReactNode } from "react";
 
 import { nonEmpty } from "../guards.js";
-import { CaptionBar, CopyButton, MaybeLink, Panel } from "./bits.js";
+import {
+  CaptionBar,
+  CommentStrip,
+  CopyButton,
+  MaybeLink,
+  Panel,
+} from "./bits.js";
 import type { DiffHl, DiffHlToken, DiffRow, FileDiff } from "./diff-parse.js";
 import { parseDiff } from "./diff-parse.js";
 import { fileIcon } from "./file-icon.js";
@@ -21,6 +28,23 @@ import {
 
 export { parseDiff } from "./diff-parse.js";
 export type { FileDiff } from "./diff-parse.js";
+
+/**
+ * A comment thread anchored to a rendered diff row (`<Comments>`). `range`
+ * selects rows by line number on `side` — the thread lands after the last
+ * matching row, like a GitHub review comment; a range matching no row (and
+ * a `range`-less, file-level comment) drops into the file card's tail.
+ */
+export interface DiffCommentSpec {
+  /** Path selecting the file card; absent targets the first file. */
+  file?: string;
+  /** Rendered comment card(s) injected at the anchor. */
+  node: ReactNode;
+  /** Inclusive line range on `side`; `end` undefined reads "to EOF". */
+  range?: { end?: number; start: number };
+  /** Side whose line numbers anchor the comment — `new` (default) or `old`. */
+  side: "new" | "old";
+}
 
 /**
  * Unified-diff rendering. ```diff / ```patch fences route here via `Pre`,
@@ -158,36 +182,93 @@ const RowContent = ({
 };
 
 const DiffRows = ({
+  after,
   hlRows,
   rows,
 }: {
+  /** Comment threads keyed by row index — rendered under that row. */
+  after?: ReadonlyMap<number, ReactNode[]>;
   hlRows?: (DiffHlToken[] | null)[];
   rows: DiffRow[];
 }): ReactElement => (
   <div className="font-mono text-[0.8125rem] leading-5">
     {rows.map((row, i) => (
-      <div
-        className={`grid grid-cols-[2.5rem_2.5rem_1.25rem_minmax(0,1fr)] ${ROW_CLS[row.kind]}`}
-        key={i}
-      >
-        <LineNum n={row.oldLine} />
-        <LineNum n={row.newLine} />
-        <span className={`text-center select-none ${SIGN_CLS[row.kind]}`}>
-          {SIGNS[row.kind]}
-        </span>
-        <span className={`pr-4 wrap-anywhere whitespace-pre-wrap ${TEXT.code}`}>
-          <RowContent row={row} toks={hlRows?.[i]} />
-        </span>
-      </div>
+      <Fragment key={i}>
+        <div
+          className={`grid grid-cols-[2.5rem_2.5rem_1.25rem_minmax(0,1fr)] ${ROW_CLS[row.kind]}`}
+        >
+          <LineNum n={row.oldLine} />
+          <LineNum n={row.newLine} />
+          <span className={`text-center select-none ${SIGN_CLS[row.kind]}`}>
+            {SIGNS[row.kind]}
+          </span>
+          <span
+            className={`pr-4 wrap-anywhere whitespace-pre-wrap ${TEXT.code}`}
+          >
+            <RowContent row={row} toks={hlRows?.[i]} />
+          </span>
+        </div>
+        {after?.get(i) === undefined ? null : (
+          <CommentStrip>{after.get(i)}</CommentStrip>
+        )}
+      </Fragment>
     ))}
   </div>
 );
 
+/** The last (document-order) row of `file` whose `side` line number falls
+ * in `range` — GitHub anchors a range comment at its end. */
+const anchorRow = (
+  file: FileDiff,
+  side: "new" | "old",
+  range: { end?: number; start: number }
+): { h: number; r: number } | undefined => {
+  const { end, start } = range;
+  let hit: { h: number; r: number } | undefined;
+  for (const [hi, hunk] of file.hunks.entries()) {
+    for (const [ri, row] of hunk.rows.entries()) {
+      const ln = side === "old" ? row.oldLine : row.newLine;
+      if (ln !== undefined && ln >= start && (end === undefined || ln <= end)) {
+        hit = { h: hi, r: ri };
+      }
+    }
+  }
+  return hit;
+};
+
+/**
+ * Group `comments` by their anchor row inside `file`: a thread hangs under
+ * the last row (document order) whose `side` line number falls in its
+ * range. Threads matching no row — plus file-level comments without a
+ * range — collect in `tail` for a strip at the card's end.
+ */
+const anchorComments = (
+  file: FileDiff,
+  comments: readonly DiffCommentSpec[]
+): { after: ReadonlyMap<number, ReactNode[]>[]; tail: ReactNode[] } => {
+  const after = file.hunks.map(() => new Map<number, ReactNode[]>());
+  const tail: ReactNode[] = [];
+  for (const c of comments) {
+    const hit =
+      c.range === undefined ? undefined : anchorRow(file, c.side, c.range);
+    if (hit === undefined) {
+      tail.push(c.node);
+      continue;
+    }
+    const rows = after[hit.h]?.get(hit.r) ?? [];
+    rows.push(c.node);
+    after[hit.h]?.set(hit.r, rows);
+  }
+  return { after, tail };
+};
+
 const FileCard = ({
+  comments,
   fallbackPath,
   file,
   hl,
 }: {
+  comments?: readonly DiffCommentSpec[];
   fallbackPath?: string;
   file: FileDiff;
   hl?: (DiffHlToken[] | null)[][];
@@ -201,6 +282,7 @@ const FileCard = ({
     file.oldPath !== file.newPath
       ? `${file.oldPath} → ${file.newPath}`
       : (path ?? "diff");
+  const anchored = anchorComments(file, comments ?? []);
   return (
     <Panel>
       <CaptionBar className={CAPTION_TITLE_CLS}>
@@ -249,22 +331,57 @@ const FileCard = ({
                 {h.header}
               </div>
             ) : null}
-            <DiffRows hlRows={hl?.[i]} rows={h.rows} />
+            <DiffRows
+              after={anchored.after[i]}
+              hlRows={hl?.[i]}
+              rows={h.rows}
+            />
           </div>
         ))}
       </div>
+      {anchored.tail.length === 0 ? null : (
+        <CommentStrip>{anchored.tail}</CommentStrip>
+      )}
     </Panel>
   );
+};
+
+/**
+ * Fan `comments` out to file cards: a comment's `file` picks the first card
+ * whose old or new path (or the fence's fallback filename) matches; absent
+ * or unmatched `file` lands on the first card.
+ */
+const commentsPerFile = (
+  files: FileDiff[],
+  comments: readonly DiffCommentSpec[],
+  fallbackPath?: string
+): (readonly DiffCommentSpec[] | undefined)[] => {
+  const perFile: DiffCommentSpec[][] = files.map(() => []);
+  for (const c of comments) {
+    const idx =
+      c.file === undefined
+        ? 0
+        : files.findIndex(
+            (f) =>
+              f.newPath === c.file ||
+              f.oldPath === c.file ||
+              fallbackPath === c.file
+          );
+    perFile[Math.max(0, idx)]?.push(c);
+  }
+  return perFile;
 };
 
 /** Rendered by `Pre` for ```diff / ```patch fences. `hl` is the per-row
  * language highlighting parsed from the fence's `data-diffhl` (absent when
  * no grammar was resolved at compile time). */
 export const DiffView = ({
+  comments,
   filename,
   hl,
   text,
 }: {
+  comments?: readonly DiffCommentSpec[];
   filename?: string;
   hl?: DiffHl;
   text: string;
@@ -273,10 +390,12 @@ export const DiffView = ({
   if (files.length === 0) {
     return null;
   }
+  const perFile = commentsPerFile(files, comments ?? [], filename);
   return (
     <>
       {files.map((f, i) => (
         <FileCard
+          comments={perFile[i]}
           fallbackPath={files.length === 1 ? filename : undefined}
           file={f}
           hl={hl?.[i]}

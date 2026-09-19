@@ -370,6 +370,25 @@ export const CountedList = (props: {
 };
 
 /**
+ * Full-width strip inserted between code/diff rows to hold a comment
+ * thread (`<Comments>`) — GitHub's inline review-thread row: white
+ * background, edge-to-edge top border. `bleed` stretches the strip across
+ * a parent's `px-4` padding (annotated code blocks sit inside one).
+ */
+export const CommentStrip = (props: {
+  bleed?: boolean;
+  children?: ReactNode;
+}): ReactElement => (
+  <div
+    className={`border-t ${BORDER_CLS} space-y-3 bg-white py-3 font-sans text-sm whitespace-normal dark:bg-neutral-950 ${
+      props.bleed === true ? "-mx-4 px-4" : "px-4"
+    }`}
+  >
+    {props.children}
+  </div>
+);
+
+/**
  * File/editor link that may not resolve: renders an `<a>` when `href` is
  * set (with `linkTarget`), else a `<span>` — identical classes either way.
  * Link-only utilities (`hover:underline`, `text-inherit`) are inert on the

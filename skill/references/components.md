@@ -66,6 +66,7 @@ This file is an index: each group lists what its components do and links to a de
 | Component | What it is |
 | --- | --- |
 | ` ```diff ` / ` ```patch ` fence | Structured per-file diff cards — editor links, `+N −M` stats, hunk line numbers |
+| `<Comments>` / `<Comment>` | GitHub-style comment threads anchored to code/diff lines — `lines`/`side`/`file` anchors, MDX bodies — `:::comments` |
 | `<Graph>` / `<Node>` / `<Edge>` | Static node/edge diagram — dagre layout at render time, SVG edges, editor-linked nodes — `:::graph` |
 | `<Tests>` / `<Test>` | Test-run report — status pills, auto counts and duration sum — `:::tests` |
 | `<Endpoints>` / `<Endpoint>` | API route list — method chips, `base` prefix, `auth`/`deprecated` — `:::endpoints` |
@@ -178,6 +179,7 @@ Markdown shorthands and what they render as — the reverse lookup of the index 
 | `` `src/x.ts` `` inline code naming a real file (optional `:L`/`:L-M`) | `<FileRef>` chip — icon, copy button, editor link (a bare `x.ts` stays plain code) |
 | ` ```mermaid ` fenced block | rendered diagram |
 | ` ```diff ` / ` ```patch ` fenced block | structured per-file diff cards |
+| `:::comments` + fence + `<Comment lines>` | line-anchored comment threads on code/diff |
 | ` ```ts title="src/x.ts" ` | highlighted code block + filename bar with file-type icon |
 | `- [ ]` / `- [x]` | styled task list |
 | nested list inside `<Tree>` | file tree |

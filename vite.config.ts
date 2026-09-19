@@ -30,6 +30,11 @@ export default defineConfig({
         extends: true,
         test: {
           include: ["tests/**/*.test.ts"],
+          // render() bundles user components and hydration builds via
+          // esbuild; the first import also pulls the ~500KB dist chunk
+          // through the module runner. Shared CI runners push some of
+          // these past the 5s default.
+          testTimeout: 30_000,
         },
       },
       {

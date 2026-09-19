@@ -20,36 +20,29 @@ Write documents as **Markdown + a small set of JSX components** (MDX). Do NOT wr
 - **No JS in documents.** `import`/`export` and `{expressions}` are rejected. All attributes are strings: `<Step status="done">`, not `status={...}`.
 - Prefer plain Markdown for prose; use components only for structure.
 - If a needed component is missing, run `npx mdxr catalog --json` to see the full catalog, then define it in the project's component file — see `references/extending.md` for the extension mechanism.
-- For component usage, read `references/components.md` (the index), then only the `references/components/*.md` detail file(s) the document needs.
+- For component usage, read `references/components.md` (the index — includes a syntax cheatsheet), then only the `references/components/*.md` detail file(s) the document needs.
 
-## Conventions (no JSX needed)
+## Component categories
+
+| Category | Covers | Details |
+| --- | --- | --- |
+| Document scaffolding | `<Plan>` root, meta row, callouts, TOC, glossary, refs, code blocks | `references/components/document.md` |
+| Planning & status | phases, steps, timeline, gantt, decisions, risks, board, matrix, stats | `references/components/planning.md` |
+| Code investigation | findings, hypotheses, terminal, traces, searches, files, flows, trees | `references/components/investigation.md` |
+| Output artifacts | diff cards, graphs, tests, endpoints, JSON, waterfalls | `references/components/output.md` |
+| Data visualization | bar/line/pie/scatter/radar/funnel/quadrant/bridge/treemap/sankey/venn | `references/components/charts.md` |
+| Layout | columns, grid, row, stack, before/after panels | `references/components/layout.md` |
+| Reader input | `<Ask>` question forms with copyable Markdown answers | `references/components/forms.md` |
+| shadcn/ui | `Button`, `Card`, `Table`, `Tabs`, … — interactive via hydration | `references/components/shadcn.md` |
+
+## Common syntax
 
 | Write | Get |
 | --- | --- |
-| `:::note` / `:::warning` / `:::decision` … | `<Callout kind>` |
-| `:::goal` / `:::nongoal` / `:::question` / `:::answer` | goal / non-goal / open-question / conclusion callouts |
-| `> [!NOTE]` GitHub alert | `<Callout>` |
-| `:::phase{title="…" status="doing"}` | `<Phase>` |
-| `:::flow{title="…"}` + `<FlowStep>` | `<Flow>` numbered call/execution chain |
-| `:::findings` + `<Finding confidence>` | findings list with confidence pills |
-| `:::hypotheses` + `<Hypothesis status>` | hypothesis ledger (supported/refuted/untested) |
-| `:::searches` + `<Search pattern hits>` | search-query log |
-| `:::trace` + `<TraceFrame>` | stack/call trace with error line |
-| `:::terminal{cmd="…" exit="…"}` / ` ```console ` fence | terminal transcript |
-| `:::files` / `:::deps` | `<Files>` related-file list / `<Deps>` dependency edges |
-| `:::tests` + `<Test>` / `:::endpoints` + `<Endpoint>` | `<Tests>` run report / `<Endpoints>` API list |
-| `:::board` + `<Lane>`/`<BoardCard>` | `<Board>` kanban |
-| `:::graph` + `<Node>`/`<Edge>` | `<Graph>` static node/edge diagram (dagre layout, no client JS) |
-| `:::waterfall` + `<Span>` / `:::matrix` + list | `<Waterfall>` timing bars / `<Matrix>` comparison grid |
-| `:::timeline{title="…"}` | `<Timeline>` |
-| `:::gantt{title="…"}` + `<Task>`/`<Milestone>` | `<Gantt>` date-based schedule chart |
-| `:::barchart` / `:::linechart` / `:::piechart` / `:::scatter` / `:::radar` / `:::funnel` / `:::quadrant` / `:::bridge` / `:::treemap` / `:::sankey` / `:::venn` | static chart panels — see `references/components/charts.md` |
-| frontmatter `status:` / `date:` / `owner:` | document header badge + meta row |
-| `path`-carrying components (`<FileRef>`, `<File>`, `<TraceFrame>`, `<FlowStep>`, `<Change>`, `<SymbolRef path>`) + `title="…"` code headers | `vscode://file/…` editor links when the file exists; frontmatter `editor:` picks the scheme (`cursor`, `zed`, `none`, …) |
-| `` `src/x.ts` `` inline code naming a real file (optional `:L`/`:L-M`) | `<FileRef>` chip — icon, copy button, editor link (a bare `x.ts` stays plain code) |
-| ` ```mermaid ` fenced block | rendered diagram |
-| ` ```diff ` / ` ```patch ` fenced block | structured per-file diff cards |
-| ` ```ts title="src/x.ts" ` | highlighted code block + filename bar with file-type icon |
+| `:::note` / `:::warning` / `:::decision` / `> [!NOTE]` | `<Callout>` |
+| `:::phase{title="…" status="doing"}` | `<Phase>` heading with status badge |
+| ` ```ts title="src/x.ts" ` | highlighted code block + filename bar |
+| ` ```diff ` / ` ```mermaid ` / ` ```console ` | diff cards / diagram / terminal transcript |
+| `` `src/x.ts` `` naming a real file | `<FileRef>` chip with editor link |
 | `- [ ]` / `- [x]` | styled task list |
-| nested list inside `<Tree>` | file tree |
-| `<Icon name="lucide:rocket">` / `icon-[lucide--rocket]` class | inline Iconify icon |
+| frontmatter `status:` / `date:` / `owner:` | document header badge + meta row |

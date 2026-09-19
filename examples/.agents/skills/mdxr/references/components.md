@@ -2,7 +2,7 @@
 
 MDX attributes are always strings (`status="done"`). `children` is Markdown.
 
-This file is an index: each group lists what its components do and links to a detail file with full signatures and examples. Read only the detail file(s) the document needs. `mdxr catalog --json` is the machine-readable source of truth for component names and attributes.
+This file is an index: each group lists what its components do and links to a detail file with full signatures and examples. Read only the detail file(s) the document needs. The syntax cheatsheet at the bottom maps Markdown shorthands (`:::x`, fences, frontmatter) to the component they produce. `mdxr catalog --json` is the machine-readable source of truth for component names and attributes.
 
 **File links.** Components carrying `path` (`FileRef`, `SymbolRef`, `File`, `TraceFrame`, `FlowStep`, `Change`) and fenced-code filename headers become editor links — `vscode://file/…` by default — when the file exists on disk (paths resolve relative to the document). Frontmatter `editor:` or `editor` in `mdxr.config.ts` picks another editor: `cursor`, `zed`, `vscode-insiders`, `windsurf`, `sublime`, `textmate`, `idea`, a custom `{path}`/`{line}` URL template, or `none` to disable. `href="…"` on a component overrides the URL entirely. Inline code works too: `` `src/mdx.ts` `` (optional `:40-52` lines suffix) auto-converts to `<FileRef>` when it resolves to a real file — a bare `mdx.ts` without a `/` stays plain code.
 
@@ -114,3 +114,37 @@ The full shadcn/ui (Base UI) set is registered (`Button`, `Card`, `Table`, `Tabs
 ## Project-defined components — details: [extending.md](extending.md)
 
 Projects can register their own components via `mdxr.config.ts` + `defineComponent`; a same-name component overrides the built-in.
+
+## Syntax cheatsheet
+
+Markdown shorthands and what they render as — the reverse lookup of the index above.
+
+| Write | Get |
+| --- | --- |
+| `:::note` / `:::warning` / `:::decision` … | `<Callout kind>` |
+| `:::goal` / `:::nongoal` / `:::question` / `:::answer` | goal / non-goal / open-question / conclusion callouts |
+| `> [!NOTE]` GitHub alert | `<Callout>` |
+| `:::phase{title="…" status="doing"}` | `<Phase>` |
+| `:::flow{title="…"}` + `<FlowStep>` | `<Flow>` numbered call/execution chain |
+| `:::findings` + `<Finding confidence>` | findings list with confidence pills |
+| `:::hypotheses` + `<Hypothesis status>` | hypothesis ledger (supported/refuted/untested) |
+| `:::searches` + `<Search pattern hits>` | search-query log |
+| `:::trace` + `<TraceFrame>` | stack/call trace with error line |
+| `:::terminal{cmd="…" exit="…"}` / ` ```console ` fence | terminal transcript |
+| `:::files` / `:::deps` | `<Files>` related-file list / `<Deps>` dependency edges |
+| `:::tests` + `<Test>` / `:::endpoints` + `<Endpoint>` | `<Tests>` run report / `<Endpoints>` API list |
+| `:::board` + `<Lane>`/`<BoardCard>` | `<Board>` kanban |
+| `:::graph` + `<Node>`/`<Edge>` | `<Graph>` static node/edge diagram (dagre layout, no client JS) |
+| `:::waterfall` + `<Span>` / `:::matrix` + list | `<Waterfall>` timing bars / `<Matrix>` comparison grid |
+| `:::timeline{title="…"}` | `<Timeline>` |
+| `:::gantt{title="…"}` + `<Task>`/`<Milestone>` | `<Gantt>` date-based schedule chart |
+| `:::barchart` / `:::linechart` / `:::piechart` / `:::scatter` / `:::radar` / `:::funnel` / `:::quadrant` / `:::bridge` / `:::treemap` / `:::sankey` / `:::venn` | static chart panels — see [components/charts.md](components/charts.md) |
+| frontmatter `status:` / `date:` / `owner:` | document header badge + meta row |
+| `path`-carrying components (`<FileRef>`, `<File>`, `<TraceFrame>`, `<FlowStep>`, `<Change>`, `<SymbolRef path>`) + `title="…"` code headers | `vscode://file/…` editor links when the file exists; frontmatter `editor:` picks the scheme (`cursor`, `zed`, `none`, …) |
+| `` `src/x.ts` `` inline code naming a real file (optional `:L`/`:L-M`) | `<FileRef>` chip — icon, copy button, editor link (a bare `x.ts` stays plain code) |
+| ` ```mermaid ` fenced block | rendered diagram |
+| ` ```diff ` / ` ```patch ` fenced block | structured per-file diff cards |
+| ` ```ts title="src/x.ts" ` | highlighted code block + filename bar with file-type icon |
+| `- [ ]` / `- [x]` | styled task list |
+| nested list inside `<Tree>` | file tree |
+| `<Icon name="lucide:rocket">` / `icon-[lucide--rocket]` class | inline Iconify icon |

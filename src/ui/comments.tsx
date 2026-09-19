@@ -10,7 +10,16 @@ import {
 } from "../define.js";
 import { asString, isRecord, nonEmpty } from "../guards.js";
 import { fenceFilename, parseLineRange } from "../lines.js";
-import { CommentStrip, MaybeLink, Panel, TrimBody } from "./bits.js";
+import {
+  ACTION_BUTTON_CLS,
+  AddCommentButton,
+  CommentReplyButton,
+  CommentStrip,
+  CopyFeedback,
+  MaybeLink,
+  Panel,
+  TrimBody,
+} from "./bits.js";
 import { indexChildren } from "./child-index.js";
 import { isEl, propOf } from "./children.js";
 import { parseDiff, parseDiffHl } from "./diff-parse.js";
@@ -25,12 +34,15 @@ import type { SeverityLevel } from "./severity.js";
 import { SEVERITY_LEVELS, Severity } from "./severity.js";
 import {
   BORDER_CLS,
+  CHIP_BORDER_CLS,
+  commentStripCls,
   LINK_CLS,
   LOC_CLS,
   MINI_CHIP_CLS,
   SURFACE_CLS,
   TEXT,
   TONE,
+  TRIM_CLS,
 } from "./tones.js";
 
 /**
@@ -67,6 +79,8 @@ const ANNOTATION_SCHEMA = v.looseObject({
 
 interface Annotation {
   file?: string;
+  /** Raw `lines` spec — strip anchors and the markdown serializer reuse it. */
+  lines?: string;
   /** Rendered card — injected at the anchor row. */
   node: ReactNode;
   range?: { end?: number; start: number };
@@ -126,26 +140,45 @@ const Avatar = ({ author }: { author?: string }): ReactElement =>
 const CommentCard = ({
   author,
   children,
+  file,
   href,
   lines,
   path,
   severity,
   side,
+  text,
   title,
 }: {
   author?: string;
   children?: ReactNode;
+  /** Authored `file` attr (not the resolved link path) — serialized back. */
+  file?: string;
   href?: string;
   lines?: string;
   path?: string;
   severity?: SeverityLevel;
   side?: Side;
+  /** Flattened body text — the markdown serializer's `<Comment>` payload. */
+  text?: string;
   title?: string;
 }): ReactElement => {
   const link = useFileLink(path, lines, href);
   const name = nonEmpty(author) ? author.replace(/^@+/u, "") : undefined;
+  // data-mdxr-comment marks the card for the markdown serializer; each
+  // data-comment-* attr maps back to a <Comment> attribute (doc-events.ts).
   return (
-    <div className="flex gap-2.5">
+    <div
+      className="flex gap-2.5"
+      data-comment-author={author}
+      data-comment-file={file}
+      data-comment-href={href}
+      data-comment-lines={lines}
+      data-comment-severity={severity}
+      data-comment-side={side === "old" ? "old" : undefined}
+      data-comment-text={text}
+      data-comment-title={title}
+      data-mdxr-comment=""
+    >
       <Avatar author={author} />
       <article
         className={`min-w-0 flex-1 overflow-hidden rounded-md border ${BORDER_CLS} bg-white dark:bg-neutral-950`}
@@ -194,18 +227,20 @@ const toAnnotation = (
   const node = (
     <CommentCard
       author={p.author}
+      file={p.file}
       href={p.href}
       key={i}
       lines={p.lines}
       path={p.file ?? fallbackPath}
       severity={p.severity}
       side={p.side}
+      text={textOf(childrenOf(el)).trim()}
       title={p.title}
     >
       {childrenOf(el)}
     </CommentCard>
   );
-  return { file: p.file, node, range, side: p.side };
+  return { file: p.file, lines: p.lines, node, range, side: p.side };
 };
 
 /** Group comments by anchor line: a thread lands under `min(end, lines)`
@@ -213,18 +248,28 @@ const toAnnotation = (
 const anchorCode = (
   comments: readonly Annotation[],
   lineCount: number
-): { after: ReadonlyMap<number, ReactNode[]>; tail: ReactNode[] } => {
-  const after = new Map<number, ReactNode[]>();
-  const tail: ReactNode[] = [];
+): { after: ReadonlyMap<number, Annotation[]>; tail: Annotation[] } => {
+  const after = new Map<number, Annotation[]>();
+  const tail: Annotation[] = [];
   for (const c of comments) {
     if (c.range === undefined || c.range.start > lineCount) {
-      tail.push(c.node);
+      tail.push(c);
       continue;
     }
     const end = Math.min(c.range.end ?? lineCount, lineCount);
-    after.set(end, [...(after.get(end) ?? []), c.node]);
+    after.set(end, [...(after.get(end) ?? []), c]);
   }
   return { after, tail };
+};
+
+/** The anchor replies inherit — the thread's last comment's spec. */
+const stripAnchor = (
+  group: Annotation[] | undefined
+): { file?: string; lines?: string; side?: Side } | undefined => {
+  const last = group?.at(-1);
+  return last === undefined
+    ? undefined
+    : { file: last.file, lines: last.lines, side: last.side };
 };
 
 /** The fenced subject decomposed: `code` element attributes + raw text. */
@@ -234,6 +279,8 @@ interface SubjectBlock {
   diffhl?: string;
   filename?: string;
   lang?: string;
+  /** Raw fence meta — the markdown serializer reproduces it verbatim. */
+  meta: string;
   text: string;
 }
 
@@ -257,6 +304,7 @@ const subjectBlock = (subject: ReactElement): SubjectBlock => {
     diffhl: asString(codeProps["data-diffhl"]),
     filename: fenceFilename(meta),
     lang,
+    meta,
     text: textOf(children),
   };
 };
@@ -298,14 +346,24 @@ const AnnotatedCode = ({
         >
           {lines.map((el, i) => (
             <Fragment key={i}>
-              {el}
+              <div className="mdxr-cline" data-comment-row="">
+                <AddCommentButton line={i + 1} />
+                {el}
+              </div>
               {anchored.after.get(i + 1) === undefined ? null : (
-                <CommentStrip bleed>{anchored.after.get(i + 1)}</CommentStrip>
+                <CommentStrip
+                  anchor={stripAnchor(anchored.after.get(i + 1))}
+                  bleed
+                >
+                  {anchored.after.get(i + 1)?.map((a): ReactNode => a.node)}
+                </CommentStrip>
               )}
             </Fragment>
           ))}
           {anchored.tail.length === 0 ? null : (
-            <CommentStrip bleed>{anchored.tail}</CommentStrip>
+            <CommentStrip bleed>
+              {anchored.tail.map((a): ReactNode => a.node)}
+            </CommentStrip>
           )}
         </div>
       </div>
@@ -313,10 +371,110 @@ const AnnotatedCode = ({
   );
 };
 
+/** Field look shared by the comment form's textarea and name input. */
+const FORM_CONTROL_CLS = `w-full min-w-0 rounded-lg border ${CHIP_BORDER_CLS} bg-transparent px-2.5 py-1.5 text-sm outline-none transition-colors placeholder:text-neutral-400 focus-visible:border-neutral-400 focus-visible:ring-3 focus-visible:ring-neutral-200/70 dark:placeholder:text-neutral-500 dark:focus-visible:ring-neutral-800`;
+
+const FORM_SUBMIT_CLS = `inline-flex cursor-pointer items-center rounded-md border border-transparent bg-neutral-900 px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-neutral-700 active:translate-y-px dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300`;
+
+/**
+ * Inert markup the client clones for interactive bits — `data-comment-tpl`
+ * names each fragment: `card` is the CommentCard skeleton with `data-cc-*`
+ * fill slots, `form` the reply/new-comment form, `strip` a thread row (its
+ * `bleed` variant follows the subject: code strips stretch across the px-4
+ * code padding, diff strips don't). Templates keep this markup out of the
+ * serializer's `[data-mdxr-comment]` scan and single-source the classes.
+ */
+const CommentTemplates = ({ bleed }: { bleed: boolean }): ReactElement => (
+  <>
+    <template data-comment-tpl="card">
+      <div className="flex gap-2.5" data-mdxr-comment="">
+        <span
+          aria-hidden
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-neutral-500 dark:bg-neutral-700 dark:text-neutral-400"
+          data-cc-avatar-anon=""
+        >
+          <Icon className="h-3.5 w-3.5" name="lucide:message-square-text" />
+        </span>
+        <span
+          aria-hidden
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-300 text-[10px] font-semibold text-neutral-700 dark:bg-neutral-600 dark:text-neutral-100"
+          data-cc-avatar=""
+        />
+        <article
+          className={`min-w-0 flex-1 overflow-hidden rounded-md border ${BORDER_CLS} bg-white dark:bg-neutral-950`}
+        >
+          <header
+            className={`flex flex-wrap items-center gap-x-1.5 gap-y-1 border-b ${BORDER_CLS} ${SURFACE_CLS} px-3 py-1.5 text-xs`}
+          >
+            <span className={`font-semibold ${TEXT.strong}`} data-cc-name="" />
+            <span className={TEXT.muted}>commented</span>
+            <span className="ml-auto inline-flex items-center gap-1.5">
+              <span className={`${MINI_CHIP_CLS} ${TONE.red}`} data-cc-old="">
+                old
+              </span>
+              <span className={LOC_CLS} data-cc-lines="" />
+            </span>
+          </header>
+          <div
+            className={`${TRIM_CLS} px-3.5 py-2.5 text-sm`}
+            data-cc-body=""
+          />
+        </article>
+      </div>
+    </template>
+    <template data-comment-tpl="form">
+      <div
+        className={`rounded-md border ${BORDER_CLS} bg-white p-2.5 dark:bg-neutral-950`}
+        data-comment-form=""
+      >
+        <textarea
+          aria-label="Comment text"
+          className={FORM_CONTROL_CLS}
+          data-comment-input=""
+          placeholder="Write a comment"
+          rows={3}
+        />
+        <div className="mt-2 flex items-center gap-2">
+          <input
+            aria-label="Name (optional)"
+            className={`${FORM_CONTROL_CLS} w-40`}
+            data-comment-author=""
+            placeholder="Name (optional)"
+            type="text"
+          />
+          <span className="ml-auto flex items-center gap-1.5">
+            <button
+              className={ACTION_BUTTON_CLS}
+              data-comment-cancel=""
+              type="button"
+            >
+              Cancel
+            </button>
+            <button
+              className={FORM_SUBMIT_CLS}
+              data-comment-submit=""
+              type="button"
+            >
+              Comment
+            </button>
+          </span>
+        </div>
+      </div>
+    </template>
+    <template data-comment-tpl="strip">
+      <div className={commentStripCls(bleed)} data-comment-strip="">
+        <div className="mdxr-thread-tools" data-thread-tools="">
+          <CommentReplyButton />
+        </div>
+      </div>
+    </template>
+  </>
+);
+
 export const Comments = defineComponent(
   {
     description:
-      'コード/diff フェンスへの行アンカーコメント（GitHub レビュー形式）。最初のフェンス子が対象。<Comment> 子は lines="40"|"40-52"|"40-" で範囲指定 — diff では side="old|new"（左右）と file=（複数ファイル時の対象選択）も解釈。author/severity/title でヘッダ装飾。lines 省略やアンカー不能なコメントは末尾にファイルレベルコメントとして表示',
+      'コード/diff フェンスへの行アンカーコメント（GitHub レビュー形式）。最初のフェンス子が対象。<Comment> 子は lines="40"|"40-52"|"40-" で範囲指定 — diff では side="old|new"（左右）と file=（複数ファイル時の対象選択）も解釈。author/severity/title でヘッダ装飾。lines 省略やアンカー不能なコメントは末尾にファイルレベルコメントとして表示。読者は行ホバーの + でコメント追加、各スレッドの Reply で返信でき、「Copy markdown」がコード+全コメントを <Comments> マークアップとしてコピーする（貼り戻せば永続化できる）',
     schema: v.looseObject({}),
   },
   ({ children }) => {
@@ -333,10 +491,12 @@ export const Comments = defineComponent(
       .filter((n) => isEl(n, Comment))
       .map((el, i) => toAnnotation(el, i, block.filename));
     const rest = flat.filter((n) => n !== subject && !isEl(n, Comment));
-    const view = isDiffBlock(block) ? (
+    const diff = isDiffBlock(block);
+    const view = diff ? (
       <DiffView
         comments={annotations.map((a): DiffCommentSpec => ({
           file: a.file,
+          lines: a.lines,
           node: a.node,
           range: a.range,
           side: a.side,
@@ -348,13 +508,37 @@ export const Comments = defineComponent(
     ) : (
       <AnnotatedCode block={block} comments={annotations} />
     );
+    // data-comments* feeds the markdown serializer (doc-events.ts): the
+    // fence round-trips verbatim, cards carry their own <Comment> attrs.
     return (
-      <>
+      <div
+        data-comments=""
+        data-comments-code={block.text}
+        data-comments-lang={block.lang}
+        data-comments-meta={nonEmpty(block.meta) ? block.meta : undefined}
+      >
         {view}
         {rest.map((n, i) => (
           <Fragment key={i}>{n}</Fragment>
         ))}
-      </>
+        <div className="not-prose mt-2 flex items-center justify-between gap-3">
+          <span className={`text-xs ${TEXT.faint}`}>
+            Hover a line or hit Reply to comment, then copy the markup.
+          </span>
+          <button
+            className={ACTION_BUTTON_CLS}
+            data-comments-copy=""
+            type="button"
+          >
+            <CopyFeedback
+              done="Copied"
+              icon="lucide:clipboard-list"
+              label="Copy markdown"
+            />
+          </button>
+        </div>
+        <CommentTemplates bleed={!diff} />
+      </div>
     );
   }
 );

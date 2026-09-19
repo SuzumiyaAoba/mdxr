@@ -3,6 +3,7 @@ import type { ReactElement, ReactNode } from "react";
 
 import { nonEmpty } from "../guards.js";
 import {
+  AddCommentButton,
   CaptionBar,
   CommentStrip,
   CopyButton,
@@ -38,6 +39,8 @@ export type { FileDiff } from "./diff-parse.js";
 export interface DiffCommentSpec {
   /** Path selecting the file card; absent targets the first file. */
   file?: string;
+  /** Raw `lines` spec — thread anchors and markdown copy reuse it. */
+  lines?: string;
   /** Rendered comment card(s) injected at the anchor. */
   node: ReactNode;
   /** Inclusive line range on `side`; `end` undefined reads "to EOF". */
@@ -181,38 +184,80 @@ const RowContent = ({
   ));
 };
 
+/** A row's add-comment anchor: del rows anchor old-side, add/ctx new-side;
+ * note rows and unnumbered (implicit-hunk) rows can't anchor at all. */
+const rowAnchor = (
+  row: DiffRow
+): { line: number; side: "new" | "old" } | undefined => {
+  if (row.kind === "del") {
+    return row.oldLine === undefined
+      ? undefined
+      : { line: row.oldLine, side: "old" };
+  }
+  if (row.kind === "add" || row.kind === "ctx") {
+    return row.newLine === undefined
+      ? undefined
+      : { line: row.newLine, side: "new" };
+  }
+  return undefined;
+};
+
 const DiffRows = ({
   after,
+  file,
   hlRows,
   rows,
 }: {
   /** Comment threads keyed by row index — rendered under that row. */
-  after?: ReadonlyMap<number, ReactNode[]>;
+  after?: ReadonlyMap<number, DiffCommentSpec[]>;
+  /** Resolved card path — lands on the "+" button and strip anchors. */
+  file?: string;
   hlRows?: (DiffHlToken[] | null)[];
   rows: DiffRow[];
 }): ReactElement => (
   <div className="font-mono text-[0.8125rem] leading-5">
-    {rows.map((row, i) => (
-      <Fragment key={i}>
-        <div
-          className={`grid grid-cols-[2.5rem_2.5rem_1.25rem_minmax(0,1fr)] ${ROW_CLS[row.kind]}`}
-        >
-          <LineNum n={row.oldLine} />
-          <LineNum n={row.newLine} />
-          <span className={`text-center select-none ${SIGN_CLS[row.kind]}`}>
-            {SIGNS[row.kind]}
-          </span>
-          <span
-            className={`pr-4 wrap-anywhere whitespace-pre-wrap ${TEXT.code}`}
+    {rows.map((row, i) => {
+      const anchor = rowAnchor(row);
+      const group = after?.get(i);
+      const last = group?.at(-1);
+      return (
+        <Fragment key={i}>
+          <div
+            className={`mdxr-drow grid grid-cols-[2.5rem_2.5rem_1.25rem_minmax(0,1fr)] ${ROW_CLS[row.kind]}`}
+            data-comment-row=""
           >
-            <RowContent row={row} toks={hlRows?.[i]} />
-          </span>
-        </div>
-        {after?.get(i) === undefined ? null : (
-          <CommentStrip>{after.get(i)}</CommentStrip>
-        )}
-      </Fragment>
-    ))}
+            {anchor === undefined ? null : (
+              <AddCommentButton
+                file={file}
+                line={anchor.line}
+                side={anchor.side}
+              />
+            )}
+            <LineNum n={row.oldLine} />
+            <LineNum n={row.newLine} />
+            <span className={`text-center select-none ${SIGN_CLS[row.kind]}`}>
+              {SIGNS[row.kind]}
+            </span>
+            <span
+              className={`pr-4 wrap-anywhere whitespace-pre-wrap ${TEXT.code}`}
+            >
+              <RowContent row={row} toks={hlRows?.[i]} />
+            </span>
+          </div>
+          {group === undefined ? null : (
+            <CommentStrip
+              anchor={{
+                file,
+                lines: last?.lines,
+                side: last?.side,
+              }}
+            >
+              {group.map((c): ReactNode => c.node)}
+            </CommentStrip>
+          )}
+        </Fragment>
+      );
+    })}
   </div>
 );
 
@@ -245,18 +290,21 @@ const anchorRow = (
 const anchorComments = (
   file: FileDiff,
   comments: readonly DiffCommentSpec[]
-): { after: ReadonlyMap<number, ReactNode[]>[]; tail: ReactNode[] } => {
-  const after = file.hunks.map(() => new Map<number, ReactNode[]>());
-  const tail: ReactNode[] = [];
+): {
+  after: ReadonlyMap<number, DiffCommentSpec[]>[];
+  tail: DiffCommentSpec[];
+} => {
+  const after = file.hunks.map(() => new Map<number, DiffCommentSpec[]>());
+  const tail: DiffCommentSpec[] = [];
   for (const c of comments) {
     const hit =
       c.range === undefined ? undefined : anchorRow(file, c.side, c.range);
     if (hit === undefined) {
-      tail.push(c.node);
+      tail.push(c);
       continue;
     }
     const rows = after[hit.h]?.get(hit.r) ?? [];
-    rows.push(c.node);
+    rows.push(c);
     after[hit.h]?.set(hit.r, rows);
   }
   return { after, tail };
@@ -333,6 +381,7 @@ const FileCard = ({
             ) : null}
             <DiffRows
               after={anchored.after[i]}
+              file={path}
               hlRows={hl?.[i]}
               rows={h.rows}
             />
@@ -340,7 +389,9 @@ const FileCard = ({
         ))}
       </div>
       {anchored.tail.length === 0 ? null : (
-        <CommentStrip>{anchored.tail}</CommentStrip>
+        <CommentStrip anchor={{ file: path }}>
+          {anchored.tail.map((c): ReactNode => c.node)}
+        </CommentStrip>
       )}
     </Panel>
   );

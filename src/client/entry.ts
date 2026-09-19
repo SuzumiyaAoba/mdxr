@@ -11,6 +11,7 @@ for (const type of [
   "click",
   "input",
   "change",
+  "keydown",
   "dragstart",
   "dragover",
   "drop",

@@ -112,6 +112,29 @@ ul.contains-task-list { padding-left: 1.25rem; }
 @media print {
   .mdxr-card-moves, .mdxr-board-tools, .mdxr-grip { display: none; }
 }
+/* <Comments>: a hover "+" on every code/diff row opens the comment form
+ * under that line. The button sits in the code block's left bleed band
+ * (.mdxr-cline — its .line child keeps the -1rem band bleed) or over the
+ * diff row's line-number gutter (.mdxr-drow); invisible until the row is
+ * hovered or the button takes keyboard focus. */
+.mdxr-cline, .mdxr-drow { position: relative; }
+.mdxr-add {
+  position: absolute; top: 0; bottom: 0; z-index: 1;
+  display: flex; align-items: center; justify-content: center;
+  width: 1rem; border: 0; padding: 0; background: transparent;
+  color: rgb(163 163 163); cursor: pointer; opacity: 0;
+  transition: opacity 0.12s ease, color 0.12s ease;
+}
+.mdxr-cline > .mdxr-add { left: -1rem; }
+.mdxr-drow > .mdxr-add { left: 0.1rem; }
+.mdxr-cline:hover > .mdxr-add, .mdxr-drow:hover > .mdxr-add,
+.mdxr-add:focus-visible { opacity: 1; }
+.mdxr-add:hover { color: rgb(2 132 199); }
+.dark .mdxr-add { color: rgb(115 115 115); }
+.dark .mdxr-add:hover { color: rgb(56 189 248); }
+@media print {
+  .mdxr-add, .mdxr-thread-tools, [data-comment-form] { display: none; }
+}
 @keyframes mdxr-pop {
   0% { transform: scale(0.3); opacity: 0; }
   70% { transform: scale(1.15); }
@@ -343,6 +366,7 @@ details[open] > summary .mdxr-chev { transform: rotate(90deg); }
 /* Reduced motion: every animation/transition above becomes instant. */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  .mdxr-add,
   .mdxr-copy,
   .mdxr-chev,
   .mdxr-choice,

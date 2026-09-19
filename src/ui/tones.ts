@@ -122,6 +122,15 @@ export const TRIM_CLS = "[&>*:first-child]:mt-0 [&>*:last-child]:mb-0";
 /** Standard neutral border — panels, cards, dividers (neutral-200/800). */
 export const BORDER_CLS = "border-neutral-200 dark:border-neutral-800";
 
+/** CommentStrip's class list — shared with the `<template>` clone in
+ * `<Comments>` so strips the client inserts match SSR output. `bleed`
+ * stretches the strip across a parent's `px-4` padding (annotated code
+ * blocks sit inside one). */
+export const commentStripCls = (bleed?: boolean): string =>
+  `border-t ${BORDER_CLS} space-y-3 bg-white py-3 font-sans text-sm whitespace-normal dark:bg-neutral-950 ${
+    bleed === true ? "-mx-4 px-4" : "px-4"
+  }`;
+
 /** Stronger border for controls and chips — inputs, code chips, marked
  * squares (neutral-300/700). */
 export const CHIP_BORDER_CLS = "border-neutral-300 dark:border-neutral-700";

@@ -7,6 +7,7 @@ import { Icon } from "./icon.js";
 import {
   BORDER_CLS,
   CHIP_BORDER_CLS,
+  commentStripCls,
   LOC_CLS,
   SURFACE_CLS,
   TEXT,
@@ -370,21 +371,72 @@ export const CountedList = (props: {
 };
 
 /**
+ * Hover "+" on a code/diff row (`<Comments>`) — opens the comment form
+ * under that line. `data-comment-add` carries the line number, `data-side`/
+ * `data-file` the diff anchor; `.mdxr-add` positions and reveals the
+ * button (BASE_CSS). All are client-JS hooks — rename them and adding
+ * comments stops working.
+ */
+export const AddCommentButton = (props: {
+  file?: string;
+  line: number;
+  side?: "new" | "old";
+}): ReactElement => (
+  <button
+    aria-label={`Add a comment on line ${props.line}`}
+    className="mdxr-add"
+    data-comment-add={props.line}
+    data-file={props.file}
+    data-side={props.side === "old" ? "old" : undefined}
+    title="Add a comment"
+    type="button"
+  >
+    <Icon className="h-3 w-3" name="lucide:plus" />
+  </button>
+);
+
+/**
+ * Reply affordance at the end of a comment thread. `data-comment-reply`
+ * is a client-JS hook (doc-events.ts swaps it for the comment form) —
+ * rename it and replies stop opening.
+ */
+export const CommentReplyButton = (): ReactElement => (
+  <button
+    className={`inline-flex cursor-pointer items-center gap-1 rounded-md border ${CHIP_BORDER_CLS} bg-white px-2 py-0.5 text-xs font-medium ${TEXT.muted} transition-colors hover:bg-neutral-100 active:translate-y-px dark:bg-neutral-900 dark:hover:bg-neutral-800`}
+    data-comment-reply=""
+    type="button"
+  >
+    <Icon className="h-3 w-3" name="lucide:reply" />
+    Reply
+  </button>
+);
+
+/**
  * Full-width strip inserted between code/diff rows to hold a comment
  * thread (`<Comments>`) — GitHub's inline review-thread row: white
  * background, edge-to-edge top border. `bleed` stretches the strip across
  * a parent's `px-4` padding (annotated code blocks sit inside one).
+ * `anchor` lands on `data-strip-*`: replies posted into the strip inherit
+ * it and the markdown serializer emits it on the new `<Comment>`.
+ * `data-comment-strip`/`data-thread-tools` are client-JS hooks.
  */
 export const CommentStrip = (props: {
+  /** Anchor replies inherit (file/lines/side). */
+  anchor?: { file?: string; lines?: string; side?: "new" | "old" };
   bleed?: boolean;
   children?: ReactNode;
 }): ReactElement => (
   <div
-    className={`border-t ${BORDER_CLS} space-y-3 bg-white py-3 font-sans text-sm whitespace-normal dark:bg-neutral-950 ${
-      props.bleed === true ? "-mx-4 px-4" : "px-4"
-    }`}
+    className={commentStripCls(props.bleed)}
+    data-comment-strip=""
+    data-strip-file={props.anchor?.file}
+    data-strip-lines={props.anchor?.lines}
+    data-strip-side={props.anchor?.side === "old" ? "old" : undefined}
   >
     {props.children}
+    <div className="mdxr-thread-tools" data-thread-tools="">
+      <CommentReplyButton />
+    </div>
   </div>
 );
 

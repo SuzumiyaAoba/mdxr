@@ -38,6 +38,24 @@ describe(clientJs, () => {
     }
   });
 
+  it("wires the comments interactions (add, reply, submit, copy)", async () => {
+    const js = await clientJs();
+    for (const s of [
+      "data-comment-add",
+      "data-comment-reply",
+      "data-comment-submit",
+      "data-comment-cancel",
+      "data-comment-tpl",
+      "data-mdxr-comment",
+      "data-comments-copy",
+      // The fence payload is read via dataset — the property name survives.
+      "commentsCode",
+      "keydown",
+    ]) {
+      expect(js).toContain(s);
+    }
+  });
+
   it("is memoized", async () => {
     await expect(clientJs()).resolves.toBe(await clientJs());
   });

@@ -33,6 +33,8 @@ GitHub review-comment UX for a fenced block: the **first fenced child** (any ` `
 
 Without `lines` the comment renders at the end of the block — GitHub's file-level comment. Without a fenced child at all, `<Comments>` degrades to the standalone card list.
 
+The block is interactive in rendered documents: hovering (or keyboard-focusing) a code/diff row reveals a **+** button that opens a comment form under that line, and every thread ends with a **Reply** button. Reader comments post locally into the page — nothing is sent to a server — and the block's **Copy markdown** button serializes the fence plus every thread (authored and reader-added alike, with their `lines`/`side`/`file`/`author` anchors) back into `<Comments>` markup. Pasting that output over the source block persists the review.
+
 ````mdx
 <Comments>
 

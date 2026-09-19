@@ -142,4 +142,68 @@ describe("Comments", () => {
     expect(body).toContain("loose note");
     expect(body).toContain("Low");
   });
+
+  it("marks every code line with an add-comment button", async () => {
+    const { body } = await render(CODE_DOC);
+    expect(body).toContain('data-comment-add="1"');
+    expect(body).toContain('data-comment-add="2"');
+    expect(body).toContain('data-comment-add="3"');
+    expect(body).toContain('aria-label="Add a comment on line 2"');
+    // Three source lines → three row wrappers.
+    expect(body.match(/data-comment-row/gu)).toHaveLength(3);
+  });
+
+  it("marks diff rows with side-aware add-comment buttons", async () => {
+    const { body } = await render(DIFF_DOC);
+    // `−old` anchors old-side 41 with the file card's resolved path.
+    expect(body).toContain(
+      'data-comment-add="41" data-file="src/render.ts" data-side="old"'
+    );
+    // The side attribute is omitted on the new side (default).
+    expect(body).not.toContain('data-side="new"');
+  });
+
+  it("carries the comment's <Comment> attributes on the card for export", async () => {
+    const { body } = await render(CODE_DOC);
+    expect(body).toContain('data-mdxr-comment=""');
+    expect(body).toContain('data-comment-lines="2"');
+    expect(body).toContain('data-comment-author="@devin"');
+    expect(body).toContain('data-comment-severity="medium"');
+    expect(body).toContain('data-comment-text="derive b from a"');
+  });
+
+  it("emits the fence payload on the root for the markdown copy", async () => {
+    const { body } = await render(CODE_DOC);
+    expect(body).toContain('data-comments=""');
+    expect(body).toContain('data-comments-lang="ts"');
+    expect(body).toContain('data-comments-meta="title=&quot;src/x.ts&quot;"');
+    expect(body).toContain("data-comments-code=");
+    expect(body).toContain('data-comments-copy=""');
+  });
+
+  it("ships inert card/form/strip templates for the client to clone", async () => {
+    const { body } = await render(CODE_DOC);
+    for (const kind of ["card", "form", "strip"]) {
+      expect(body).toContain(`data-comment-tpl="${kind}"`);
+    }
+  });
+
+  it("ships the form fields and thread reply hook the client needs", async () => {
+    const { body } = await render(CODE_DOC);
+    for (const hook of [
+      "data-comment-input",
+      "data-comment-submit",
+      "data-comment-cancel",
+      "data-comment-reply",
+    ]) {
+      expect(body).toContain(`${hook}=""`);
+    }
+  });
+
+  it("tags each thread strip with the anchor replies inherit", async () => {
+    const { body } = await render(DIFF_DOC);
+    // The old-side thread strip keeps side + lines for its Reply button.
+    expect(body).toContain('data-strip-lines="41"');
+    expect(body).toContain('data-strip-side="old"');
+  });
 });

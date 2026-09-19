@@ -18,6 +18,7 @@ if (typeof document !== "undefined") {
     "click",
     "input",
     "change",
+    "keydown",
     "dragstart",
     "dragover",
     "drop",

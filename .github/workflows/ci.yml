@@ -45,6 +45,9 @@ jobs:
       # @storybook/addon-vitest; browser binaries aren't part of pnpm install.
       - run: pnpm exec playwright install --with-deps chromium
 
-      - run: pnpm test
-
+      # Tests bundle user components that self-import `mdxr`; Node resolves
+      # that via this package's `exports`, which point at dist/ — so the
+      # build must run first.
       - run: pnpm build
+
+      - run: pnpm test

@@ -47,9 +47,11 @@ jobs:
 
       - run: pnpm check
 
-      - run: pnpm test
-
+      # Build before test: tests self-import `mdxr`, which resolves via
+      # `exports` to dist/ (see ci.yml).
       - run: pnpm build
+
+      - run: pnpm test
 
       # --no-git-checks: tag checkouts are detached HEAD.
       # Requires the NPM_TOKEN repo secret (npm granular access token).

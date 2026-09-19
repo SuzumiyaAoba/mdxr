@@ -1,6 +1,11 @@
-import { describe, expect, it, vi } from "vitest";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+
+import { afterAll, describe, expect, it, vi } from "vitest";
 
 import { exportIndex, runtimeModuleContents } from "../src/hydrate.js";
+import { scanMdxrImports } from "../src/hydrate/import-scan.js";
 import { render } from "../src/render.js";
 
 const DOC = `# Smoke
@@ -130,5 +135,103 @@ describe("hydrate module surface", () => {
       const missing = [...surface].filter((n) => n !== "v" && !emitted.has(n));
       expect(missing).toStrictEqual([]);
     }
+  });
+});
+
+/**
+ * `export { v } from "mdxr"` hands the whole valibot namespace to consumers —
+ * the per-prop access scan would ship `export const v = {}` while SSR binds
+ * the real namespace, so a re-export must force `"all"`.
+ */
+describe(scanMdxrImports, () => {
+  const dirs: string[] = [];
+
+  afterAll(async () => {
+    await Promise.all(
+      dirs.map(async (d) => {
+        await rm(d, { force: true, recursive: true });
+      })
+    );
+  });
+
+  const scan = async (source: string) => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), "mdxr-scan-"));
+    dirs.push(dir);
+    const f = path.join(dir, "comp.ts");
+    await writeFile(f, source);
+    return await scanMdxrImports(f);
+  };
+
+  it("re-exported `v` escapes — ships the whole namespace", async () => {
+    const results = await Promise.all(
+      [
+        'export { v } from "mdxr";',
+        'export { v as schemas } from "mdxr";',
+        'export { v, Plan } from "mdxr";',
+      ].map(async (src) => {
+        const r = await scan(src);
+        return r.vProps;
+      })
+    );
+    for (const vProps of results) {
+      expect(vProps).toBe("all");
+    }
+  });
+
+  it("imported `v` still scans only accessed props", async () => {
+    const { vProps } = await scan(
+      'import { v } from "mdxr";\nexport const s = v.string();\n'
+    );
+    expect(vProps).toStrictEqual(new Set(["string"]));
+  });
+
+  it("component re-exports don't force valibot", async () => {
+    const { names, vProps } = await scan(
+      'export { Plan } from "mdxr/components";'
+    );
+    expect(names).toStrictEqual(new Set(["Plan"]));
+    expect(vProps).toBeNull();
+  });
+
+  it("comment delimiters inside an import clause don't hide the import", async () => {
+    const { names, vProps } = await scan(
+      [
+        "import {",
+        "  Plan, // don't drop; needed",
+        '  v, /* say "hi"; still v */',
+        '} from "mdxr";',
+        "export const s = v.string();",
+      ].join("\n")
+    );
+    expect(names).toStrictEqual(new Set(["Plan", "v"]));
+    expect(vProps).toStrictEqual(new Set(["string"]));
+  });
+
+  it("comments between `}` and `from` don't corrupt the clause", async () => {
+    const { names } = await scan(
+      'import { Plan } /* keep; "this" */ from "mdxr/components";'
+    );
+    expect(names).toStrictEqual(new Set(["Plan"]));
+  });
+
+  it("commented bare/dynamic imports still count as full-surface", async () => {
+    const bare = await scan('import /* side effect */ "mdxr/components";');
+    expect(bare.names).toBe("all");
+    expect(bare.vProps).toBe("all");
+    const dyn = await scan('const m = await import /* lazy */ ("mdxr");');
+    expect(dyn.names).toBe("all");
+    expect(dyn.vProps).toBe("all");
+  });
+
+  it("type-only imports contribute no runtime names", async () => {
+    const { names, vProps } = await scan(
+      [
+        'import type { Plan } from "mdxr/components";',
+        'export type { v } from "mdxr";',
+        'import { Icon } from "mdxr/components";',
+      ].join("\n")
+    );
+    expect(names).toStrictEqual(new Set(["Icon"]));
+    expect(vProps).toBeNull();
   });
 });

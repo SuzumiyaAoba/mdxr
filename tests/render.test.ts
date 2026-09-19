@@ -455,7 +455,9 @@ describe(mdxToHtml, () => {
     expect(body).toContain("beta");
     expect(body).not.toContain("gamma");
     expect(body).toContain("sample.ts:1-2");
-    expect(body).toContain("language-ts");
+    // langForPath yields the canonical grammar id (typescript), matching
+    // title-based inference in the shiki highlighter.
+    expect(body).toContain("language-typescript");
   });
 
   it("fails <CodeFile> for a missing file", async () => {
@@ -592,6 +594,17 @@ describe(mdxToHtml, () => {
   it("does not convert inline-code paths inside links", async () => {
     const { body } = await renderAt(
       "[`../fixtures/sample.ts`](https://x.test)",
+      fixtureDoc
+    );
+    expect(body).not.toContain("vscode://");
+    expect(body).toContain("<code>../fixtures/sample.ts</code>");
+  });
+
+  it("does not convert inline-code paths inside raw JSX <a>", async () => {
+    // A JSX <a> wrapper is an mdxJsx element, not a "link" node — FileRef
+    // inside it would mint a nested <a> that the HTML parser then splits.
+    const { body } = await renderAt(
+      '<a href="https://x.test">`../fixtures/sample.ts`</a>',
       fixtureDoc
     );
     expect(body).not.toContain("vscode://");

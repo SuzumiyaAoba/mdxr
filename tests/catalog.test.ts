@@ -62,6 +62,26 @@ describe(catalogEntries, () => {
     const ctor = entries.find((e) => e.name === "constructor");
     expect(ctor?.source).toBe("project");
   });
+
+  it("shows the picklist inside a pipe, not just the base type", () => {
+    // Endpoint method: v.pipe(v.string(), v.toUpperCase(), v.picklist(METHODS))
+    const endpoint = catalogEntries().find((e) => e.name === "Endpoint");
+    expect(endpoint?.props.method?.type).toContain('"GET"');
+  });
+
+  it("reports the outermost default of nested wrappers", () => {
+    const Nested = defineComponent(
+      {
+        schema: v.object({
+          // Absent prop resolves to "outer" — the inner default never applies.
+          x: v.optional(v.nullable(v.string(), "inner"), "outer"),
+        }),
+      },
+      () => null
+    );
+    const entry = catalogEntries({ Nested }).find((e) => e.name === "Nested");
+    expect(entry?.props.x).toMatchObject({ default: "outer", required: false });
+  });
 });
 
 describe(formatCatalog, () => {

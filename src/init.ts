@@ -42,6 +42,11 @@ export const installSkill = async (opts: InitOptions): Promise<string[]> => {
   return await Promise.all(
     dests.map(async (dest) => {
       await fsp.mkdir(path.dirname(dest), { recursive: true });
+      if (opts.force === true) {
+        // fs.cp only overwrites same-named files — files deleted or renamed
+        // upstream would linger in dest. A force install replaces wholesale.
+        await fsp.rm(dest, { force: true, recursive: true });
+      }
       await fsp.cp(path.join(pkgRoot, "skill"), dest, {
         force: true,
         recursive: true,

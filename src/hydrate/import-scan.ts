@@ -56,7 +56,14 @@ const parseClause = (
   names: Set<string>,
   vAliases: string[]
 ): void => {
-  for (const part of stripComments(clause).slice(1, -1).split(",")) {
+  // The clause may trail past `}` — comments between `}` and `from` are legal
+  // (`import {a} /* x */ from "m"`) and the regex captures them. Strip
+  // comments first (a `}` inside one is comment text), then cut at the last
+  // `}` so `{ a } /* c */` reads as `a`, not `a }`.
+  const inner = stripComments(clause);
+  const close = inner.lastIndexOf("}");
+  const body = close === -1 ? inner.slice(1) : inner.slice(1, close);
+  for (const part of body.split(",")) {
     const spec = part.trim().replace(/^type\s+/u, "");
     const [imported, local] = spec.split(/\s+as\s+/u).map((s) => s?.trim());
     if (imported === undefined || imported === "") {
@@ -67,6 +74,26 @@ const parseClause = (
       vAliases.push(local ?? "v");
     }
   }
+};
+
+/** Merge per-alias prop scans — `"all"` once any alias escapes. */
+const mergeVProps = (
+  stripped: string,
+  vAliases: string[],
+  escapes: boolean
+): Set<string> | "all" | null => {
+  if (escapes) {
+    return "all";
+  }
+  let vProps: Set<string> | null = null;
+  for (const alias of vAliases) {
+    const props = scanVProps(stripped, alias);
+    if (props === "all") {
+      return "all";
+    }
+    vProps = vProps === null ? props : new Set([...vProps, ...props]);
+  }
+  return vProps;
 };
 
 /**
@@ -87,16 +114,26 @@ export const scanMdxrImports = async (
   const names = new Set<string>();
   const vAliases: string[] = [];
   // `\s*` not `\s+`: `import{v}from"mdxr"` is legal and must still register.
+  // `(?!\s*type\b)` puts the whitespace inside the lookahead — a `\s*` outside
+  // would backtrack to zero and let `import type` slip through as a runtime
+  // import (over-shipping the whole surface). The clause pattern alternates
+  // comments with plain chars so a `;`, `'`, or `"` inside a comment doesn't
+  // truncate the clause and hide the whole import.
   const fromRe =
-    /(?:import|export)\s*(?!type\b)(?<clause>[^;"']*?)\s*from\s*["']mdxr(?:\/components)?["']/gu;
+    /(?:import|export)\s*(?!\s*type\b)(?<clause>(?:\/\*[\s\S]*?\*\/|\/\/[^\n]*|[^;"'])*?)\s*from\s*["']mdxr(?:\/components)?["']/gu;
   let stripped = source;
+  // `export { v } from "mdxr"` hands the namespace to consumers — every
+  // property is reachable, so the per-prop access scan can't apply.
+  let vEscapes = false;
   for (const m of source.matchAll(fromRe)) {
     const clause = m.groups?.clause ?? "";
     stripped = stripped.replace(m[0], "");
     if (!clause.startsWith("{")) {
       return { names: "all", vProps: "all" };
     }
+    const found = vAliases.length;
     parseClause(clause, names, vAliases);
+    vEscapes ||= m[0].startsWith("export") && vAliases.length > found;
   }
   // Type-only imports don't run, but a leftover `import type { v }` would
   // still trip the `\bv\b` leftover scan and force-ship all of valibot.
@@ -104,21 +141,18 @@ export const scanMdxrImports = async (
     /(?:import|export)\s+type\s[^;]*?(?:;|$)/gmu,
     ""
   );
+  // Bare/dynamic imports escape analysis entirely. The separator allows
+  // comments — `import /* x */ ("mdxr")` is legal and must still count.
+  const sep = String.raw`(?:\s|/\*[\s\S]*?\*/|//[^\n]*)*`;
   if (
-    /import\s+["']mdxr(?:\/components)?["']/u.test(source) ||
-    /import\s*\(\s*["']mdxr(?:\/components)?["']/u.test(source)
+    new RegExp(`import${sep}["']mdxr(?:/components)?["']`, "u").test(source) ||
+    new RegExp(`import${sep}\\(${sep}["']mdxr(?:/components)?["']`, "u").test(
+      source
+    )
   ) {
     return { names: "all", vProps: "all" };
   }
-  let vProps: Set<string> | "all" | null = null;
-  for (const alias of vAliases) {
-    const props = scanVProps(stripped, alias);
-    if (props === "all") {
-      vProps = "all";
-      break;
-    }
-    vProps = vProps === null ? props : new Set([...vProps, ...props]);
-  }
+  const vProps = mergeVProps(stripped, vAliases, vEscapes);
   return {
     names,
     vProps: vAliases.length === 0 ? null : (vProps ?? new Set()),

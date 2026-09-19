@@ -5,6 +5,7 @@ import type { Node } from "unist";
 import { visit } from "unist-util-visit";
 import type { VFile } from "vfile";
 
+import { langForPath } from "../langs.js";
 import { parseLineRange } from "../lines.js";
 import type { MdxTarget } from "./ast.js";
 import { isFlowElement, jsxAttr } from "./ast.js";
@@ -67,13 +68,15 @@ export const remarkCodeFile = () => (tree: Node, file: VFile) => {
       titleSuffix = `:${rangeSpec}`;
     }
 
-    const lang = jsxAttr(node, "lang") ?? path.extname(abs).replace(/^\./u, "");
+    // langForPath, not just extname: basename tables cover Makefile,
+    // Dockerfile, .gitignore — extensionless files still get a grammar.
+    const lang = jsxAttr(node, "lang") ?? langForPath(abs);
     const target: CodeTarget = node;
     target.type = "code";
     delete target.name;
     delete target.attributes;
     delete target.children;
-    target.lang = lang === "" ? undefined : lang;
+    target.lang = lang;
     // `"` inside a path would close the title="…" meta early — quote it as `'`.
     const title = rel.replaceAll('"', "'");
     target.meta = `title="${title}${titleSuffix}"`;

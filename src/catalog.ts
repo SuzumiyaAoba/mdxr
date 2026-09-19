@@ -32,8 +32,20 @@ const describeSchema = (schema: unknown): string => {
   if (schema.type === "union" && Array.isArray(schema.options)) {
     return schema.options.map(describeSchema).join(" | ");
   }
-  if (schema.type === "pipe" && Array.isArray(schema.pipe)) {
-    return describeSchema(schema.pipe[0]);
+  // `v.pipe(v.string(), v.toUpperCase(), v.picklist(M))` keeps `type:
+  // "string"` — the base type — and stores the actions in `.pipe`. The
+  // constrained member (picklist/union/literal) reads better than "string";
+  // transforms like trim/case don't describe accepted values.
+  if (Array.isArray(schema.pipe)) {
+    const pipe: unknown[] = schema.pipe;
+    const constrained = pipe.find(
+      (s) =>
+        isRecord(s) &&
+        (s.type === "picklist" || s.type === "union" || s.type === "literal")
+    );
+    if (constrained !== undefined) {
+      return describeSchema(constrained);
+    }
   }
   return typeof schema.type === "string" ? schema.type : "unknown";
 };
@@ -50,9 +62,9 @@ const unwrapProp = (
   let def: unknown;
   while (typeof s.type === "string" && WRAPPER_TYPES.has(s.type)) {
     required = false;
-    if (s.default !== undefined) {
-      def = s.default;
-    }
+    // First (outermost) default wins: `v.optional(v.nullable(x, "a"), "b")`
+    // yields "b" for an absent prop — the inner default never applies.
+    def ??= s.default;
     s = isRecord(s.wrapped) ? s.wrapped : {};
   }
   return { def, required, s };

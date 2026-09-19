@@ -36,8 +36,15 @@ export const remarkFilePaths = () => (tree: Node, file: VFile) => {
       : undefined;
   };
   visitParents(tree, "inlineCode", (node: Node, ancestors: Node[]) => {
+    // Links keep plain code — FileRef renders its own <a>, and nested
+    // anchors break in the HTML parser. Raw JSX <a> wrappers count too:
+    // they're mdxJsx elements, not "link" nodes.
     const inLink = ancestors.some(
-      (a) => a.type === "link" || a.type === "linkReference"
+      (a) =>
+        a.type === "link" ||
+        a.type === "linkReference" ||
+        ((a.type === "mdxJsxTextElement" || a.type === "mdxJsxFlowElement") &&
+          (a as MdxTarget).name === "a")
     );
     if (inLink || !("value" in node) || typeof node.value !== "string") {
       return;

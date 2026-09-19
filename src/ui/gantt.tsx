@@ -284,7 +284,10 @@ const collectDates = (children: ReactNode): Date[] => {
     if (isEl(n, Task)) {
       const s = toDate(propOf(n, "start"));
       if (s !== undefined) {
-        dates.push(s, toDate(propOf(n, "end")) ?? s);
+        const e = toDate(propOf(n, "end"));
+        // Same clamp Task applies to its own bar — an inverted end<start
+        // renders as a one-day bar, so it must not stretch the axis.
+        dates.push(s, e === undefined || e < s ? s : e);
       }
     } else if (isEl(n, Milestone)) {
       const d = toDate(propOf(n, "date"));
@@ -294,6 +297,23 @@ const collectDates = (children: ReactNode): Date[] => {
     }
   }
   return dates;
+};
+
+/** Min/max across collected child dates. */
+const dateBounds = (
+  children: ReactNode
+): { max: Date | undefined; min: Date | undefined } => {
+  let min: Date | undefined;
+  let max: Date | undefined;
+  for (const d of collectDates(children)) {
+    if (min === undefined || d < min) {
+      min = d;
+    }
+    if (max === undefined || d > max) {
+      max = d;
+    }
+  }
+  return { max, min };
 };
 
 /**
@@ -307,20 +327,27 @@ const resolveRange = (
   end: unknown,
   fallback: Date
 ): { last: Date; origin: Date; spanDays: number } => {
-  let origin = toDate(start);
-  let last = toDate(end);
-  for (const d of collectDates(children)) {
-    if (origin === undefined || d < origin) {
-      origin = d;
-    }
-    if (last === undefined || d > last) {
-      last = d;
-    }
+  const boundStart = toDate(start);
+  const boundEnd = toDate(end);
+  let origin = boundStart;
+  let last = boundEnd;
+  if (origin === undefined || last === undefined) {
+    // An explicit bound is a hard edge — only the unset side derives from
+    // child dates. Extending a set side would silently un-zoom the chart.
+    const { min, max } = dateBounds(children);
+    origin ??= min;
+    last ??= max;
   }
-  const o = origin ?? fallback;
+  let o = origin ?? fallback;
   let l = last ?? addDays(o, 29);
   if (l < o) {
-    l = o;
+    // Inverted range — needs an explicit side (derived min <= max by
+    // construction). A lone explicit end wins; otherwise keep the origin.
+    if (boundEnd !== undefined && boundStart === undefined) {
+      o = l;
+    } else {
+      l = o;
+    }
   }
   return {
     last: l,

@@ -118,7 +118,9 @@ const copyWithFeedback = (
 // Falls back to the control's value when no text can be read.
 const choiceText = (f: Element): string => {
   if (f instanceof HTMLOptionElement) {
-    const t = (f.textContent ?? "").trim();
+    // Same whitespace collapse as SSR's choiceLabel — otherwise the live
+    // sheet rewrites an SSR-seeded "a b" label as "a  b" on first sync.
+    const t = (f.textContent ?? "").replaceAll(/\s+/gu, " ").trim();
     return t === "" ? f.value : t;
   }
   const fallback = f instanceof HTMLInputElement ? f.value : "";
@@ -486,9 +488,13 @@ const dragStart = (e: Event, el: Element): boolean => {
     // Firefox won't start a drag without setData.
     e.dataTransfer.setData("text/plain", card.dataset.cardTitle ?? "");
   }
-  // Defer so the drag image keeps the card's normal look.
+  // Defer so the drag image keeps the card's normal look. Re-check the
+  // active drag: a same-frame drop/dragend would otherwise leave a stale
+  // mdxr-drag class behind after dragFinish already ran.
   requestAnimationFrame(() => {
-    card.classList.add("mdxr-drag");
+    if (draggedCard === card) {
+      card.classList.add("mdxr-drag");
+    }
   });
   return true;
 };

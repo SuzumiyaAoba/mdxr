@@ -13,6 +13,19 @@ import type { EdgeSpec, NodeSpec } from "./graph-specs.js";
 const RANKDIRS = { down: "TB", left: "RL", right: "LR", up: "BT" } as const;
 export type GraphDirection = keyof typeof RANKDIRS;
 
+/** East-Asian wide/fullwidth glyphs take ~1.7 mono cells vs ASCII's one. */
+const WIDE_CHAR =
+  /[ᄀ-ᄟ⺀-꓏가-힣豈-﫿︰-﹏＀-￯\u{20000}-\u{2FFFD}\u{30000}-\u{3FFFD}]/u;
+
+/** Text width in mono "cells" — SSR can't measure, so wide chars count extra. */
+const textCells = (s: string): number => {
+  let cells = 0;
+  for (const ch of s) {
+    cells += WIDE_CHAR.test(ch) ? 1.7 : 1;
+  }
+  return cells;
+};
+
 export const midpoint = (a: Point, b: Point): Point => ({
   x: (a.x + b.x) / 2,
   y: (a.y + b.y) / 2,
@@ -71,18 +84,34 @@ export const labelPoint = (pts: Point[]): Point => {
 /** Width/height guesses for layout — SSR can't measure, so text is estimated. */
 export const nodeSize = (s: NodeSpec): { height: number; width: number } => {
   const label = nonEmpty(s.label) ? s.label : s.id;
-  const w =
-    26 +
-    label.length * 7.4 +
+  const labelW =
+    textCells(label) * 7.4 +
     (nonEmpty(s.icon) || nonEmpty(s.path) ? 20 : 0) +
     (s.status === undefined ? 0 : 16);
+  const noteW = nonEmpty(s.note) ? textCells(s.note) * 7.4 : 0;
   return {
     height: nonEmpty(s.note) ? 52 : 38,
-    width: Math.round(Math.min(240, Math.max(92, w))),
+    width: Math.round(
+      Math.min(240, Math.max(92, 26 + Math.max(labelW, noteW)))
+    ),
   };
 };
 
+/**
+ * Chip-size guess for an edge label. Passed to dagre so the rank channel
+ * widens to fit it — without it labels land on top of neighboring nodes.
+ */
+export const edgeLabelSize = (
+  label: string
+): { height: number; width: number } => ({
+  height: 22,
+  width: Math.round(textCells(label) * 6.9 + 16),
+});
+
 export type DagreGraph = graphlib.Graph<GraphLabel, NodeLabel, EdgeLabel>;
+
+/** dagre edge name per live-edge index — names keep parallel edges distinct. */
+export const edgeKey = (i: number): string => `e${i}`;
 
 /** dagre layout pass: nodes in spec order (dupes skipped), live edges only. */
 export const layoutGraph = (
@@ -90,7 +119,7 @@ export const layoutGraph = (
   edges: EdgeSpec[],
   direction: GraphDirection
 ): { g: DagreGraph; height: number; liveEdges: EdgeSpec[]; width: number } => {
-  const g: DagreGraph = new graphlib.Graph();
+  const g: DagreGraph = new graphlib.Graph({ multigraph: true });
   g.setGraph({
     marginx: 10,
     marginy: 10,
@@ -108,8 +137,11 @@ export const layoutGraph = (
     g.setNode(n.id, nodeSize(n));
   }
   const liveEdges = edges.filter((e) => g.hasNode(e.from) && g.hasNode(e.to));
-  for (const e of liveEdges) {
-    g.setEdge(e.from, e.to);
+  for (const [i, e] of liveEdges.entries()) {
+    const label = nonEmpty(e.label)
+      ? { ...edgeLabelSize(e.label), labelpos: "c" as const }
+      : {};
+    g.setEdge({ name: edgeKey(i), v: e.from, w: e.to }, label);
   }
   layout(g);
   const { width = 0, height = 0 } = g.graph();

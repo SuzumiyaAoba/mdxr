@@ -20,6 +20,7 @@ import type { CssSource } from "./tailwind.js";
 import { buildCss } from "./tailwind.js";
 import { builtinComponents } from "./ui/index.js";
 import { PlanHeader } from "./ui/plan.js";
+import { isStatus, STATUSES } from "./ui/status-badge.js";
 
 export interface LoadedComponents {
   components: ComponentMap;
@@ -144,6 +145,25 @@ const buildHydrateBundle = async (args: {
 };
 
 /**
+ * Frontmatter `status` is free-form YAML, not a JSX prop — normalize case
+ * ("Doing" → "doing") and warn+drop anything outside STATUSES so a metadata
+ * typo can't take down the whole document render.
+ */
+const headerStatus = (raw: string | undefined): string | undefined => {
+  if (raw === undefined) {
+    return undefined;
+  }
+  const norm = raw.trim().toLowerCase();
+  if (isStatus(norm)) {
+    return norm;
+  }
+  process.stderr.write(
+    `mdxr: warning: frontmatter status "${raw}" is not one of ${STATUSES.join("|")} — the badge is skipped\n`
+  );
+  return undefined;
+};
+
+/**
  * PlanHeader props from frontmatter — present only with a `title` and no
  * `<Plan>`-style `<article>` root in the body (that would render a second
  * header). Used for both the SSR header and the hydration payload.
@@ -159,7 +179,7 @@ const frontmatterHeader = (
   return {
     date: fm("date"),
     owner: fm("owner"),
-    status: fm("status"),
+    status: headerStatus(fm("status")),
     title,
     updated: fm("updated"),
     version: fm("version"),
@@ -172,7 +192,10 @@ export const render = async (
   opts: RenderSourceOptions = {}
 ): Promise<string> => {
   const dir = path.resolve(opts.dir ?? process.cwd());
-  const filePath = opts.filePath ?? path.join(dir, "document.mdx");
+  // Relative filePaths anchor to `dir`, not cwd — mdxToHtml resolves
+  // `<CodeFile>`/`file:` links against file.dirname, and `dir` is the
+  // documented base for those (e.g. `mdxr < doc.mdx` with -d).
+  const filePath = path.resolve(dir, opts.filePath ?? "document.mdx");
   const config: ResolvedConfig = await loadConfig(dir);
 
   const user = await loadUserComponents(config);

@@ -69,10 +69,18 @@ describe(remarkCodeFile, () => {
     expect(node).not.toHaveProperty("name");
     expect(node).not.toHaveProperty("attributes");
     expect(node).toMatchObject({
-      lang: "ts",
+      // langForPath resolves the canonical shiki id, not the raw extension.
+      lang: "typescript",
       meta: 'title="fixtures/sample.ts"',
     });
     expect(node).toHaveProperty("value", expect.stringContaining("export"));
+  });
+
+  it("detects a grammar for extensionless files by basename", () => {
+    // extname-only inference left Makefile/Dockerfile unhighlighted —
+    // langForPath's basename table covers them.
+    const { node } = runCodeFile(codeFileEl({ path: "fixtures/Makefile" }));
+    expect(node).toHaveProperty("lang", "makefile");
   });
 
   it("sanitizes a double-quote in the path so the title meta stays intact", () => {

@@ -1,3 +1,4 @@
+import type { EdgeLabel } from "@dagrejs/dagre";
 import type { ReactElement } from "react";
 import * as v from "valibot";
 
@@ -11,6 +12,7 @@ import { useFileLink } from "./file-link.js";
 import type { DagreGraph } from "./graph-layout.js";
 import {
   arrowPath,
+  edgeKey,
   labelPoint,
   layoutGraph,
   nodeSize,
@@ -138,12 +140,12 @@ const StrokePath = ({ d }: { d: string }): ReactElement => (
 /** Routed edge: smoothed path plus its arrowhead, tinted via EDGE_COLORS. */
 const EdgePath = ({
   e,
-  g,
+  edge,
 }: {
   e: EdgeSpec;
-  g: DagreGraph;
+  edge: EdgeLabel;
 }): ReactElement | null => {
-  const pts = g.edge(e.from, e.to)?.points;
+  const pts = edge.points;
   if (pts === undefined || pts.length < 2) {
     return null;
   }
@@ -156,22 +158,22 @@ const EdgePath = ({
   );
 };
 
-/** Edge label chip, positioned at the route's midpoint. */
+/** Edge label chip at the position dagre reserved for it during layout. */
 const EdgeLabelChip = ({
   e,
-  g,
+  edge,
 }: {
   e: EdgeSpec;
-  g: DagreGraph;
+  edge: EdgeLabel;
 }): ReactElement | null => {
   if (!nonEmpty(e.label)) {
     return null;
   }
-  const pts = g.edge(e.from, e.to)?.points;
-  if (pts === undefined || pts.length === 0) {
-    return null;
-  }
-  const p = labelPoint(pts);
+  // Labeled edges carry dagre-computed x/y; the route midpoint is a fallback.
+  const p =
+    edge.x === undefined || edge.y === undefined
+      ? labelPoint(edge.points ?? [])
+      : { x: edge.x, y: edge.y };
   return (
     <span
       className={`absolute z-10 -translate-x-1/2 -translate-y-1/2 ${MONO_TAG_CLS} whitespace-nowrap shadow-sm`}
@@ -250,11 +252,19 @@ export const Graph = defineComponent(
               width={width}
             >
               {liveEdges.map((e, i) => (
-                <EdgePath e={e} g={g} key={i} />
+                <EdgePath
+                  e={e}
+                  edge={g.edge(e.from, e.to, edgeKey(i))}
+                  key={i}
+                />
               ))}
             </svg>
             {liveEdges.map((e, i) => (
-              <EdgeLabelChip e={e} g={g} key={`label-${i}`} />
+              <EdgeLabelChip
+                e={e}
+                edge={g.edge(e.from, e.to, edgeKey(i))}
+                key={`label-${i}`}
+              />
             ))}
             {uniqueNodes.map((n) => (
               <PlacedNode g={g} key={n.id} n={n} />

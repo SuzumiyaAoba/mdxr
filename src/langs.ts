@@ -138,7 +138,7 @@ const EXT_LANGS: Record<string, string> = {
 /** Best-guess shiki language for a file path — basename first, then the
  * extension. `x.d.ts` keeps `ts` (the declaration grammar is the same). */
 export const langForPath = (path: string): string | undefined => {
-  const base = path.split("/").at(-1)?.toLowerCase() ?? "";
+  const base = path.split(/[\\/]/u).at(-1)?.toLowerCase() ?? "";
   const named = own(FILE_LANGS, base);
   if (named !== undefined) {
     return named;

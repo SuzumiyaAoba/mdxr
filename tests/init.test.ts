@@ -1,4 +1,4 @@
-import { mkdtemp, readdir, realpath, rm } from "node:fs/promises";
+import { mkdtemp, readdir, realpath, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -68,6 +68,19 @@ describe(installSkill, () => {
     await expect(
       installSkill({ force: true, tool: "agents" })
     ).resolves.toStrictEqual([path.join(dir, ".agents/skills/mdxr")]);
+  });
+
+  it("removes stale files on --force reinstall", async () => {
+    // fs.cp only overwrites same-named files — a file deleted or renamed
+    // upstream would linger in dest after a forced reinstall.
+    const dir = await makeDir();
+    process.chdir(dir);
+    const [dest] = await installSkill({ tool: "agents" });
+    const stale = path.join(dest ?? "", "STALE.md");
+    await writeFile(stale, "leftover\n");
+    await installSkill({ force: true, tool: "agents" });
+    await expect(readdir(dest ?? "")).resolves.not.toContain("STALE.md");
+    await expect(readdir(dest ?? "")).resolves.toContain("SKILL.md");
   });
 
   it("rejects an unknown tool before writing anything", async () => {

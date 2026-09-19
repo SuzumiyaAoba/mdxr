@@ -14,10 +14,12 @@ import type { DocContextValue } from "../src/doc-context.js";
 import { DocContext } from "../src/doc-context.js";
 import { isComponent, safeHref } from "../src/guards.js";
 import { htmlDocument } from "../src/html.js";
+import { langForPath } from "../src/langs.js";
 import { importBundledCode } from "../src/load-user-module.js";
 import { mdxToHtml } from "../src/mdx.js";
 import { render } from "../src/render.js";
 import { buildCss } from "../src/tailwind.js";
+import { edgeLabelSize } from "../src/ui/graph-layout.js";
 import { builtinComponents } from "../src/ui/index.js";
 import { PlanHeader } from "../src/ui/plan.js";
 import { renderDoc } from "./helpers.js";
@@ -207,6 +209,16 @@ describe(safeHref, () => {
   });
 });
 
+describe(langForPath, () => {
+  it("treats backslashes as separators like fileIcon does", () => {
+    // fileIcon split on /[\\/]/ but langForPath only split "/", so a
+    // Windows-style path got an icon yet no grammar.
+    expect(langForPath("src\\lang\\x.ts")).toBe("typescript");
+    expect(langForPath("C:\\proj\\Makefile")).toBe("makefile");
+    expect(langForPath("a/b/c.py")).toBe("python");
+  });
+});
+
 describe("repo chip links", () => {
   it("rejects a non-http scheme in a repo URL", async () => {
     // `repo` with "://" used to land in href unchecked — a `javascript:`
@@ -298,6 +310,70 @@ describe("Graph", () => {
     expect(body).toContain("First");
     expect(body).not.toContain("Dupe");
   });
+
+  it("reserves space for edge labels so chips clear the nodes", async () => {
+    // Edge labels used to sit at the route midpoint with no room reserved —
+    // a chip wider than the rank channel landed on top of neighboring nodes.
+    const { body } = await ssr(
+      '<Graph direction="right"><Node id="a" label="alpha" /><Node id="b" label="beta" /><Node id="c" label="gamma" /><Edge from="a" to="b" label="static markup" /><Edge from="a" to="c" label="runtime deps" /></Graph>'
+    );
+    const boxes = [
+      ...body.matchAll(
+        /class="absolute" style="height:(?<h>[\d.]+)px;left:(?<x>[\d.]+)px;top:(?<y>[\d.]+)px;width:(?<w>[\d.]+)px"/gu
+      ),
+    ].map((m) => ({
+      h: Number(m.groups?.h),
+      w: Number(m.groups?.w),
+      x: Number(m.groups?.x),
+      y: Number(m.groups?.y),
+    }));
+    const chips = [
+      ...body.matchAll(
+        /whitespace-nowrap shadow-sm" style="left:(?<x>[\d.]+)px;top:(?<y>[\d.]+)px">(?<t>[^<]+)/gu
+      ),
+    ].map((m) => ({
+      t: m.groups?.t ?? "",
+      x: Number(m.groups?.x),
+      y: Number(m.groups?.y),
+    }));
+    expect(chips).toHaveLength(2);
+    for (const c of chips) {
+      const { height: h, width: w } = edgeLabelSize(c.t);
+      for (const b of boxes) {
+        const hit =
+          c.x - w / 2 < b.x + b.w &&
+          c.x + w / 2 > b.x &&
+          c.y - h / 2 < b.y + b.h &&
+          c.y + h / 2 > b.y;
+        expect(hit).toBeFalsy();
+      }
+    }
+  });
+});
+
+describe("Gantt", () => {
+  it("treats explicit start/end as hard bounds, not seeds", async () => {
+    // "start/end で表示範囲を上書き" — child dates used to extend the
+    // explicit range, so a June task defeated a March-only zoom.
+    const { body } = await ssr(
+      '<Gantt title="Q" start="2025-03-01" end="2025-03-31"><Task name="in" start="2025-03-05" end="2025-03-10"/><Task name="out" start="2025-06-01" end="2025-06-10"/></Gantt>'
+    );
+    // The caption prints the resolved range; it must stay inside March.
+    expect(body).toContain("Mar 1 – Mar 31, 2025");
+    expect(body).not.toContain("Mar 1 – Jun 10, 2025");
+  });
+
+  it("does not let an inverted task end pull the range backwards", async () => {
+    // Task renders end<start clamped to start (a one-day bar); the range
+    // collector pushed the raw earlier end, stretching the axis months wide.
+    const { body } = await ssr(
+      '<Gantt><Task name="t" start="2025-06-10" end="2025-01-01"/></Gantt>'
+    );
+    // Correct range: a single day → no month ticks at all.
+    expect(body).toContain("Jun 10");
+    expect(body).not.toContain("Feb");
+    expect(body).not.toContain("Mar");
+  });
 });
 
 describe(htmlDocument, () => {
@@ -343,6 +419,43 @@ describe(render, () => {
     const dir = await makeDir();
     const html = await render("---\ntitle: 42\n---\n\nbody", { dir });
     expect(html).toContain("<title>42</title>");
+  });
+
+  it("normalizes frontmatter status case; unknown values warn, not crash", async () => {
+    const dir = await makeDir();
+    const spy = vi.spyOn(process.stderr, "write").mockReturnValue(true);
+    try {
+      // "Doing" used to hit StatusBadge's picklist and fail the whole
+      // document render — frontmatter is metadata, not a JSX prop.
+      const good = await render("---\ntitle: T\nstatus: Doing\n---\n\nbody", {
+        dir,
+      });
+      expect(good).toContain("In progress");
+      expect(spy.mock.calls.flat().join("")).not.toContain(
+        "frontmatter status"
+      );
+
+      spy.mockClear();
+      const bad = await render("---\ntitle: T\nstatus: wip\n---\n\nbody", {
+        dir,
+      });
+      expect(bad).toContain("<h1");
+      expect(spy.mock.calls.flat().join("")).toContain(
+        'frontmatter status "wip"'
+      );
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it("anchors a relative filePath to dir, not cwd", async () => {
+    const dir = await makeDir();
+    await mkdir(path.join(dir, "sub"));
+    await writeFile(path.join(dir, "sub", "real.ts"), "x\n");
+    // "<stdin>" has no directory of its own — `dir` is the documented base
+    // for file lookups; resolving against cwd silently dropped the link.
+    const html = await render("`sub/real.ts`", { dir, filePath: "<stdin>" });
+    expect(html).toContain("vscode://file/");
   });
 
   it("extracts the title from an h1 containing inline elements", async () => {

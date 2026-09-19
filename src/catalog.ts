@@ -161,6 +161,66 @@ export const CONVENTIONS = [
   { result: "Matrix container (comparison grid)", syntax: ":::matrix" },
   { result: "Timeline", syntax: ':::timeline{title="..."}' },
   {
+    result: "Review container (code review report)",
+    syntax: ':::review{title="..." verdict="changes"}',
+  },
+  {
+    result: "Checks container (CI/verification status)",
+    syntax: ":::checks",
+  },
+  {
+    result: "Audit container (vulnerability inventory)",
+    syntax: ':::audit{tool="npm audit"}',
+  },
+  {
+    result: "Bumps container (dependency upgrades)",
+    syntax: ":::bumps",
+  },
+  {
+    result: "Packages container (dependency inventory)",
+    syntax: ":::packages",
+  },
+  {
+    result: "Gauges container (percent-bar rows: coverage, scores)",
+    syntax: ":::gauges",
+  },
+  {
+    result: "Benchmarks container (before/after comparisons)",
+    syntax: ':::benchmarks{better="lower"}',
+  },
+  {
+    result: "Schema container (DB table definitions)",
+    syntax: ":::schema",
+  },
+  {
+    result: "EnvVars container (environment variable docs)",
+    syntax: ":::envvars",
+  },
+  {
+    result: "StatusPage container (service health rollup)",
+    syntax: ":::statuspage",
+  },
+  {
+    result: "Uptime container (status-page day bars)",
+    syntax: ':::uptime{pct="99.9"}',
+  },
+  {
+    result: "Release container (changelog block)",
+    syntax: ':::release{version="v1.0.0"}',
+  },
+  {
+    result: "Pathway container (version/env stepper)",
+    syntax: ':::pathway{title="..."}',
+  },
+  {
+    result: "Incident header (postmortem card)",
+    syntax: ':::incident{title="..." severity="high"}',
+  },
+  {
+    result: "Verdict banner (approve/pass/warn/fail conclusion)",
+    syntax: ':::verdict{status="approve"}',
+  },
+  {
     result: "chart containers (quantitative visualizations)",
     syntax:
       ":::barchart · :::linechart · :::piechart · :::scatter · :::radar · :::funnel · :::quadrant · :::bridge · :::treemap · :::sankey · :::venn",

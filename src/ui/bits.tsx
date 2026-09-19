@@ -304,6 +304,8 @@ export const TrimBody = (props: {
  * a pill slot + optional title + prose children.
  */
 export const IndexedCard = (props: {
+  /** Right-aligned extra in the header row (e.g. a file LocLink). */
+  aside?: ReactNode;
   children?: ReactNode;
   /** 1-based index from `useChildIndex`; 0 hides the badge. */
   n: number;
@@ -318,6 +320,9 @@ export const IndexedCard = (props: {
       {nonEmpty(props.title) ? (
         <span className="text-sm font-medium">{props.title}</span>
       ) : null}
+      {props.aside === undefined ? null : (
+        <span className="ml-auto">{props.aside}</span>
+      )}
     </div>
     <TrimBody className="mt-1.5 text-sm">{props.children}</TrimBody>
   </article>

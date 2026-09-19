@@ -7,32 +7,58 @@ import { isParent, textContent, toMdxElement } from "./ast.js";
 import { CALLOUT_KINDS, normalizeCalloutKind } from "./callouts.js";
 
 const CONTAINER_COMPONENTS: Record<string, string> = {
+  audit: "Audit",
   barchart: "BarChart",
+  bench: "Bench",
+  benchmarks: "Benchmarks",
   board: "Board",
   bridge: "Bridge",
+  bump: "Bump",
+  bumps: "Bumps",
+  check: "Check",
+  checks: "Checks",
+  comment: "Comment",
+  day: "Day",
+  dbfield: "DbField",
+  dbtable: "DbTable",
   deps: "Deps",
   endpoints: "Endpoints",
+  entry: "Entry",
+  envvar: "EnvVar",
+  envvars: "EnvVars",
   files: "Files",
   finding: "Finding",
   findings: "Findings",
   flow: "Flow",
   funnel: "Funnel",
   gantt: "Gantt",
+  gauge: "Gauge",
+  gauges: "Gauges",
   graph: "Graph",
   hypotheses: "Hypotheses",
   hypothesis: "Hypothesis",
+  incident: "Incident",
   linechart: "LineChart",
   matrix: "Matrix",
+  package: "Package",
+  packages: "Packages",
+  pathway: "Pathway",
   phase: "Phase",
   piechart: "PieChart",
   plan: "Plan",
   quadrant: "Quadrant",
   radar: "Radar",
+  release: "Release",
+  review: "Review",
   sankey: "Sankey",
   scatter: "Scatter",
+  schema: "Schema",
   search: "Search",
   searches: "Searches",
+  service: "Service",
+  statuspage: "StatusPage",
   steps: "Steps",
+  stop: "Stop",
   summary: "Summary",
   terminal: "Terminal",
   tests: "Tests",
@@ -40,7 +66,10 @@ const CONTAINER_COMPONENTS: Record<string, string> = {
   toc: "Toc",
   trace: "Trace",
   treemap: "Treemap",
+  uptime: "Uptime",
   venn: "Venn",
+  verdict: "Verdict",
+  vuln: "Vuln",
   waterfall: "Waterfall",
 };
 
@@ -69,6 +98,18 @@ const isDirective = (n: Node): n is DirectiveNode =>
  *     → BarChart / LineChart / PieChart / Scatter / Radar
  *   :::funnel / :::quadrant / :::bridge / :::treemap / :::sankey / :::venn
  *     → Funnel / Quadrant / Bridge / Treemap / Sankey / Venn
+ *   :::review / :::comment / :::checks / :::check / :::audit / :::vuln
+ *     → Review / Comment / Checks / Check / Audit / Vuln
+ *   :::bumps / :::bump / :::packages / :::package
+ *     → Bumps / Bump / Packages / Package
+ *   :::gauges / :::gauge / :::benchmarks / :::bench
+ *     → Gauges / Gauge / Benchmarks / Bench
+ *   :::schema / :::dbtable / :::dbfield / :::envvars / :::envvar
+ *     → Schema / DbTable / DbField / EnvVars / EnvVar
+ *   :::release / :::entry / :::pathway / :::stop / :::incident / :::verdict
+ *     → Release / Entry / Pathway / Stop / Incident / Verdict
+ *   :::statuspage / :::service / :::uptime / :::day
+ *     → StatusPage / Service / Uptime / Day
  * `non-goal` is accepted as an alias of the `nongoal` callout kind.
  */
 export const remarkMdxrDirectives = () => (tree: Node, file: VFile) => {

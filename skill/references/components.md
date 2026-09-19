@@ -73,6 +73,32 @@ This file is an index: each group lists what its components do and links to a de
 | `<Waterfall>` / `<Span>` | Timing waterfall (OTel-trace-style bars) — `:::waterfall` |
 | `<Ins>` / `<Del>` | Inline word-level edits — semantic `<ins>`/`<del>` |
 
+## Reports — details: [components/reports.md](components/reports.md)
+
+Review results, verification status, security/dependency scans, metrics, config docs, and ops/release summaries.
+
+| Component | What it is |
+| --- | --- |
+| `<Review>` / `<Comment>` | Code-review report — numbered findings with severity pills, `file:line` links, verdict pill + severity tally — `:::review` |
+| `<Verdict>` | Colored verdict banner — approve/pass/warn/fail/info — `:::verdict` |
+| `<Severity>` | Inline severity pill — critical/high/medium/low/info |
+| `<Checks>` / `<Check>` | CI check list — status icons, required chips, auto counts + duration sum — `:::checks` |
+| `<Audit>` / `<Vuln>` | Vulnerability report — severity tally, CVE/GHSA links, fix versions — `:::audit` |
+| `<Bumps>` / `<Bump>` | Dependency upgrade plan — `from → to`, auto major/minor/patch detection — `:::bumps` |
+| `<Packages>` / `<Package>` | Package inventory — kind/license chips, count caption — `:::packages` |
+| `<Gauges>` / `<Gauge>` | Percent-bar list — coverage/scores with auto pass/fail coloring — `:::gauges` |
+| `<Score>` | 0–100 ring gauge — health/quality scores |
+| `<Spark>` | Inline sparkline for prose trends |
+| `<Benchmarks>` / `<Bench>` | Before/after measurement table — auto % delta, `better="lower"` flips colors — `:::benchmarks` |
+| `<DiffStat>` | Inline `+N −M across F files` chip with proportional bar |
+| `<Schema>` / `<DbTable>` / `<DbField>` | Database schema docs — PK/FK/unique/null chips — `:::schema` |
+| `<EnvVars>` / `<EnvVar>` | Env-var reference — required/secret chips, masked values, name-copy button — `:::envvars` |
+| `<StatusPage>` / `<Service>` | Service-health summary — worst-status rollup, uptime figures — `:::statuspage` |
+| `<Uptime>` / `<Day>` | Statuspage-style daily uptime bar — `:::uptime` |
+| `<Release>` / `<Entry>` | Release notes — entries auto-grouped by kind (breaking/added/…/security) — `:::release` |
+| `<Pathway>` / `<Stop>` | Migration/rollout stepper — version paths, env promotion — `:::pathway` |
+| `<Incident>` | Incident/postmortem header — severity + status pills, timeline meta, impact line — `:::incident` |
+
 ## Data visualization — details: [components/charts.md](components/charts.md)
 
 All charts are static SVG/HTML at render time (no client JS); `tone` pins a color, `unit` labels values.
@@ -133,6 +159,14 @@ Markdown shorthands and what they render as — the reverse lookup of the index 
 | `:::terminal{cmd="…" exit="…"}` / ` ```console ` fence | terminal transcript |
 | `:::files` / `:::deps` | `<Files>` related-file list / `<Deps>` dependency edges |
 | `:::tests` + `<Test>` / `:::endpoints` + `<Endpoint>` | `<Tests>` run report / `<Endpoints>` API list |
+| `:::review{verdict="changes"}` + `<Comment severity file>` | `<Review>` code-review report |
+| `:::verdict{status="approve"}` | `<Verdict>` conclusion banner |
+| `:::checks` + `<Check status>` / `:::audit` + `<Vuln severity>` | `<Checks>` CI status / `<Audit>` vulnerability report |
+| `:::bumps` + `<Bump from to>` / `:::packages` + `<Package>` | `<Bumps>` upgrade plan / `<Packages>` inventory |
+| `:::gauges` + `<Gauge value>` / `:::benchmarks` + `<Bench before after>` | `<Gauges>` percent bars / `<Benchmarks>` compare table |
+| `:::schema` + `<DbTable>`/`<DbField>` / `:::envvars` + `<EnvVar>` | `<Schema>` DB docs / `<EnvVars>` env reference |
+| `:::statuspage` + `<Service>` / `:::uptime` + `<Day>` | `<StatusPage>` health summary / `<Uptime>` daily bar |
+| `:::release{version="…"}` + `<Entry kind>` / `:::pathway` + `<Stop>` / `:::incident` | `<Release>` notes / `<Pathway>` stepper / `<Incident>` postmortem |
 | `:::board` + `<Lane>`/`<BoardCard>` | `<Board>` kanban |
 | `:::graph` + `<Node>`/`<Edge>` | `<Graph>` static node/edge diagram (dagre layout, no client JS) |
 | `:::waterfall` + `<Span>` / `:::matrix` + list | `<Waterfall>` timing bars / `<Matrix>` comparison grid |

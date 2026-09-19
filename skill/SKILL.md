@@ -30,6 +30,7 @@ Write documents as **Markdown + a small set of JSX components** (MDX). Do NOT wr
 | Planning & status | phases, steps, timeline, gantt, decisions, risks, board, matrix, stats | `references/components/planning.md` |
 | Code investigation | findings, hypotheses, terminal, traces, searches, files, flows, trees | `references/components/investigation.md` |
 | Output artifacts | diff cards, graphs, tests, endpoints, JSON, waterfalls | `references/components/output.md` |
+| Reports | code review, CI checks, vuln/dep audits, metrics, schema/env docs, status/release/incident | `references/components/reports.md` |
 | Data visualization | bar/line/pie/scatter/radar/funnel/quadrant/bridge/treemap/sankey/venn | `references/components/charts.md` |
 | Layout | columns, grid, row, stack, before/after panels | `references/components/layout.md` |
 | Reader input | `<Ask>` question forms with copyable Markdown answers | `references/components/forms.md` |

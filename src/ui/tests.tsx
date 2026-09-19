@@ -46,7 +46,7 @@ const STYLES: Record<TestStatus, { cls: string; icon: string; label: string }> =
   };
 
 /** `"120ms"`/`"1.2s"`/`"2m"` → milliseconds; unparseable → undefined. */
-const parseDuration = (x: unknown): number | undefined => {
+export const parseDuration = (x: unknown): number | undefined => {
   if (typeof x === "number") {
     return Number.isFinite(x) ? x : undefined;
   }
@@ -68,7 +68,7 @@ const parseDuration = (x: unknown): number | undefined => {
   return n;
 };
 
-const formatDuration = (ms: number): string => {
+export const formatDuration = (ms: number): string => {
   if (ms >= 10_000) {
     return `${Math.round(ms / 1000)}s`;
   }

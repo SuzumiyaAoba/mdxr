@@ -73,6 +73,24 @@ This file is an index: each group lists what its components do and links to a de
 | `<Waterfall>` / `<Span>` | Timing waterfall (OTel-trace-style bars) — `:::waterfall` |
 | `<Ins>` / `<Del>` | Inline word-level edits — semantic `<ins>`/`<del>` |
 
+## Data visualization — details: [components/charts.md](components/charts.md)
+
+All charts are static SVG/HTML at render time (no client JS); `tone` pins a color, `unit` labels values.
+
+| Component | What it is |
+| --- | --- |
+| `<BarChart>` / `<Bar>` | Category comparison — vertical/horizontal, grouped or stacked series — `:::barchart` |
+| `<LineChart>` / `<Series>` | Trend lines over ordered categories; `area` fill, `dash` series — `:::linechart` |
+| `<PieChart>` / `<Slice>` | Part-of-whole pie/donut with legend — `:::piechart` |
+| `<Scatter>` / `<Point>` | Two-axis correlation; `size` bubbles — `:::scatter` |
+| `<Radar>` / `<Series>` | Spider chart on 3+ shared axes — `:::radar` |
+| `<Funnel>` / `<Stage>` | Stage-by-stage narrowing with conversion percents — `:::funnel` |
+| `<Quadrant>` / `<Pin>` | 2-axis positioning map with labeled regions — `:::quadrant` |
+| `<Bridge>` / `<Delta>` | Running-total waterfall (start→deltas→end) — `:::bridge` |
+| `<Treemap>` / `<Tile>` | Squarified part-of-whole areas — `:::treemap` |
+| `<Sankey>` / `<Link>` / `<Node>` | Flow split/merge across stage columns — `:::sankey` |
+| `<Venn>` / `<Set>` / `<Overlap>` | 2–3 set overlap diagram — `:::venn` |
+
 ## Layout — details: [components/layout.md](components/layout.md)
 
 | Component | What it is |

@@ -10,7 +10,7 @@ export const attrTrue = (x: unknown): boolean =>
 
 export const attrFalse = (x: unknown): boolean => x === false || x === "false";
 
-/** Numeric part of `"40"`, `"40%"`, `"120ms"`, `1.2` — suffix text is dropped. */
+/** Numeric part of `"40"`, `"-15"`, `"40%"`, `"120ms"`, `1.2` — suffix text is dropped. */
 export const numOf = (x: unknown): number | undefined => {
   if (typeof x === "number") {
     return Number.isFinite(x) ? x : undefined;
@@ -18,7 +18,7 @@ export const numOf = (x: unknown): number | undefined => {
   if (typeof x !== "string") {
     return undefined;
   }
-  const m = /^\s*(?<n>\d+(?:\.\d+)?)/u.exec(x);
+  const m = /^\s*(?<n>[+-]?\d+(?:\.\d+)?)/u.exec(x);
   return m?.groups === undefined ? undefined : Number(m.groups.n);
 };
 

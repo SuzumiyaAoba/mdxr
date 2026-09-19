@@ -1224,4 +1224,171 @@ describe(mdxToHtml, () => {
     expect(body).toContain("old");
     expect(body).toContain("new");
   });
+
+  it("renders a BarChart with proportional column heights", async () => {
+    const { body } = await render(
+      '<BarChart title="q" unit="x"><Bar name="a" value="10" /><Bar name="b" value="20" /></BarChart>'
+    );
+    for (const s of ["q", "a", "b", "height:50%", "height:100%", "0–20x"]) {
+      expect(body).toContain(s);
+    }
+  });
+
+  it("accepts :::barchart directives", async () => {
+    const { body } = await render(
+      ':::barchart{title="t"}\n<Bar name="a" value="5" />\n:::'
+    );
+    expect(body).toContain("t");
+    expect(body).toContain("a");
+  });
+
+  it("renders a horizontal stacked BarChart with a series legend", async () => {
+    const { body } = await render(
+      '<BarChart direction="horizontal" series="x,y" stacked><Bar name="a" values="1,3" /></BarChart>'
+    );
+    for (const s of ["a", "x", "y", "width:25%", "width:75%"]) {
+      expect(body).toContain(s);
+    }
+  });
+
+  it("renders a LineChart with series paths and point markers", async () => {
+    const { body } = await render(
+      '<LineChart labels="m,t,w" title="lat"><Series name="api" values="1,2,3" /></LineChart>'
+    );
+    for (const s of ["lat", "api", "<svg", "<circle", "M", "m", "t", "w"]) {
+      expect(body).toContain(s);
+    }
+  });
+
+  it("accepts :::linechart directives", async () => {
+    const { body } = await render(
+      ':::linechart\n<Series name="s" values="1,2" />\n:::'
+    );
+    expect(body).toContain("s");
+  });
+
+  it("renders a PieChart with slice paths and a donut hole", async () => {
+    const { body } = await render(
+      '<PieChart donut title="p"><Slice name="a" value="30" /><Slice name="b" value="10" /></PieChart>'
+    );
+    for (const s of ["p", "<svg", "<path", "a", "b", "30", "40"]) {
+      expect(body).toContain(s);
+    }
+  });
+
+  it("renders a Scatter plot with axis names and bubbles", async () => {
+    const { body } = await render(
+      '<Scatter title="sc" x="load" y="time"><Point x="1" y="2" /><Point name="big" size="9" x="3" y="4" /></Scatter>'
+    );
+    for (const s of ["sc", "<svg", "LOAD", "TIME", "big", "<circle"]) {
+      expect(body).toContain(s);
+    }
+  });
+
+  it("renders a Radar polygon per series", async () => {
+    const { body } = await render(
+      '<Radar axes="a,b,c" title="r"><Series name="s" values="1,2,3" /></Radar>'
+    );
+    for (const s of ["r", "<svg", "a", "b", "c", "s", "<path"]) {
+      expect(body).toContain(s);
+    }
+  });
+
+  it("renders a Funnel with conversion percents", async () => {
+    const { body } = await render(
+      '<Funnel title="f" unit="u"><Stage name="top" value="100" /><Stage name="mid" value="40" /></Funnel>'
+    );
+    for (const s of ["f", "top", "mid", "100u", "40%", "40u · 40%"]) {
+      expect(body).toContain(s);
+    }
+  });
+
+  it("renders a Quadrant map with positioned pins and corner labels", async () => {
+    const { body } = await render(
+      '<Quadrant quadrants="tl,tr,bl,br" title="q" x="u" y="v"><Pin name="p" x="20" y="80" /></Quadrant>'
+    );
+    for (const s of [
+      "q",
+      "tl",
+      "tr",
+      "bl",
+      "br",
+      "p",
+      "left:20%",
+      "bottom:80%",
+    ]) {
+      expect(body).toContain(s);
+    }
+  });
+
+  it("renders a Bridge with signed deltas and total pillars", async () => {
+    const { body } = await render(
+      '<Bridge title="b" unit="m"><Delta name="start" total value="10" /><Delta name="up" value="5" /><Delta name="down" value="-3" /></Bridge>'
+    );
+    for (const s of [
+      "b",
+      "start",
+      "up",
+      "down",
+      "+5",
+      "-3",
+      "bg-neutral-400",
+      "bg-emerald-500",
+      "bg-red-500",
+    ]) {
+      expect(body).toContain(s);
+    }
+  });
+
+  it("accepts :::bridge directives", async () => {
+    const { body } = await render(
+      ':::bridge\n<Delta name="d" value="-2" />\n:::'
+    );
+    expect(body).toContain("d");
+    expect(body).toContain("-2");
+  });
+
+  it("renders a Treemap with area-proportional tiles", async () => {
+    const { body } = await render(
+      '<Treemap title="tm"><Tile name="big" value="80" /><Tile name="small" value="20" /></Treemap>'
+    );
+    for (const s of ["tm", "big", "small", "80%", "20%"]) {
+      expect(body).toContain(s);
+    }
+  });
+
+  it("renders a Sankey with ribbon paths and node bars", async () => {
+    const { body } = await render(
+      '<Sankey stages="s,t" title="sk"><Link from="a" to="b" value="10" /><Link from="c" to="b" value="5" /></Sankey>'
+    );
+    for (const s of ["sk", "<svg", "S", "T", "a", "b", "c", "10", "5"]) {
+      expect(body).toContain(s);
+    }
+  });
+
+  it("accepts :::sankey directives", async () => {
+    const { body } = await render(
+      ':::sankey\n<Link from="x" to="y" value="3" />\n:::'
+    );
+    expect(body).toContain("x");
+    expect(body).toContain("y");
+  });
+
+  it("renders a Venn with circles and an overlap label", async () => {
+    const { body } = await render(
+      '<Venn title="v"><Set name="fe" value="10" /><Set name="be" value="12" /><Overlap sets="fe,be" value="4" /></Venn>'
+    );
+    for (const s of ["v", "<svg", "fe", "be", "10", "12", "4"]) {
+      expect(body).toContain(s);
+    }
+  });
+
+  it("renders standalone chart children as fallback chips", async () => {
+    const { body } = await render(
+      '<Bar name="b" value="3" /> <Slice name="s" value="1" /> <Delta name="d" value="2" />'
+    );
+    for (const s of ["b", "3", "s", "1", "d", "2"]) {
+      expect(body).toContain(s);
+    }
+  });
 });

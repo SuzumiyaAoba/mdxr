@@ -7,20 +7,29 @@ import { isParent, textContent, toMdxElement } from "./ast.js";
 import { CALLOUT_KINDS, normalizeCalloutKind } from "./callouts.js";
 
 const CONTAINER_COMPONENTS: Record<string, string> = {
+  barchart: "BarChart",
   board: "Board",
+  bridge: "Bridge",
   deps: "Deps",
   endpoints: "Endpoints",
   files: "Files",
   finding: "Finding",
   findings: "Findings",
   flow: "Flow",
+  funnel: "Funnel",
   gantt: "Gantt",
   graph: "Graph",
   hypotheses: "Hypotheses",
   hypothesis: "Hypothesis",
+  linechart: "LineChart",
   matrix: "Matrix",
   phase: "Phase",
+  piechart: "PieChart",
   plan: "Plan",
+  quadrant: "Quadrant",
+  radar: "Radar",
+  sankey: "Sankey",
+  scatter: "Scatter",
   search: "Search",
   searches: "Searches",
   steps: "Steps",
@@ -30,6 +39,8 @@ const CONTAINER_COMPONENTS: Record<string, string> = {
   timeline: "Timeline",
   toc: "Toc",
   trace: "Trace",
+  treemap: "Treemap",
+  venn: "Venn",
   waterfall: "Waterfall",
 };
 
@@ -54,6 +65,10 @@ const isDirective = (n: Node): n is DirectiveNode =>
  *     → Flow / Findings / Finding / Files / Deps
  *   :::terminal / :::trace / :::hypotheses / :::hypothesis / :::searches / :::search
  *     → Terminal / Trace / Hypotheses / Hypothesis / Searches / Search
+ *   :::barchart / :::linechart / :::piechart / :::scatter / :::radar
+ *     → BarChart / LineChart / PieChart / Scatter / Radar
+ *   :::funnel / :::quadrant / :::bridge / :::treemap / :::sankey / :::venn
+ *     → Funnel / Quadrant / Bridge / Treemap / Sankey / Venn
  * `non-goal` is accepted as an alias of the `nongoal` callout kind.
  */
 export const remarkMdxrDirectives = () => (tree: Node, file: VFile) => {

@@ -160,6 +160,11 @@ export const CONVENTIONS = [
   },
   { result: "Matrix container (comparison grid)", syntax: ":::matrix" },
   { result: "Timeline", syntax: ':::timeline{title="..."}' },
+  {
+    result: "chart containers (quantitative visualizations)",
+    syntax:
+      ":::barchart · :::linechart · :::piechart · :::scatter · :::radar · :::funnel · :::quadrant · :::bridge · :::treemap · :::sankey · :::venn",
+  },
   { result: "table of contents (auto from headings)", syntax: ":::toc" },
   { result: "Callout (GitHub alert)", syntax: "> [!NOTE] / [!WARNING] / ..." },
   { result: "diagram (mermaid via CDN)", syntax: "```mermaid fenced block" },

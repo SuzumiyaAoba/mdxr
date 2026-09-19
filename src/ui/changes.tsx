@@ -12,7 +12,7 @@ import {
 } from "./bits.js";
 import { fileIcon } from "./file-icon.js";
 import { useFileLink } from "./file-link.js";
-import { LINK_CLS, MONO_CLS, TEXT } from "./tones.js";
+import { LINK_CLS, MONO_CLS, TEXT, TONE_TEXT } from "./tones.js";
 
 export const CHANGE_KINDS = ["add", "modify", "delete", "rename"] as const;
 export type ChangeKind = (typeof CHANGE_KINDS)[number];
@@ -20,22 +20,22 @@ export type ChangeKind = (typeof CHANGE_KINDS)[number];
 const KINDS: Record<ChangeKind, { cls: string; icon: string; label: string }> =
   {
     add: {
-      cls: "text-emerald-600 dark:text-emerald-400",
+      cls: TONE_TEXT.emerald,
       icon: "lucide:file-plus",
       label: "Add",
     },
     delete: {
-      cls: "text-red-600 dark:text-red-400",
+      cls: TONE_TEXT.red,
       icon: "lucide:file-x",
       label: "Delete",
     },
     modify: {
-      cls: "text-sky-600 dark:text-sky-400",
+      cls: TONE_TEXT.sky,
       icon: "lucide:file-pen",
       label: "Modify",
     },
     rename: {
-      cls: "text-violet-600 dark:text-violet-400",
+      cls: TONE_TEXT.violet,
       icon: "lucide:file-symlink",
       label: "Rename",
     },

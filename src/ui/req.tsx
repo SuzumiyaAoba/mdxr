@@ -5,7 +5,7 @@ import { NUMISH } from "./attrs.js";
 import { ListPanel, ListRow } from "./bits.js";
 import { Icon } from "./icon.js";
 import { STATUS_PROP, StatusBadge } from "./status-badge.js";
-import { TRIM_CLS } from "./tones.js";
+import { TONE, TRIM_CLS } from "./tones.js";
 
 export const Reqs = defineComponent(
   {
@@ -25,8 +25,10 @@ export const Req = defineComponent(
   },
   ({ id, status, children }) => (
     <ListRow>
-      <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-neutral-100 px-1.5 py-0.5 font-mono text-xs font-medium text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
-        <Icon className="h-3 w-3 opacity-60" name="lucide:bookmark" />
+      <span
+        className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 font-mono text-xs font-medium ${TONE.neutral}`}
+      >
+        <Icon className="h-3 w-3" name="lucide:bookmark" />
         {id}
       </span>
       <span className={`min-w-0 flex-1 text-sm ${TRIM_CLS}`}>{children}</span>

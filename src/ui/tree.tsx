@@ -9,7 +9,15 @@ import { FoldChev } from "./bits.js";
 import { isEl } from "./children.js";
 import { fileIcon, folderIcon } from "./file-icon.js";
 import { Icon } from "./icon.js";
-import { BORDER_CLS, DISCLOSURE_ROW_CLS, TEXT, TREE_ROW_CLS } from "./tones.js";
+import {
+  BORDER_CLS,
+  DISCLOSURE_ROW_CLS,
+  RAIL_BG_CLS,
+  SUNKEN_CLS,
+  TEXT,
+  TONE_TEXT,
+  TREE_ROW_CLS,
+} from "./tones.js";
 
 type El = ReactElement<{ children?: ReactNode }>;
 
@@ -29,7 +37,7 @@ const NodeIcon = ({
   name: string;
 }): ReactElement => (
   <Icon
-    className={`h-3.5 w-3.5 shrink-0 self-center ${dir ? "text-amber-500" : TEXT.faint}`}
+    className={`h-3.5 w-3.5 shrink-0 self-center ${dir ? TONE_TEXT.amber : TEXT.faint}`}
     name={dir ? folderIcon(name) : fileIcon(name)}
   />
 );
@@ -38,7 +46,7 @@ const NodeIcon = ({
 const Tick = (): ReactElement => (
   <span
     aria-hidden
-    className="absolute top-[0.72em] -left-3 h-px w-2.5 bg-neutral-300 dark:bg-neutral-600"
+    className={`absolute top-[0.72em] -left-3 h-px w-2.5 ${RAIL_BG_CLS}`}
   />
 );
 
@@ -50,7 +58,7 @@ const Tick = (): ReactElement => (
 const Rail = ({ last }: { last: boolean }): ReactElement => (
   <span
     aria-hidden
-    className={`absolute -top-0.5 -left-3 w-px bg-neutral-200 dark:bg-neutral-700 ${
+    className={`absolute -top-0.5 -left-3 w-px ${RAIL_BG_CLS} ${
       last ? "h-[calc(0.72em_+_3px)]" : "bottom-0"
     }`}
   />
@@ -251,7 +259,7 @@ export const Tree = defineComponent(
   },
   ({ root, open, children }) => (
     <div
-      className={`mdxr-tree not-prose my-6 overflow-x-auto rounded-lg border bg-neutral-50 px-4 py-3 font-mono text-sm dark:bg-neutral-900/60 ${BORDER_CLS}`}
+      className={`mdxr-tree not-prose my-6 overflow-x-auto rounded-lg border ${SUNKEN_CLS} px-4 py-3 font-mono text-sm ${BORDER_CLS}`}
     >
       {nonEmpty(root) ? (
         <div className="mb-1.5 flex items-center gap-1.5 font-semibold">

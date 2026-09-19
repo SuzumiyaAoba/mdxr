@@ -14,7 +14,7 @@ import {
 } from "./bits.js";
 import { fileIcon } from "./file-icon.js";
 import { useFileLink } from "./file-link.js";
-import { LINK_CLS, MONO_CLS, TEXT } from "./tones.js";
+import { LINK_CLS, MONO_CLS, TEXT, TONE_TEXT } from "./tones.js";
 
 export const FILE_KINDS = [
   "config",
@@ -28,37 +28,37 @@ export const FILE_KINDS = [
 
 const KINDS: Record<string, { cls: string; icon: string }> = {
   config: {
-    cls: TEXT.muted,
+    cls: TONE_TEXT.neutral,
     icon: "lucide:settings",
   },
   core: {
-    cls: "text-violet-600 dark:text-violet-400",
+    cls: TONE_TEXT.violet,
     icon: "lucide:layers",
   },
   docs: {
-    cls: TEXT.muted,
+    cls: TONE_TEXT.neutral,
     icon: "lucide:book-open",
   },
   entry: {
-    cls: "text-sky-600 dark:text-sky-400",
+    cls: TONE_TEXT.sky,
     icon: "lucide:log-in",
   },
   generated: {
-    cls: TEXT.muted,
+    cls: TONE_TEXT.neutral,
     icon: "lucide:bot",
   },
   test: {
-    cls: "text-amber-600 dark:text-amber-400",
+    cls: TONE_TEXT.amber,
     icon: "lucide:flask-conical",
   },
   types: {
-    cls: "text-teal-600 dark:text-teal-400",
+    cls: TONE_TEXT.teal,
     icon: "lucide:braces",
   },
 };
 
 const FALLBACK_KIND = {
-  cls: TEXT.muted,
+  cls: TONE_TEXT.neutral,
   icon: "lucide:tag",
 };
 

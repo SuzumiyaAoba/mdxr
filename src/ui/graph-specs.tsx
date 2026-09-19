@@ -4,11 +4,12 @@ import * as v from "valibot";
 import { defineComponent, flattenChildren, parseProps } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { BOOLISH_PROP, FILE_LINK_PROPS } from "./attrs.js";
+import { CODE_CHIP_CLS } from "./bits.js";
 import { isEl } from "./children.js";
 import { DEP_KINDS } from "./deps.js";
 import { fileIcon } from "./file-icon.js";
 import { hasIcon, Icon } from "./icon.js";
-import { STATUS_ICONS, STATUS_PROP } from "./status-badge.js";
+import { STATUS_ICON_CLS, STATUS_ICONS, STATUS_PROP } from "./status-badge.js";
 import { TEXT } from "./tones.js";
 
 /**
@@ -45,14 +46,17 @@ export const Node = defineComponent(
   },
   // Standalone use (outside <Graph>): a small chip so misplaced nodes still render.
   ({ id, label, icon, path, status }): ReactElement => (
-    <span className="not-prose inline-flex items-center gap-1.5 rounded-md border border-neutral-300 bg-white px-2 py-0.5 font-mono text-xs text-neutral-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200">
+    <span className={`font-mono ${CODE_CHIP_CLS}`}>
       {hasIcon(icon) ? <Icon className="h-3 w-3" name={icon} /> : null}
       {!hasIcon(icon) && nonEmpty(path) ? (
         <Icon className="h-3 w-3" name={fileIcon(path)} />
       ) : null}
       {nonEmpty(label) ? label : id}
       {status === undefined ? null : (
-        <Icon className="h-3 w-3" name={STATUS_ICONS[status]} />
+        <Icon
+          className={`h-3 w-3 ${STATUS_ICON_CLS[status]}`}
+          name={STATUS_ICONS[status]}
+        />
       )}
     </span>
   )

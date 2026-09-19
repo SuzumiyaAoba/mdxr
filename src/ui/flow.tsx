@@ -6,7 +6,7 @@ import { FILE_LINK_PROPS, TITLE_PROP } from "./attrs.js";
 import { LocLink, Section, TrimBody } from "./bits.js";
 import { indexChildren, useChildIndex } from "./child-index.js";
 import { Icon } from "./icon.js";
-import { TEXT } from "./tones.js";
+import { CHIP_BORDER_CLS, RAIL_BG_CLS, TEXT } from "./tones.js";
 
 export const Flow = defineComponent(
   {
@@ -37,12 +37,12 @@ export const FlowStep = defineComponent(
         {last ? null : (
           <span
             aria-hidden
-            className="absolute top-9 bottom-0 left-[13px] w-px bg-neutral-200 dark:bg-neutral-700"
+            className={`absolute top-9 bottom-0 left-[13px] w-px ${RAIL_BG_CLS}`}
           />
         )}
         <span
           aria-hidden
-          className="bg-background absolute top-0 left-0 flex h-7 w-7 items-center justify-center rounded-full border border-neutral-300 font-mono text-xs font-medium text-neutral-500 dark:border-neutral-700 dark:text-neutral-400"
+          className={`bg-background absolute top-0 left-0 flex h-7 w-7 items-center justify-center rounded-full border ${CHIP_BORDER_CLS} font-mono text-xs font-medium ${TEXT.muted}`}
         >
           {n > 0 ? (
             n
@@ -54,7 +54,7 @@ export const FlowStep = defineComponent(
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
             {nonEmpty(name) ? (
               <code
-                className={`font-mono text-[0.9em] font-semibold ${TEXT.strong}`}
+                className={`font-mono text-[0.85em] font-semibold ${TEXT.strong}`}
               >
                 {name}
               </code>

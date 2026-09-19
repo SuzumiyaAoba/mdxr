@@ -3,7 +3,7 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { TITLE_PROP } from "./attrs.js";
 import { ListPanel, ListRow, RowIcon, RowNote, Tag } from "./bits.js";
-import { MONO_CLS, TEXT } from "./tones.js";
+import { MONO_CLS, TONE_TEXT } from "./tones.js";
 
 export const DEP_KINDS = [
   "calls",
@@ -17,27 +17,27 @@ export type DepKind = (typeof DEP_KINDS)[number];
 
 const KINDS: Record<DepKind, { cls: string; icon: string }> = {
   calls: {
-    cls: "text-sky-600 dark:text-sky-400",
+    cls: TONE_TEXT.sky,
     icon: "lucide:square-function",
   },
   extends: {
-    cls: "text-violet-600 dark:text-violet-400",
+    cls: TONE_TEXT.violet,
     icon: "lucide:git-branch",
   },
   implements: {
-    cls: "text-teal-600 dark:text-teal-400",
+    cls: TONE_TEXT.teal,
     icon: "lucide:layers",
   },
   imports: {
-    cls: TEXT.muted,
+    cls: TONE_TEXT.neutral,
     icon: "lucide:package",
   },
   reads: {
-    cls: TEXT.muted,
+    cls: TONE_TEXT.neutral,
     icon: "lucide:eye",
   },
   writes: {
-    cls: "text-amber-600 dark:text-amber-400",
+    cls: TONE_TEXT.amber,
     icon: "lucide:pencil",
   },
 };

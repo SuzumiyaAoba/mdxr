@@ -6,7 +6,15 @@ import { isRecord, nonEmpty } from "../guards.js";
 import { attrFalse, BOOLISH_PROP } from "./attrs.js";
 import { CaptionBar, CopyButton, FoldChev, Panel } from "./bits.js";
 import { Icon } from "./icon.js";
-import { BORDER_CLS, DISCLOSURE_ROW_CLS, TEXT, TREE_ROW_CLS } from "./tones.js";
+import {
+  CAPTION_TITLE_CLS,
+  COUNT_CHIP_CLS,
+  DISCLOSURE_ROW_CLS,
+  RAIL_CLS,
+  SUNKEN_CLS,
+  TEXT,
+  TREE_ROW_CLS,
+} from "./tones.js";
 
 /**
  * Collapsible JSON tree — objects/arrays fold via nested native <details>
@@ -118,13 +126,11 @@ const NodeView = ({
         <FoldChev />
         {keyEl}
         <span className={TEXT.faint}>{openB}</span>
-        <span
-          className={`mdxr-count rounded bg-neutral-200/70 px-1 text-[0.65rem] ${TEXT.muted} dark:bg-neutral-800`}
-        >
+        <span className={`mdxr-count ${COUNT_CHIP_CLS}`}>
           {entries.length} {isArr ? "items" : "keys"}
         </span>
       </summary>
-      <div className={`ml-[1.05rem] border-l pl-2.5 ${BORDER_CLS}`}>
+      <div className={`ml-[1.05rem] border-l pl-2.5 ${RAIL_CLS}`}>
         {entries.map(([k, item]) => (
           <NodeView
             depth={depth + 1}
@@ -167,13 +173,15 @@ export const Json = defineComponent(
     return (
       <Panel className="mdxr-json">
         {nonEmpty(title) ? (
-          <CaptionBar className="flex items-center gap-2">
+          <CaptionBar className={CAPTION_TITLE_CLS}>
             <Icon className="h-3.5 w-3.5" name="lucide:braces" />
-            <span className="min-w-0 flex-1 truncate font-medium">{title}</span>
+            <span className="min-w-0 flex-1 truncate">{title}</span>
             <CopyButton copy={text} title="Copy JSON" />
           </CaptionBar>
         ) : null}
-        <div className="overflow-x-auto bg-neutral-50 px-4 py-3 font-mono text-[0.8125rem] leading-relaxed dark:bg-neutral-900/60">
+        <div
+          className={`overflow-x-auto ${SUNKEN_CLS} px-4 py-3 font-mono text-[0.8125rem] leading-relaxed`}
+        >
           <NodeView depth={0} openAll={!closed(open)} value={data} />
         </div>
       </Panel>

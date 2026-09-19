@@ -4,7 +4,7 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { TITLE_PROP } from "./attrs.js";
 import { Icon } from "./icon.js";
-import { TRIM_CLS } from "./tones.js";
+import { TONE_BAND, TONE_BORDER, TRIM_CLS } from "./tones.js";
 
 const panel = (
   cls: { border: string; head: string },
@@ -37,8 +37,8 @@ export const Before = defineComponent(
   ({ title, children }) =>
     panel(
       {
-        border: "border-red-200 dark:border-red-900/60",
-        head: "border-red-200 bg-red-50 text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300",
+        border: TONE_BORDER.red,
+        head: `${TONE_BORDER.red} ${TONE_BAND.red}`,
       },
       "lucide:history",
       "Before",
@@ -56,8 +56,8 @@ export const After = defineComponent(
   ({ title, children }) =>
     panel(
       {
-        border: "border-emerald-200 dark:border-emerald-900/60",
-        head: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-300",
+        border: TONE_BORDER.emerald,
+        head: `${TONE_BORDER.emerald} ${TONE_BAND.emerald}`,
       },
       "lucide:sparkles",
       "After",

@@ -4,7 +4,17 @@ import { nonEmpty } from "../guards.js";
 import { indexChildren } from "./child-index.js";
 import { linkTarget, useFileLink } from "./file-link.js";
 import { Icon } from "./icon.js";
-import { BORDER_CLS, LOC_CLS, TEXT, TRIM_CLS } from "./tones.js";
+import {
+  BORDER_CLS,
+  CHIP_BORDER_CLS,
+  LOC_CLS,
+  SURFACE_CLS,
+  TEXT,
+  TEXT_MICRO,
+  TEXT_SUB,
+  TONE_TEXT,
+  TRIM_CLS,
+} from "./tones.js";
 
 /**
  * Bordered panel shape framing a document block (code, diffs, graphs,
@@ -78,7 +88,7 @@ export const CopyButton = (props: {
       <Icon className="h-3.5 w-3.5" name="lucide:copy" />
     </span>
     <span
-      className={`mdxr-copy-done hidden items-center ${props.doneClassName ?? "text-emerald-600 dark:text-emerald-400"}`}
+      className={`mdxr-copy-done hidden items-center ${props.doneClassName ?? TONE_TEXT.emerald}`}
     >
       <Icon className="h-3.5 w-3.5" name="lucide:check" />
     </span>
@@ -90,8 +100,7 @@ export const CopyButton = (props: {
  * Board). `transition-colors` only — `transition-all` would animate layout
  * properties too.
  */
-export const ACTION_BUTTON_CLS =
-  "inline-flex cursor-pointer items-center rounded-md border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-100 active:translate-y-px dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700";
+export const ACTION_BUTTON_CLS = `inline-flex cursor-pointer items-center rounded-md border ${CHIP_BORDER_CLS} bg-white px-2.5 py-1 text-xs font-medium ${TEXT.chip} transition-colors hover:bg-neutral-100 active:translate-y-px dark:bg-neutral-800 dark:hover:bg-neutral-700`;
 
 /**
  * Idle/done label pair inside a labeled action button. The
@@ -111,7 +120,9 @@ export const CopyFeedback = (props: {
       <Icon className="h-3.5 w-3.5" name={props.icon} />
       {props.label}
     </span>
-    <span className="mdxr-copy-done hidden items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+    <span
+      className={`mdxr-copy-done hidden items-center gap-1.5 ${TONE_TEXT.emerald}`}
+    >
       <Icon className="h-3.5 w-3.5" name="lucide:check" />
       {props.done}
     </span>
@@ -136,8 +147,12 @@ export const Pill = (props: {
   </span>
 );
 
-const CAPTION_BASE = `bg-neutral-50 px-4 py-2 text-xs ${TEXT.muted} dark:bg-neutral-900`;
+const CAPTION_BASE = `${SURFACE_CLS} px-4 py-2 text-xs ${TEXT.muted}`;
 const CAPTION_BORDER = `border-b ${BORDER_CLS}`;
+
+/** CaptionBar's strip classes, for headers that are not a `<figcaption>`
+ * (Ask's section header). */
+export const CAPTION_CLS = `${CAPTION_BORDER} ${CAPTION_BASE}`;
 
 /**
  * Header strip on framed blocks (code, diffs, tables). `border` (default on)
@@ -197,7 +212,7 @@ export const RowLabel = (props: {
   <div className="min-w-0">
     <div className="truncate text-sm">{props.name}</div>
     {nonEmpty(props.sub) ? (
-      <div className={`truncate text-[0.7rem] ${TEXT.faint}`}>{props.sub}</div>
+      <div className={`truncate ${TEXT_SUB} ${TEXT.faint}`}>{props.sub}</div>
     ) : null}
   </div>
 );
@@ -262,7 +277,9 @@ export const Section = (props: {
 
 /** Small numbered square used by list items indexed via `useChildIndex`. */
 export const NumBadge = (props: { n: number }): ReactElement => (
-  <span className="flex h-5 w-5 items-center justify-center rounded-md border border-neutral-300 font-mono text-[0.7em] font-medium text-neutral-400 dark:border-neutral-700 dark:text-neutral-500">
+  <span
+    className={`flex h-5 w-5 items-center justify-center rounded-md border ${CHIP_BORDER_CLS} font-mono ${TEXT_MICRO} font-medium ${TEXT.faint}`}
+  >
     {props.n}
   </span>
 );
@@ -387,11 +404,16 @@ export const RowNote = (props: {
     </span>
   );
 
+/**
+ * Bordered inline chip shell shared by the reference components —
+ * FileRef/SymbolRef/Cmd (via CodeChip), Ref's link chip, Graph's standalone
+ * node chip. `font-mono` stays with the callers that want mono content.
+ */
+export const CODE_CHIP_CLS = `not-prose mx-0.5 inline-flex items-center gap-1.5 rounded-md border ${CHIP_BORDER_CLS} bg-neutral-100 px-1.5 py-0.5 align-baseline text-[0.85em] ${TEXT.code} dark:bg-neutral-800`;
+
 /** Bordered inline code chip — the `<code>` shell used by FileRef/SymbolRef/Cmd. */
 export const CodeChip = (props: { children?: ReactNode }): ReactElement => (
-  <code className="not-prose mx-0.5 inline-flex items-center gap-1.5 rounded-md border border-neutral-300 bg-neutral-100 px-1.5 py-0.5 align-baseline font-mono text-[0.85em] text-neutral-800 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
-    {props.children}
-  </code>
+  <code className={`font-mono ${CODE_CHIP_CLS}`}>{props.children}</code>
 );
 
 /** `path` plus its `:lines` suffix — the file-location label. */

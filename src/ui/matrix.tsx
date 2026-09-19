@@ -6,7 +6,13 @@ import { nonEmpty, own } from "../guards.js";
 import { CaptionBar, Panel } from "./bits.js";
 import { isEl } from "./children.js";
 import { Icon } from "./icon.js";
-import { BORDER_CLS, DIVIDE_CLS, TEXT } from "./tones.js";
+import {
+  BORDER_CLS,
+  DIVIDE_CLS,
+  SURFACE_CLS,
+  TEXT,
+  TONE_TEXT,
+} from "./tones.js";
 
 /**
  * Comparison matrix — rows come from a nested Markdown list, cells are
@@ -59,19 +65,21 @@ const Cell = ({ cell }: { cell: string }): ReactElement => {
   if (kind === "yes") {
     return (
       <Icon
-        className="h-4 w-4 text-emerald-500"
+        className={`h-4 w-4 ${TONE_TEXT.emerald}`}
         label="yes"
         name="lucide:check"
       />
     );
   }
   if (kind === "no") {
-    return <Icon className="h-4 w-4 text-red-500" label="no" name="lucide:x" />;
+    return (
+      <Icon className={`h-4 w-4 ${TONE_TEXT.red}`} label="no" name="lucide:x" />
+    );
   }
   if (kind === "partial") {
     return (
       <Icon
-        className="h-4 w-4 text-amber-500"
+        className={`h-4 w-4 ${TONE_TEXT.amber}`}
         label="partial"
         name="lucide:minus"
       />
@@ -126,10 +134,7 @@ const MatrixHeader = ({
   grid: GridStyle;
   headers: string[];
 }): ReactElement => (
-  <div
-    className={`grid border-b bg-neutral-50/50 dark:bg-neutral-900/40 ${BORDER_CLS}`}
-    style={grid}
-  >
+  <div className={`grid border-b ${SURFACE_CLS} ${BORDER_CLS}`} style={grid}>
     <div className="px-4 py-2" />
     {Array.from({ length: colCount }, (_, i) => (
       <div

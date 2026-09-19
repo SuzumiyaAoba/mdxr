@@ -6,7 +6,7 @@ import { FILE_LINK_PROPS } from "./attrs.js";
 import { ListPanel, ListRow, LocLink, RowNote, Tag } from "./bits.js";
 import { indexChildren, useChildIndex } from "./child-index.js";
 import { Icon } from "./icon.js";
-import { LOC_CLS, MONO_CLS, TEXT } from "./tones.js";
+import { LOC_CLS, MONO_CLS, TEXT, TONE_BAND } from "./tones.js";
 
 export const FRAME_KINDS = ["app", "lib"] as const;
 export type FrameKind = (typeof FRAME_KINDS)[number];
@@ -23,7 +23,9 @@ export const Trace = defineComponent(
   ({ error, title, children }) => (
     <ListPanel title={title}>
       {nonEmpty(error) ? (
-        <div className="flex items-center gap-2 bg-red-50 px-4 py-2 font-mono text-[0.85em] font-medium text-red-700 dark:bg-red-950/40 dark:text-red-300">
+        <div
+          className={`flex items-center gap-2 px-4 py-2 font-mono text-[0.85em] font-medium ${TONE_BAND.red}`}
+        >
           <Icon className="h-3.5 w-3.5 shrink-0" name="lucide:circle-alert" />
           {error}
         </div>

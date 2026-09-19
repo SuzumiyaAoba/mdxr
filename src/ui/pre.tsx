@@ -11,7 +11,7 @@ import { DiffView } from "./diff.js";
 import { fileIcon } from "./file-icon.js";
 import { Icon } from "./icon.js";
 import { TERMINAL_LANGS, Transcript } from "./terminal.js";
-import { BORDER_CLS, LINK_CLS } from "./tones.js";
+import { BORDER_CLS, LINK_CLS, SURFACE_CLS } from "./tones.js";
 
 /** "src/x.ts:40-52" → { path: "src/x.ts", line: "40" }; labels stay untouched. */
 const splitFileLine = (filename: string): { line?: string; path: string } => {
@@ -100,7 +100,7 @@ const specialView = (
   if (lang === "mermaid") {
     return (
       <pre
-        className={`mermaid my-6 flex justify-center rounded-lg border bg-neutral-50 p-4 dark:bg-neutral-900 ${BORDER_CLS}`}
+        className={`mermaid my-6 flex justify-center rounded-lg border p-4 ${SURFACE_CLS} ${BORDER_CLS}`}
       >
         {text}
       </pre>

@@ -2,6 +2,7 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { NUMISH } from "./attrs.js";
+import { TEXT, TRACK_CLS } from "./tones.js";
 
 export const Summary = defineComponent(
   {
@@ -24,11 +25,11 @@ export const Summary = defineComponent(
       <div className="not-prose my-6">
         <div className="mb-1.5 flex items-baseline justify-between text-sm">
           <span className="font-medium">{label ?? "Progress"}</span>
-          <span className="text-neutral-500 tabular-nums dark:text-neutral-400">
+          <span className={`tabular-nums ${TEXT.muted}`}>
             {d}/{t}
           </span>
         </div>
-        <div className="h-2 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
+        <div className={`h-2 overflow-hidden rounded-full ${TRACK_CLS}`}>
           <div
             className="h-full rounded-full bg-emerald-500 transition-all"
             style={{ width: `${pct}%` }}

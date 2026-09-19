@@ -20,7 +20,16 @@ import type { EdgeSpec, NodeSpec } from "./graph-specs.js";
 import { collectSpecs } from "./graph-specs.js";
 import { hasIcon, Icon } from "./icon.js";
 import { STATUS_ICON_CLS, STATUS_ICONS } from "./status-badge.js";
-import { CAPTION_TITLE_CLS, TEXT } from "./tones.js";
+import {
+  BORDER_CLS,
+  CAPTION_TITLE_CLS,
+  CHIP_BORDER_CLS,
+  MONO_TAG_CLS,
+  SUNKEN_CLS,
+  TEXT,
+  TEXT_SUB,
+  TONE_TEXT,
+} from "./tones.js";
 
 export { Edge, Node } from "./graph-specs.js";
 
@@ -35,12 +44,12 @@ export { Edge, Node } from "./graph-specs.js";
 
 /** text-* classes double as `stroke="currentColor"` colors on SVG paths. */
 const EDGE_COLORS: Record<DepKind, string> = {
-  calls: "text-sky-500 dark:text-sky-400",
-  extends: "text-violet-500 dark:text-violet-400",
-  implements: "text-teal-500 dark:text-teal-400",
-  imports: TEXT.faint,
-  reads: TEXT.faint,
-  writes: "text-amber-500 dark:text-amber-400",
+  calls: TONE_TEXT.sky,
+  extends: TONE_TEXT.violet,
+  implements: TONE_TEXT.teal,
+  imports: TONE_TEXT.neutral,
+  reads: TONE_TEXT.neutral,
+  writes: TONE_TEXT.amber,
 };
 
 /** Explicit `icon` wins; a `path` falls back to the file-type icon. */
@@ -66,10 +75,10 @@ const GraphNode = ({
   const external = attrTrue(spec.external);
   const card = (
     <div
-      className={`flex h-full w-full flex-col justify-center rounded-lg border px-2.5 shadow-sm ${
+      className={`flex h-full w-full flex-col justify-center rounded-md border px-2.5 shadow-sm ${
         external
-          ? "border-dashed border-neutral-300 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900/60"
-          : "border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-950"
+          ? `border-dashed ${CHIP_BORDER_CLS} ${SUNKEN_CLS}`
+          : `${BORDER_CLS} bg-white dark:bg-neutral-950`
       }`}
     >
       <div className="flex min-w-0 items-center gap-1.5">
@@ -88,7 +97,7 @@ const GraphNode = ({
         )}
       </div>
       {nonEmpty(spec.note) ? (
-        <div className={`mt-0.5 truncate text-[0.68rem] ${TEXT.faint}`}>
+        <div className={`mt-0.5 truncate ${TEXT_SUB} ${TEXT.faint}`}>
           {spec.note}
         </div>
       ) : null}
@@ -165,7 +174,7 @@ const EdgeLabelChip = ({
   const p = labelPoint(pts);
   return (
     <span
-      className="absolute z-10 -translate-x-1/2 -translate-y-1/2 rounded border border-neutral-200 bg-white px-1.5 py-px font-mono text-[0.65rem] whitespace-nowrap text-neutral-500 shadow-sm dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400"
+      className={`absolute z-10 -translate-x-1/2 -translate-y-1/2 ${MONO_TAG_CLS} whitespace-nowrap shadow-sm`}
       style={{ left: p.x, top: p.y }}
     >
       {e.label}
@@ -232,7 +241,7 @@ export const Graph = defineComponent(
             {title}
           </CaptionBar>
         ) : null}
-        <div className="overflow-x-auto bg-neutral-50/60 p-3 dark:bg-neutral-900/40">
+        <div className={`overflow-x-auto p-3 ${SUNKEN_CLS}`}>
           <div className="relative" style={{ height, minWidth: "100%", width }}>
             <svg
               aria-hidden

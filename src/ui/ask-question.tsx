@@ -14,7 +14,7 @@ import { nonEmpty } from "../guards.js";
 import { attrTrue, BOOLISH_PROP } from "./attrs.js";
 import { isEl, propOf } from "./children.js";
 import { Icon } from "./icon.js";
-import { TEXT } from "./tones.js";
+import { CHIP_BORDER_CLS, TEXT, TONE_TEXT } from "./tones.js";
 
 /**
  * `<Ask>` question internals: the `Choice`/`Question` components plus the
@@ -54,8 +54,7 @@ const ChoiceMode = createContext<{ mode: ChoiceKind; name: string }>({
   name: "",
 });
 
-const CONTROL_CLS =
-  "w-full min-w-0 rounded-lg border border-neutral-300 bg-transparent px-2.5 py-1.5 text-sm outline-none transition-colors placeholder:text-neutral-400 focus-visible:border-neutral-400 focus-visible:ring-3 focus-visible:ring-neutral-200/70 dark:border-neutral-700 dark:placeholder:text-neutral-500 dark:focus-visible:ring-neutral-800";
+const CONTROL_CLS = `w-full min-w-0 rounded-lg border ${CHIP_BORDER_CLS} bg-transparent px-2.5 py-1.5 text-sm outline-none transition-colors placeholder:text-neutral-400 focus-visible:border-neutral-400 focus-visible:ring-3 focus-visible:ring-neutral-200/70 dark:placeholder:text-neutral-500 dark:focus-visible:ring-neutral-800`;
 
 /**
  * A single option inside a `<Question type="choice|multi|select">`. Renders
@@ -80,7 +79,9 @@ export const Choice = defineComponent(
       return <option value={value}>{children}</option>;
     }
     return (
-      <label className="mdxr-choice flex cursor-pointer items-start gap-2.5 rounded-lg border border-neutral-200 px-3 py-2 text-sm transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800/60">
+      <label
+        className={`mdxr-choice flex cursor-pointer items-start gap-2.5 rounded-lg border ${CHIP_BORDER_CLS} px-3 py-2 text-sm transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/60`}
+      >
         <input
           className="sr-only"
           defaultChecked={truthy(checked)}
@@ -345,7 +346,7 @@ export const Question = defineComponent(
         <>
           {labelText}
           {truthy(required) ? (
-            <span className="ml-0.5 text-red-500">*</span>
+            <span className={`ml-0.5 ${TONE_TEXT.red}`}>*</span>
           ) : null}
         </>
       ),

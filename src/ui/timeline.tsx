@@ -11,7 +11,7 @@ import {
   STATUS_PROP,
   StatusBadge,
 } from "./status-badge.js";
-import { TEXT } from "./tones.js";
+import { RAIL_CLS, TEXT } from "./tones.js";
 
 export const Timeline = defineComponent(
   {
@@ -20,9 +20,7 @@ export const Timeline = defineComponent(
   },
   ({ title, children }) => (
     <Section title={title}>
-      <div className="space-y-4 border-l-2 border-neutral-300 pl-4 dark:border-neutral-700">
-        {children}
-      </div>
+      <div className={`space-y-4 border-l-2 pl-4 ${RAIL_CLS}`}>{children}</div>
     </Section>
   )
 );

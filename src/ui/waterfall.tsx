@@ -9,7 +9,13 @@ import { CaptionBar, Panel, RowLabel } from "./bits.js";
 import { indexChildren, useChildIndex } from "./child-index.js";
 import { isEl, propOf } from "./children.js";
 import { Icon } from "./icon.js";
-import { CAPTION_TITLE_CLS, MONO_NUM_CLS, TEXT } from "./tones.js";
+import {
+  CAPTION_TITLE_CLS,
+  MONO_NUM_CLS,
+  TEXT,
+  TEXT_MICRO,
+  TRACK_CLS,
+} from "./tones.js";
 
 /**
  * Timing waterfall — horizontal span bars like an OTel trace view. `start`
@@ -53,14 +59,14 @@ export const Span = defineComponent(
     return (
       <div className="grid grid-cols-[minmax(6rem,9rem)_minmax(0,1fr)_4.5rem] items-center gap-x-3 py-1">
         <RowLabel name={name} sub={note} />
-        <div className="relative h-4.5 rounded bg-neutral-100 dark:bg-neutral-800">
+        <div className={`relative h-4.5 rounded ${TRACK_CLS}`}>
           <div
             className={`absolute inset-y-0 rounded ${cls}`}
             style={{ left: `${left}%`, width: `${width}%` }}
           />
         </div>
         <div
-          className={`text-right font-mono text-xs tabular-nums ${TEXT.muted}`}
+          className={`text-right font-mono ${TEXT_MICRO} tabular-nums ${TEXT.muted}`}
         >
           {String(duration)}
         </div>
@@ -115,7 +121,9 @@ export const Waterfall = defineComponent(
         <div className="px-4 py-3">
           <div className="grid grid-cols-[minmax(6rem,9rem)_minmax(0,1fr)_4.5rem] gap-x-3 pb-1">
             <span />
-            <span className="flex justify-between font-mono text-[0.62rem] text-neutral-400 tabular-nums dark:text-neutral-500">
+            <span
+              className={`flex justify-between font-mono ${TEXT_MICRO} ${TEXT.faint} tabular-nums`}
+            >
               <span>0</span>
               <span>
                 {totalNum}

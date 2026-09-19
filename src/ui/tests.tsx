@@ -7,7 +7,14 @@ import { LINK_LINES_PROPS, NUMISH } from "./attrs.js";
 import { CaptionBar, ListPanel, LocLink, TrimBody } from "./bits.js";
 import { isEl, propOf } from "./children.js";
 import { Icon } from "./icon.js";
-import { LOC_CLS, TEXT } from "./tones.js";
+import {
+  CHIP_BORDER_CLS,
+  COUNT_CHIP_CLS,
+  LOC_CLS,
+  SUNKEN_CLS,
+  TEXT,
+  TONE_TEXT,
+} from "./tones.js";
 
 export const TEST_STATUSES = ["pass", "fail", "skip", "todo"] as const;
 export type TestStatus = (typeof TEST_STATUSES)[number];
@@ -17,22 +24,22 @@ const isTestStatus = isOneOf(TEST_STATUSES);
 const STYLES: Record<TestStatus, { cls: string; icon: string; label: string }> =
   {
     fail: {
-      cls: "text-red-500",
+      cls: TONE_TEXT.red,
       icon: "lucide:circle-x",
       label: "failed",
     },
     pass: {
-      cls: "text-emerald-500",
+      cls: TONE_TEXT.emerald,
       icon: "lucide:circle-check",
       label: "passed",
     },
     skip: {
-      cls: "text-neutral-400",
+      cls: TONE_TEXT.neutral,
       icon: "lucide:circle-minus",
       label: "skipped",
     },
     todo: {
-      cls: "text-violet-500 dark:text-violet-400",
+      cls: TONE_TEXT.violet,
       icon: "lucide:circle-dashed",
       label: "todo",
     },
@@ -107,7 +114,7 @@ export const Test = defineComponent(
           className={`mt-1.5 rounded-md border-l-2 px-3 py-2 text-xs ${TEXT.body} ${
             status === "fail"
               ? "border-red-400/60 bg-red-500/5"
-              : "border-neutral-300 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900/50"
+              : `${CHIP_BORDER_CLS} ${SUNKEN_CLS}`
           }`}
         >
           {children}
@@ -168,11 +175,7 @@ const TestsCaption = ({
     ) : (
       <span className="font-medium">Tests</span>
     )}
-    {nonEmpty(tool) ? (
-      <span className="rounded bg-neutral-200/70 px-1.5 py-px font-mono text-[0.68rem] text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
-        {tool}
-      </span>
-    ) : null}
+    {nonEmpty(tool) ? <span className={COUNT_CHIP_CLS}>{tool}</span> : null}
     <span className="ml-auto flex items-center gap-x-2 font-medium">
       {TEST_STATUSES.map((st) => {
         const c = summary.counts.get(st);

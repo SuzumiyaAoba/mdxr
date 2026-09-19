@@ -7,7 +7,17 @@ import { parseDiff } from "./diff-parse.js";
 import { fileIcon } from "./file-icon.js";
 import { useFileLink } from "./file-link.js";
 import { Icon } from "./icon.js";
-import { LINK_CLS, TEXT, TONE } from "./tones.js";
+import {
+  CAPTION_TITLE_CLS,
+  LINK_CLS,
+  MINI_CHIP_CLS,
+  RAIL_BG_CLS,
+  TEXT,
+  TEXT_SUB,
+  TONE,
+  TONE_BAND,
+  TONE_TEXT,
+} from "./tones.js";
 
 export { parseDiff } from "./diff-parse.js";
 export type { FileDiff } from "./diff-parse.js";
@@ -25,7 +35,7 @@ const blockCls = (i: number, green: number, hasChanges: boolean): string => {
   if (i < green) {
     return "bg-emerald-500";
   }
-  return hasChanges ? "bg-red-400" : "bg-neutral-200 dark:bg-neutral-700";
+  return hasChanges ? "bg-red-400" : RAIL_BG_CLS;
 };
 
 /** GitHub-style 5-block change meter: green share ∝ adds/(adds+dels). */
@@ -86,9 +96,9 @@ const ROW_CLS: Record<DiffRow["kind"], string> = {
 };
 
 const SIGN_CLS: Record<DiffRow["kind"], string> = {
-  add: "text-emerald-600 dark:text-emerald-400",
+  add: TONE_TEXT.emerald,
   ctx: TEXT.ghost,
-  del: "text-red-600 dark:text-red-400",
+  del: TONE_TEXT.red,
   note: TEXT.ghost,
 };
 
@@ -142,7 +152,7 @@ const FileCard = ({
       : (path ?? "diff");
   return (
     <Panel>
-      <CaptionBar className="flex items-center gap-2">
+      <CaptionBar className={CAPTION_TITLE_CLS}>
         <Icon
           className="h-3.5 w-3.5 shrink-0"
           name={fileIcon(path ?? "x.diff")}
@@ -154,18 +164,14 @@ const FileCard = ({
           {label}
         </MaybeLink>
         {kind === undefined ? null : (
-          <span
-            className={`shrink-0 rounded-full px-1.5 py-px text-[0.65rem] font-medium ${KINDS[kind].cls}`}
-          >
+          <span className={`${MINI_CHIP_CLS} ${KINDS[kind].cls}`}>
             {KINDS[kind].label}
           </span>
         )}
         <span className="ml-auto flex shrink-0 items-center gap-2">
           <span className="font-mono font-medium">
-            <span className="text-emerald-600 dark:text-emerald-400">
-              +{file.adds}
-            </span>{" "}
-            <span className="text-red-600 dark:text-red-400">−{file.dels}</span>
+            <span className={TONE_TEXT.emerald}>+{file.adds}</span>{" "}
+            <span className={TONE_TEXT.red}>−{file.dels}</span>
           </span>
           <StatBlocks adds={file.adds} dels={file.dels} />
           <CopyButton copy={file.raw.join("\n")} title="Copy diff" />
@@ -173,7 +179,7 @@ const FileCard = ({
       </CaptionBar>
       {file.meta.length > 0 ? (
         <div
-          className={`border-b border-neutral-100 px-4 py-1.5 font-mono text-[0.7rem] dark:border-neutral-800/60 ${TEXT.faint}`}
+          className={`border-b border-neutral-100 px-4 py-1.5 font-mono ${TEXT_SUB} dark:border-neutral-800/60 ${TEXT.faint}`}
         >
           {file.meta.map((m, i) => (
             <div className="truncate" key={i}>
@@ -186,7 +192,9 @@ const FileCard = ({
         {file.hunks.map((h, i) => (
           <div key={i}>
             {nonEmpty(h.header) ? (
-              <div className="bg-sky-50 px-4 py-1 font-mono text-[0.72rem] text-sky-700 dark:bg-sky-950/30 dark:text-sky-300">
+              <div
+                className={`px-4 py-1 font-mono ${TEXT_SUB} ${TONE_BAND.sky}`}
+              >
                 {h.header}
               </div>
             ) : null}

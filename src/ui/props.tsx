@@ -4,7 +4,7 @@ import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { attrTrue, BOOLISH_PROP } from "./attrs.js";
 import { CaptionBar, Panel } from "./bits.js";
-import { BORDER_CLS, DIVIDE_CLS, TEXT, TRIM_CLS } from "./tones.js";
+import { BORDER_CLS, DIVIDE_CLS, TEXT, TONE_TEXT, TRIM_CLS } from "./tones.js";
 
 export const Props = defineComponent(
   {
@@ -54,7 +54,7 @@ export const Prop = defineComponent(
       <td className="py-2 pr-3 pl-4 align-top font-mono text-[0.85em] whitespace-nowrap">
         {name}
         {isTruthy(required) ? (
-          <span className="ml-0.5 text-red-500" title="required">
+          <span className={`ml-0.5 ${TONE_TEXT.red}`} title="required">
             *
           </span>
         ) : null}

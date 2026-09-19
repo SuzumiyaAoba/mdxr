@@ -147,7 +147,7 @@ describe(mdxToHtml, () => {
       '<Due date="2000-01-01" /> <Due date="2999-01-01" />'
     );
     expect(body).toContain("overdue");
-    expect(body).toContain("border-red-300");
+    expect(body).toContain("bg-red-100");
     expect(body).toContain("2999-01-01");
   });
 

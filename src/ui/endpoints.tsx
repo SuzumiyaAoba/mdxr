@@ -6,10 +6,19 @@ import { nonEmpty } from "../guards.js";
 import { attrTrue, BOOLISH_PROP } from "./attrs.js";
 import { CaptionBar, ListPanel, ListRow, RowNote } from "./bits.js";
 import { Icon } from "./icon.js";
-import { CAPTION_TITLE_CLS, MONO_CLS, TEXT, TONE, TRIM_CLS } from "./tones.js";
+import {
+  CAPTION_TITLE_CLS,
+  MINI_CHIP_CLS,
+  MONO_CLS,
+  TEXT,
+  TEXT_MICRO,
+  TEXT_SUB,
+  TONE,
+  TRIM_CLS,
+} from "./tones.js";
 
 /** Tiny rounded chip (Deprecated/auth) inside an endpoint row. */
-const MINI_CHIP = `inline-flex shrink-0 items-center gap-1 rounded-full bg-neutral-100 px-1.5 py-px text-[0.65rem] font-medium ${TEXT.muted} dark:bg-neutral-800`;
+const MINI_CHIP = `${MINI_CHIP_CLS} ${TONE.neutral}`;
 
 export const HTTP_METHODS = [
   "GET",
@@ -54,7 +63,7 @@ export const Endpoint = defineComponent(
     return (
       <ListRow>
         <span
-          className={`inline-flex w-15 shrink-0 items-center justify-center rounded px-1 py-0.5 font-mono text-[0.68rem] font-bold tracking-wide ${METHODS[method] ?? METHODS.GET}`}
+          className={`inline-flex w-15 shrink-0 items-center justify-center rounded px-1 py-0.5 font-mono ${TEXT_MICRO} font-bold tracking-wide ${METHODS[method] ?? METHODS.GET}`}
         >
           {method}
         </span>
@@ -94,7 +103,7 @@ export const Endpoints = defineComponent(
           {nonEmpty(title) ? title : "Endpoints"}
           {nonEmpty(base) ? (
             <code
-              className={`ml-auto font-mono text-[0.7rem] font-normal ${TEXT.faint}`}
+              className={`ml-auto font-mono ${TEXT_SUB} font-normal ${TEXT.faint}`}
             >
               {base}
             </code>

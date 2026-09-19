@@ -6,13 +6,12 @@ import { defineComponent } from "../define.js";
 import { DocContext } from "../doc-context.js";
 import { nonEmpty } from "../guards.js";
 import { Icon } from "./icon.js";
+import { TONE } from "./tones.js";
 
 const CLASSES = {
-  neutral:
-    "border-neutral-300 bg-neutral-50 text-neutral-600 dark:border-neutral-700 dark:bg-neutral-800/60 dark:text-neutral-300",
-  overdue:
-    "border-red-300 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/50 dark:text-red-300",
-  soon: "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
+  neutral: TONE.neutral,
+  overdue: TONE.red,
+  soon: TONE.amber,
 };
 
 const dueState = (
@@ -52,12 +51,9 @@ export const Due = defineComponent(
     const { cls, rel } = dueState(date, now ?? new Date());
     return (
       <span
-        className={`not-prose inline-flex items-baseline gap-1 rounded-md border px-1.5 py-0.5 text-xs ${cls}`}
+        className={`not-prose inline-flex items-baseline gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${cls}`}
       >
-        <Icon
-          className="h-3 w-3 self-center opacity-60"
-          name="lucide:calendar-days"
-        />
+        <Icon className="h-3 w-3 self-center" name="lucide:calendar-days" />
         {nonEmpty(label) ? <span className="opacity-75">{label}</span> : null}
         <time dateTime={date} className="font-mono">
           {date}

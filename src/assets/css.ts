@@ -180,7 +180,7 @@ html:not(.dark) .shiki span {
 .shiki.has-focused .line:not(.focused) { opacity: 0.4; }
 .shiki .line.focused { opacity: 1; }
 .shiki span.highlighted-word {
-  background: rgba(245, 158, 11, 0.18); border-radius: 0.2rem;
+  background: rgba(245, 158, 11, 0.18); border-radius: 0.25rem;
   outline: 1px solid rgba(245, 158, 11, 0.35); padding: 0 0.1rem;
 }
 .shiki.has-line-numbers { counter-reset: mdxr-line; }

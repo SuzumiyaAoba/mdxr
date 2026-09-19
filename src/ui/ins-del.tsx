@@ -16,7 +16,7 @@ export const Ins = defineComponent(
   },
   ({ title, children }) => (
     <ins
-      className="rounded-[0.2rem] bg-emerald-500/15 px-0.5 py-px text-emerald-800 underline decoration-emerald-600/50 decoration-1 underline-offset-2 dark:text-emerald-300 dark:decoration-emerald-400/50"
+      className="rounded bg-emerald-500/15 px-0.5 py-px text-emerald-800 underline decoration-emerald-600/50 decoration-1 underline-offset-2 dark:text-emerald-300 dark:decoration-emerald-400/50"
       title={nonEmpty(title) ? title : "inserted"}
     >
       {children}
@@ -32,7 +32,7 @@ export const Del = defineComponent(
   },
   ({ title, children }) => (
     <del
-      className="rounded-[0.2rem] bg-red-500/15 px-0.5 py-px text-red-800 decoration-red-500/70 decoration-1 dark:text-red-300"
+      className="rounded bg-red-500/15 px-0.5 py-px text-red-800 decoration-red-500/70 decoration-1 dark:text-red-300"
       title={nonEmpty(title) ? title : "deleted"}
     >
       {children}

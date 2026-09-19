@@ -3,7 +3,7 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { isOneOf } from "../guards.js";
 import { Pill } from "./bits.js";
-import { TONE } from "./tones.js";
+import { TONE, TONE_TEXT } from "./tones.js";
 
 export const STATUSES = ["todo", "doing", "done", "blocked"] as const;
 export type Status = (typeof STATUSES)[number];
@@ -23,10 +23,10 @@ export const STATUS_ICONS: Record<Status, string> = {
 
 /** `text-*` color for status icons used standalone (Step, Event, Graph nodes). */
 export const STATUS_ICON_CLS: Record<Status, string> = {
-  blocked: "text-red-500",
-  doing: "text-sky-500",
-  done: "text-emerald-500",
-  todo: "text-neutral-400",
+  blocked: TONE_TEXT.red,
+  doing: TONE_TEXT.sky,
+  done: TONE_TEXT.emerald,
+  todo: TONE_TEXT.neutral,
 };
 
 const STYLES: Record<Status, { label: string; cls: string }> = {

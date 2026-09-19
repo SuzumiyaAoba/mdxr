@@ -21,7 +21,14 @@ import { isEl, propOf } from "./children.js";
 import { Icon } from "./icon.js";
 import { STATUS_PROP } from "./status-badge.js";
 import type { Status } from "./status-badge.js";
-import { CAPTION_TITLE_CLS, MONO_NUM_CLS, TEXT } from "./tones.js";
+import {
+  CAPTION_TITLE_CLS,
+  MONO_NUM_CLS,
+  RAIL_BG_CLS,
+  TEXT,
+  TEXT_MICRO,
+  TRACK_CLS,
+} from "./tones.js";
 
 /**
  * Date-based Gantt chart — task bars and milestone diamonds on a day scale.
@@ -33,8 +40,7 @@ import { CAPTION_TITLE_CLS, MONO_NUM_CLS, TEXT } from "./tones.js";
 const ROW_GRID =
   "grid grid-cols-[minmax(7rem,10rem)_minmax(0,1fr)_5rem] items-center gap-x-3";
 
-const TRACK_CLS =
-  "relative h-4.5 overflow-hidden rounded bg-neutral-100 dark:bg-neutral-800";
+const BAR_TRACK_CLS = `relative h-4.5 overflow-hidden rounded ${TRACK_CLS}`;
 
 /** Bar fill per status — `soft` backs the progress overlay, `solid` is the bar. */
 const BAR: Record<Status, { soft: string; solid: string }> = {
@@ -139,7 +145,7 @@ const Guides = (): ReactNode => {
       {scale.ticks.map((t) => (
         <div
           aria-hidden
-          className="absolute inset-y-0 w-px bg-neutral-200 dark:bg-neutral-700"
+          className={`absolute inset-y-0 w-px ${RAIL_BG_CLS}`}
           key={t.pct}
           style={{ left: `${t.pct}%` }}
         />
@@ -167,12 +173,12 @@ const Row = (props: {
   return (
     <div className={`${ROW_GRID} py-1`}>
       <RowLabel name={props.name} sub={sub} />
-      <div className={TRACK_CLS}>
+      <div className={BAR_TRACK_CLS}>
         <Guides />
         {props.children}
       </div>
       <div
-        className={`text-right font-mono text-[0.62rem] tabular-nums ${TEXT.muted}`}
+        className={`text-right font-mono ${TEXT_MICRO} tabular-nums ${TEXT.muted}`}
       >
         {props.dates}
       </div>
@@ -392,7 +398,7 @@ export const Gantt = defineComponent(
             <span className="relative h-3.5">
               {scale.ticks.map((t) => (
                 <span
-                  className={`absolute -translate-x-1/2 font-mono text-[0.62rem] whitespace-nowrap tabular-nums ${TEXT.faint}`}
+                  className={`absolute -translate-x-1/2 font-mono ${TEXT_MICRO} whitespace-nowrap tabular-nums ${TEXT.faint}`}
                   key={t.pct}
                   style={{ left: `${t.pct}%` }}
                 >

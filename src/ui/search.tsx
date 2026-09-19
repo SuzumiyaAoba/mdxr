@@ -4,9 +4,16 @@ import * as v from "valibot";
 import { defineComponent, flattenChildren } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { NUMISH, TITLE_PROP } from "./attrs.js";
-import { ListPanel, ListRow, RowIcon, RowNote } from "./bits.js";
+import { ListPanel, ListRow, Pill, RowIcon, RowNote } from "./bits.js";
 import { isEl, propOf } from "./children.js";
-import { LOC_CLS, MONO_CLS, TONE } from "./tones.js";
+import {
+  LOC_CLS,
+  MONO_CLS,
+  MONO_TAG_CLS,
+  SURFACE_CLS,
+  TEXT,
+  TONE,
+} from "./tones.js";
 
 interface HitsBadge {
   label: string;
@@ -46,19 +53,15 @@ export const Search = defineComponent(
         <RowIcon name="lucide:search" />
         <code className={MONO_CLS}>{pattern}</code>
         {nonEmpty(path) ? <span className={LOC_CLS}>in {path}</span> : null}
-        {nonEmpty(tool) ? (
-          <span className="inline-flex shrink-0 items-center rounded border border-neutral-200 px-1.5 py-0.5 font-mono text-[0.7rem] text-neutral-500 dark:border-neutral-700 dark:text-neutral-400">
-            {tool}
-          </span>
-        ) : null}
+        {nonEmpty(tool) ? <span className={MONO_TAG_CLS}>{tool}</span> : null}
         {badge === undefined ? null : (
-          <span
-            className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+          <Pill
+            className={`shrink-0 ${
               badge.n !== undefined && badge.n > 0 ? TONE.emerald : TONE.neutral
             }`}
           >
             {badge.label}
-          </span>
+          </Pill>
         )}
         <RowNote>{children}</RowNote>
       </ListRow>
@@ -106,7 +109,7 @@ export const Searches = defineComponent(
     return (
       <ListPanel title={title}>
         {count > 0 ? (
-          <div className="bg-neutral-50 px-4 py-1.5 text-xs text-neutral-500 dark:bg-neutral-900 dark:text-neutral-400">
+          <div className={`${SURFACE_CLS} px-4 py-1.5 text-xs ${TEXT.muted}`}>
             {searchSummary(count, hits)}
           </div>
         ) : null}

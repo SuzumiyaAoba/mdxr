@@ -23,10 +23,12 @@ export const Owner = defineComponent(
     }),
   },
   ({ name, role }) => (
-    <span className="not-prose inline-flex items-center gap-1.5 rounded-full bg-neutral-100 py-0.5 pr-2 pl-0.5 text-xs text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
+    <span
+      className={`not-prose inline-flex items-center gap-1.5 rounded-full bg-neutral-100 py-0.5 pr-2 pl-0.5 text-xs ${TEXT.chip} dark:bg-neutral-800`}
+    >
       <span
-        className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-neutral-300 text-[9px] font-semibold text-neutral-700 dark:bg-neutral-600 dark:text-neutral-100"
         aria-hidden
+        className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-neutral-300 text-[9px] font-semibold text-neutral-700 dark:bg-neutral-600 dark:text-neutral-100"
       >
         {initials(name)}
       </span>

@@ -3,7 +3,7 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { Pill, TrimBody } from "./bits.js";
-import { BORDER_CLS, TONE } from "./tones.js";
+import { BORDER_CLS, TONE, TONE_BORDER } from "./tones.js";
 
 export const OPTION_STATUSES = [
   "considered",
@@ -23,7 +23,7 @@ const STYLES: Record<
     label: "Considered",
   },
   recommended: {
-    card: "border-emerald-300 dark:border-emerald-800",
+    card: TONE_BORDER.emerald,
     chip: TONE.emerald,
     icon: "lucide:thumbs-up",
     label: "Recommended",
@@ -48,7 +48,7 @@ export const Option = defineComponent(
   ({ title, status, children }) => {
     const s = STYLES[status];
     return (
-      <div className={`my-6 rounded-lg border p-4 ${s.card}`}>
+      <div className={`my-6 rounded-lg border px-4 py-3 ${s.card}`}>
         <div className="flex flex-wrap items-center gap-2">
           {nonEmpty(title) ? (
             <span className="font-semibold">{title}</span>

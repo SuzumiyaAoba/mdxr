@@ -3,7 +3,7 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { Pill, TrimBody } from "./bits.js";
-import { TEXT, TONE } from "./tones.js";
+import { TEXT, TONE, TONE_BORDER } from "./tones.js";
 
 export const DECISION_STATUSES = [
   "accepted",
@@ -58,7 +58,9 @@ export const Decision = defineComponent(
   ({ title, status, date, children }) => {
     const s = STYLES[status];
     return (
-      <section className="my-6 rounded-lg border border-indigo-200 bg-indigo-50/50 px-4 py-3 dark:border-indigo-900 dark:bg-indigo-950/30">
+      <section
+        className={`my-6 rounded-lg border bg-indigo-50/50 px-4 py-3 dark:bg-indigo-950/30 ${TONE_BORDER.indigo}`}
+      >
         <div className="flex flex-wrap items-baseline gap-2">
           <span className="font-semibold text-indigo-900 dark:text-indigo-100">
             {title}

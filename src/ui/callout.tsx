@@ -3,6 +3,7 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { TrimBody } from "./bits.js";
 import { Icon } from "./icon.js";
+import { EDGE_PANEL_CLS } from "./tones.js";
 
 export const CALLOUT_KINDS = [
   "note",
@@ -90,9 +91,7 @@ export const Callout = defineComponent(
   ({ kind, title, children }) => {
     const k = KINDS[kind];
     return (
-      <aside
-        className={`my-6 rounded-r-lg border-l-4 px-4 py-3 text-sm ${k.cls}`}
-      >
+      <aside className={`${EDGE_PANEL_CLS} ${k.cls}`}>
         <div className="flex items-center gap-1.5 font-semibold">
           <Icon className="h-4 w-4 shrink-0" name={k.icon} />
           <span>{k.label}</span>

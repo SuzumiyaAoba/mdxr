@@ -10,10 +10,15 @@ import { nonEmpty } from "../guards.js";
 import { Choice, Question, QUESTION_TYPES } from "./ask-question.js";
 import type { QuestionType } from "./ask-question.js";
 import { attrTrue } from "./attrs.js";
-import { ACTION_BUTTON_CLS, CopyFeedback, PANEL_CLS } from "./bits.js";
+import {
+  ACTION_BUTTON_CLS,
+  CAPTION_CLS,
+  CopyFeedback,
+  PANEL_CLS,
+} from "./bits.js";
 import { isEl, propOf } from "./children.js";
 import { Icon } from "./icon.js";
-import { BORDER_CLS, DIVIDE_CLS, TEXT } from "./tones.js";
+import { BORDER_CLS, DIVIDE_CLS, SURFACE_CLS, TEXT } from "./tones.js";
 
 export { Choice, Question, QUESTION_TYPES } from "./ask-question.js";
 export type { QuestionType } from "./ask-question.js";
@@ -151,18 +156,12 @@ export const Ask = defineComponent(
       data-ask
       data-ask-title={nonEmpty(title) ? title : undefined}
     >
-      <div
-        className={`border-b bg-neutral-50 px-4 py-2.5 dark:bg-neutral-900 ${BORDER_CLS}`}
-      >
-        <div
-          className={`flex items-center gap-1.5 text-xs font-semibold ${TEXT.muted}`}
-        >
+      <div className={CAPTION_CLS}>
+        <div className="flex items-center gap-1.5 font-semibold">
           <Icon className="h-3.5 w-3.5" name="lucide:list-checks" />
           {nonEmpty(title) ? title : "Questions"}
         </div>
-        {nonEmpty(description) ? (
-          <p className={`mt-1 text-xs ${TEXT.muted}`}>{description}</p>
-        ) : null}
+        {nonEmpty(description) ? <p className="mt-1">{description}</p> : null}
       </div>
       <div className={DIVIDE_CLS}>{children}</div>
       <div className={`border-t ${BORDER_CLS}`}>
@@ -180,7 +179,7 @@ export const Ask = defineComponent(
         </pre>
       </div>
       <div
-        className={`flex items-center justify-between gap-3 border-t bg-neutral-50 px-4 py-2 dark:bg-neutral-900 ${BORDER_CLS}`}
+        className={`flex items-center justify-between gap-3 border-t ${SURFACE_CLS} px-4 py-2 ${BORDER_CLS}`}
       >
         <span className={`text-xs ${TEXT.faint}`}>
           Updates live as you answer — copy or save it.

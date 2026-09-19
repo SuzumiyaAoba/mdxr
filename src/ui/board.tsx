@@ -10,7 +10,7 @@ import { CHIP_PROPS, ChipRow } from "./chips.js";
 import { Icon } from "./icon.js";
 import { STATUS_ICON_CLS, STATUS_ICONS, STATUS_PROP } from "./status-badge.js";
 import type { Status } from "./status-badge.js";
-import { BORDER_CLS, TEXT } from "./tones.js";
+import { BORDER_CLS, COUNT_CHIP_CLS, TEXT } from "./tones.js";
 
 const DOT: Record<Status, string> = {
   blocked: "bg-red-500",
@@ -129,9 +129,7 @@ export const Lane = defineComponent(
             />
           )}
           <span className="min-w-0 flex-1 truncate">{title}</span>
-          <span className="mdxr-lane-count rounded-full bg-neutral-200/80 px-1.5 py-px font-mono text-[0.65rem] text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
-            {count}
-          </span>
+          <span className={`mdxr-lane-count ${COUNT_CHIP_CLS}`}>{count}</span>
         </header>
         <div className="min-h-8 space-y-2" data-board-cards="">
           {children}

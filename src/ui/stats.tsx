@@ -4,7 +4,7 @@ import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { NUMISH } from "./attrs.js";
 import { Icon } from "./icon.js";
-import { BORDER_CLS, TEXT } from "./tones.js";
+import { BORDER_CLS, TEXT, TONE_TEXT } from "./tones.js";
 
 export const Stats = defineComponent(
   {
@@ -20,13 +20,13 @@ export const Stats = defineComponent(
 const deltaStyle = (delta: string): { cls: string; icon: string } => {
   if (delta.startsWith("+")) {
     return {
-      cls: "text-emerald-600 dark:text-emerald-400",
+      cls: TONE_TEXT.emerald,
       icon: "lucide:trending-up",
     };
   }
   if (delta.startsWith("-")) {
     return {
-      cls: "text-red-600 dark:text-red-400",
+      cls: TONE_TEXT.red,
       icon: "lucide:trending-down",
     };
   }
@@ -47,7 +47,7 @@ export const Stat = defineComponent(
     }),
   },
   ({ value, label, delta }) => (
-    <div className={`rounded-lg border p-4 ${BORDER_CLS}`}>
+    <div className={`rounded-lg border px-4 py-3 ${BORDER_CLS}`}>
       <div className="text-2xl font-semibold tabular-nums">{value}</div>
       <div className={`mt-0.5 text-sm ${TEXT.muted}`}>{label}</div>
       {nonEmpty(delta) ? (

@@ -5,7 +5,7 @@ import { nonEmpty } from "../guards.js";
 import { attrFalse, BOOLISH_PROP } from "./attrs.js";
 import { PANEL_CLS } from "./bits.js";
 import { Icon } from "./icon.js";
-import { BORDER_CLS } from "./tones.js";
+import { BORDER_CLS, SURFACE_CLS, TEXT } from "./tones.js";
 
 const closed = attrFalse;
 
@@ -34,7 +34,9 @@ export const Toc = defineComponent(
     return (
       <nav aria-label="Table of contents" className={`mdxr-toc ${PANEL_CLS}`}>
         <details open={!closed(open)}>
-          <summary className="flex cursor-pointer items-center gap-1.5 bg-neutral-50 px-4 py-2 text-xs font-semibold text-neutral-500 transition-colors select-none hover:bg-neutral-100 active:bg-neutral-200 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800/70 dark:active:bg-neutral-800">
+          <summary
+            className={`flex cursor-pointer items-center gap-1.5 ${SURFACE_CLS} px-4 py-2 text-xs font-semibold ${TEXT.muted} transition-colors select-none hover:bg-neutral-100 active:bg-neutral-200 dark:hover:bg-neutral-800/70 dark:active:bg-neutral-800`}
+          >
             <Icon className="h-3.5 w-3.5" name="lucide:list-tree" />
             <span className="flex-1">
               {nonEmpty(title) ? title : "Contents"}

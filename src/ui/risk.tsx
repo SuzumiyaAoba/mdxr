@@ -3,7 +3,7 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { Pill, TrimBody } from "./bits.js";
-import { TONE } from "./tones.js";
+import { BORDER_CLS, EDGE_PANEL_CLS, SUNKEN_CLS, TONE } from "./tones.js";
 
 export const RISK_LEVELS = ["low", "medium", "high"] as const;
 export type RiskLevel = (typeof RISK_LEVELS)[number];
@@ -45,9 +45,7 @@ export const Risk = defineComponent(
   ({ level, title, mitigation, children }) => {
     const s = STYLES[level];
     return (
-      <aside
-        className={`my-6 rounded-r-lg border-l-4 bg-neutral-50 px-4 py-3 text-sm dark:bg-neutral-900/60 ${s.border}`}
-      >
+      <aside className={`${EDGE_PANEL_CLS} ${SUNKEN_CLS} ${s.border}`}>
         <div className="flex flex-wrap items-baseline gap-2">
           <Pill className={s.chip} icon={s.icon}>
             {s.label} risk
@@ -58,7 +56,7 @@ export const Risk = defineComponent(
         </div>
         <TrimBody className="mt-1.5">{children}</TrimBody>
         {nonEmpty(mitigation) ? (
-          <div className="mt-2 border-t border-neutral-200 pt-2 text-xs dark:border-neutral-700">
+          <div className={`mt-2 border-t pt-2 text-xs ${BORDER_CLS}`}>
             <span className="font-medium">Mitigation: </span>
             {mitigation}
           </div>

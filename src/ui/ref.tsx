@@ -4,6 +4,7 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { safeHref } from "../guards.js";
 import { NUMISH } from "./attrs.js";
+import { CODE_CHIP_CLS } from "./bits.js";
 import { Icon } from "./icon.js";
 import { BORDER_CLS, TEXT } from "./tones.js";
 
@@ -23,7 +24,7 @@ export const Ref = defineComponent(
       className={`group not-prose my-6 flex items-start gap-3 rounded-lg border px-4 py-3 text-inherit no-underline transition-colors hover:bg-neutral-50 active:bg-neutral-100 dark:hover:bg-neutral-900 dark:active:bg-neutral-800 ${BORDER_CLS}`}
     >
       <Icon
-        className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+        className={`mt-0.5 h-4 w-4 shrink-0 ${TEXT.faint} transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5`}
         name="lucide:external-link"
       />
       <span className="min-w-0 flex-1">
@@ -74,8 +75,7 @@ const ghLink = (
   id: string
 ): string => `${repoBase(repo)}/${GH_PATH[kind]}/${id}`;
 
-const CHIP_CLS =
-  "not-prose mx-0.5 inline-flex items-center gap-1.5 rounded-md border border-neutral-300 bg-neutral-100 px-1.5 py-0.5 align-baseline text-[0.85em] text-neutral-800 no-underline transition-all hover:bg-neutral-200 active:scale-95 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700";
+const CHIP_CLS = `${CODE_CHIP_CLS} no-underline transition-all hover:bg-neutral-200 active:scale-95 dark:hover:bg-neutral-700`;
 
 const refChip = (
   kind: "issue" | "pr",

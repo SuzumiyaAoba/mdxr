@@ -26,6 +26,21 @@ export interface FileDiff {
   raw: string[];
 }
 
+/** One highlighted token inside a rendered diff row. */
+export interface DiffHlToken {
+  /** Shiki style string — `--shiki-light`/`--shiki-dark` vars. */
+  s?: string;
+  /** Token text. */
+  t: string;
+}
+
+/**
+ * Per-file highlight payload parked on `<code data-diffhl>` by rehypeShiki:
+ * `[file][hunk][row]` → token list. `null` means "render the row's plain
+ * text" — note rows, or files whose language could not be resolved.
+ */
+export type DiffHl = (DiffHlToken[] | null)[][][];
+
 const GIT_RE =
   /^diff --git (?:"(?<aq>[^"]+)" "(?<bq>[^"]+)"|(?<a>\S+) (?<b>\S+))/u;
 const OLD_RE = /^--- (?:"(?<q>[^"]+)"|(?<p>\S+))/u;

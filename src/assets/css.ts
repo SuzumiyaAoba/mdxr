@@ -122,15 +122,17 @@ ul.contains-task-list { padding-left: 1.25rem; }
   25% { transform: translateX(-2px); }
   75% { transform: translateX(2px); }
 }
-/* shiki dual-theme: token spans carry --shiki-* variables, not colors. */
-.shiki span {
+/* shiki dual-theme: token spans carry --shiki-* variables, not colors.
+ * .mdxr-diff-hl marks the same kind of token span inside DiffView rows — it
+ * is not nested in a .shiki code element, so it joins the selectors here. */
+.shiki span, .mdxr-diff-hl {
   color: var(--shiki-light);
   font-style: var(--shiki-light-font-style, normal);
   font-weight: var(--shiki-light-font-weight, normal);
   text-decoration: var(--shiki-light-text-decoration, none);
 }
 @media (prefers-color-scheme: dark) {
-  .shiki span {
+  .shiki span, .mdxr-diff-hl {
     color: var(--shiki-dark);
     font-style: var(--shiki-dark-font-style, normal);
     font-weight: var(--shiki-dark-font-weight, normal);
@@ -139,13 +141,13 @@ ul.contains-task-list { padding-left: 1.25rem; }
 }
 /* The .dark class (set by THEME_JS in documents, the toolbar in Storybook)
  * wins over the media query so toggling it re-themes code blocks too. */
-.dark .shiki span {
+.dark .shiki span, .dark .mdxr-diff-hl {
   color: var(--shiki-dark);
   font-style: var(--shiki-dark-font-style, normal);
   font-weight: var(--shiki-dark-font-weight, normal);
   text-decoration: var(--shiki-dark-text-decoration, none);
 }
-html:not(.dark) .shiki span {
+html:not(.dark) .shiki span, html:not(.dark) .mdxr-diff-hl {
   color: var(--shiki-light);
   font-style: var(--shiki-light-font-style, normal);
   font-weight: var(--shiki-light-font-weight, normal);

@@ -5,8 +5,9 @@ import type { DocProps } from "../define.js";
 import { textOf } from "../define.js";
 import { DocContext } from "../doc-context.js";
 import { asString, isRecord, nonEmpty } from "../guards.js";
-import { firstLine, splitPathLines } from "../lines.js";
+import { fenceFilename, firstLine, splitPathLines } from "../lines.js";
 import { CaptionBar, CopyButton, MaybeLink, Panel } from "./bits.js";
+import type { DiffHl } from "./diff-parse.js";
 import { DiffView } from "./diff.js";
 import { fileIcon } from "./file-icon.js";
 import { Icon } from "./icon.js";
@@ -85,6 +86,20 @@ const terminalView = (
   );
 };
 
+/** JSON from the fence's `data-diffhl` attribute, or undefined when absent or
+ * malformed — malformed data degrades to unhighlighted rows, never a crash. */
+const parseDiffHl = (raw: string | undefined): DiffHl | undefined => {
+  if (raw === undefined) {
+    return undefined;
+  }
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as DiffHl) : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 /**
  * Fences that render as something other than a code block: ```mermaid becomes
  * a diagram (mermaid loads from CDN only when present), console/terminal
@@ -95,7 +110,8 @@ const specialView = (
   lang: string | undefined,
   meta: string,
   text: string,
-  filename: string | undefined
+  filename: string | undefined,
+  hl: DiffHl | undefined
 ): ReactElement | undefined => {
   if (lang === "mermaid") {
     return (
@@ -111,7 +127,7 @@ const specialView = (
     if (text.trim() === "") {
       return undefined;
     }
-    return <DiffView filename={filename} text={text} />;
+    return <DiffView filename={filename} hl={hl} text={text} />;
   }
   return terminalView(lang, meta, text, filename);
 };
@@ -134,13 +150,16 @@ export const Pre = (props: DocProps): ReactElement => {
     asString(codeProps.metastring) ??
     "";
   // Boundary-anchored: `data-title="x"` must not yield a filename header.
-  const filename =
-    /(?:^|\s)(?:title|filename)="(?<name>[^"]+)"/u.exec(meta)?.groups?.name ??
-    /(?:^|\s)(?:title|filename)='(?<sq>[^']+)'/u.exec(meta)?.groups?.sq ??
-    /(?:^|\s)(?:title|filename)=(?<name>[^\s"']+)/u.exec(meta)?.groups?.name;
+  const filename = fenceFilename(meta);
   const text = textOf(codeProps.children);
 
-  const special = specialView(lang, meta, text, filename);
+  const special = specialView(
+    lang,
+    meta,
+    text,
+    filename,
+    parseDiffHl(asString(codeProps["data-diffhl"]))
+  );
   if (special !== undefined) {
     return special;
   }

@@ -938,6 +938,33 @@ describe(mdxToHtml, () => {
     expect(body).toContain("+1");
   });
 
+  it("syntax-highlights diff rows in the file's language", async () => {
+    const { body } = await render(
+      "```diff\n--- a/src/a.ts\n+++ b/src/a.ts\n@@ -1,3 +1,3 @@\n-const x = 1\n+const x = 2\n const y = 3\n```"
+    );
+    // Token spans carry the dual-theme vars; the rows keep their diff cards.
+    expect(body).toContain("mdxr-diff-hl");
+    expect(body).toContain("--shiki-light");
+    expect(body).toContain("src/a.ts");
+    expect(body).toContain("const");
+  });
+
+  it("highlights a bare +/- diff via the fence's filename meta", async () => {
+    const { body } = await render(
+      '```diff title="src/a.py"\n+x = 1\n-y = 2\n```'
+    );
+    expect(body).toContain("mdxr-diff-hl");
+    expect(body).toContain("--shiki-light");
+  });
+
+  it("leaves diff rows plain when no language resolves", async () => {
+    const { body } = await render(
+      "```diff\n--- a/x.qqq\n+++ b/x.qqq\n@@ -1 +1 @@\n-a\n+b\n```"
+    );
+    expect(body).toContain("+1");
+    expect(body).not.toContain("mdxr-diff-hl");
+  });
+
   it("marks new and deleted files in diffs", async () => {
     const { body } = await render(
       "```diff\n--- /dev/null\n+++ b/added.ts\n@@ -0,0 +1 @@\n+hi\n```\n\n```diff\n--- a/gone.ts\n+++ /dev/null\n@@ -1 +0,0 @@\n-bye\n```"

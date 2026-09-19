@@ -1,8 +1,8 @@
-import type { ReactElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import { nonEmpty } from "../guards.js";
 import { CaptionBar, CopyButton, MaybeLink, Panel } from "./bits.js";
-import type { DiffRow, FileDiff } from "./diff-parse.js";
+import type { DiffHl, DiffHlToken, DiffRow, FileDiff } from "./diff-parse.js";
 import { parseDiff } from "./diff-parse.js";
 import { fileIcon } from "./file-icon.js";
 import { useFileLink } from "./file-link.js";
@@ -114,7 +114,56 @@ const LineNum = ({ n }: { n?: number }): ReactElement => (
   <span className={`px-2 text-right select-none ${TEXT.faint}`}>{n ?? ""}</span>
 );
 
-const DiffRows = ({ rows }: { rows: DiffRow[] }): ReactElement => (
+// Style strings repeat across tokens — same grammar color → same declaration.
+const STYLE_CACHE = new Map<string, Record<string, string>>();
+
+/** `--shiki-light:#fff;--shiki-dark:#fff` → a React style object. */
+const shikiStyle = (style: string): Record<string, string> => {
+  const hit = STYLE_CACHE.get(style);
+  if (hit !== undefined) {
+    return hit;
+  }
+  const out: Record<string, string> = {};
+  for (const decl of style.split(";")) {
+    const i = decl.indexOf(":");
+    if (i > 0) {
+      out[decl.slice(0, i).trim()] = decl.slice(i + 1).trim();
+    }
+  }
+  STYLE_CACHE.set(style, out);
+  return out;
+};
+
+/** Row text, or its language-highlighted tokens when rehypeShiki found a
+ * grammar for the file (span vars are themed by the `.mdxr-diff-hl` rules). */
+const RowContent = ({
+  row,
+  toks,
+}: {
+  row: DiffRow;
+  toks?: DiffHlToken[] | null;
+}): ReactNode => {
+  if (toks === undefined || toks === null) {
+    return nonEmpty(row.text) ? row.text : " ";
+  }
+  return toks.map((tok, i) => (
+    <span
+      className="mdxr-diff-hl"
+      key={i}
+      style={tok.s === undefined ? undefined : shikiStyle(tok.s)}
+    >
+      {tok.t}
+    </span>
+  ));
+};
+
+const DiffRows = ({
+  hlRows,
+  rows,
+}: {
+  hlRows?: (DiffHlToken[] | null)[];
+  rows: DiffRow[];
+}): ReactElement => (
   <div className="font-mono text-[0.8125rem] leading-5">
     {rows.map((row, i) => (
       <div
@@ -127,7 +176,7 @@ const DiffRows = ({ rows }: { rows: DiffRow[] }): ReactElement => (
           {SIGNS[row.kind]}
         </span>
         <span className={`pr-4 wrap-anywhere whitespace-pre-wrap ${TEXT.code}`}>
-          {nonEmpty(row.text) ? row.text : " "}
+          <RowContent row={row} toks={hlRows?.[i]} />
         </span>
       </div>
     ))}
@@ -137,9 +186,11 @@ const DiffRows = ({ rows }: { rows: DiffRow[] }): ReactElement => (
 const FileCard = ({
   fallbackPath,
   file,
+  hl,
 }: {
   fallbackPath?: string;
   file: FileDiff;
+  hl?: (DiffHlToken[] | null)[][];
 }): ReactElement => {
   const path = file.newPath ?? file.oldPath ?? fallbackPath;
   const link = useFileLink(path);
@@ -198,7 +249,7 @@ const FileCard = ({
                 {h.header}
               </div>
             ) : null}
-            <DiffRows rows={h.rows} />
+            <DiffRows hlRows={hl?.[i]} rows={h.rows} />
           </div>
         ))}
       </div>
@@ -206,12 +257,16 @@ const FileCard = ({
   );
 };
 
-/** Rendered by `Pre` for ```diff / ```patch fences. */
+/** Rendered by `Pre` for ```diff / ```patch fences. `hl` is the per-row
+ * language highlighting parsed from the fence's `data-diffhl` (absent when
+ * no grammar was resolved at compile time). */
 export const DiffView = ({
   filename,
+  hl,
   text,
 }: {
   filename?: string;
+  hl?: DiffHl;
   text: string;
 }): ReactElement | null => {
   const files = parseDiff(text).filter((f) => f.raw.length > 0);
@@ -224,6 +279,7 @@ export const DiffView = ({
         <FileCard
           fallbackPath={files.length === 1 ? filename : undefined}
           file={f}
+          hl={hl?.[i]}
           key={i}
         />
       ))}

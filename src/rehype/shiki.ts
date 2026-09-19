@@ -14,7 +14,15 @@ import type { Highlighter, LanguageInput, ShikiTransformer } from "shiki";
 import { visit } from "unist-util-visit";
 
 import { isRecord, own } from "../guards.js";
-import { SKIP_LANGS } from "../langs.js";
+import { langForPath, SKIP_LANGS } from "../langs.js";
+import { fenceFilename, fenceLang } from "../lines.js";
+import { parseDiff } from "../ui/diff-parse.js";
+import type {
+  DiffHl,
+  DiffHlToken,
+  DiffRow,
+  FileDiff,
+} from "../ui/diff-parse.js";
 
 /**
  * Fenced code blocks are syntax-highlighted with shiki at render time.
@@ -121,6 +129,8 @@ const getHighlighter = async (): Promise<Highlighter> => {
   }
 };
 
+const DIFF_FENCE_LANGS: ReadonlySet<string> = new Set(["diff", "patch"]);
+
 const isElement = (node: unknown): node is Element =>
   isRecord(node) && node.type === "element" && typeof node.tagName === "string";
 
@@ -222,14 +232,202 @@ export const highlightToHtml = async (
 };
 
 /**
+ * One side of a hunk, highlighted as the file's own language: `ctx`/`add`
+ * rows read from the new side, `ctx`/`del` rows from the old side. Shiki's
+ * output line array aligns 1:1 with the joined row texts (rows never
+ * contain `\n`).
+ */
+const sideTokens = (
+  highlighter: Highlighter,
+  lang: string,
+  src: string
+): DiffHlToken[][] => {
+  if (src === "") {
+    return [];
+  }
+  const hast = highlighter.codeToHast(src, {
+    defaultColor: false,
+    lang,
+    themes: THEMES,
+  });
+  const pre = hast.children.find(
+    (child): child is Element => isElement(child) && child.tagName === "pre"
+  );
+  const code = pre?.children.find(
+    (child): child is Element => isElement(child) && child.tagName === "code"
+  );
+  if (code === undefined) {
+    return [];
+  }
+  const lines: DiffHlToken[][] = [];
+  for (const child of code.children) {
+    if (
+      !isElement(child) ||
+      child.tagName !== "span" ||
+      !classNames(child).includes("line")
+    ) {
+      continue;
+    }
+    lines.push(
+      child.children.flatMap((tok): DiffHlToken[] => {
+        if (tok.type === "text") {
+          return tok.value === "" ? [] : [{ t: tok.value }];
+        }
+        if (!isElement(tok)) {
+          return [];
+        }
+        const style = tok.properties?.style;
+        return [
+          {
+            s: typeof style === "string" && style !== "" ? style : undefined,
+            t: textContent(tok),
+          },
+        ];
+      })
+    );
+  }
+  return lines;
+};
+
+/** A resolved (highlighter, lang) pair for one side of a file diff. */
+interface DiffSide {
+  highlighter: Highlighter;
+  lang: string;
+}
+
+/** Token lines per row of one hunk — `null` for note rows and for rows whose
+ * side had no usable grammar. Add/ctx rows read the new-side highlight, del
+ * rows the old-side one (the sides can carry different languages after a
+ * cross-extension rename). */
+const hunkTokens = (
+  sides: { new?: DiffSide; old?: DiffSide },
+  rows: DiffRow[]
+): (DiffHlToken[] | null)[] => {
+  const nt =
+    sides.new === undefined
+      ? []
+      : sideTokens(
+          sides.new.highlighter,
+          sides.new.lang,
+          rows
+            .filter((r) => r.kind === "ctx" || r.kind === "add")
+            .map((r) => r.text)
+            .join("\n")
+        );
+  const ot =
+    sides.old === undefined
+      ? []
+      : sideTokens(
+          sides.old.highlighter,
+          sides.old.lang,
+          rows
+            .filter((r) => r.kind === "ctx" || r.kind === "del")
+            .map((r) => r.text)
+            .join("\n")
+        );
+  let ni = 0;
+  let oi = 0;
+  return rows.map((row) => {
+    if (row.kind === "add") {
+      const t = nt[ni] ?? null;
+      ni += 1;
+      return t;
+    }
+    if (row.kind === "del") {
+      const t = ot[oi] ?? null;
+      oi += 1;
+      return t;
+    }
+    if (row.kind === "ctx") {
+      const t = nt[ni] ?? null;
+      ni += 1;
+      oi += 1;
+      return t;
+    }
+    return null;
+  });
+};
+
+/**
+ * Language-highlighted rows for every file/hunk of a parsed diff. Language
+ * comes from the `lang=` meta override, else the file's own path (the fence's
+ * `title=`/`filename=` names a single-file diff). A file whose language can't
+ * be resolved keeps `null` rows — it renders plain, like today.
+ */
+const diffHighlight = async (
+  files: FileDiff[],
+  meta: string
+): Promise<DiffHl | undefined> => {
+  const override = fenceLang(meta);
+  const named = files.length === 1 ? fenceFilename(meta) : undefined;
+  const langOf = (path: string | undefined): string | undefined =>
+    override ?? (path === undefined ? undefined : langForPath(path));
+  const perFile = files.map((file) => ({
+    file,
+    newLang: langOf(file.newPath ?? file.oldPath ?? named),
+    oldLang: langOf(file.oldPath ?? file.newPath ?? named),
+  }));
+  // One parallel grammar-load pass for every language the diff touches.
+  const wanted = new Set(
+    perFile.flatMap((l) =>
+      [l.newLang, l.oldLang].filter((x): x is string => x !== undefined)
+    )
+  );
+  const ready = new Map<string, Highlighter>();
+  await Promise.all(
+    [...wanted].map(async (lang) => {
+      const highlighter = await readyHighlighter(lang);
+      if (highlighter !== undefined) {
+        ready.set(lang, highlighter);
+      }
+    })
+  );
+  const sideOf = (lang: string | undefined): DiffSide | undefined => {
+    if (lang === undefined) {
+      return undefined;
+    }
+    const highlighter = ready.get(lang);
+    return highlighter === undefined ? undefined : { highlighter, lang };
+  };
+  let any = false;
+  const hl = perFile.map(({ file, newLang, oldLang }): DiffHl[number] => {
+    const newSide = sideOf(newLang);
+    // Deleted rows prefer the old side's language; when it didn't resolve
+    // they share the new side's rather than going plain.
+    const oldSide = sideOf(oldLang) ?? newSide;
+    return file.hunks.map((h) => {
+      try {
+        const rows = hunkTokens({ new: newSide, old: oldSide }, h.rows);
+        any ||= rows.some((r) => r !== null);
+        return rows;
+      } catch {
+        // One broken grammar must not fail the whole document — this hunk's
+        // rows degrade to plain text.
+        return h.rows.map((): null => null);
+      }
+    });
+  });
+  return any ? hl : undefined;
+};
+
+/**
  * Rehype plugin: replace the text inside `pre > code` with shiki's highlighted
  * line spans. The `pre`/`code` elements and their properties (language class,
  * `meta` from remarkCodeMeta) are kept so the `Pre` component's filename
- * header, copy payload, and mermaid handling keep working.
+ * header, copy payload, and mermaid handling keep working. ```diff/```patch
+ * fences skip the generic path: `DiffView` replaces their markup, so instead
+ * each hunk's old/new sides are highlighted in the file's own language and
+ * parked as JSON on `code`'s `data-diffhl` prop — it serializes into the
+ * compiled module, reaching SSR and hydration renders identically.
  */
 export const rehypeShiki = () => async (tree: Root) => {
   const targets: { code: Element; lang: string; meta: string; text: string }[] =
     [];
+  const diffs: {
+    code: Element;
+    files: FileDiff[];
+    meta: string;
+  }[] = [];
 
   visit(tree, "element", (node) => {
     if (node.tagName !== "pre") {
@@ -245,15 +443,27 @@ export const rehypeShiki = () => async (tree: Root) => {
     }
     const meta =
       typeof code.properties?.meta === "string" ? code.properties.meta : "";
-    targets.push({ code, lang, meta, text: textContent(code) });
+    const text = textContent(code);
+    // A ```diff fence with parseable structure renders as DiffView — the
+    // language highlight replaces the generic pass. Unparseable content
+    // falls back to the ordinary diff-grammar highlight below (DiffView
+    // renders it as a plain code block too).
+    if (DIFF_FENCE_LANGS.has(lang)) {
+      const files = parseDiff(text).filter((f) => f.raw.length > 0);
+      if (files.length > 0) {
+        diffs.push({ code, files, meta });
+        return;
+      }
+    }
+    targets.push({ code, lang, meta, text });
   });
 
-  if (targets.length === 0) {
+  if (targets.length === 0 && diffs.length === 0) {
     return;
   }
 
-  await Promise.all(
-    targets.map(async ({ code, lang, meta, text }) => {
+  await Promise.all([
+    ...targets.map(async ({ code, lang, meta, text }) => {
       const highlighter = await readyHighlighter(lang);
       if (highlighter === undefined) {
         return;
@@ -290,6 +500,16 @@ export const rehypeShiki = () => async (tree: Root) => {
         ...code.properties,
         className: [...classNames(code), "shiki", ...lifted],
       };
-    })
-  );
+    }),
+    ...diffs.map(async ({ code, files, meta }) => {
+      const hl = await diffHighlight(files, meta);
+      if (hl === undefined) {
+        return;
+      }
+      code.properties = {
+        ...code.properties,
+        "data-diffhl": JSON.stringify(hl),
+      };
+    }),
+  ]);
 };

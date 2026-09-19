@@ -26,7 +26,7 @@ jobs:
           # test/build scripts still run under the matrix Node on PATH.
           standalone: true
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
@@ -48,7 +48,7 @@ jobs:
       # vp pack uses Promise.withResolvers (Node >= 22). Build under 22 even
       # on the Node 20 leg — matching how released dist/ is produced — then
       # switch back so `pnpm test` exercises the artifact on the matrix Node.
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         if: matrix.node-version == 20
         with:
           node-version: 22
@@ -58,7 +58,7 @@ jobs:
       # build must run first.
       - run: pnpm build
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         if: matrix.node-version == 20
         with:
           node-version: 20

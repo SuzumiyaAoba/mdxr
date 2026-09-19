@@ -2,11 +2,11 @@ import type { ReactElement, ReactNode } from "react";
 import * as v from "valibot";
 
 import { defineComponent, flattenChildren, textOf } from "../define.js";
-import { nonEmpty } from "../guards.js";
+import { nonEmpty, own } from "../guards.js";
 import { CaptionBar, Panel } from "./bits.js";
 import { isEl } from "./children.js";
 import { Icon } from "./icon.js";
-import { BORDER_CLS, TEXT } from "./tones.js";
+import { BORDER_CLS, DIVIDE_CLS, TEXT } from "./tones.js";
 
 /**
  * Comparison matrix — rows come from a nested Markdown list, cells are
@@ -51,10 +51,7 @@ const CELL_KINDS: Record<string, CellKind> = {
 
 const cellKind = (cell: string): CellKind => {
   const key = cell.trim().toLowerCase();
-  if (Object.hasOwn(CELL_KINDS, key)) {
-    return CELL_KINDS[key] ?? "text";
-  }
-  return key === "" ? "empty" : "text";
+  return own(CELL_KINDS, key) ?? (key === "" ? "empty" : "text");
 };
 
 const Cell = ({ cell }: { cell: string }): ReactElement => {
@@ -195,7 +192,7 @@ export const Matrix = defineComponent(
         {headers.length > 0 ? (
           <MatrixHeader colCount={colCount} grid={grid} headers={headers} />
         ) : null}
-        <div className="divide-y divide-neutral-100 dark:divide-neutral-800/60">
+        <div className={DIVIDE_CLS}>
           {rows.map((cells, i) => (
             <MatrixRow cells={cells} colCount={colCount} grid={grid} key={i} />
           ))}

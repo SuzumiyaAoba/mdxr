@@ -4,7 +4,7 @@ import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { Due } from "./due.js";
 import { Owner } from "./owner.js";
-import { STATUSES, StatusBadge } from "./status-badge.js";
+import { STATUS_PROP, StatusBadge } from "./status-badge.js";
 import { BORDER_CLS } from "./tones.js";
 
 export const Phase = defineComponent(
@@ -14,7 +14,7 @@ export const Phase = defineComponent(
     schema: v.looseObject({
       due: v.optional(v.string()),
       owner: v.optional(v.string()),
-      status: v.optional(v.picklist(STATUSES)),
+      status: STATUS_PROP,
       title: v.string(),
     }),
   },

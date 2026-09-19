@@ -2,7 +2,7 @@ import type { Node, Parent } from "unist";
 import { visit } from "unist-util-visit";
 import type { VFile } from "vfile";
 
-import { isRecord } from "../guards.js";
+import { isRecord, own } from "../guards.js";
 import { isParent, textContent, toMdxElement } from "./ast.js";
 import { CALLOUT_KINDS, normalizeCalloutKind } from "./callouts.js";
 
@@ -14,6 +14,7 @@ const CONTAINER_COMPONENTS: Record<string, string> = {
   finding: "Finding",
   findings: "Findings",
   flow: "Flow",
+  gantt: "Gantt",
   graph: "Graph",
   hypotheses: "Hypotheses",
   hypothesis: "Hypothesis",
@@ -66,11 +67,9 @@ export const remarkMdxrDirectives = () => (tree: Node, file: VFile) => {
       const directive = node;
       const name = normalizeCalloutKind(directive.name);
       const isContainer = directive.type === "containerDirective";
-      // hasOwn, not a bare index: `:::toString` would otherwise resolve to
+      // own-property lookup: `:::toString` would otherwise resolve to
       // Object.prototype.toString and be "rendered" as a component name.
-      const container = Object.hasOwn(CONTAINER_COMPONENTS, name)
-        ? CONTAINER_COMPONENTS[name]
-        : undefined;
+      const container = own(CONTAINER_COMPONENTS, name);
       const component = CALLOUT_KINDS.has(name) ? "Callout" : container;
       if (component === undefined) {
         file.message(

@@ -2,6 +2,7 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { NUMISH } from "./attrs.js";
 import { Icon } from "./icon.js";
 import { BORDER_CLS, TEXT } from "./tones.js";
 
@@ -42,7 +43,7 @@ export const Stat = defineComponent(
     schema: v.looseObject({
       delta: v.optional(v.string()),
       label: v.string(),
-      value: v.union([v.string(), v.number()]),
+      value: NUMISH,
     }),
   },
   ({ value, label, delta }) => (

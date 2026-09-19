@@ -13,7 +13,7 @@ import { createHighlighter } from "shiki";
 import type { Highlighter, LanguageInput, ShikiTransformer } from "shiki";
 import { visit } from "unist-util-visit";
 
-import { isRecord } from "../guards.js";
+import { isRecord, own } from "../guards.js";
 import { SKIP_LANGS } from "../langs.js";
 
 /**
@@ -161,9 +161,9 @@ const ensureLanguage = async (
   const load = (async () => {
     const bundled: Record<string, LanguageInput> =
       highlighter.getBundledLanguages();
-    // hasOwn: a fence like ```toString would otherwise hand
+    // own-property lookup: a fence like ```toString would otherwise hand
     // Object.prototype.toString to loadLanguage.
-    const loader = Object.hasOwn(bundled, lang) ? bundled[lang] : undefined;
+    const loader = own(bundled, lang);
     if (loader === undefined) {
       return false;
     }

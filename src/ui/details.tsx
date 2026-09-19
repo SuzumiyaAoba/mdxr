@@ -1,7 +1,7 @@
 import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
-import { attrTrue } from "./attrs.js";
+import { attrTrue, BOOLISH_PROP } from "./attrs.js";
 import { Icon } from "./icon.js";
 import { BORDER_CLS, TRIM_CLS } from "./tones.js";
 
@@ -14,7 +14,7 @@ export const Details = defineComponent(
     description:
       '折りたたみセクション (ネイティブ <details> — JS なしで開閉)。summary="..." で要約、open で初期展開',
     schema: v.looseObject({
-      open: v.optional(v.union([v.boolean(), v.string()])),
+      open: BOOLISH_PROP,
       summary: v.optional(v.string()),
     }),
   },

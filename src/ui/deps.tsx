@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
+import { TITLE_PROP } from "./attrs.js";
 import { ListPanel, ListRow, RowIcon, RowNote, Tag } from "./bits.js";
 import { MONO_CLS, TEXT } from "./tones.js";
 
@@ -45,9 +46,7 @@ export const Deps = defineComponent(
   {
     description:
       "依存関係エッジ一覧のコンテナ。<Dep> を並べる。title でキャプションバー",
-    schema: v.looseObject({
-      title: v.optional(v.string()),
-    }),
+    schema: v.looseObject(TITLE_PROP),
   },
   ({ title, children }) => <ListPanel title={title}>{children}</ListPanel>
 );

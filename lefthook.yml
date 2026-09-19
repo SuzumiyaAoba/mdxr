@@ -11,6 +11,11 @@ pre-commit:
         - "**/*.json"
         - "**/*.jsonc"
         - "**/*.css"
+      # Staged-files typecheck builds a program from the listed files only,
+      # so ambient declarations in .storybook/globals.d.ts (*.css) are out of
+      # scope — .storybook stays covered by the repo-wide `pnpm check`.
+      exclude:
+        - ".storybook/**"
       stage_fixed: true
     - name: react-doctor
       run: pnpm exec react-doctor --staged --blocking none || true

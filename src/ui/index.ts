@@ -18,6 +18,7 @@ import { FileRef } from "./file-ref.js";
 import { File, Files } from "./files.js";
 import { Finding, Findings } from "./findings.js";
 import { Flow, FlowStep } from "./flow.js";
+import { Gantt, Milestone, Task } from "./gantt.js";
 import { Glossary, Term } from "./glossary.js";
 import { Edge, Graph, Node } from "./graph.js";
 import { Cell, Grid } from "./grid.js";
@@ -74,6 +75,7 @@ export { FileRef } from "./file-ref.js";
 export { File, FILE_KINDS, Files } from "./files.js";
 export { CONFIDENCES, Finding, Findings } from "./findings.js";
 export { Flow, FlowStep } from "./flow.js";
+export { Gantt, Milestone, Task } from "./gantt.js";
 export { Glossary, Term } from "./glossary.js";
 export { Edge, Graph, Node } from "./graph.js";
 export { Cell, Grid } from "./grid.js";
@@ -152,6 +154,7 @@ export const builtinComponents: ComponentMap = {
   Findings,
   Flow,
   FlowStep,
+  Gantt,
   Glossary,
   Graph,
   Grid,
@@ -165,6 +168,7 @@ export const builtinComponents: ComponentMap = {
   Matrix,
   Meta,
   MetaItem,
+  Milestone,
   Node,
   Option,
   Owner,
@@ -191,6 +195,7 @@ export const builtinComponents: ComponentMap = {
   Steps,
   Summary,
   SymbolRef,
+  Task,
   Term,
   Terminal,
   Test,

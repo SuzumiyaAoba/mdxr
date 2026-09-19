@@ -2,18 +2,17 @@ import type { ReactElement, ReactNode } from "react";
 import * as v from "valibot";
 
 import { defineComponent, flattenChildren } from "../define.js";
-import { nonEmpty } from "../guards.js";
-import { LINK_LINES_PROPS } from "./attrs.js";
-import { CaptionBar, ListPanel, LocLink } from "./bits.js";
+import { isOneOf, nonEmpty } from "../guards.js";
+import { LINK_LINES_PROPS, NUMISH } from "./attrs.js";
+import { CaptionBar, ListPanel, LocLink, TrimBody } from "./bits.js";
 import { isEl, propOf } from "./children.js";
 import { Icon } from "./icon.js";
-import { LOC_CLS, TEXT, TRIM_CLS } from "./tones.js";
+import { LOC_CLS, TEXT } from "./tones.js";
 
 export const TEST_STATUSES = ["pass", "fail", "skip", "todo"] as const;
 export type TestStatus = (typeof TEST_STATUSES)[number];
 
-const isTestStatus = (x: unknown): x is TestStatus =>
-  typeof x === "string" && (TEST_STATUSES as readonly string[]).includes(x);
+const isTestStatus = isOneOf(TEST_STATUSES);
 
 const STYLES: Record<TestStatus, { cls: string; icon: string; label: string }> =
   {
@@ -78,7 +77,7 @@ export const Test = defineComponent(
       "テスト結果1行。name は必須、status は pass|fail|skip|todo。duration に所要時間、file/lines で実ファイルへのエディタリンク。children は失敗時の詳細 (エラー出力など)",
     schema: v.looseObject({
       ...LINK_LINES_PROPS,
-      duration: v.optional(v.union([v.string(), v.number()])),
+      duration: v.optional(NUMISH),
       file: v.optional(v.string()),
       name: v.string(),
       status: v.optional(v.picklist(TEST_STATUSES), "pass"),
@@ -104,17 +103,15 @@ export const Test = defineComponent(
             </span>
           )}
         </div>
-        {children === undefined ? null : (
-          <div
-            className={`mt-1.5 rounded-md border-l-2 px-3 py-2 text-xs ${TEXT.body} ${TRIM_CLS} ${
-              status === "fail"
-                ? "border-red-400/60 bg-red-500/5"
-                : "border-neutral-300 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900/50"
-            }`}
-          >
-            {children}
-          </div>
-        )}
+        <TrimBody
+          className={`mt-1.5 rounded-md border-l-2 px-3 py-2 text-xs ${TEXT.body} ${
+            status === "fail"
+              ? "border-red-400/60 bg-red-500/5"
+              : "border-neutral-300 bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900/50"
+          }`}
+        >
+          {children}
+        </TrimBody>
       </div>
     );
   }

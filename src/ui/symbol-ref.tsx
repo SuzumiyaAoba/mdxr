@@ -6,6 +6,7 @@ import { FILE_LINK_PROPS } from "./attrs.js";
 import { CodeChip, CopyButton, MaybeLink, PathLabel } from "./bits.js";
 import { useFileLink } from "./file-link.js";
 import { Icon } from "./icon.js";
+import { LINK_CLS } from "./tones.js";
 
 export const SYMBOL_KINDS = [
   "class",
@@ -58,10 +59,7 @@ export const SymbolRef = defineComponent(
         {kind === undefined ? null : (
           <Icon className="h-3.5 w-3.5 opacity-60" name={KIND_ICONS[kind]} />
         )}
-        <MaybeLink
-          className="text-inherit no-underline hover:underline"
-          href={link}
-        >
+        <MaybeLink className={LINK_CLS} href={link}>
           {label}
         </MaybeLink>
         <CopyButton

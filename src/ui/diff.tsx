@@ -7,7 +7,7 @@ import { parseDiff } from "./diff-parse.js";
 import { fileIcon } from "./file-icon.js";
 import { useFileLink } from "./file-link.js";
 import { Icon } from "./icon.js";
-import { TEXT, TONE } from "./tones.js";
+import { LINK_CLS, TEXT, TONE } from "./tones.js";
 
 export { parseDiff } from "./diff-parse.js";
 export type { FileDiff } from "./diff-parse.js";
@@ -99,6 +99,11 @@ const SIGNS: Record<DiffRow["kind"], string> = {
   note: " ",
 };
 
+/** One line-number gutter cell — empty when the row has no line on this side. */
+const LineNum = ({ n }: { n?: number }): ReactElement => (
+  <span className={`px-2 text-right select-none ${TEXT.faint}`}>{n ?? ""}</span>
+);
+
 const DiffRows = ({ rows }: { rows: DiffRow[] }): ReactElement => (
   <div className="font-mono text-[0.8125rem] leading-5">
     {rows.map((row, i) => (
@@ -106,12 +111,8 @@ const DiffRows = ({ rows }: { rows: DiffRow[] }): ReactElement => (
         className={`grid grid-cols-[2.5rem_2.5rem_1.25rem_minmax(0,1fr)] ${ROW_CLS[row.kind]}`}
         key={i}
       >
-        <span className={`px-2 text-right select-none ${TEXT.faint}`}>
-          {row.oldLine ?? ""}
-        </span>
-        <span className={`px-2 text-right select-none ${TEXT.faint}`}>
-          {row.newLine ?? ""}
-        </span>
+        <LineNum n={row.oldLine} />
+        <LineNum n={row.newLine} />
         <span className={`text-center select-none ${SIGN_CLS[row.kind]}`}>
           {SIGNS[row.kind]}
         </span>
@@ -147,7 +148,7 @@ const FileCard = ({
           name={fileIcon(path ?? "x.diff")}
         />
         <MaybeLink
-          className="min-w-0 truncate font-mono text-inherit no-underline hover:underline"
+          className={`min-w-0 truncate font-mono ${LINK_CLS}`}
           href={link}
         >
           {label}

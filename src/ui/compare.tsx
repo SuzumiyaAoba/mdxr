@@ -2,6 +2,7 @@ import type { ReactNode, ReactElement } from "react";
 import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
+import { TITLE_PROP } from "./attrs.js";
 import { Icon } from "./icon.js";
 import { TRIM_CLS } from "./tones.js";
 
@@ -31,9 +32,7 @@ export const Before = defineComponent(
   {
     description:
       "Before パネル (赤系)。<Columns> と組み合わせて before/after 比較に。title でラベル上書き可",
-    schema: v.looseObject({
-      title: v.optional(v.string()),
-    }),
+    schema: v.looseObject(TITLE_PROP),
   },
   ({ title, children }) =>
     panel(
@@ -52,9 +51,7 @@ export const After = defineComponent(
   {
     description:
       "After パネル (緑系)。<Columns> と組み合わせて before/after 比較に。title でラベル上書き可",
-    schema: v.looseObject({
-      title: v.optional(v.string()),
-    }),
+    schema: v.looseObject(TITLE_PROP),
   },
   ({ title, children }) =>
     panel(

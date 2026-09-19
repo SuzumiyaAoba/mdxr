@@ -1,14 +1,17 @@
 import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
+import { isOneOf } from "../guards.js";
 import { Pill } from "./bits.js";
 import { TONE } from "./tones.js";
 
 export const STATUSES = ["todo", "doing", "done", "blocked"] as const;
 export type Status = (typeof STATUSES)[number];
 
-export const isStatus = (x: unknown): x is Status =>
-  typeof x === "string" && (STATUSES as readonly string[]).includes(x);
+export const isStatus = isOneOf(STATUSES);
+
+/** Schema entry for an optional `status` prop — shared by every task/status component. */
+export const STATUS_PROP = v.optional(v.picklist(STATUSES));
 
 /** Iconify names for each status — shared by StatusBadge, Step and Event. */
 export const STATUS_ICONS: Record<Status, string> = {

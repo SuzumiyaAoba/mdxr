@@ -1,17 +1,16 @@
+import type { ReactElement } from "react";
 import * as v from "valibot";
 
-import { defineComponent, flattenChildren } from "../define.js";
+import { defineComponent, flattenChildren, textOf } from "../define.js";
 import { nonEmpty } from "../guards.js";
-import { Section } from "./bits.js";
+import { TITLE_PROP } from "./attrs.js";
+import { ACTION_BUTTON_CLS, CopyFeedback, Section, TrimBody } from "./bits.js";
 import { isEl } from "./children.js";
-import { Due } from "./due.js";
-import { EFFORT_SIZES, Effort } from "./effort.js";
+import { CHIP_PROPS, ChipRow } from "./chips.js";
 import { Icon } from "./icon.js";
-import { Owner } from "./owner.js";
-import { PRIORITY_LEVELS, Priority } from "./priority.js";
-import { STATUS_ICON_CLS, STATUS_ICONS, STATUSES } from "./status-badge.js";
+import { STATUS_ICON_CLS, STATUS_ICONS, STATUS_PROP } from "./status-badge.js";
 import type { Status } from "./status-badge.js";
-import { BORDER_CLS, TEXT, TRIM_CLS } from "./tones.js";
+import { BORDER_CLS, TEXT } from "./tones.js";
 
 const DOT: Record<Status, string> = {
   blocked: "bg-red-500",
@@ -20,31 +19,64 @@ const DOT: Record<Status, string> = {
   todo: "bg-neutral-400",
 };
 
+/**
+ * Lane-to-lane move buttons — the keyboard/touch alternative to drag & drop
+ * (HTML5 DnD never reaches touch browsers). `data-board-move` is a client-JS
+ * hook: doc-events.ts moves the card ±1 lane on click and disables the
+ * button at the board's edges via `disabled`.
+ */
+const MoveButton = (props: {
+  /** `"-1"` previous lane, `"1"` next lane. */
+  dir: "-1" | "1";
+}): ReactElement => (
+  <button
+    aria-label={
+      props.dir === "-1" ? "Move to previous lane" : "Move to next lane"
+    }
+    className="mdxr-move"
+    data-board-move={props.dir}
+    title={props.dir === "-1" ? "Move left" : "Move right"}
+    type="button"
+  >
+    <Icon
+      className="h-3.5 w-3.5"
+      name={props.dir === "-1" ? "lucide:chevron-left" : "lucide:chevron-right"}
+    />
+  </button>
+);
+
 export const BoardCard = defineComponent(
   {
     description:
-      "カンバンのカード。title は必須。priority/effort/owner/due で既存チップを並べられる。children は補足テキスト",
+      "カンバンのカード。title は必須。priority/effort/owner/due で既存チップを並べられる。children は補足テキスト。ドラッグまたは両端の矢印ボタンでレーン間を移動できる",
     schema: v.looseObject({
-      due: v.optional(v.string()),
-      effort: v.optional(v.picklist(EFFORT_SIZES)),
-      owner: v.optional(v.string()),
-      priority: v.optional(v.picklist(PRIORITY_LEVELS)),
-      status: v.optional(v.picklist(STATUSES)),
+      ...CHIP_PROPS,
+      status: STATUS_PROP,
       title: v.string(),
     }),
   },
   ({ title, priority, effort, owner, due, status, children }) => {
-    const hasChips =
-      priority !== undefined ||
-      effort !== undefined ||
-      nonEmpty(owner) ||
-      nonEmpty(due) ||
-      status !== undefined;
+    // Plain-text payload for the markdown serializer — element children
+    // (links, emphasis) flatten to their visible text.
+    const text = children === undefined ? "" : textOf(children).trim();
     return (
       <div
         className={`rounded-md border bg-white p-2.5 shadow-sm dark:bg-neutral-950 ${BORDER_CLS}`}
+        data-board-card=""
+        data-card-due={due}
+        data-card-effort={effort}
+        data-card-owner={owner}
+        data-card-priority={priority}
+        data-card-status={status}
+        data-card-text={nonEmpty(text) ? text : undefined}
+        data-card-title={title}
+        draggable
       >
         <div className="flex items-start gap-1.5">
+          <Icon
+            className={`mdxr-grip mt-0.5 h-3.5 w-3.5 shrink-0 ${TEXT.ghost}`}
+            name="lucide:grip-vertical"
+          />
           {status === undefined ? null : (
             <Icon
               className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${STATUS_ICON_CLS[status]}`}
@@ -55,20 +87,13 @@ export const BoardCard = defineComponent(
           <div className="min-w-0 flex-1 text-sm leading-snug font-medium">
             {title}
           </div>
+          <span className="mdxr-card-moves -mt-0.5 -mr-1 flex shrink-0 items-center">
+            <MoveButton dir="-1" />
+            <MoveButton dir="1" />
+          </span>
         </div>
-        {children === undefined ? null : (
-          <div className={`mt-1 text-xs ${TEXT.muted} ${TRIM_CLS}`}>
-            {children}
-          </div>
-        )}
-        {hasChips ? (
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            {priority === undefined ? null : <Priority level={priority} />}
-            {effort === undefined ? null : <Effort size={effort} />}
-            {nonEmpty(owner) ? <Owner name={owner} /> : null}
-            {nonEmpty(due) ? <Due date={due} /> : null}
-          </div>
-        ) : null}
+        <TrimBody className={`mt-1 text-xs ${TEXT.muted}`}>{children}</TrimBody>
+        <ChipRow due={due} effort={effort} owner={owner} priority={priority} />
       </div>
     );
   }
@@ -77,9 +102,9 @@ export const BoardCard = defineComponent(
 export const Lane = defineComponent(
   {
     description:
-      "カンバンの列。<Board> の子として使う。title は列名、status でヘッダの色点 (todo|doing|done|blocked)。子の <BoardCard> 数がバッジになる",
+      "カンバンの列。<Board> の子として使う。title は列名、status でヘッダの色点 (todo|doing|done|blocked)。子の <BoardCard> 数がバッジになる。空の列もドロップ先になる",
     schema: v.looseObject({
-      status: v.optional(v.picklist(STATUSES)),
+      status: STATUS_PROP,
       title: v.string(),
     }),
   },
@@ -88,7 +113,12 @@ export const Lane = defineComponent(
       isEl(c, BoardCard)
     ).length;
     return (
-      <section className="w-64 shrink-0 rounded-xl bg-neutral-100/70 p-2 dark:bg-neutral-900/70">
+      <section
+        className="w-64 shrink-0 rounded-xl bg-neutral-100/70 p-2 dark:bg-neutral-900/70"
+        data-board-lane=""
+        data-lane-status={status}
+        data-lane-title={title}
+      >
         <header
           className={`flex items-center gap-2 px-1.5 py-1.5 text-xs font-semibold ${TEXT.body}`}
         >
@@ -99,13 +129,13 @@ export const Lane = defineComponent(
             />
           )}
           <span className="min-w-0 flex-1 truncate">{title}</span>
-          {count > 0 ? (
-            <span className="rounded-full bg-neutral-200/80 px-1.5 py-px font-mono text-[0.65rem] text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
-              {count}
-            </span>
-          ) : null}
+          <span className="mdxr-lane-count rounded-full bg-neutral-200/80 px-1.5 py-px font-mono text-[0.65rem] text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+            {count}
+          </span>
         </header>
-        <div className="space-y-2">{children}</div>
+        <div className="min-h-8 space-y-2" data-board-cards="">
+          {children}
+        </div>
       </section>
     );
   }
@@ -114,15 +144,31 @@ export const Lane = defineComponent(
 export const Board = defineComponent(
   {
     description:
-      "カンバンボードのコンテナ。<Lane> を横に並べる (はみ出しは横スクロール)",
-    schema: v.looseObject({
-      title: v.optional(v.string()),
-    }),
+      "カンバンボードのコンテナ。<Lane> を横に並べる (はみ出しは横スクロール)。カードはドラッグまたは矢印ボタンで移動でき、移動後の状態を <Board> マークアップとしてコピーできる",
+    schema: v.looseObject(TITLE_PROP),
   },
   ({ title, children }) => (
     <Section title={title}>
-      <div className="not-prose flex items-start gap-3 overflow-x-auto pb-1">
-        {children}
+      <div className="mdxr-board" data-board="" data-board-title={title}>
+        <div className="not-prose flex items-start gap-3 overflow-x-auto pb-1">
+          {children}
+        </div>
+        <div className="mdxr-board-tools not-prose mt-2 flex items-center justify-between gap-3">
+          <span className={`text-xs ${TEXT.faint}`}>
+            Drag cards or use the arrow buttons, then copy the updated markup.
+          </span>
+          <button
+            className={ACTION_BUTTON_CLS}
+            data-board-copy=""
+            type="button"
+          >
+            <CopyFeedback
+              done="Copied"
+              icon="lucide:clipboard-list"
+              label="Copy markdown"
+            />
+          </button>
+        </div>
       </div>
     </Section>
   )

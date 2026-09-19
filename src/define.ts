@@ -36,6 +36,34 @@ type PropsOf<S> = S extends GenericSchema
   : Record<string, unknown>;
 
 /**
+ * Validate `props` against `schema`, throwing the catalog's `Invalid props`
+ * error on failure. `tag` names the element in the message
+ * (`Invalid props on <Node>`); without it the bare `Invalid props` form is
+ * reported — the shape `defineComponent` produces.
+ */
+export const parseProps = <S extends GenericSchema>(
+  schema: S,
+  props: unknown,
+  tag?: string
+): InferOutput<S> => {
+  const r = safeParse(schema, props);
+  if (!r.success) {
+    const detail = r.issues
+      .map(
+        (i) =>
+          `${i.path?.map((p) => String(p.key)).join(".") ?? "props"}: ${i.message}`
+      )
+      .join("; ");
+    throw new Error(
+      tag === undefined
+        ? `Invalid props: ${detail}`
+        : `Invalid props on <${tag}>: ${detail}`
+    );
+  }
+  return r.output;
+};
+
+/**
  * Wrap a render function with prop validation + catalog metadata.
  * Prop types are inferred from the valibot schema, so the render callback
  * is fully typed. Validation failures surface as document errors so the
@@ -48,20 +76,8 @@ export const defineComponent = <
   render: (props: PropsOf<S> & { children?: ReactNode }) => ReactElement | null
 ): MdxrComponent => {
   const Comp = (props: DocProps): ReactElement | null => {
-    let parsed: unknown = props;
-    if (meta.schema !== undefined) {
-      const r = safeParse(meta.schema, props);
-      if (!r.success) {
-        const detail = r.issues
-          .map(
-            (i) =>
-              `${i.path?.map((p) => String(p.key)).join(".") ?? "props"}: ${i.message}`
-          )
-          .join("; ");
-        throw new Error(`Invalid props: ${detail}`);
-      }
-      parsed = r.output;
-    }
+    const parsed: unknown =
+      meta.schema === undefined ? props : parseProps(meta.schema, props);
     // Validated above by the schema (or intentionally loose without one).
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion
     return render(parsed as PropsOf<S> & { children?: ReactNode });

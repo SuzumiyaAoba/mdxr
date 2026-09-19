@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { mdxToHtml } from "../src/mdx.js";
 import { fileIcon, folderIcon } from "../src/ui/file-icon.js";
 import { hasIcon } from "../src/ui/icon.js";
-import { builtinComponents } from "../src/ui/index.js";
+import { renderDoc } from "./helpers.js";
 
 describe(fileIcon, () => {
   it.each([
@@ -109,8 +108,7 @@ describe(folderIcon, () => {
   );
 });
 
-const render = async (src: string) =>
-  await mdxToHtml(src, builtinComponents, "document.mdx", { hydrate: false });
+const render = renderDoc;
 
 describe("rendered file icons", () => {
   it("renders File rows with extension icons", async () => {

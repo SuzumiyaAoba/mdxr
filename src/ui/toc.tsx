@@ -2,7 +2,7 @@ import * as v from "valibot";
 
 import { defineComponent, flattenChildren } from "../define.js";
 import { nonEmpty } from "../guards.js";
-import { attrFalse } from "./attrs.js";
+import { attrFalse, BOOLISH_PROP } from "./attrs.js";
 import { PANEL_CLS } from "./bits.js";
 import { Icon } from "./icon.js";
 import { BORDER_CLS } from "./tones.js";
@@ -23,7 +23,7 @@ export const Toc = defineComponent(
     schema: v.looseObject({
       depth: v.optional(v.string()),
       min: v.optional(v.string()),
-      open: v.optional(v.union([v.boolean(), v.string()])),
+      open: BOOLISH_PROP,
       title: v.optional(v.string()),
     }),
   },

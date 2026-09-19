@@ -3,6 +3,7 @@ import * as v from "valibot";
 
 import { defineComponent, flattenChildren, textOf } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { NUMISH } from "./attrs.js";
 import { CopyButton } from "./bits.js";
 
 /**
@@ -101,7 +102,7 @@ export const Terminal = defineComponent(
       "ターミナル実行結果ブロック。cmd は `$ ` プロンプト行として先頭に表示、exit は終了コードバッジ (0=緑/他=赤)、title はタイトルバー。children は出力（フェンスドコードブロック推奨）。本文中 `$ ` 始まりの行はコマンド行として強調",
     schema: v.looseObject({
       cmd: v.optional(v.string()),
-      exit: v.optional(v.union([v.string(), v.number()])),
+      exit: v.optional(NUMISH),
       title: v.optional(v.string()),
     }),
   },

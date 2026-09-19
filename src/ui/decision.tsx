@@ -2,8 +2,8 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
-import { Pill } from "./bits.js";
-import { TEXT, TONE, TRIM_CLS } from "./tones.js";
+import { Pill, TrimBody } from "./bits.js";
+import { TEXT, TONE } from "./tones.js";
 
 export const DECISION_STATUSES = [
   "accepted",
@@ -70,9 +70,7 @@ export const Decision = defineComponent(
             <time className={`font-mono text-xs ${TEXT.muted}`}>{date}</time>
           ) : null}
         </div>
-        {children === undefined ? null : (
-          <div className={`mt-1.5 text-sm ${TRIM_CLS}`}>{children}</div>
-        )}
+        <TrimBody className="mt-1.5 text-sm">{children}</TrimBody>
       </section>
     );
   }

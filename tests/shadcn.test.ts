@@ -1,13 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { mdxToHtml } from "../src/mdx.js";
 import { buildCss } from "../src/tailwind.js";
-import { builtinComponents } from "../src/ui/index.js";
+import { renderDoc } from "./helpers.js";
 
-// Static markup: hydrate renders with renderToString, whose `<!-- -->`
-// text-boundary comments break plain substring assertions.
-const render = async (src: string) =>
-  await mdxToHtml(src, builtinComponents, "document.mdx", { hydrate: false });
+const render = renderDoc;
 
 describe("shadcn/ui components in documents", () => {
   it("renders Button with variant classes", async () => {

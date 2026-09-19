@@ -179,17 +179,12 @@ const looseLine = (st: ParseState, line: string): void => {
   if (rt?.groups !== undefined) {
     f.newPath ??= cleanPath(rt.groups.p.trim());
   }
-  if (line.startsWith("+")) {
-    f.adds += 1;
+  if (line.startsWith("+") || line.startsWith("-")) {
+    const kind = line.startsWith("+") ? "add" : "del";
+    f[kind === "add" ? "adds" : "dels"] += 1;
     st.oldLeft = Number.POSITIVE_INFINITY;
     st.newLeft = Number.POSITIVE_INFINITY;
-    st.hunk = { rows: [{ kind: "add", text: line.slice(1) }] };
-    f.hunks.push(st.hunk);
-  } else if (line.startsWith("-")) {
-    f.dels += 1;
-    st.oldLeft = Number.POSITIVE_INFINITY;
-    st.newLeft = Number.POSITIVE_INFINITY;
-    st.hunk = { rows: [{ kind: "del", text: line.slice(1) }] };
+    st.hunk = { rows: [{ kind, text: line.slice(1) }] };
     f.hunks.push(st.hunk);
   } else if (line !== "") {
     f.meta.push(line);

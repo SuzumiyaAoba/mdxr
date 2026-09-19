@@ -2,19 +2,17 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
-import { FILE_LINK_PROPS } from "./attrs.js";
-import { LocLink, Section } from "./bits.js";
+import { FILE_LINK_PROPS, TITLE_PROP } from "./attrs.js";
+import { LocLink, Section, TrimBody } from "./bits.js";
 import { indexChildren, useChildIndex } from "./child-index.js";
 import { Icon } from "./icon.js";
-import { TEXT, TRIM_CLS } from "./tones.js";
+import { TEXT } from "./tones.js";
 
 export const Flow = defineComponent(
   {
     description:
       "呼び出し・実行フローのコンテナ。<FlowStep> を番号付きで縦に連結する。title で見出し",
-    schema: v.looseObject({
-      title: v.optional(v.string()),
-    }),
+    schema: v.looseObject(TITLE_PROP),
   },
   ({ title, children }) => (
     <Section title={title}>
@@ -66,11 +64,9 @@ export const FlowStep = defineComponent(
             ) : null}
           </div>
         ) : null}
-        {children === undefined ? null : (
-          <div className={`mt-1.5 text-sm ${TEXT.body} ${TRIM_CLS}`}>
-            {children}
-          </div>
-        )}
+        <TrimBody className={`mt-1.5 text-sm ${TEXT.body}`}>
+          {children}
+        </TrimBody>
       </li>
     );
   }

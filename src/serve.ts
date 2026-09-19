@@ -254,28 +254,41 @@ const servePreview = async (
   return server;
 };
 
+/**
+ * Wraps a render fn with dependency tracking: `deps` reads the paths the
+ * last render reported via `onDependencies` (theme CSS + its imports), so
+ * `armDeps` can watch files outside the document's own directory.
+ */
+const trackDeps = (
+  renderDoc: (onDeps: (paths: string[]) => void) => Promise<string>
+): Pick<PreviewTarget, "deps" | "renderDoc"> => {
+  let deps: string[] = [];
+  return {
+    deps: () => deps,
+    renderDoc: async () => {
+      const collected: string[] = [];
+      const doc = await renderDoc((d) => {
+        collected.push(...d);
+      });
+      deps = collected;
+      return doc;
+    },
+  };
+};
+
 /** Serve an .mdx file, rebuilding + live-reloading on changes in its directory. */
 export const serve = async (
   mdxPath: string,
   port: number
 ): Promise<http.Server> => {
   const abs = path.resolve(mdxPath);
-  let deps: string[] = [];
   return await servePreview(
     {
-      deps: () => deps,
       label: mdxPath,
-      renderDoc: async () => {
-        const collected: string[] = [];
-        const doc = await renderFile(abs, {
-          liveReload: true,
-          onDependencies: (d) => {
-            collected.push(...d);
-          },
-        });
-        deps = collected;
-        return doc;
-      },
+      ...trackDeps(
+        async (onDeps) =>
+          await renderFile(abs, { liveReload: true, onDependencies: onDeps })
+      ),
       watchDir: path.dirname(abs),
       watchFile: abs,
     },
@@ -290,24 +303,18 @@ export const serveSource = async (
   opts: Omit<RenderSourceOptions, "liveReload" | "onDependencies"> = {}
 ): Promise<http.Server> => {
   const dir = path.resolve(opts.dir ?? process.cwd());
-  let deps: string[] = [];
   return await servePreview(
     {
-      deps: () => deps,
       label: opts.filePath ?? "stdin",
-      renderDoc: async () => {
-        const collected: string[] = [];
-        const doc = await render(source, {
-          dir,
-          filePath: opts.filePath,
-          liveReload: true,
-          onDependencies: (d) => {
-            collected.push(...d);
-          },
-        });
-        deps = collected;
-        return doc;
-      },
+      ...trackDeps(
+        async (onDeps) =>
+          await render(source, {
+            dir,
+            filePath: opts.filePath,
+            liveReload: true,
+            onDependencies: onDeps,
+          })
+      ),
       watchDir: dir,
     },
     port

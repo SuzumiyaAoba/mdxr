@@ -11,7 +11,7 @@ import * as v from "valibot";
 import type { DocProps } from "../define.js";
 import { defineComponent, flattenChildren } from "../define.js";
 import { nonEmpty } from "../guards.js";
-import { attrTrue } from "./attrs.js";
+import { attrTrue, BOOLISH_PROP } from "./attrs.js";
 import { isEl, propOf } from "./children.js";
 import { Icon } from "./icon.js";
 import { TEXT } from "./tones.js";
@@ -67,7 +67,7 @@ export const Choice = defineComponent(
     description:
       "<Question> の選択肢。choice=ラジオ / multi=チェックボックス / select=option として描画。checked で初期選択",
     schema: v.looseObject({
-      checked: v.optional(v.union([v.boolean(), v.string()])),
+      checked: BOOLISH_PROP,
       description: v.optional(v.string()),
       value: v.string(),
     }),
@@ -293,12 +293,12 @@ export const Question = defineComponent(
     description:
       "<Ask> 内の質問。name は回答キー。type は choice|multi|select|text|textarea|toggle (省略時は <Choice> があれば choice、なければ text)",
     schema: v.looseObject({
-      checked: v.optional(v.union([v.boolean(), v.string()])),
+      checked: BOOLISH_PROP,
       description: v.optional(v.string()),
       label: v.optional(v.string()),
       name: v.string(),
       placeholder: v.optional(v.string()),
-      required: v.optional(v.union([v.boolean(), v.string()])),
+      required: BOOLISH_PROP,
       rows: v.optional(v.string()),
       type: v.optional(v.picklist(QUESTION_TYPES)),
       value: v.optional(v.string()),

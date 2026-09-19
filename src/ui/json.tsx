@@ -3,10 +3,10 @@ import * as v from "valibot";
 
 import { defineComponent, textOf } from "../define.js";
 import { isRecord, nonEmpty } from "../guards.js";
-import { attrFalse } from "./attrs.js";
-import { CaptionBar, CopyButton, Panel } from "./bits.js";
+import { attrFalse, BOOLISH_PROP } from "./attrs.js";
+import { CaptionBar, CopyButton, FoldChev, Panel } from "./bits.js";
 import { Icon } from "./icon.js";
-import { BORDER_CLS, TEXT } from "./tones.js";
+import { BORDER_CLS, DISCLOSURE_ROW_CLS, TEXT, TREE_ROW_CLS } from "./tones.js";
 
 /**
  * Collapsible JSON tree — objects/arrays fold via nested native <details>
@@ -81,7 +81,7 @@ const NodeView = ({
     );
   if (depth > MAX_DEPTH) {
     return (
-      <div className="flex items-baseline gap-1.5 py-px">
+      <div className={TREE_ROW_CLS}>
         {keyEl}
         <span className="text-neutral-400">…</span>
       </div>
@@ -90,7 +90,7 @@ const NodeView = ({
   const isArr = Array.isArray(value);
   if (!isArr && !isRecord(value)) {
     return (
-      <div className="flex items-baseline gap-1.5 py-px">
+      <div className={TREE_ROW_CLS}>
         {keyEl}
         <Leaf value={value} />
       </div>
@@ -103,7 +103,7 @@ const NodeView = ({
   const closeB = isArr ? "]" : "}";
   if (entries.length === 0) {
     return (
-      <div className="flex items-baseline gap-1.5 py-px">
+      <div className={TREE_ROW_CLS}>
         {keyEl}
         <span className={TEXT.faint}>
           {openB}
@@ -114,11 +114,8 @@ const NodeView = ({
   }
   return (
     <details className="group" open={openAll}>
-      <summary className="flex cursor-pointer list-none items-baseline gap-1.5 py-px select-none">
-        <Icon
-          className={`mdxr-chev h-3 w-3 shrink-0 self-center ${TEXT.faint}`}
-          name="lucide:chevron-right"
-        />
+      <summary className={`list-none ${DISCLOSURE_ROW_CLS}`}>
+        <FoldChev />
         {keyEl}
         <span className={TEXT.faint}>{openB}</span>
         <span
@@ -148,7 +145,7 @@ export const Json = defineComponent(
     description:
       '折りたたみ可能な JSON ツリー (ネストした <details>、JS 不要)。value 属性に JSON 文字列、または子に ```json フェンス。open="false" で全階層を折り畳み。title でキャプション+コピー',
     schema: v.looseObject({
-      open: v.optional(v.union([v.boolean(), v.string()])),
+      open: BOOLISH_PROP,
       title: v.optional(v.string()),
       value: v.optional(v.string()),
     }),

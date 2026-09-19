@@ -1,9 +1,10 @@
 import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
+import { NUMISH } from "./attrs.js";
 import { ListPanel, ListRow } from "./bits.js";
 import { Icon } from "./icon.js";
-import { STATUSES, StatusBadge } from "./status-badge.js";
+import { STATUS_PROP, StatusBadge } from "./status-badge.js";
 import { TRIM_CLS } from "./tones.js";
 
 export const Reqs = defineComponent(
@@ -18,8 +19,8 @@ export const Req = defineComponent(
     description:
       '要件1行。id="REQ-1" などの識別子チップ。status (todo|doing|done|blocked) でバッジを付けられる',
     schema: v.looseObject({
-      id: v.union([v.string(), v.number()]),
-      status: v.optional(v.picklist(STATUSES)),
+      id: NUMISH,
+      status: STATUS_PROP,
     }),
   },
   ({ id, status, children }) => (

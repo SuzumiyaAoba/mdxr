@@ -33,6 +33,26 @@ Chronological milestone list with a left rail. `Event` requires `date` (any stri
 </Timeline>
 ```
 
+### `<Gantt title start end today>` / `<Task name start end status progress owner note>` / `<Milestone name date status owner note>` / `:::gantt`
+
+Date-based schedule chart. `<Task>` needs `name` + `start` (ISO `YYYY-MM-DD`); `end` defaults to `start` (a one-day bar). `status` (todo|doing|done|blocked) colors the bar, `progress="0–100"` shows a partial fill, `owner`/`note` add a muted sub-line. `<Milestone>` needs `name` + `date` and renders a diamond. The range spans the earliest start to the latest end; `start`/`end` on `<Gantt>` override it. A "today" marker is drawn when the render date falls inside the range — disable with `today="false"` or pin it with `today="YYYY-MM-DD"`. Axis ticks are days on short ranges, Mondays mid-range, month starts after.
+
+```mdx
+<Gantt title="v1.0 release">
+  <Task name="API design" start="2026-09-01" end="2026-09-05" status="done" />
+  <Task
+    name="Implementation"
+    start="2026-09-08"
+    end="2026-09-18"
+    status="doing"
+    progress="40"
+    owner="alice"
+  />
+  <Task name="Docs" start="2026-09-21" end="2026-09-25" />
+  <Milestone name="v1.0 freeze" date="2026-09-30" />
+</Gantt>
+```
+
 ### `<Decision title="…" status="…" date="…">`
 
 Decision record (ADR-lite). `status` is `proposed|accepted|rejected|deprecated| superseded`. Children hold context and rationale. For a one-line record prefer `:::decision` (the Callout kind).
@@ -97,7 +117,7 @@ Requirement / acceptance-criteria rows: `id` renders a mono chip, optional `stat
 
 ### `<Board title>` / `<Lane title status>` / `<BoardCard title>` / `:::board`
 
-Kanban board — `Lane`s lay out side by side (horizontal scroll on narrow viewports); the header shows a status dot plus a card-count badge. `BoardCard` requires `title`; optional `status` icon plus the same inline chips as `Step` (`priority`, `effort`, `owner`, `due`); children are a muted description.
+Kanban board — `Lane`s lay out side by side (horizontal scroll on narrow viewports); the header shows a status dot plus a card-count badge. `BoardCard` requires `title`; optional `status` icon plus the same inline chips as `Step` (`priority`, `effort`, `owner`, `due`); children are a muted description. Interactive: readers can drag cards between lanes (or use the ‹ › buttons on each card), and "Copy markdown" copies the current arrangement as `<Board>` markup to paste back into the source.
 
 ```mdx
 <Board title="Sprint 12">

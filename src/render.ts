@@ -35,6 +35,14 @@ export const loadComponents = async (
   return { code, components: mergeUserComponents(mod) };
 };
 
+/** Components named by `config.componentsPath` — an empty map when unset. */
+export const loadUserComponents = async (
+  config: ResolvedConfig
+): Promise<LoadedComponents> =>
+  config.componentsPath === undefined
+    ? { components: {} }
+    : await loadComponents(config.componentsPath);
+
 /** Read all of our own shipped JS so Tailwind can scan built-in classes.
  *  Memoized: package sources don't change within a process (serve rebuilds
  *  would otherwise rescan dist+src on every keystroke). */
@@ -167,10 +175,7 @@ export const render = async (
   const filePath = opts.filePath ?? path.join(dir, "document.mdx");
   const config: ResolvedConfig = await loadConfig(dir);
 
-  const user =
-    config.componentsPath === undefined
-      ? { components: {} }
-      : await loadComponents(config.componentsPath);
+  const user = await loadUserComponents(config);
 
   // hasOwn, not `in`: prototype names ("toString", "constructor") are not
   // catalog collisions.

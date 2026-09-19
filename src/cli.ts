@@ -8,7 +8,7 @@ import { catalogEntries, formatCatalog, CONVENTIONS } from "./catalog.js";
 import { loadConfig } from "./config.js";
 import { formatError, parseErrorFormat } from "./format-error.js";
 import { installSkill } from "./init.js";
-import { loadComponents, render, renderFile } from "./render.js";
+import { loadUserComponents, render, renderFile } from "./render.js";
 import { serve, serveSource } from "./serve.js";
 import { builtinComponents } from "./ui/index.js";
 
@@ -134,10 +134,7 @@ cli
     try {
       const dir = path.resolve(opts.dir ?? process.cwd());
       const config = await loadConfig(dir);
-      const user =
-        config.componentsPath === undefined
-          ? { components: {} }
-          : await loadComponents(config.componentsPath);
+      const user = await loadUserComponents(config);
       const entries = catalogEntries(user.components);
       if (opts.json === true) {
         console.log(

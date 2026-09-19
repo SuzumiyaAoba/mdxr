@@ -2,16 +2,18 @@ import { isValidElement } from "react";
 import type { ReactElement, ReactNode } from "react";
 import * as v from "valibot";
 
+import { formatAnswerSheet } from "../ask-sheet.js";
+import type { SheetEntry } from "../ask-sheet.js";
 import type { DocProps } from "../define.js";
 import { defineComponent, flattenChildren, textOf } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { Choice, Question, QUESTION_TYPES } from "./ask-question.js";
 import type { QuestionType } from "./ask-question.js";
 import { attrTrue } from "./attrs.js";
-import { PANEL_CLS } from "./bits.js";
+import { ACTION_BUTTON_CLS, CopyFeedback, PANEL_CLS } from "./bits.js";
 import { isEl, propOf } from "./children.js";
 import { Icon } from "./icon.js";
-import { BORDER_CLS, TEXT } from "./tones.js";
+import { BORDER_CLS, DIVIDE_CLS, TEXT } from "./tones.js";
 
 export { Choice, Question, QUESTION_TYPES } from "./ask-question.js";
 export type { QuestionType } from "./ask-question.js";
@@ -104,27 +106,25 @@ const collectQuestions = (node: ReactNode, out: QuestionEl[]): void => {
   }
 };
 
-// askMarkdown for the initial DOM: `- **label**: answer` under `# title`.
+// askMarkdown for the initial DOM — the client's formatter (ask-sheet.ts)
+// applied to the untouched default answers.
 const answerSheet = (title: unknown, children: ReactNode): string => {
   const questions: QuestionEl[] = [];
   collectQuestions(children, questions);
-  const lines: string[] = [];
+  const entries: SheetEntry[] = [];
   for (const q of questions) {
-    const answer = defaultAnswer(q).replaceAll("\n", "\n  ");
     const rawLabel = nonEmpty(propOf(q, "label"))
       ? propOf(q, "label")
       : propOf(q, "name");
-    const label = (typeof rawLabel === "string" ? rawLabel : "")
-      .replaceAll(/\s+/gu, " ")
-      .trim()
-      .replaceAll("\\", "\\\\")
-      .replaceAll("*", "\\*");
-    lines.push(`- **${label}**:${answer === "" ? "" : ` ${answer}`}`);
+    entries.push({
+      answer: defaultAnswer(q),
+      label: typeof rawLabel === "string" ? rawLabel : "",
+    });
   }
-  const t = (nonEmpty(title) ? title : "Answers")
-    .replaceAll(/\s+/gu, " ")
-    .trim();
-  return `# ${t === "" ? "Answers" : t}\n\n${lines.length === 0 ? "(no questions)" : lines.join("\n")}`;
+  return formatAnswerSheet(
+    typeof title === "string" ? title : undefined,
+    entries
+  );
 };
 
 /**
@@ -164,9 +164,7 @@ export const Ask = defineComponent(
           <p className={`mt-1 text-xs ${TEXT.muted}`}>{description}</p>
         ) : null}
       </div>
-      <div className="divide-y divide-neutral-100 dark:divide-neutral-800/70">
-        {children}
-      </div>
+      <div className={DIVIDE_CLS}>{children}</div>
       <div className={`border-t ${BORDER_CLS}`}>
         <div
           className={`flex items-center gap-1.5 px-4 pt-2.5 text-xs font-medium ${TEXT.faint}`}
@@ -188,33 +186,19 @@ export const Ask = defineComponent(
           Updates live as you answer — copy or save it.
         </span>
         <div className="flex shrink-0 items-center gap-2">
-          <button
-            className="inline-flex cursor-pointer items-center rounded-md border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium text-neutral-700 transition-all hover:bg-neutral-100 active:translate-y-px dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
-            data-ask-copy
-            type="button"
-          >
-            <span className="mdxr-copy-idle inline-flex items-center gap-1.5">
-              <Icon className="h-3.5 w-3.5" name="lucide:clipboard-list" />
-              Copy answers
-            </span>
-            <span className="mdxr-copy-done hidden items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-              <Icon className="h-3.5 w-3.5" name="lucide:check" />
-              Copied
-            </span>
+          <button className={ACTION_BUTTON_CLS} data-ask-copy type="button">
+            <CopyFeedback
+              done="Copied"
+              icon="lucide:clipboard-list"
+              label="Copy answers"
+            />
           </button>
-          <button
-            className="inline-flex cursor-pointer items-center rounded-md border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium text-neutral-700 transition-all hover:bg-neutral-100 active:translate-y-px dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
-            data-ask-save
-            type="button"
-          >
-            <span className="mdxr-copy-idle inline-flex items-center gap-1.5">
-              <Icon className="h-3.5 w-3.5" name="lucide:download" />
-              Save .md
-            </span>
-            <span className="mdxr-copy-done hidden items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-              <Icon className="h-3.5 w-3.5" name="lucide:check" />
-              Saved
-            </span>
+          <button className={ACTION_BUTTON_CLS} data-ask-save type="button">
+            <CopyFeedback
+              done="Saved"
+              icon="lucide:download"
+              label="Save .md"
+            />
           </button>
         </div>
       </div>

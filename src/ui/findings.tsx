@@ -1,6 +1,8 @@
 import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
+import { isOneOf } from "../guards.js";
+import { TITLE_PROP } from "./attrs.js";
 import { CountedList, IndexedCard, Pill } from "./bits.js";
 import { useChildIndex } from "./child-index.js";
 import { countByProp } from "./children.js";
@@ -9,8 +11,7 @@ import { TONE } from "./tones.js";
 export const CONFIDENCES = ["confirmed", "inferred", "unverified"] as const;
 export type Confidence = (typeof CONFIDENCES)[number];
 
-export const isConfidence = (x: unknown): x is Confidence =>
-  typeof x === "string" && (CONFIDENCES as readonly string[]).includes(x);
+export const isConfidence = isOneOf(CONFIDENCES);
 
 const CONF: Record<Confidence, { cls: string; icon: string; label: string }> = {
   confirmed: {
@@ -62,9 +63,7 @@ export const Findings = defineComponent(
   {
     description:
       "発見事項リストのコンテナ。<Finding> を並べ、confidence 別の件数サマリを上部に表示",
-    schema: v.looseObject({
-      title: v.optional(v.string()),
-    }),
+    schema: v.looseObject(TITLE_PROP),
   },
   ({ title, children }) => (
     <CountedList

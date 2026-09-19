@@ -20,6 +20,7 @@ import { render } from "../src/render.js";
 import { buildCss } from "../src/tailwind.js";
 import { builtinComponents } from "../src/ui/index.js";
 import { PlanHeader } from "../src/ui/plan.js";
+import { renderDoc } from "./helpers.js";
 
 const tmpDirs: string[] = [];
 
@@ -37,9 +38,8 @@ const cleanTmpDirs = async (): Promise<void> => {
   );
 };
 
-// Static markup for substring assertions — see render.test.ts's helper.
-const ssr = async (src: string) =>
-  await mdxToHtml(src, builtinComponents, "document.mdx", { hydrate: false });
+// Static markup for substring assertions — see tests/helpers.ts.
+const ssr = renderDoc;
 
 describe("remarkNoJs attribute expressions", () => {
   it("rejects expression attribute values prop={expr}", async () => {

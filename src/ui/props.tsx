@@ -2,9 +2,9 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
-import { attrTrue } from "./attrs.js";
+import { attrTrue, BOOLISH_PROP } from "./attrs.js";
 import { CaptionBar, Panel } from "./bits.js";
-import { BORDER_CLS, TEXT, TRIM_CLS } from "./tones.js";
+import { BORDER_CLS, DIVIDE_CLS, TEXT, TRIM_CLS } from "./tones.js";
 
 export const Props = defineComponent(
   {
@@ -30,9 +30,7 @@ export const Props = defineComponent(
             <th className="py-2 pr-4 pl-3 font-medium">Description</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800/60">
-          {children}
-        </tbody>
+        <tbody className={DIVIDE_CLS}>{children}</tbody>
       </table>
     </Panel>
   )
@@ -47,7 +45,7 @@ export const Prop = defineComponent(
     schema: v.looseObject({
       default: v.optional(v.string()),
       name: v.string(),
-      required: v.optional(v.union([v.boolean(), v.string()])),
+      required: BOOLISH_PROP,
       type: v.optional(v.string()),
     }),
   },

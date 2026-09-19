@@ -1,15 +1,16 @@
 import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
+import { NUMISH } from "./attrs.js";
 
 export const Summary = defineComponent(
   {
     description:
       "進捗バー。done/total は文字列でもよい (MDX の属性は文字列のため)",
     schema: v.looseObject({
-      done: v.optional(v.union([v.string(), v.number()]), "0"),
+      done: v.optional(NUMISH, "0"),
       label: v.optional(v.string()),
-      total: v.optional(v.union([v.string(), v.number()]), "0"),
+      total: v.optional(NUMISH, "0"),
     }),
   },
   ({ done, total, label }) => {

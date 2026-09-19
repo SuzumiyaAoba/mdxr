@@ -11,7 +11,7 @@ import { DiffView } from "./diff.js";
 import { fileIcon } from "./file-icon.js";
 import { Icon } from "./icon.js";
 import { TERMINAL_LANGS, Transcript } from "./terminal.js";
-import { BORDER_CLS } from "./tones.js";
+import { BORDER_CLS, LINK_CLS } from "./tones.js";
 
 /** "src/x.ts:40-52" → { path: "src/x.ts", line: "40" }; labels stay untouched. */
 const splitFileLine = (filename: string): { line?: string; path: string } => {
@@ -48,7 +48,7 @@ const CodeHeader = (props: {
   return (
     <CaptionBar className="flex items-center justify-between">
       <MaybeLink
-        className="inline-flex items-center gap-1.5 font-mono text-inherit no-underline hover:underline"
+        className={`inline-flex items-center gap-1.5 font-mono ${LINK_CLS}`}
         href={link}
       >
         {label}

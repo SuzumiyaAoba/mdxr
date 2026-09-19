@@ -1,0 +1,126 @@
+/**
+ * User-module import scanning: which names an importer pulls from
+ * `mdxr`/`mdxr/components`, and which valibot properties it accesses through
+ * an imported `v` alias. The virtual runtime module generated for each
+ * importer contains only what it requests — a full-surface module would
+ * drag the whole catalog into every hydration bundle.
+ */
+
+import { readFile } from "node:fs/promises";
+
+export interface MdxrImports {
+  /** Named imports the file requests, or `"all"` when it needs the whole API. */
+  names: Set<string> | "all";
+  /**
+   * Properties accessed on the imported `v`, or `"all"` when `v` escapes
+   * (bare use, re-export, dynamic access) so the whole namespace is needed.
+   * `null` when `v` is not imported.
+   */
+  vProps: Set<string> | "all" | null;
+}
+
+/**
+ * Properties accessed on `alias` (`v`'s local name) — or `"all"` when the
+ * namespace escapes (bare use, `alias[key]`, spread, re-export) and the full
+ * valibot namespace must be shipped.
+ */
+const scanVProps = (stripped: string, alias: string): Set<string> | "all" => {
+  const esc = alias.replaceAll(/[$()*+.?[\\\]^{|}]/gu, "\\$&");
+  const access = new RegExp(
+    `\\b${esc}\\s*\\?\\.\\s*(\\w+)|\\b${esc}\\s*\\.\\s*(\\w+)`,
+    "gu"
+  );
+  const props = new Set<string>();
+  for (const use of stripped.matchAll(access)) {
+    const prop = use[1] ?? use[2];
+    if (prop !== undefined) {
+      props.add(prop);
+    }
+  }
+  const leftover = stripped.replaceAll(access, "");
+  return new RegExp(`\\b${esc}\\b`, "u").test(leftover) ? "all" : props;
+};
+
+/**
+ * `/* … *\/` and `// …` are legal inside a multiline import clause, and a
+ * name polluted with comment text would silently fail the surface check and
+ * kill the hydration build. Clauses never contain string literals, so a
+ * regex strip is safe here.
+ */
+const stripComments = (s: string): string =>
+  s.replaceAll(/\/\*[\s\S]*?\*\//gu, "").replaceAll(/\/\/[^\n]*/gu, "");
+
+/** Parse `{ a, b as c, type T }` import specifiers into names + `v` aliases. */
+const parseClause = (
+  clause: string,
+  names: Set<string>,
+  vAliases: string[]
+): void => {
+  for (const part of stripComments(clause).slice(1, -1).split(",")) {
+    const spec = part.trim().replace(/^type\s+/u, "");
+    const [imported, local] = spec.split(/\s+as\s+/u).map((s) => s?.trim());
+    if (imported === undefined || imported === "") {
+      continue;
+    }
+    names.add(imported);
+    if (imported === "v") {
+      vAliases.push(local ?? "v");
+    }
+  }
+};
+
+/**
+ * Which names `importer` pulls from `mdxr`/`mdxr/components`, extracted with a
+ * regex over its source. `names`/`vProps` are `"all"` for namespace, default,
+ * bare, or dynamic imports and for uninspectable importers — the fallback
+ * keeps semantics correct at the cost of emitting every catalog re-export.
+ */
+export const scanMdxrImports = async (
+  importer: string
+): Promise<MdxrImports> => {
+  let source: string;
+  try {
+    source = await readFile(importer, "utf-8");
+  } catch {
+    return { names: "all", vProps: "all" };
+  }
+  const names = new Set<string>();
+  const vAliases: string[] = [];
+  // `\s*` not `\s+`: `import{v}from"mdxr"` is legal and must still register.
+  const fromRe =
+    /(?:import|export)\s*(?!type\b)(?<clause>[^;"']*?)\s*from\s*["']mdxr(?:\/components)?["']/gu;
+  let stripped = source;
+  for (const m of source.matchAll(fromRe)) {
+    const clause = m.groups?.clause ?? "";
+    stripped = stripped.replace(m[0], "");
+    if (!clause.startsWith("{")) {
+      return { names: "all", vProps: "all" };
+    }
+    parseClause(clause, names, vAliases);
+  }
+  // Type-only imports don't run, but a leftover `import type { v }` would
+  // still trip the `\bv\b` leftover scan and force-ship all of valibot.
+  stripped = stripped.replaceAll(
+    /(?:import|export)\s+type\s[^;]*?(?:;|$)/gmu,
+    ""
+  );
+  if (
+    /import\s+["']mdxr(?:\/components)?["']/u.test(source) ||
+    /import\s*\(\s*["']mdxr(?:\/components)?["']/u.test(source)
+  ) {
+    return { names: "all", vProps: "all" };
+  }
+  let vProps: Set<string> | "all" | null = null;
+  for (const alias of vAliases) {
+    const props = scanVProps(stripped, alias);
+    if (props === "all") {
+      vProps = "all";
+      break;
+    }
+    vProps = vProps === null ? props : new Set([...vProps, ...props]);
+  }
+  return {
+    names,
+    vProps: vAliases.length === 0 ? null : (vProps ?? new Set()),
+  };
+};

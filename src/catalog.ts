@@ -81,6 +81,17 @@ const propsOf = (schema: unknown): Record<string, PropInfo> => {
   return out;
 };
 
+const entryOf = (
+  name: string,
+  comp: ComponentMap[string],
+  source: CatalogEntry["source"]
+): CatalogEntry => ({
+  description: comp.__mdxr?.description,
+  name,
+  props: propsOf(comp.__mdxr?.schema),
+  source,
+});
+
 export const catalogEntries = (project: ComponentMap = {}): CatalogEntry[] => {
   const entries: CatalogEntry[] = [];
   for (const [name, comp] of Object.entries(builtinComponents)) {
@@ -94,23 +105,12 @@ export const catalogEntries = (project: ComponentMap = {}): CatalogEntry[] => {
     // count as overrides via the prototype chain.
     const overridden = Object.hasOwn(project, name);
     const shown = overridden ? (project[name] ?? comp) : comp;
-    entries.push({
-      description: shown.__mdxr?.description,
-      name,
-      props: propsOf(shown.__mdxr?.schema),
-      source: overridden ? "project" : "builtin",
-    });
+    entries.push(entryOf(name, shown, overridden ? "project" : "builtin"));
   }
   for (const [name, comp] of Object.entries(project)) {
-    if (Object.hasOwn(builtinComponents, name)) {
-      continue;
+    if (!Object.hasOwn(builtinComponents, name)) {
+      entries.push(entryOf(name, comp, "project"));
     }
-    entries.push({
-      description: comp.__mdxr?.description,
-      name,
-      props: propsOf(comp.__mdxr?.schema),
-      source: "project",
-    });
   }
   return entries;
 };
@@ -142,6 +142,10 @@ export const CONVENTIONS = [
     syntax: ':::graph{title="..." direction="right"}',
   },
   { result: "Waterfall container (timing bars)", syntax: ":::waterfall" },
+  {
+    result: "Gantt container (date-based schedule)",
+    syntax: ':::gantt{title="..."}',
+  },
   { result: "Matrix container (comparison grid)", syntax: ":::matrix" },
   { result: "Timeline", syntax: ':::timeline{title="..."}' },
   { result: "table of contents (auto from headings)", syntax: ":::toc" },

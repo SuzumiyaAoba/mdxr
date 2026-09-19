@@ -1,14 +1,10 @@
 import * as v from "valibot";
 
 import { defineComponent, flattenChildren } from "../define.js";
-import { nonEmpty } from "../guards.js";
-import { attrTrue } from "./attrs.js";
+import { attrTrue, BOOLISH_PROP } from "./attrs.js";
 import { isEl, propOf } from "./children.js";
-import { Due } from "./due.js";
-import { EFFORT_SIZES, Effort } from "./effort.js";
+import { CHIP_PROPS, ChipRow } from "./chips.js";
 import { Icon } from "./icon.js";
-import { Owner } from "./owner.js";
-import { PRIORITY_LEVELS, Priority } from "./priority.js";
 import {
   isStatus,
   STATUS_ICON_CLS,
@@ -24,40 +20,23 @@ export const Step = defineComponent(
     description:
       "単一の手順。status は todo|doing|done|blocked。owner/effort/priority/due でチップを付けられる",
     schema: v.looseObject({
-      due: v.optional(v.string()),
-      effort: v.optional(v.picklist(EFFORT_SIZES)),
-      owner: v.optional(v.string()),
-      priority: v.optional(v.picklist(PRIORITY_LEVELS)),
+      ...CHIP_PROPS,
       status: v.optional(v.picklist(STATUSES), "todo"),
     }),
   },
-  ({ status, owner, effort, priority, due, children }) => {
-    const hasChips =
-      priority !== undefined ||
-      effort !== undefined ||
-      nonEmpty(owner) ||
-      nonEmpty(due);
-    return (
-      <div className="flex gap-3">
-        <Icon
-          className={`mt-1 h-4.5 w-4.5 shrink-0 ${STATUS_ICON_CLS[status]}`}
-          label={status}
-          name={STATUS_ICONS[status]}
-        />
-        <div className="min-w-0 flex-1">
-          <div className={TRIM_CLS}>{children}</div>
-          {hasChips ? (
-            <div className="mt-2 flex flex-wrap items-center gap-1.5">
-              {priority === undefined ? null : <Priority level={priority} />}
-              {effort === undefined ? null : <Effort size={effort} />}
-              {nonEmpty(owner) ? <Owner name={owner} /> : null}
-              {nonEmpty(due) ? <Due date={due} /> : null}
-            </div>
-          ) : null}
-        </div>
+  ({ status, owner, effort, priority, due, children }) => (
+    <div className="flex gap-3">
+      <Icon
+        className={`mt-1 h-4.5 w-4.5 shrink-0 ${STATUS_ICON_CLS[status]}`}
+        label={status}
+        name={STATUS_ICONS[status]}
+      />
+      <div className="min-w-0 flex-1">
+        <div className={TRIM_CLS}>{children}</div>
+        <ChipRow due={due} effort={effort} owner={owner} priority={priority} />
       </div>
-    );
-  }
+    </div>
+  )
 );
 
 /** Resolve a child's effective status — only `<Step>` elements count. */
@@ -74,7 +53,7 @@ export const Steps = defineComponent(
     description:
       "手順リストのコンテナ。<Step> を並べる。progress で自動進捗バーを表示",
     schema: v.looseObject({
-      progress: v.optional(v.union([v.boolean(), v.string()])),
+      progress: BOOLISH_PROP,
     }),
   },
   ({ progress, children }) => {

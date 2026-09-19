@@ -25,6 +25,19 @@ describe(clientJs, () => {
     expect(js).toContain("data-mdxr-theme");
   });
 
+  it("wires the board interactions (drag, move, copy)", async () => {
+    const js = await clientJs();
+    for (const s of [
+      "data-board-card",
+      "data-board-lane",
+      "data-board-move",
+      "data-board-copy",
+      "dragstart",
+    ]) {
+      expect(js).toContain(s);
+    }
+  });
+
   it("is memoized", async () => {
     await expect(clientJs()).resolves.toBe(await clientJs());
   });

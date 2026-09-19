@@ -2,7 +2,7 @@ import type { Preview } from "@storybook/react-vite";
 import { useEffect } from "react";
 
 import { BASE_CSS } from "../src/assets/css.js";
-import { handleDocEvent } from "../src/client/doc-events.js";
+import { handleDocEvent, syncBoards } from "../src/client/doc-events.js";
 import { enhanceRenderedBlocks } from "./enhance.js";
 
 import "./preview.css";
@@ -14,9 +14,17 @@ if (typeof document !== "undefined") {
   style.textContent = BASE_CSS;
   document.head.append(style);
   // Rendered documents inline these listeners via the client bundle.
-  document.addEventListener("click", handleDocEvent);
-  document.addEventListener("input", handleDocEvent);
-  document.addEventListener("change", handleDocEvent);
+  for (const type of [
+    "click",
+    "input",
+    "change",
+    "dragstart",
+    "dragover",
+    "drop",
+    "dragend",
+  ]) {
+    document.addEventListener(type, handleDocEvent);
+  }
 }
 
 const ThemeSync = ({ dark }: { dark: boolean }): null => {
@@ -34,6 +42,8 @@ const ThemeSync = ({ dark }: { dark: boolean }): null => {
 const DocumentEnhancements = (): null => {
   useEffect(() => {
     void enhanceRenderedBlocks(document);
+    // Board move-button state is client-side; resync per story commit.
+    syncBoards(document);
   });
   return null;
 };

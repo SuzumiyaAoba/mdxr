@@ -12,7 +12,7 @@ import {
 } from "./bits.js";
 import { fileIcon } from "./file-icon.js";
 import { useFileLink } from "./file-link.js";
-import { MONO_CLS, TEXT } from "./tones.js";
+import { LINK_CLS, MONO_CLS, TEXT } from "./tones.js";
 
 export const CHANGE_KINDS = ["add", "modify", "delete", "rename"] as const;
 export type ChangeKind = (typeof CHANGE_KINDS)[number];
@@ -79,10 +79,7 @@ export const Change = defineComponent(
           {k.label}
         </Tag>
         <RowIcon name={fileIcon(nonEmpty(to) ? to : path)} />
-        <MaybeLink
-          className="text-inherit no-underline hover:underline"
-          href={link}
-        >
+        <MaybeLink className={LINK_CLS} href={link}>
           {label}
         </MaybeLink>
         <RowNote>{children}</RowNote>

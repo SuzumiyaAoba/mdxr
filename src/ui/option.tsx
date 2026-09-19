@@ -2,8 +2,8 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
-import { Pill } from "./bits.js";
-import { BORDER_CLS, TONE, TRIM_CLS } from "./tones.js";
+import { Pill, TrimBody } from "./bits.js";
+import { BORDER_CLS, TONE } from "./tones.js";
 
 export const OPTION_STATUSES = [
   "considered",
@@ -57,9 +57,7 @@ export const Option = defineComponent(
             {s.label}
           </Pill>
         </div>
-        {children === undefined ? null : (
-          <div className={`mt-1.5 text-sm ${TRIM_CLS}`}>{children}</div>
-        )}
+        <TrimBody className="mt-1.5 text-sm">{children}</TrimBody>
       </div>
     );
   }

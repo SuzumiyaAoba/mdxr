@@ -3,17 +3,12 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { mdxToHtml } from "../src/mdx.js";
-import { builtinComponents } from "../src/ui/index.js";
+import { renderDoc } from "./helpers.js";
 
-// Assertions match against renderToStaticMarkup output — hydrated docs
-// render with renderToString instead, which emits `<!-- -->` text-boundary
-// comments that break plain substring checks.
-const render = async (src: string) =>
-  await mdxToHtml(src, builtinComponents, "document.mdx", { hydrate: false });
+const render = renderDoc;
 
 /** A filePath inside tests/ so <CodeFile> resolves fixtures/ relatively. */
-const renderAt = async (src: string, docPath: string) =>
-  await mdxToHtml(src, builtinComponents, docPath, { hydrate: false });
+const renderAt = renderDoc;
 
 const fixtureDoc = fileURLToPath(new URL("fixtures/doc.mdx", import.meta.url));
 
@@ -1060,6 +1055,53 @@ describe(mdxToHtml, () => {
     expect(body).toContain("50ms");
   });
 
+  it("renders a Gantt with positioned task bars and a milestone", async () => {
+    const { body } = await render(
+      '<Gantt title="release"><Task name="impl" start="2026-09-01" end="2026-09-10" status="doing" progress="40" /><Task name="docs" start="2026-09-11" end="2026-09-20" /><Milestone name="v1" date="2026-09-20" /></Gantt>'
+    );
+    for (const s of [
+      "release",
+      "impl",
+      "docs",
+      "v1",
+      "left:0%",
+      "width:50%",
+      "left:50%",
+      "rotate-45",
+      "Sep 1–10",
+      "Sep 11–20",
+      "Sep 20",
+      "bg-sky-500",
+    ]) {
+      expect(body).toContain(s);
+    }
+  });
+
+  it("accepts :::gantt directives", async () => {
+    const { body } = await render(
+      ':::gantt{title="g"}\n<Task name="t" start="2026-10-01" end="2026-10-05" />\n:::'
+    );
+    expect(body).toContain("g");
+    expect(body).toContain("t");
+    expect(body).toContain("Oct 1–5");
+  });
+
+  it("honors Gantt start/end overrides and the today marker", async () => {
+    const { body } = await render(
+      '<Gantt start="2026-09-01" end="2026-09-30" today="2026-09-16"><Task name="t" start="2026-09-01" end="2026-09-10" /></Gantt>'
+    );
+    // day 15 of 30 → the today line sits at 50%
+    expect(body).toContain("bg-red-500/70");
+    expect(body).toContain("left:50%");
+  });
+
+  it('hides the Gantt today marker with today="false"', async () => {
+    const { body } = await render(
+      '<Gantt start="2026-09-01" end="2026-09-30" today="false"><Task name="t" start="2026-09-01" /></Gantt>'
+    );
+    expect(body).not.toContain("bg-red-500/70");
+  });
+
   it("renders a Board with lanes, counts, and card chips", async () => {
     const { body } = await render(
       '<Board><Lane title="Todo" status="todo"><BoardCard title="Write docs" priority="p1" owner="aoba" /></Lane><Lane title="Done" status="done"><BoardCard title="Ship" status="done" /></Lane></Board>'
@@ -1071,6 +1113,32 @@ describe(mdxToHtml, () => {
       "Ship",
       "aoba",
       ">1</span>",
+    ]) {
+      expect(body).toContain(s);
+    }
+  });
+
+  it("emits the board's interactive hooks (drag, move, copy)", async () => {
+    const { body } = await render(
+      '<Board title="Sprint"><Lane title="Todo" status="todo"><BoardCard title="Write docs" priority="p1" owner="aoba">some notes</BoardCard></Lane></Board>'
+    );
+    for (const s of [
+      'data-board=""',
+      'data-board-title="Sprint"',
+      'data-board-lane=""',
+      'data-lane-title="Todo"',
+      'data-lane-status="todo"',
+      'data-board-cards=""',
+      'data-board-card=""',
+      'draggable="true"',
+      'data-card-title="Write docs"',
+      'data-card-priority="p1"',
+      'data-card-owner="aoba"',
+      'data-card-text="some notes"',
+      'data-board-move="-1"',
+      'data-board-move="1"',
+      'data-board-copy=""',
+      "Copy markdown",
     ]) {
       expect(body).toContain(s);
     }

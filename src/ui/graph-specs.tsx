@@ -1,14 +1,14 @@
 import type { ReactElement, ReactNode } from "react";
 import * as v from "valibot";
 
-import { defineComponent, flattenChildren } from "../define.js";
+import { defineComponent, flattenChildren, parseProps } from "../define.js";
 import { nonEmpty } from "../guards.js";
-import { FILE_LINK_PROPS } from "./attrs.js";
+import { BOOLISH_PROP, FILE_LINK_PROPS } from "./attrs.js";
 import { isEl } from "./children.js";
 import { DEP_KINDS } from "./deps.js";
 import { fileIcon } from "./file-icon.js";
 import { hasIcon, Icon } from "./icon.js";
-import { STATUS_ICONS, STATUSES } from "./status-badge.js";
+import { STATUS_ICONS, STATUS_PROP } from "./status-badge.js";
 import { TEXT } from "./tones.js";
 
 /**
@@ -19,12 +19,12 @@ import { TEXT } from "./tones.js";
 
 export const NODE_SCHEMA = v.looseObject({
   ...FILE_LINK_PROPS,
-  external: v.optional(v.union([v.boolean(), v.string()])),
+  external: BOOLISH_PROP,
   icon: v.optional(v.string()),
   id: v.string(),
   label: v.optional(v.string()),
   note: v.optional(v.string()),
-  status: v.optional(v.picklist(STATUSES)),
+  status: STATUS_PROP,
 });
 
 export const EDGE_SCHEMA = v.looseObject({
@@ -78,24 +78,6 @@ export const Edge = defineComponent(
   )
 );
 
-const parseSpec = <S extends v.GenericSchema>(
-  schema: S,
-  props: unknown,
-  tag: string
-): v.InferOutput<S> => {
-  const r = v.safeParse(schema, props);
-  if (!r.success) {
-    const detail = r.issues
-      .map(
-        (i) =>
-          `${i.path?.map((p) => String(p.key)).join(".") ?? "props"}: ${i.message}`
-      )
-      .join("; ");
-    throw new Error(`Invalid props on <${tag}>: ${detail}`);
-  }
-  return r.output;
-};
-
 /** Splits children into <Node>/<Edge> specs and leftover content. */
 export const collectSpecs = (
   children: ReactNode
@@ -105,9 +87,9 @@ export const collectSpecs = (
   const rest: ReactNode[] = [];
   for (const child of flattenChildren(children)) {
     if (isEl(child, Node)) {
-      nodes.push(parseSpec(NODE_SCHEMA, child.props, "Node"));
+      nodes.push(parseProps(NODE_SCHEMA, child.props, "Node"));
     } else if (isEl(child, Edge)) {
-      edges.push(parseSpec(EDGE_SCHEMA, child.props, "Edge"));
+      edges.push(parseProps(EDGE_SCHEMA, child.props, "Edge"));
     } else {
       rest.push(child);
     }

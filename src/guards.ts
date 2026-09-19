@@ -27,6 +27,22 @@ export const nonEmpty = (v: unknown): v is string =>
 export const asString = (v: unknown): string | undefined =>
   typeof v === "string" ? v : undefined;
 
+/** Membership-guard factory: `isOneOf(STATUSES)` narrows to the list's union. */
+export const isOneOf =
+  <T extends string>(list: readonly T[]) =>
+  (x: unknown): x is T =>
+    typeof x === "string" && (list as readonly string[]).includes(x);
+
+/**
+ * Prototype-safe record lookup — `table[key]` only for own properties, so
+ * keys like "toString" or "constructor" can't leak members off `Object`'s
+ * prototype. Use wherever document-supplied strings index a table.
+ */
+export const own = <T>(
+  table: Readonly<Record<string, T>>,
+  key: string
+): T | undefined => (Object.hasOwn(table, key) ? table[key] : undefined);
+
 const SAFE_SCHEMES = new Set(["http", "https", "mailto", "tel"]);
 
 /**

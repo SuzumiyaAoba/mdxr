@@ -20,7 +20,7 @@ import type { EdgeSpec, NodeSpec } from "./graph-specs.js";
 import { collectSpecs } from "./graph-specs.js";
 import { hasIcon, Icon } from "./icon.js";
 import { STATUS_ICON_CLS, STATUS_ICONS } from "./status-badge.js";
-import { TEXT } from "./tones.js";
+import { CAPTION_TITLE_CLS, TEXT } from "./tones.js";
 
 export { Edge, Node } from "./graph-specs.js";
 
@@ -114,6 +114,18 @@ const GraphNode = ({
   );
 };
 
+/** Unfilled rounded stroke in the group's currentColor — edge body/arrowhead. */
+const StrokePath = ({ d }: { d: string }): ReactElement => (
+  <path
+    d={d}
+    fill="none"
+    stroke="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth={1.5}
+  />
+);
+
 /** Routed edge: smoothed path plus its arrowhead, tinted via EDGE_COLORS. */
 const EdgePath = ({
   e,
@@ -129,22 +141,8 @@ const EdgePath = ({
   const cls = EDGE_COLORS[e.kind ?? "imports"] ?? EDGE_COLORS.imports;
   return (
     <g className={cls}>
-      <path
-        d={smoothPath(pts)}
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.5}
-      />
-      <path
-        d={arrowPath(pts)}
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={1.5}
-      />
+      <StrokePath d={smoothPath(pts)} />
+      <StrokePath d={arrowPath(pts)} />
     </g>
   );
 };
@@ -229,7 +227,7 @@ export const Graph = defineComponent(
     return (
       <Panel>
         {nonEmpty(title) ? (
-          <CaptionBar className="flex items-center gap-2 font-medium">
+          <CaptionBar className={CAPTION_TITLE_CLS}>
             <Icon className="h-3.5 w-3.5" name="lucide:workflow" />
             {title}
           </CaptionBar>

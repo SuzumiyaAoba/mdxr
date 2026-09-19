@@ -1,8 +1,8 @@
 import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
+import { TrimBody } from "./bits.js";
 import { Icon } from "./icon.js";
-import { TRIM_CLS } from "./tones.js";
 
 export const CALLOUT_KINDS = [
   "note",
@@ -100,9 +100,7 @@ export const Callout = defineComponent(
             <span className="font-normal opacity-75">{title}</span>
           ) : null}
         </div>
-        {children === undefined ? null : (
-          <div className={`mt-1.5 ${TRIM_CLS}`}>{children}</div>
-        )}
+        <TrimBody className="mt-1.5">{children}</TrimBody>
       </aside>
     );
   }

@@ -85,6 +85,39 @@ export const CopyButton = (props: {
   </button>
 );
 
+/**
+ * Bordered secondary-button shape for labeled copy/save actions (Ask,
+ * Board). `transition-colors` only — `transition-all` would animate layout
+ * properties too.
+ */
+export const ACTION_BUTTON_CLS =
+  "inline-flex cursor-pointer items-center rounded-md border border-neutral-300 bg-white px-2.5 py-1 text-xs font-medium text-neutral-700 transition-colors hover:bg-neutral-100 active:translate-y-px dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700";
+
+/**
+ * Idle/done label pair inside a labeled action button. The
+ * `mdxr-copy-idle`/`mdxr-copy-done` classes are client-JS hooks — the
+ * document script toggles `.copied` on the parent button to swap them.
+ */
+export const CopyFeedback = (props: {
+  /** Done-state text (e.g. `Copied`, `Saved`). */
+  done: string;
+  /** Idle-state icon, e.g. `lucide:clipboard-list`. */
+  icon: string;
+  /** Idle-state text (e.g. `Copy answers`). */
+  label: string;
+}): ReactElement => (
+  <>
+    <span className="mdxr-copy-idle inline-flex items-center gap-1.5">
+      <Icon className="h-3.5 w-3.5" name={props.icon} />
+      {props.label}
+    </span>
+    <span className="mdxr-copy-done hidden items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+      <Icon className="h-3.5 w-3.5" name="lucide:check" />
+      {props.done}
+    </span>
+  </>
+);
+
 /** Round status/kind chip — icon + label on a `TONE` background. */
 export const Pill = (props: {
   children?: ReactNode;
@@ -152,6 +185,37 @@ export const ListPanel = (props: {
   );
 };
 
+/**
+ * Truncated name + optional muted sub-line — the label cell of chart rows
+ * (Waterfall spans, Gantt tasks/milestones).
+ */
+export const RowLabel = (props: {
+  name: ReactNode;
+  /** Faint second line (`owner · note`); empty/absent hides it. */
+  sub?: string;
+}): ReactElement => (
+  <div className="min-w-0">
+    <div className="truncate text-sm">{props.name}</div>
+    {nonEmpty(props.sub) ? (
+      <div className={`truncate text-[0.7rem] ${TEXT.faint}`}>{props.sub}</div>
+    ) : null}
+  </div>
+);
+
+/**
+ * Rotating disclosure chevron for tree-line `<details>` (Tree, Json).
+ * `mdxr-chev` is the CSS hook that spins it open — keep the name.
+ */
+export const FoldChev = (props: {
+  /** Non-conflicting extras, e.g. group-hover colors. */
+  className?: string;
+}): ReactElement => (
+  <Icon
+    className={`mdxr-chev h-3 w-3 shrink-0 self-center ${TEXT.faint} ${props.className ?? ""}`}
+    name="lucide:chevron-right"
+  />
+);
+
 /** Muted icon centered on a list row (Files/Deps/Changes/Search). */
 export const RowIcon = (props: {
   /** Non-conflicting extras. */
@@ -204,6 +268,21 @@ export const NumBadge = (props: { n: number }): ReactElement => (
 );
 
 /**
+ * Optional MDX body region — renders nothing without children and trims the
+ * outer margins of the first/last child (TRIM_CLS). `className` carries the
+ * spacing/text look, e.g. `mt-1.5 text-sm`.
+ */
+export const TrimBody = (props: {
+  children?: ReactNode;
+  className?: string;
+}): ReactElement | null =>
+  props.children === undefined ? null : (
+    <div className={`${TRIM_CLS} ${props.className ?? ""}`}>
+      {props.children}
+    </div>
+  );
+
+/**
  * Bordered card for counted list items (Finding, Hypothesis): index badge +
  * a pill slot + optional title + prose children.
  */
@@ -223,9 +302,7 @@ export const IndexedCard = (props: {
         <span className="text-sm font-medium">{props.title}</span>
       ) : null}
     </div>
-    {props.children === undefined ? null : (
-      <div className={`mt-1.5 text-sm ${TRIM_CLS}`}>{props.children}</div>
-    )}
+    <TrimBody className="mt-1.5 text-sm">{props.children}</TrimBody>
   </article>
 );
 

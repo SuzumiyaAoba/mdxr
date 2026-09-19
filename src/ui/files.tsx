@@ -1,8 +1,8 @@
 import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
-import { nonEmpty } from "../guards.js";
-import { FILE_LINK_PROPS } from "./attrs.js";
+import { nonEmpty, own } from "../guards.js";
+import { FILE_LINK_PROPS, TITLE_PROP } from "./attrs.js";
 import {
   ListPanel,
   ListRow,
@@ -14,7 +14,7 @@ import {
 } from "./bits.js";
 import { fileIcon } from "./file-icon.js";
 import { useFileLink } from "./file-link.js";
-import { MONO_CLS, TEXT } from "./tones.js";
+import { LINK_CLS, MONO_CLS, TEXT } from "./tones.js";
 
 export const FILE_KINDS = [
   "config",
@@ -66,9 +66,7 @@ export const Files = defineComponent(
   {
     description:
       "関連ファイル一覧のコンテナ。<File> を並べる。title でキャプションバー",
-    schema: v.looseObject({
-      title: v.optional(v.string()),
-    }),
+    schema: v.looseObject(TITLE_PROP),
   },
   ({ title, children }) => <ListPanel title={title}>{children}</ListPanel>
 );
@@ -84,11 +82,11 @@ export const File = defineComponent(
     }),
   },
   ({ path, lines, kind, href, children }) => {
-    // hasOwn: `kind` is a free-form string — "toString" would otherwise pull
+    // `own`: `kind` is a free-form string — "toString" would otherwise pull
     // a function off the prototype instead of the fallback styling.
     let r: { cls: string; icon: string } | undefined;
     if (nonEmpty(kind)) {
-      r = Object.hasOwn(KINDS, kind) ? KINDS[kind] : FALLBACK_KIND;
+      r = own(KINDS, kind) ?? FALLBACK_KIND;
     }
     const link = useFileLink(path, lines, href);
     const label = (
@@ -99,10 +97,7 @@ export const File = defineComponent(
     return (
       <ListRow>
         <RowIcon name={fileIcon(path)} />
-        <MaybeLink
-          className="text-inherit no-underline hover:underline"
-          href={link}
-        >
+        <MaybeLink className={LINK_CLS} href={link}>
           {label}
         </MaybeLink>
         {r === undefined ? null : (

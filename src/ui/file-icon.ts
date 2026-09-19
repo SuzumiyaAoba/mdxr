@@ -1,3 +1,4 @@
+import { own } from "../guards.js";
 import { hasIcon } from "./icon.js";
 
 /**
@@ -970,14 +971,9 @@ const DIR_NAMES: Record<string, string> = {
 const basename = (path: string): string =>
   (path.split(/[\\/]/u).pop() ?? path).trim().toLowerCase();
 
-/**
- * `table[key]` for own keys only — prototype members ("constructor",
- * "toString") are valid file/dir names but not icon keys.
- */
-const own = (table: Record<string, string>, key: string): string | undefined =>
-  Object.hasOwn(table, key) ? table[key] : undefined;
-
-/** Iconify name for a file path, picked from its name and extension. */
+/** Iconify name for a file path, picked from its name and extension.
+ * `own` guards every table lookup: prototype members ("constructor",
+ * "toString") are valid file names but not icon keys. */
 export const fileIcon = (path: string): string => {
   const base = basename(path);
   const named = own(FILE_NAMES, base);

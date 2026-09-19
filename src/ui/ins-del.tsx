@@ -2,6 +2,7 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { TITLE_PROP } from "./attrs.js";
 
 /**
  * Inline word-level edits for prose/config changes — the inline counterpart
@@ -11,9 +12,7 @@ export const Ins = defineComponent(
   {
     description:
       "挿入テキスト (インライン、緑+下線)。<Del> と対で before/after の差分を文やコード片に示す",
-    schema: v.looseObject({
-      title: v.optional(v.string()),
-    }),
+    schema: v.looseObject(TITLE_PROP),
   },
   ({ title, children }) => (
     <ins
@@ -29,9 +28,7 @@ export const Del = defineComponent(
   {
     description:
       "削除テキスト (インライン、赤+取り消し線)。<Ins> と対で before/after の差分を文やコード片に示す",
-    schema: v.looseObject({
-      title: v.optional(v.string()),
-    }),
+    schema: v.looseObject(TITLE_PROP),
   },
   ({ title, children }) => (
     <del

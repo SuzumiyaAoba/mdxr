@@ -2,12 +2,13 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { TITLE_PROP } from "./attrs.js";
 import { Section } from "./bits.js";
 import { Icon } from "./icon.js";
 import {
   STATUS_ICON_CLS,
   STATUS_ICONS,
-  STATUSES,
+  STATUS_PROP,
   StatusBadge,
 } from "./status-badge.js";
 import { TEXT } from "./tones.js";
@@ -15,9 +16,7 @@ import { TEXT } from "./tones.js";
 export const Timeline = defineComponent(
   {
     description: "時系列のイベント/マイルストーンリスト。<Event> を並べる",
-    schema: v.looseObject({
-      title: v.optional(v.string()),
-    }),
+    schema: v.looseObject(TITLE_PROP),
   },
   ({ title, children }) => (
     <Section title={title}>
@@ -34,7 +33,7 @@ export const Event = defineComponent(
       "タイムラインの1項目。date は必須、status は todo|doing|done|blocked",
     schema: v.looseObject({
       date: v.string(),
-      status: v.optional(v.picklist(STATUSES)),
+      status: STATUS_PROP,
       title: v.optional(v.string()),
     }),
   },

@@ -4,7 +4,7 @@ import * as v from "valibot";
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { Meta } from "./meta.js";
-import { STATUSES, StatusBadge } from "./status-badge.js";
+import { STATUS_PROP, StatusBadge } from "./status-badge.js";
 import { BORDER_CLS } from "./tones.js";
 
 interface PlanHeaderProps {
@@ -47,7 +47,7 @@ export const Plan = defineComponent(
     schema: v.looseObject({
       date: v.optional(v.string()),
       owner: v.optional(v.string()),
-      status: v.optional(v.picklist(STATUSES)),
+      status: STATUS_PROP,
       title: v.optional(v.string()),
       updated: v.optional(v.string()),
       version: v.optional(v.string()),

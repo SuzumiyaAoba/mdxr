@@ -3,10 +3,10 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
-import { attrTrue } from "./attrs.js";
+import { attrTrue, BOOLISH_PROP } from "./attrs.js";
 import { CaptionBar, ListPanel, ListRow, RowNote } from "./bits.js";
 import { Icon } from "./icon.js";
-import { MONO_CLS, TEXT, TONE, TRIM_CLS } from "./tones.js";
+import { CAPTION_TITLE_CLS, MONO_CLS, TEXT, TONE, TRIM_CLS } from "./tones.js";
 
 /** Tiny rounded chip (Deprecated/auth) inside an endpoint row. */
 const MINI_CHIP = `inline-flex shrink-0 items-center gap-1 rounded-full bg-neutral-100 px-1.5 py-px text-[0.65rem] font-medium ${TEXT.muted} dark:bg-neutral-800`;
@@ -40,7 +40,7 @@ export const Endpoint = defineComponent(
       "API エンドポイント1行。method は HTTP メソッド (大小無視、色付きチップ)、path は必須。auth に認可名 (admin|token …)、deprecated で打ち消し+ピル。<Endpoints> の base がパスに前置される。children は説明文",
     schema: v.looseObject({
       auth: v.optional(v.string()),
-      deprecated: v.optional(v.union([v.boolean(), v.string()])),
+      deprecated: BOOLISH_PROP,
       method: v.optional(
         v.pipe(v.string(), v.toUpperCase(), v.picklist(HTTP_METHODS)),
         "GET"
@@ -89,7 +89,7 @@ export const Endpoints = defineComponent(
   ({ title, base, children }) => (
     <ListPanel>
       {nonEmpty(title) || nonEmpty(base) ? (
-        <CaptionBar className="flex items-center gap-2 font-medium">
+        <CaptionBar className={CAPTION_TITLE_CLS}>
           <Icon className="h-3.5 w-3.5" name="lucide:route" />
           {nonEmpty(title) ? title : "Endpoints"}
           {nonEmpty(base) ? (

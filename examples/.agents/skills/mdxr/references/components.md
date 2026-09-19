@@ -29,6 +29,7 @@ This file is an index: each group lists what its components do and links to a de
 | `<Phase>` | Section heading with a status badge — `:::phase` |
 | `<Steps>` / `<Step>` | Status-aware task list with optional progress bar; owner/effort/priority/due chips |
 | `<Timeline>` / `<Event>` | Dated milestone rail — `:::timeline` |
+| `<Gantt>` / `<Task>` / `<Milestone>` | Date-based schedule chart — `:::gantt` |
 | `<Decision>` | ADR-lite decision record (one-liner → `:::decision` callout) |
 | `<Option>` | Alternative-comparison card (recommended/considered/rejected) |
 | `<Risk>` | Risk block — severity pill + mitigation line |
@@ -36,7 +37,7 @@ This file is an index: each group lists what its components do and links to a de
 | `<Stats>` / `<Stat>` | Metric card grid; `delta` colored by sign |
 | `<Priority>` `<Effort>` `<Due>` `<Owner>` | Inline chips (priority, T-shirt effort, deadline, person) |
 | `<Reqs>` / `<Req>` | Requirement / acceptance-criteria rows |
-| `<Board>` / `<Lane>` / `<BoardCard>` | Kanban board — lanes with status dots and card counts — `:::board` |
+| `<Board>` / `<Lane>` / `<BoardCard>` | Interactive kanban — lanes with status dots and card counts; cards drag between lanes, "Copy markdown" copies the updated `<Board>` markup — `:::board` |
 | `<Matrix>` | Comparison grid — nested list rows, `yes`/`no`/`partial`/`✓`/`✗`/`△` cells render as icons — `:::matrix` |
 | `<Summary>` | Progress bar |
 | `<StatusBadge>` | Standalone status pill |

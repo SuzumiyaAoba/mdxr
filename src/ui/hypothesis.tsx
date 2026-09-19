@@ -1,6 +1,8 @@
 import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
+import { isOneOf } from "../guards.js";
+import { TITLE_PROP } from "./attrs.js";
 import { CountedList, IndexedCard, Pill } from "./bits.js";
 import { useChildIndex } from "./child-index.js";
 import { countByProp } from "./children.js";
@@ -13,9 +15,7 @@ export const HYPOTHESIS_STATUSES = [
 ] as const;
 export type HypothesisStatus = (typeof HYPOTHESIS_STATUSES)[number];
 
-export const isHypothesisStatus = (x: unknown): x is HypothesisStatus =>
-  typeof x === "string" &&
-  (HYPOTHESIS_STATUSES as readonly string[]).includes(x);
+export const isHypothesisStatus = isOneOf(HYPOTHESIS_STATUSES);
 
 const STYLES: Record<
   HypothesisStatus,
@@ -70,9 +70,7 @@ export const Hypotheses = defineComponent(
   {
     description:
       "仮説リストのコンテナ。<Hypothesis> を並べ、status 別の件数サマリを上部に表示",
-    schema: v.looseObject({
-      title: v.optional(v.string()),
-    }),
+    schema: v.looseObject(TITLE_PROP),
   },
   ({ title, children }) => (
     <CountedList

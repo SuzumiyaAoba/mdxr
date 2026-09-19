@@ -4,11 +4,12 @@ import * as v from "valibot";
 
 import { defineComponent, flattenChildren, textOf } from "../define.js";
 import { nonEmpty } from "../guards.js";
-import { attrFalse } from "./attrs.js";
+import { attrFalse, BOOLISH_PROP } from "./attrs.js";
+import { FoldChev } from "./bits.js";
 import { isEl } from "./children.js";
 import { fileIcon, folderIcon } from "./file-icon.js";
 import { Icon } from "./icon.js";
-import { BORDER_CLS, TEXT } from "./tones.js";
+import { BORDER_CLS, DISCLOSURE_ROW_CLS, TEXT, TREE_ROW_CLS } from "./tones.js";
 
 type El = ReactElement<{ children?: ReactNode }>;
 
@@ -71,7 +72,7 @@ const Row = ({
   children?: ReactNode;
   depth: number;
 }): ReactElement => (
-  <div className="flex items-baseline gap-1.5 py-px">
+  <div className={TREE_ROW_CLS}>
     {depth > 0 ? <Tick /> : null}
     {children}
   </div>
@@ -194,12 +195,9 @@ const renderList = (
       <li className="relative">
         {depth > 0 ? <Rail last={last} /> : null}
         <details open={expanded && nested.length > 0}>
-          <summary className="group flex cursor-pointer items-baseline gap-1.5 py-px select-none">
+          <summary className={`group ${DISCLOSURE_ROW_CLS}`}>
             {depth > 0 ? <Tick /> : null}
-            <Icon
-              className={`mdxr-chev h-3 w-3 shrink-0 self-center ${TEXT.faint} group-hover:text-neutral-600 dark:group-hover:text-neutral-300`}
-              name="lucide:chevron-right"
-            />
+            <FoldChev className="group-hover:text-neutral-600 dark:group-hover:text-neutral-300" />
             {entry}
             {noteEl}
           </summary>
@@ -247,7 +245,7 @@ export const Tree = defineComponent(
     description:
       'ファイルツリー。子のネストしたリストを描画する。末尾 `/` または子を持つ項目はフォルダでクリックで折り畳める (JS 不要)。open="false" で全フォルダを初期折り畳み。`名前 — 注記` で注釈、`...` または `…` で省略プレースホルダ、`**太字**` でハイライト',
     schema: v.looseObject({
-      open: v.optional(v.union([v.boolean(), v.string()])),
+      open: BOOLISH_PROP,
       root: v.optional(v.string()),
     }),
   },

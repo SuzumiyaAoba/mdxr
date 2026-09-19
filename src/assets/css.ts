@@ -73,6 +73,45 @@ ul.contains-task-list { padding-left: 1.25rem; }
 .mdxr-ask [data-ask-copy].copied, .mdxr-ask [data-ask-save].copied {
   border-color: rgb(52 211 153 / 0.6);
 }
+/* Board: cards drag between lanes (and reorder within one). .mdxr-drag
+ * marks the card being held; .mdxr-drop-before (on a card) and
+ * .mdxr-drop-end (on the lane's card box) draw the insertion line;
+ * .mdxr-drop-lane outlines the target lane. The ‹ › move buttons stay
+ * visible at low opacity — they're the touch/keyboard path (HTML5 DnD
+ * never reaches touch browsers). */
+[data-board-card] { cursor: grab; }
+[data-board-card].mdxr-drag { cursor: grabbing; opacity: 0.4; }
+[data-board-card].mdxr-drop-before { box-shadow: 0 -2px 0 0 rgb(14 165 233); }
+[data-board-cards].mdxr-drop-end {
+  box-shadow: inset 0 -2px 0 0 rgb(14 165 233);
+  border-radius: 0.375rem;
+}
+[data-board-lane].mdxr-drop-lane {
+  outline: 2px dashed rgb(14 165 233 / 0.5);
+  outline-offset: -2px;
+}
+.mdxr-move {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 1.25rem; width: 1.25rem; border: 0; padding: 0;
+  border-radius: 0.25rem; background: transparent;
+  color: rgb(163 163 163); cursor: pointer; opacity: 0.6;
+  transition: opacity 0.15s ease, color 0.15s ease,
+    background-color 0.15s ease, transform 0.1s ease;
+}
+.mdxr-move:not(:disabled):hover {
+  opacity: 1; color: rgb(64 64 64); background: rgb(245 245 245);
+}
+.dark .mdxr-move:not(:disabled):hover {
+  color: rgb(212 212 212); background: rgb(38 38 38);
+}
+.mdxr-move:not(:disabled):active { transform: scale(0.85); }
+.mdxr-move:focus-visible {
+  outline: 2px solid rgb(14 165 233); outline-offset: 1px; opacity: 1;
+}
+.mdxr-move:disabled { opacity: 0.2; cursor: default; }
+@media print {
+  .mdxr-card-moves, .mdxr-board-tools, .mdxr-grip { display: none; }
+}
 @keyframes mdxr-pop {
   0% { transform: scale(0.3); opacity: 0; }
   70% { transform: scale(1.15); }
@@ -304,6 +343,7 @@ details[open] > summary .mdxr-chev { transform: rotate(90deg); }
   .mdxr-choice,
   .mdxr-mark,
   .mdxr-mark-box svg,
+  .mdxr-move,
   .mdxr-switch,
   .mdxr-switch::after,
   .mdxr-theme,
@@ -312,6 +352,7 @@ details[open] > summary .mdxr-chev { transform: rotate(90deg); }
   }
   .mdxr-copy:active { transform: none; }
   .mdxr-choice:active { transform: none; }
+  .mdxr-move:active { transform: none; }
   .mdxr-theme:active { transform: none; }
   .copied .mdxr-copy-done, .copy-failed { animation: none; }
   .mdxr-theme .mdxr-theme-i { animation: none; }

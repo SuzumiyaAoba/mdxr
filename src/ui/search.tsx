@@ -3,6 +3,7 @@ import * as v from "valibot";
 
 import { defineComponent, flattenChildren } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { NUMISH, TITLE_PROP } from "./attrs.js";
 import { ListPanel, ListRow, RowIcon, RowNote } from "./bits.js";
 import { isEl, propOf } from "./children.js";
 import { LOC_CLS, MONO_CLS, TONE } from "./tones.js";
@@ -32,7 +33,7 @@ export const Search = defineComponent(
     description:
       "検索クエリ1行。pattern=検索パターン（必須）、path=対象スコープ、tool=ツール名 (rg/grep 等)、hits=ヒット数（0 は no hits、省略可）。children は注記",
     schema: v.looseObject({
-      hits: v.optional(v.union([v.string(), v.number()])),
+      hits: v.optional(NUMISH),
       path: v.optional(v.string()),
       pattern: v.string(),
       tool: v.optional(v.string()),
@@ -98,9 +99,7 @@ export const Searches = defineComponent(
   {
     description:
       "検索クエリログのコンテナ。<Search> を並べる。title でキャプションバー、件数とヒット合計を上部に表示",
-    schema: v.looseObject({
-      title: v.optional(v.string()),
-    }),
+    schema: v.looseObject(TITLE_PROP),
   },
   ({ title, children }) => {
     const { count, hits } = summarizeSearches(children);

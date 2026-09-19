@@ -51,3 +51,23 @@ export const TRIM_CLS = "[&>*:first-child]:mt-0 [&>*:last-child]:mb-0";
 
 /** Standard neutral border — panels, cards, dividers (neutral-200/800). */
 export const BORDER_CLS = "border-neutral-200 dark:border-neutral-800";
+
+/** Inherit-color link that underlines on hover — chips/labels inside panels. */
+export const LINK_CLS = "text-inherit no-underline hover:underline";
+
+/** Indented tree-line row — Json nodes and file-Tree entries. */
+export const TREE_ROW_CLS = "flex items-baseline gap-1.5 py-px";
+
+/** Clickable inline fold row — `<summary>` of a tree-line <details> (Tree, Json). */
+export const DISCLOSURE_ROW_CLS =
+  "flex cursor-pointer items-baseline gap-1.5 py-px select-none";
+
+/** CaptionBar layout for icon+title headers (Graph/Gantt/Waterfall/Endpoints). */
+export const CAPTION_TITLE_CLS = "flex items-center gap-2 font-medium";
+
+/** Right-aligned mono digits in a titled caption (Gantt/Waterfall). */
+export const MONO_NUM_CLS = "font-mono font-normal tabular-nums";
+
+/** Soft inner divider rows inside panels (Ask questions, Matrix, Props). */
+export const DIVIDE_CLS =
+  "divide-y divide-neutral-100 dark:divide-neutral-800/60";

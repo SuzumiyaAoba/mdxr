@@ -3,6 +3,7 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { safeHref } from "../guards.js";
+import { NUMISH } from "./attrs.js";
 import { Icon } from "./icon.js";
 import { BORDER_CLS, TEXT } from "./tones.js";
 
@@ -104,7 +105,7 @@ const refChip = (
 const ghRefSchema = () =>
   v.looseObject({
     href: v.optional(v.string()),
-    number: v.union([v.string(), v.number()]),
+    number: NUMISH,
     repo: v.string(),
   });
 

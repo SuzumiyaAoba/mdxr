@@ -411,6 +411,24 @@ const diffHighlight = async (
 };
 
 /**
+ * The `data-diffhl` payload for a raw diff text — the Storybook counterpart of
+ * the rehype path, which component stories bypass (like `highlightToHtml` for
+ * ordinary fences). Undefined when the text doesn't parse as a structured diff
+ * or no row could be highlighted.
+ */
+export const diffHighlightJson = async (
+  text: string,
+  meta: string
+): Promise<string | undefined> => {
+  const files = parseDiff(text).filter((f) => f.raw.length > 0);
+  if (files.length === 0) {
+    return undefined;
+  }
+  const hl = await diffHighlight(files, meta);
+  return hl === undefined ? undefined : JSON.stringify(hl);
+};
+
+/**
  * Rehype plugin: replace the text inside `pre > code` with shiki's highlighted
  * line spans. The `pre`/`code` elements and their properties (language class,
  * `meta` from remarkCodeMeta) are kept so the `Pre` component's filename

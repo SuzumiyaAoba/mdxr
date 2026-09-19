@@ -1,8 +1,15 @@
+/// <reference types="vitest/config" />
+import path from "node:path";
+
+import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
+import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vite-plus";
 
 import oxfmtConfig from "./oxfmt.config";
 import oxlintConfig from "./oxlint.config";
 
+// The storybook project runs component tests in a real browser.
+// More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineConfig({
   fmt: oxfmtConfig,
   lint: oxlintConfig,
@@ -18,6 +25,30 @@ export default defineConfig({
     sourcemap: false,
   },
   test: {
-    include: ["tests/**/*.test.ts"],
+    projects: [
+      {
+        extends: true,
+        test: {
+          include: ["tests/**/*.test.ts"],
+        },
+      },
+      {
+        extends: true,
+        plugins: [
+          storybookTest({
+            configDir: path.join(import.meta.dirname, ".storybook"),
+          }),
+        ],
+        test: {
+          browser: {
+            enabled: true,
+            headless: true,
+            instances: [{ browser: "chromium" }],
+            provider: playwright({}),
+          },
+          name: "storybook",
+        },
+      },
+    ],
   },
 });

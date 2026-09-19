@@ -41,6 +41,10 @@ jobs:
       # full typecheck — keep a real tsc pass on every matrix leg.
       - run: pnpm typecheck
 
+      # The storybook Vitest project runs component tests in Chromium via
+      # @storybook/addon-vitest; browser binaries aren't part of pnpm install.
+      - run: pnpm exec playwright install --with-deps chromium
+
       - run: pnpm test
 
       - run: pnpm build

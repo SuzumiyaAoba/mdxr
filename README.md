@@ -28,13 +28,14 @@ Render an `.mdx` file (or stdin) to a standalone HTML file.
 mdxr render plan.mdx                 # → plan.html
 mdxr render plan.mdx -o out.html     # custom output path
 cat plan.mdx | mdxr render > out.html # stdin → stdout
+mdxr render plan.mdx --open          # also open plan.html in the default browser
 mdxr render plan.mdx --no-hydrate    # static HTML, no client bundle
 mdxr render plan.mdx --format json   # machine-readable errors
 ```
 
 ### `mdxr serve [file]`
 
-Preview a document in the browser with live reload (`-p, --port`, default `3737`).
+Preview a document in the browser with live reload (`-p, --port`, default `3737`; `--open` to launch the browser once serving).
 
 ### `mdxr catalog`
 

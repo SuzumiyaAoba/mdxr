@@ -4,6 +4,7 @@ import http from "node:http";
 import path from "node:path";
 
 import { formatError } from "./format-error.js";
+import { openInBrowser } from "./open.js";
 import type { RenderSourceOptions } from "./render.js";
 import { render, renderFile } from "./render.js";
 
@@ -254,6 +255,17 @@ const servePreview = async (
   return server;
 };
 
+/** Open a listening preview server's localhost URL in the default browser. */
+const openPreview = async (
+  server: http.Server,
+  port: number
+): Promise<void> => {
+  const address = server.address();
+  const boundPort =
+    typeof address === "object" && address !== null ? address.port : port;
+  await openInBrowser(`http://localhost:${boundPort}`);
+};
+
 /**
  * Wraps a render fn with dependency tracking: `deps` reads the paths the
  * last render reported via `onDependencies` (theme CSS + its imports), so
@@ -276,13 +288,23 @@ const trackDeps = (
   };
 };
 
+/** Options for {@link serve} and {@link serveSource}. */
+export interface ServeOptions extends Omit<
+  RenderSourceOptions,
+  "liveReload" | "onDependencies"
+> {
+  /** Open the preview URL in the default browser once the server is listening. */
+  open?: boolean;
+}
+
 /** Serve an .mdx file, rebuilding + live-reloading on changes in its directory. */
 export const serve = async (
   mdxPath: string,
-  port: number
+  port: number,
+  opts: Pick<ServeOptions, "open"> = {}
 ): Promise<http.Server> => {
   const abs = path.resolve(mdxPath);
-  return await servePreview(
+  const server = await servePreview(
     {
       label: mdxPath,
       ...trackDeps(
@@ -294,16 +316,20 @@ export const serve = async (
     },
     port
   );
+  if (opts.open === true) {
+    await openPreview(server, port);
+  }
+  return server;
 };
 
 /** Serve MDX source passed directly (e.g. piped via stdin). */
 export const serveSource = async (
   source: string,
   port: number,
-  opts: Omit<RenderSourceOptions, "liveReload" | "onDependencies"> = {}
+  opts: ServeOptions = {}
 ): Promise<http.Server> => {
   const dir = path.resolve(opts.dir ?? process.cwd());
-  return await servePreview(
+  const server = await servePreview(
     {
       label: opts.filePath ?? "stdin",
       ...trackDeps(
@@ -319,4 +345,8 @@ export const serveSource = async (
     },
     port
   );
+  if (opts.open === true) {
+    await openPreview(server, port);
+  }
+  return server;
 };

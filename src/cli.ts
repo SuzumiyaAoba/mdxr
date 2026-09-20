@@ -8,6 +8,7 @@ import { catalogEntries, formatCatalog, CONVENTIONS } from "./catalog.js";
 import { loadConfig } from "./config.js";
 import { formatError, parseErrorFormat } from "./format-error.js";
 import { installSkill } from "./init.js";
+import { openInBrowser } from "./open.js";
 import { loadUserComponents, render, renderFile } from "./render.js";
 import { serve, serveSource } from "./serve.js";
 import { builtinComponents } from "./ui/index.js";
@@ -24,6 +25,21 @@ const requireStdinSource = (): void => {
   if (process.stdin.isTTY) {
     throw new Error("no input: pass an .mdx file or pipe MDX source via stdin");
   }
+};
+
+/**
+ * Write the rendered HTML to stdout — no status line, stdout carries the
+ * document itself. Downstream pipes (e.g. `| head`) may close early, so
+ * EPIPE is not an error.
+ */
+const writeStdout = (html: string): void => {
+  process.stdout.on("error", (err: NodeJS.ErrnoException) => {
+    if (err.code === "EPIPE") {
+      process.exit(0);
+    }
+    throw err;
+  });
+  process.stdout.write(html);
 };
 
 const fail = (err: unknown, json: boolean): never => {
@@ -48,10 +64,16 @@ cli
     "--no-hydrate",
     "Emit static HTML without the client hydration bundle"
   )
+  .option("--open", "Open the rendered file in the default browser")
   .action(
     async (
       file: string | undefined,
-      opts: { out?: string; format?: string; hydrate?: boolean }
+      opts: {
+        format?: string;
+        hydrate?: boolean;
+        open?: boolean;
+        out?: string;
+      }
     ) => {
       const json = opts.format === "json";
       try {
@@ -59,6 +81,19 @@ cli
         const fromStdin = file === undefined || file === "-";
         if (fromStdin) {
           requireStdinSource();
+        }
+
+        const out =
+          opts.out === "-"
+            ? undefined
+            : (opts.out ??
+              (fromStdin
+                ? undefined
+                : `${file.replace(/\.(?:mdx|md)$/u, "")}.html`));
+
+        if (out === undefined && opts.open === true) {
+          // The browser needs a file to open — stdout carries the HTML.
+          throw new Error("--open requires an output file");
         }
 
         const html = fromStdin
@@ -69,27 +104,14 @@ cli
             })
           : await renderFile(file, { hydrate: opts.hydrate });
 
-        const out =
-          opts.out === "-"
-            ? undefined
-            : (opts.out ??
-              (fromStdin
-                ? undefined
-                : `${file.replace(/\.(?:mdx|md)$/u, "")}.html`));
-
         if (out === undefined) {
-          // No status line: stdout carries the HTML itself. Downstream
-          // pipes (e.g. `| head`) may close early — EPIPE is not an error.
-          process.stdout.on("error", (err: NodeJS.ErrnoException) => {
-            if (err.code === "EPIPE") {
-              process.exit(0);
-            }
-            throw err;
-          });
-          process.stdout.write(html);
+          writeStdout(html);
           return;
         }
         await writeFile(path.resolve(out), html);
+        if (opts.open === true) {
+          await openInBrowser(path.resolve(out));
+        }
         if (json) {
           console.log(JSON.stringify({ ok: true, out }));
         } else {
@@ -104,27 +126,35 @@ cli
 cli
   .command("serve [file]", "Preview a document in the browser with live reload")
   .option("-p, --port <port>", "Port", { default: 3737 })
-  .action(async (file: string | undefined, opts: { port: number | string }) => {
-    try {
-      // mri leaves a non-numeric flag as a string; http.listen would treat
-      // that as a pipe path instead of a port.
-      const port = Number(opts.port);
-      if (!Number.isInteger(port) || port < 0 || port > 65_535) {
-        throw new Error(`invalid --port: ${opts.port}`);
+  .option("--open", "Open the preview in the default browser once serving")
+  .action(
+    async (
+      file: string | undefined,
+      opts: { open?: boolean; port: number | string }
+    ) => {
+      try {
+        // mri leaves a non-numeric flag as a string; http.listen would treat
+        // that as a pipe path instead of a port.
+        const port = Number(opts.port);
+        if (!Number.isInteger(port) || port < 0 || port > 65_535) {
+          throw new Error(`invalid --port: ${opts.port}`);
+        }
+        const open = opts.open === true;
+        if (file === undefined || file === "-") {
+          requireStdinSource();
+          await serveSource(await readStdin(), port, {
+            dir: process.cwd(),
+            filePath: "<stdin>",
+            open,
+          });
+          return;
+        }
+        await serve(file, port, { open });
+      } catch (error) {
+        fail(error, false);
       }
-      if (file === undefined || file === "-") {
-        requireStdinSource();
-        await serveSource(await readStdin(), port, {
-          dir: process.cwd(),
-          filePath: "<stdin>",
-        });
-        return;
-      }
-      await serve(file, port);
-    } catch (error) {
-      fail(error, false);
     }
-  });
+  );
 
 cli
   .command("catalog", "List available components (built-in + project-defined)")

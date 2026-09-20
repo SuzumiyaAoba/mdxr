@@ -10,10 +10,10 @@ Write documents as **Markdown + a small set of JSX components** (MDX). Do NOT wr
 ## Workflow
 
 1. Write the document as `*.mdx` using Markdown plus the components below.
-2. Render: `npx @suzumiyaaoba/mdxr render plan.mdx -o plan.html`
-3. Or pipe MDX directly: `cat plan.mdx | npx @suzumiyaaoba/mdxr render > plan.html` (`mdxr render -` also reads stdin; `-o out.html` writes a file).
+2. Render and open it for the user: `npx @suzumiyaaoba/mdxr render plan.mdx -o plan.html --open` (`--open` launches the file in the user's default browser — `open` on macOS, `xdg-open` on Linux, `start` on Windows).
+3. Or pipe MDX directly: `cat plan.mdx | npx @suzumiyaaoba/mdxr render > plan.html` (`mdxr render -` also reads stdin; `-o out.html` writes a file — required for `--open`).
 4. On errors, the message includes `file:line:col` — fix and re-run. `npx @suzumiyaaoba/mdxr render plan.mdx --format json` prints machine-readable errors.
-5. Preview while editing: `npx @suzumiyaaoba/mdxr serve plan.mdx` — or pipe: `cat plan.mdx | npx @suzumiyaaoba/mdxr serve`
+5. Preview while editing: `npx @suzumiyaaoba/mdxr serve plan.mdx --open` — or pipe: `cat plan.mdx | npx @suzumiyaaoba/mdxr serve --open`
 
 ## Rules
 

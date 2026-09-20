@@ -1,6 +1,7 @@
 /**
  * User-module import scanning: which names an importer pulls from
- * `mdxr`/`mdxr/components`, and which valibot properties it accesses through
+ * `@suzumiyaaoba/mdxr`(/components), and which valibot properties it accesses
+ * through
  * an imported `v` alias. The virtual runtime module generated for each
  * importer contains only what it requests — a full-surface module would
  * drag the whole catalog into every hydration bundle.
@@ -97,7 +98,8 @@ const mergeVProps = (
 };
 
 /**
- * Which names `importer` pulls from `mdxr`/`mdxr/components`, extracted with a
+ * Which names `importer` pulls from `@suzumiyaaoba/mdxr`(/components),
+ * extracted with a
  * regex over its source. `names`/`vProps` are `"all"` for namespace, default,
  * bare, or dynamic imports and for uninspectable importers — the fallback
  * keeps semantics correct at the cost of emitting every catalog re-export.
@@ -113,16 +115,18 @@ export const scanMdxrImports = async (
   }
   const names = new Set<string>();
   const vAliases: string[] = [];
-  // `\s*` not `\s+`: `import{v}from"mdxr"` is legal and must still register.
+  // `\s*` not `\s+`: `import{v}from"@suzumiyaaoba/mdxr"` is legal and must
+  // still register.
   // `(?!\s*type\b)` puts the whitespace inside the lookahead — a `\s*` outside
   // would backtrack to zero and let `import type` slip through as a runtime
   // import (over-shipping the whole surface). The clause pattern alternates
   // comments with plain chars so a `;`, `'`, or `"` inside a comment doesn't
   // truncate the clause and hide the whole import.
   const fromRe =
-    /(?:import|export)\s*(?!\s*type\b)(?<clause>(?:\/\*[\s\S]*?\*\/|\/\/[^\n]*|[^;"'])*?)\s*from\s*["']mdxr(?:\/components)?["']/gu;
+    /(?:import|export)\s*(?!\s*type\b)(?<clause>(?:\/\*[\s\S]*?\*\/|\/\/[^\n]*|[^;"'])*?)\s*from\s*["']@suzumiyaaoba\/mdxr(?:\/components)?["']/gu;
   let stripped = source;
-  // `export { v } from "mdxr"` hands the namespace to consumers — every
+  // `export { v } from "@suzumiyaaoba/mdxr"` hands the namespace to consumers —
+  // every
   // property is reachable, so the per-prop access scan can't apply.
   let vEscapes = false;
   for (const m of source.matchAll(fromRe)) {
@@ -142,13 +146,18 @@ export const scanMdxrImports = async (
     ""
   );
   // Bare/dynamic imports escape analysis entirely. The separator allows
-  // comments — `import /* x */ ("mdxr")` is legal and must still count.
+  // comments — `import /* x */ ("@suzumiyaaoba/mdxr")` is legal and must
+  // still count.
   const sep = String.raw`(?:\s|/\*[\s\S]*?\*/|//[^\n]*)*`;
   if (
-    new RegExp(`import${sep}["']mdxr(?:/components)?["']`, "u").test(source) ||
-    new RegExp(`import${sep}\\(${sep}["']mdxr(?:/components)?["']`, "u").test(
-      source
-    )
+    new RegExp(
+      `import${sep}["']@suzumiyaaoba/mdxr(?:/components)?["']`,
+      "u"
+    ).test(source) ||
+    new RegExp(
+      `import${sep}\\(${sep}["']@suzumiyaaoba/mdxr(?:/components)?["']`,
+      "u"
+    ).test(source)
   ) {
     return { names: "all", vProps: "all" };
   }

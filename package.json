@@ -1,5 +1,5 @@
 {
-  "name": "mdxr",
+  "name": "@suzumiyaaoba/mdxr",
   "version": "0.1.0",
   "description": "Render agent-authored MDX documents (plans, reports) to standalone HTML with a semantic component catalog",
   "keywords": [
@@ -37,6 +37,9 @@
       "default": "./dist/components.mjs"
     },
     "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "vp pack",

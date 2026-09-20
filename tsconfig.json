@@ -13,8 +13,8 @@
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
     "paths": {
-      "mdxr": ["./src/index.ts"],
-      "mdxr/components": ["./src/components.ts"],
+      "@suzumiyaaoba/mdxr": ["./src/index.ts"],
+      "@suzumiyaaoba/mdxr/components": ["./src/components.ts"],
       "@/*": ["./src/*"]
     }
   },

@@ -1,7 +1,8 @@
 /**
  * Export-surface scanning for the hydration bundle: which leaf module
  * provides each public name, and which names each public specifier
- * (`mdxr`, `mdxr/components`) actually exports. Derived by scanning the
+ * (`@suzumiyaaoba/mdxr`, `…/components`) actually exports. Derived by
+ * scanning the
  * leaf modules under `src/ui/` + `src/components/ui/` rather than parsing
  * barrels: any export form (`export *`, `export const`, `export {X}` lists,
  * re-export chains like ask→ask-question) resolves correctly, and new leaf
@@ -141,7 +142,7 @@ export interface ExportIndex {
    * Names each public specifier actually exports — the virtual module must
    * not resolve beyond this, or the client would see a real value where SSR's
    * import failed or bound `undefined` (e.g. `mountDocument`, leaf internals
-   * like `fileIcon` under `mdxr`, or `v` under `mdxr/components`).
+   * like `fileIcon` under the root entry, or `v` under `/components`).
    */
   surfaces: { components: Set<string>; mdxr: Set<string> };
 }

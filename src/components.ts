@@ -1,4 +1,4 @@
-// Public entry: `mdxr/components`
+// Public entry: `@suzumiyaaoba/mdxr/components`
 // Re-export the built-in catalog so custom components can compose them.
 // `export *` keeps the surface complete — the hydration bundle never loads
 // this barrel (it resolves each used name straight to its leaf module).

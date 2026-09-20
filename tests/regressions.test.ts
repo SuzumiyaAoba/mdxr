@@ -498,7 +498,7 @@ describe(render, () => {
 describe("hydrate import scan", () => {
   afterAll(cleanTmpDirs);
 
-  it('handles `import{v}from"mdxr"` with no spaces', async () => {
+  it('handles `import{v}from"@suzumiyaaoba/mdxr"` with no spaces', async () => {
     const dir = await makeDir();
     await writeFile(
       path.join(dir, "mdxr.config.ts"),
@@ -506,7 +506,7 @@ describe("hydrate import scan", () => {
     );
     await writeFile(
       path.join(dir, "components.tsx"),
-      `import{v,defineComponent}from"mdxr";
+      `import{v,defineComponent}from"@suzumiyaaoba/mdxr";
 export const Flag = defineComponent(
   { schema: v.looseObject({ t: v.optional(v.string()) }) },
   ({ t }) => <i data-flag>{t}</i>
@@ -540,7 +540,7 @@ export const Flag = defineComponent(
       `import {
   defineComponent, /* wraps + validates */
   v,
-} from "mdxr";
+} from "@suzumiyaaoba/mdxr";
 export const Note = defineComponent(
   { schema: v.looseObject({ t: v.optional(v.string()) }) },
   ({ t }) => <i data-note>{t}</i>

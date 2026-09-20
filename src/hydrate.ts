@@ -3,7 +3,7 @@
  * rebuilds the exact vnode tree SSR produced and `hydrateRoot`s it onto
  * `<main id="mdxr-root">`. Implementation details live in `src/hydrate/`:
  * `export-index` (export surface scanning), `import-scan` (user-module
- * import analysis), `runtime-module` (virtual `mdxr` module codegen), and
+ * import analysis), `runtime-module` (virtual package module codegen), and
  * `plugins` (esbuild plugins for shared packages, the doc module, icons).
  */
 

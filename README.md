@@ -7,17 +7,17 @@ Render agent-authored MDX documents (plans, reports) to standalone HTML with a s
 Run directly with `npx` — no install required:
 
 ```sh
-npx mdxr render plan.mdx     # writes plan.html
-npx mdxr serve plan.mdx      # live preview at http://localhost:3737
-npx mdxr catalog             # list available components
-npx mdxr init                # install the mdxr agent skill into the project
+npx @suzumiyaaoba/mdxr render plan.mdx     # writes plan.html
+npx @suzumiyaaoba/mdxr serve plan.mdx      # live preview at http://localhost:3737
+npx @suzumiyaaoba/mdxr catalog             # list available components
+npx @suzumiyaaoba/mdxr init                # install the mdxr agent skill into the project
 ```
 
 Or install it:
 
 ```sh
-npm install -g mdxr          # global CLI
-npm install mdxr             # library: import { render } from "mdxr"
+npm install -g @suzumiyaaoba/mdxr          # global CLI
+npm install @suzumiyaaoba/mdxr             # library: import { render } from "@suzumiyaaoba/mdxr"
 ```
 
 ### `mdxr render [file]`

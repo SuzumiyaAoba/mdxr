@@ -47,8 +47,8 @@ jobs:
 
       - run: pnpm check
 
-      # Build before test: tests self-import `mdxr`, which resolves via
-      # `exports` to dist/ (see ci.yml).
+      # Build before test: tests self-import `@suzumiyaaoba/mdxr`, which
+      # resolves via `exports` to dist/ (see ci.yml).
       - run: pnpm build
 
       - run: pnpm test

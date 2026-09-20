@@ -61,12 +61,12 @@ describe("hydration bundle", () => {
 });
 
 /**
- * The virtual `mdxr`/`mdxr/components` module must mirror the real package's
+ * The virtual package module must mirror the real package's
  * export surface per specifier, or the hydration bundle would resolve names
  * SSR bound to `undefined` (or vice versa) — a silent server/client split.
  */
 describe("hydrate module surface", () => {
-  it("`mdxr` exposes only its config API — no catalog or internals", async () => {
+  it("the root entry exposes only its config API — no catalog or internals", async () => {
     const { map, surfaces } = await exportIndex();
     const code = runtimeModuleContents(
       map,
@@ -78,12 +78,12 @@ describe("hydrate module surface", () => {
     }
     expect(code).toContain('export * as v from "valibot"');
     // Plan is a catalog component; mountDocument is hydration plumbing —
-    // neither exists on the real `mdxr` entry.
+    // neither exists on the real root entry.
     expect(code).not.toContain("Plan");
     expect(code).not.toContain("mountDocument");
   });
 
-  it("`mdxr/components` exposes the catalog but not the `mdxr`-only API", async () => {
+  it("the components entry exposes the catalog but not the root-only API", async () => {
     const { map, surfaces } = await exportIndex();
     const code = runtimeModuleContents(
       map,
@@ -93,7 +93,7 @@ describe("hydrate module surface", () => {
     expect(code).toContain("Plan");
     expect(code).toContain("buttonVariants");
     expect(code).toContain("builtinComponents");
-    // defineConfig/v/mountDocument don't exist on `mdxr/components` — SSR
+    // defineConfig/v/mountDocument don't exist on `/components` — SSR
     // sees `undefined` for them, so the client must too.
     for (const absent of [
       "defineConfig",
@@ -106,7 +106,7 @@ describe("hydrate module surface", () => {
 
   it("drops named imports outside the specifier's surface", async () => {
     const { map, surfaces } = await exportIndex();
-    // fileIcon is a leaf internal — real `mdxr/components` doesn't export it.
+    // fileIcon is a leaf internal — the real `/components` doesn't export it.
     const code = runtimeModuleContents(
       map,
       { names: new Set(["fileIcon", "Plan"]), vProps: null },
@@ -139,7 +139,7 @@ describe("hydrate module surface", () => {
 });
 
 /**
- * `export { v } from "mdxr"` hands the whole valibot namespace to consumers —
+ * `export { v } from "@suzumiyaaoba/mdxr"` hands the whole valibot namespace to consumers —
  * the per-prop access scan would ship `export const v = {}` while SSR binds
  * the real namespace, so a re-export must force `"all"`.
  */
@@ -165,9 +165,9 @@ describe(scanMdxrImports, () => {
   it("re-exported `v` escapes — ships the whole namespace", async () => {
     const results = await Promise.all(
       [
-        'export { v } from "mdxr";',
-        'export { v as schemas } from "mdxr";',
-        'export { v, Plan } from "mdxr";',
+        'export { v } from "@suzumiyaaoba/mdxr";',
+        'export { v as schemas } from "@suzumiyaaoba/mdxr";',
+        'export { v, Plan } from "@suzumiyaaoba/mdxr";',
       ].map(async (src) => {
         const r = await scan(src);
         return r.vProps;
@@ -180,14 +180,14 @@ describe(scanMdxrImports, () => {
 
   it("imported `v` still scans only accessed props", async () => {
     const { vProps } = await scan(
-      'import { v } from "mdxr";\nexport const s = v.string();\n'
+      'import { v } from "@suzumiyaaoba/mdxr";\nexport const s = v.string();\n'
     );
     expect(vProps).toStrictEqual(new Set(["string"]));
   });
 
   it("component re-exports don't force valibot", async () => {
     const { names, vProps } = await scan(
-      'export { Plan } from "mdxr/components";'
+      'export { Plan } from "@suzumiyaaoba/mdxr/components";'
     );
     expect(names).toStrictEqual(new Set(["Plan"]));
     expect(vProps).toBeNull();
@@ -199,7 +199,7 @@ describe(scanMdxrImports, () => {
         "import {",
         "  Plan, // don't drop; needed",
         '  v, /* say "hi"; still v */',
-        '} from "mdxr";',
+        '} from "@suzumiyaaoba/mdxr";',
         "export const s = v.string();",
       ].join("\n")
     );
@@ -209,16 +209,20 @@ describe(scanMdxrImports, () => {
 
   it("comments between `}` and `from` don't corrupt the clause", async () => {
     const { names } = await scan(
-      'import { Plan } /* keep; "this" */ from "mdxr/components";'
+      'import { Plan } /* keep; "this" */ from "@suzumiyaaoba/mdxr/components";'
     );
     expect(names).toStrictEqual(new Set(["Plan"]));
   });
 
   it("commented bare/dynamic imports still count as full-surface", async () => {
-    const bare = await scan('import /* side effect */ "mdxr/components";');
+    const bare = await scan(
+      'import /* side effect */ "@suzumiyaaoba/mdxr/components";'
+    );
     expect(bare.names).toBe("all");
     expect(bare.vProps).toBe("all");
-    const dyn = await scan('const m = await import /* lazy */ ("mdxr");');
+    const dyn = await scan(
+      'const m = await import /* lazy */ ("@suzumiyaaoba/mdxr");'
+    );
     expect(dyn.names).toBe("all");
     expect(dyn.vProps).toBe("all");
   });
@@ -226,9 +230,9 @@ describe(scanMdxrImports, () => {
   it("type-only imports contribute no runtime names", async () => {
     const { names, vProps } = await scan(
       [
-        'import type { Plan } from "mdxr/components";',
-        'export type { v } from "mdxr";',
-        'import { Icon } from "mdxr/components";',
+        'import type { Plan } from "@suzumiyaaoba/mdxr/components";',
+        'export type { v } from "@suzumiyaaoba/mdxr";',
+        'import { Icon } from "@suzumiyaaoba/mdxr/components";',
       ].join("\n")
     );
     expect(names).toStrictEqual(new Set(["Icon"]));

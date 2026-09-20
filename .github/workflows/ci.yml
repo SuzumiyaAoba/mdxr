@@ -53,9 +53,9 @@ jobs:
         with:
           node-version: 22
 
-      # Tests bundle user components that self-import `mdxr`; Node resolves
-      # that via this package's `exports`, which point at dist/ — so the
-      # build must run first.
+      # Tests bundle user components that self-import `@suzumiyaaoba/mdxr`;
+      # Node resolves that via this package's `exports`, which point at
+      # dist/ — so the build must run first.
       - run: pnpm build
 
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0

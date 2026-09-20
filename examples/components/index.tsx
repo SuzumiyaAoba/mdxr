@@ -1,5 +1,5 @@
-import { defineComponent, v } from "mdxr";
-import { Icon, StatusBadge, STATUSES } from "mdxr/components";
+import { defineComponent, v } from "@suzumiyaaoba/mdxr";
+import { Icon, StatusBadge, STATUSES } from "@suzumiyaaoba/mdxr/components";
 import { useState } from "react";
 
 export const LinkCard = defineComponent(

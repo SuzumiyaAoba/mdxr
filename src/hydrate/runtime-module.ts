@@ -1,5 +1,6 @@
 /**
- * The virtual `mdxr`/`mdxr/components` module used inside hydration bundles.
+ * The virtual `@suzumiyaaoba/mdxr`(/components) module used inside hydration
+ * bundles.
  * A fresh module is generated per importer containing only the re-exports
  * that importer requests: esbuild eagerly resolves every
  * `export { x } from "m"` target, and the leaf modules' top-level
@@ -20,7 +21,8 @@ import type { MdxrImports } from "./import-scan.js";
 /**
  * Names that live outside the leaf map: `builtinComponents` is defined in the
  * catalog barrel itself (pulling it is intentional — the whole catalog is the
- * value) and `defineConfig` is part of the `mdxr` API surface. They resolve
+ * value) and `defineConfig` is part of the `@suzumiyaaoba/mdxr` API surface.
+ * They resolve
  * only when a module actually imports them.
  */
 export const EXTRA_MODULES: Record<string, string> = {
@@ -33,9 +35,9 @@ export const EXTRA_MODULES: Record<string, string> = {
  * The virtual module's `v` export. `export * as v` would materialize the
  * entire valibot namespace — a plain object built from named imports ships
  * only the schemas actually written. Unknown `v.x` accesses stay absent,
- * matching `undefined` semantics. The `surface` gate keeps `mdxr/components`
- * honest: that specifier has no `v` export, so shipping one would diverge
- * from SSR.
+ * matching `undefined` semantics. The `surface` gate keeps
+ * `@suzumiyaaoba/mdxr/components` honest: that specifier has no `v` export,
+ * so shipping one would diverge from SSR.
  */
 const vExportLines = (imports: MdxrImports, surface: Set<string>): string[] => {
   if (!surface.has("v") || imports.vProps === null) {
@@ -58,7 +60,7 @@ const vExportLines = (imports: MdxrImports, surface: Set<string>): string[] => {
 };
 
 /**
- * Virtual stand-in for `mdxr` / `mdxr/components` inside the bundle.
+ * Virtual stand-in for `@suzumiyaaoba/mdxr`(/components) inside the bundle.
  */
 // Exported for tests — pure codegen, so the emitted export list is easy to
 // assert without running esbuild.
@@ -105,20 +107,24 @@ export const runtimeModule = (index: ExportIndex): Plugin => ({
       { importer: string; surface: Set<string> }
     >();
     let seq = 0;
-    b.onResolve({ filter: /^mdxr(?:\/components)?$/ }, (args) => {
-      const virtual = `mdxr:runtime:${seq}`;
-      seq += 1;
-      importers.set(virtual, {
-        importer: args.importer,
-        // Each specifier gets its own real surface — `mdxr` (config API) and
-        // `mdxr/components` (the catalog) are deliberately different sets.
-        surface:
-          args.path === "mdxr"
-            ? index.surfaces.mdxr
-            : index.surfaces.components,
-      });
-      return { namespace: "mdxr-runtime", path: virtual };
-    });
+    b.onResolve(
+      { filter: /^@suzumiyaaoba\/mdxr(?:\/components)?$/ },
+      (args) => {
+        const virtual = `mdxr:runtime:${seq}`;
+        seq += 1;
+        importers.set(virtual, {
+          importer: args.importer,
+          // Each specifier gets its own real surface — the root entry (config
+          // API) and `/components` (the catalog) are deliberately different
+          // sets.
+          surface:
+            args.path === "@suzumiyaaoba/mdxr"
+              ? index.surfaces.mdxr
+              : index.surfaces.components,
+        });
+        return { namespace: "mdxr-runtime", path: virtual };
+      }
+    );
     b.onLoad(
       { filter: /^mdxr:runtime:/, namespace: "mdxr-runtime" },
       async (args) => {

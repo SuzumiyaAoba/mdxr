@@ -7,7 +7,7 @@ const require = module.createRequire(import.meta.url);
 const findPkgRoot = (): string => {
   try {
     return path.dirname(
-      url.fileURLToPath(require.resolve("mdxr/package.json"))
+      url.fileURLToPath(require.resolve("@suzumiyaaoba/mdxr/package.json"))
     );
   } catch {
     // Bundled (dist/*.mjs) and source (src/*.ts) layouts both sit one level
@@ -30,6 +30,7 @@ export const pkgRoot = findPkgRoot();
 export const srcDir = path.join(pkgRoot, "src");
 
 /** Directory where bundled user modules are cached. Kept inside this package so
- *  bare imports (`react`, `valibot`, `mdxr`) resolve to *our* copy —
+ *  bare imports (`react`, `valibot`, `@suzumiyaaoba/mdxr`) resolve to *our*
+ *  copy —
  *  guaranteeing a single React instance shared with renderToStaticMarkup. */
 export const cacheDir = `${pkgRoot}/.mdxr-cache`;

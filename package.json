@@ -1,6 +1,6 @@
 {
   "name": "@suzumiyaaoba/mdxr",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Render agent-authored MDX documents (plans, reports) to standalone HTML with a semantic component catalog",
   "keywords": [
     "agents",

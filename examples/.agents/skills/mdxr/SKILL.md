@@ -1,6 +1,6 @@
 ---
 name: mdxr
-description: Write rich plan/report documents as MDX using the mdxr component catalog, then render them to standalone HTML with `npx @suzumiyaaoba/mdxr render`. Use when creating plan files, status reports, reviews, or any structured document meant to be viewed as a styled HTML page.
+description: Write rich plan/report documents as MDX using the mdxr component catalog, then render them to standalone HTML with `npx @suzumiyaaoba/mdxr render`. Use when creating plan files, status reports, reviews, or any structured document meant to be viewed as a styled HTML page — and whenever the user explicitly asks for a deliverable written or rendered with mdxr, regardless of document type.
 ---
 
 # mdxr — agent-authored documents rendered to HTML

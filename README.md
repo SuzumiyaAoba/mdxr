@@ -51,6 +51,25 @@ mdxr init --tool all       # all supported tools
 mdxr init --global         # into your home directory instead
 ```
 
+## Agent skill
+
+The `mdxr` skill teaches coding agents the component catalog and the render workflow. Install it into your project (or globally) with the [`skills` CLI](https://github.com/vercel-labs/skills):
+
+```sh
+npx skills add Suzumiyaaoba/mdxr --skill mdxr
+# add -g for a global install, or -a claude-code to target a specific agent
+```
+
+Then ask your agent, for example:
+
+> Use the mdxr skill to write an implementation plan for the auth feature and render it to HTML.
+
+Not just plans — any deliverable works (reports, reviews, investigation summaries, …). To make this automatic, add a standing instruction to your agent config (e.g. `AGENTS.md` / `CLAUDE.md`):
+
+```md
+- Whenever the user explicitly asks for a deliverable with mdxr, use the mdxr skill to write and render it.
+```
+
 ## License
 
 MIT

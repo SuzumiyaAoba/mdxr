@@ -1,0 +1,93 @@
+---
+title: shadcn/ui
+---
+
+The full shadcn/ui (Base UI) set is registered. Stateful primitives hydrate, so tabs switch, accordions open, and switches flip in the rendered document — try them inside this page.
+
+## Buttons & badges
+
+<Row>
+  <Button>Default</Button>
+  <Button variant="secondary">Secondary</Button>
+  <Button variant="outline">Outline</Button>
+  <Button variant="destructive">Destructive</Button>
+</Row>
+
+<Row>
+  <Badge>stable</Badge>
+  <Badge variant="secondary">beta</Badge>
+  <Badge variant="outline">outline</Badge>
+  <Badge variant="destructive">breaking</Badge>
+</Row>
+
+## Alert & card
+
+<Alert>
+  <AlertTitle>Heads up</AlertTitle>
+  <AlertDescription>
+    Fully static and safe in documents.
+  </AlertDescription>
+</Alert>
+
+<Card className="w-80">
+  <CardHeader>
+    <CardTitle>Static card</CardTitle>
+    <CardDescription>Composed from CardHeader/CardContent</CardDescription>
+  </CardHeader>
+  <CardContent>Card body content.</CardContent>
+</Card>
+
+## Interactive (hydrated)
+
+<Tabs defaultValue="one">
+  <TabsList>
+    <TabsTrigger value="one">One</TabsTrigger>
+    <TabsTrigger value="two">Two</TabsTrigger>
+  </TabsList>
+  <TabsContent value="one">Panel one</TabsContent>
+  <TabsContent value="two">Panel two</TabsContent>
+</Tabs>
+
+<Accordion>
+  <AccordionItem value="a">
+    <AccordionTrigger>Section A</AccordionTrigger>
+    <AccordionContent>Content A</AccordionContent>
+  </AccordionItem>
+  <AccordionItem value="b">
+    <AccordionTrigger>Section B</AccordionTrigger>
+    <AccordionContent>Content B</AccordionContent>
+  </AccordionItem>
+</Accordion>
+
+<Row>
+  <Switch id="notifications" />
+  <FieldLabel htmlFor="notifications">Notifications</FieldLabel>
+</Row>
+
+## Table, progress, kbd
+
+<Table>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Name</TableHead>
+      <TableHead>Status</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableCell>cli</TableCell>
+      <TableCell><Badge variant="secondary">beta</Badge></TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>ui</TableCell>
+      <TableCell><Badge>stable</Badge></TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
+
+<Stack gap="sm">
+  <Progress value="60" />
+  <Skeleton className="h-4 w-40" />
+</Stack>
+
+Press <Kbd>⌘</Kbd> + <Kbd>K</Kbd> to search.

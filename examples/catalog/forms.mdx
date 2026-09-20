@@ -1,0 +1,29 @@
+---
+title: Reader input
+---
+
+Native-form question blocks — answers render live as copyable Markdown.
+
+<Ask title="Sign-off checklist" description="Answers feed back into the plan">
+  <Question name="approach" type="choice" label="Implementation approach" required>
+    <Choice value="gradual" checked>
+      Gradual migration
+    </Choice>
+    <Choice value="rewrite" description="Needs a rollback path">
+      Full rewrite
+    </Choice>
+  </Question>
+  <Question name="scope" type="multi" label="In scope">
+    <Choice value="api" checked>API</Choice>
+    <Choice value="ui" checked>UI</Choice>
+    <Choice value="docs">Docs</Choice>
+  </Question>
+  <Question name="prio" type="select" label="Priority" placeholder="Pick one">
+    <Choice value="high">High</Choice>
+    <Choice value="mid">Medium</Choice>
+    <Choice value="low">Low</Choice>
+  </Question>
+  <Question name="deadline" type="text" label="Deadline" placeholder="YYYY-MM-DD" />
+  <Question name="notes" type="textarea" label="Notes" rows="2" />
+  <Question name="preview" type="toggle" label="Deploy a preview environment" checked />
+</Ask>

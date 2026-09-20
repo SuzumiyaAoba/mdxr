@@ -1,0 +1,119 @@
+---
+title: Reports
+---
+
+Review results, verification status, security and dependency scans, metrics, and ops summaries.
+
+## Review & verdict
+
+<Review title="PR #42 — renderer rewrite" verdict="changes">
+  <Comment severity="high" file="src/mdx.ts" lines="42-58" title="Escapes user input">
+    `attrs` are interpolated without escaping — wrap in `escapeHtml`.
+  </Comment>
+  <Comment severity="low" title="Nit: naming">
+    `doc` vs `out` is confusing here.
+  </Comment>
+</Review>
+
+<Verdict status="warn" title="Ship with follow-ups">
+Two medium findings are acceptable if the tracking issue lands this week.
+</Verdict>
+
+Inline severity pills: <Severity level="critical" /> <Severity level="high" /> <Severity level="medium" /> <Severity level="low" /> <Severity level="info" />
+
+## Checks
+
+<Checks title="CI — main" context="a1b2c3d">
+  <Check name="lint" status="pass" duration="30s" required />
+  <Check name="typecheck" status="pass" duration="45s" required />
+  <Check name="test" status="fail" duration="90s" required>
+    2 assertions failed in reports.test.ts
+  </Check>
+  <Check name="storybook" status="pass" duration="20s" />
+</Checks>
+
+## Audit & dependencies
+
+<Audit tool="npm audit">
+  <Vuln severity="critical" id="GHSA-1234" package="minimatch" affected="<3.1.2" fix="3.1.2" />
+  <Vuln severity="low" package="left-pad" wontfix="true" />
+</Audit>
+
+<Bumps>
+  <Bump name="react" from="18.3.1" to="19.0.0" breaking />
+  <Bump name="vitest" from="4.1.0" to="4.2.0" />
+  <Bump name="oxlint" from="1.9.0" to="1.9.4" />
+</Bumps>
+
+<Packages title="Direct dependencies">
+  <Package name="react" version="19.3.0" kind="dep" license="MIT" />
+  <Package name="@mdx-js/mdx" version="3.1.1" kind="dep" license="MIT" />
+  <Package name="ultracite" version="7.11.1" kind="dev" />
+</Packages>
+
+## Metrics
+
+<Gauges title="Coverage" unit="lines">
+  <Gauge label="src/mdx.ts" value="82" target="80" detail="412/500" />
+  <Gauge label="src/cli.ts" value="45" />
+  <Gauge label="src/render.ts" value="91" target="80" />
+</Gauges>
+
+<Score value="87" label="health" detail="0 errors, 6 warnings" />
+
+Trend in prose <Spark values="120,110,96,88,92" tone="emerald" /> and a diff summary <DiffStat files="12" adds="340" dels="120" />.
+
+<Benchmarks better="lower" unit="ms">
+  <Bench name="small doc" before="120" after="60" />
+  <Bench name="large doc" before="100" after="150" />
+</Benchmarks>
+
+## Schema & env vars
+
+<Schema engine="postgres 16">
+  <DbTable name="users">
+    <DbField name="id" type="uuid" pk />
+    <DbField name="email" type="text" unique />
+    <DbField name="org_id" type="uuid" fk="orgs.id" null />
+  </DbTable>
+</Schema>
+
+<EnvVars title="Config">
+  <EnvVar name="DATABASE_URL" required secret value="postgres://real" />
+  <EnvVar name="LOG_LEVEL" default="info" />
+  <EnvVar name="CACHE_TTL" default="300" />
+</EnvVars>
+
+## Ops
+
+<StatusPage title="Service status">
+  <Service name="API" status="operational" uptime="99.98%" />
+  <Service name="Dashboard" status="degraded" />
+  <Service name="Webhooks" status="operational" uptime="99.91%" />
+</StatusPage>
+
+<Uptime title="API — last 14 days" pct="99.9" from="Sep 7" to="today">
+  <Day status="up" date="Sep 7" />
+  <Day status="up" date="Sep 8" />
+  <Day status="down" date="Sep 9" note="INC-1" />
+  <Day status="up" date="Sep 10" />
+  <Day status="degraded" date="Sep 11" note="latency" />
+  <Day status="up" date="Sep 12" />
+</Uptime>
+
+<Release version="v0.2.0" date="2026-09-19">
+  <Entry kind="breaking" scope="cli">rename --out to -o</Entry>
+  <Entry kind="added">report component families</Entry>
+  <Entry kind="fixed">diff card line numbers</Entry>
+  <Entry kind="changed">catalog page examples</Entry>
+</Release>
+
+<Pathway title="Upgrade path">
+  <Stop label="v17" status="done" />
+  <Stop label="v18" status="doing" current />
+  <Stop label="v19" status="todo" />
+</Pathway>
+
+<Incident title="Docs deploy 404s" severity="high" status="resolved" started="09:12" resolved="09:46" duration="34m" impact="GitHub Pages returned 404 for all assets">
+Proxy mounted the site at the wrong base path.
+</Incident>

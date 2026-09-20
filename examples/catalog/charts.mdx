@@ -1,0 +1,108 @@
+---
+title: Data visualization
+---
+
+All charts are static SVG/HTML at render time — no client JS, no CDN. `tone` pins a color, `unit` labels values.
+
+## Bar chart
+
+<BarChart title="deploys per quarter" unit="deploys">
+  <Bar name="Q1" value="18" />
+  <Bar name="Q2" value="26" note="launch" />
+  <Bar name="Q3" tone="emerald" value="34" />
+  <Bar name="Q4" value="41" />
+</BarChart>
+
+<BarChart series="this year,last year" title="latency by endpoint" unit="ms">
+  <Bar name="/users" values="42,58" />
+  <Bar name="/search" values="120,210" />
+</BarChart>
+
+## Line chart
+
+<LineChart labels="Mon,Tue,Wed,Thu,Fri" title="p95 latency" unit="ms" area>
+  <Series name="api" values="120,118,132,125,110" />
+  <Series name="edge" tone="emerald" values="60,58,64,70,55" />
+  <Series name="target" dash tone="red" values="150,150,150,150,150" />
+</LineChart>
+
+## Pie chart
+
+<PieChart donut title="build minutes" unit="min">
+  <Slice name="compile" value="38" />
+  <Slice name="tests" value="27" />
+  <Slice name="lint" value="9" />
+  <Slice name="pack" value="6" />
+</PieChart>
+
+## Scatter
+
+<Scatter title="latency vs payload" x="payload kb" y="latency ms">
+  <Point x="12" y="40" />
+  <Point x="40" y="95" />
+  <Point name="bulk export" size="90" tone="amber" x="140" y="210" />
+  <Point x="80" y="130" />
+</Scatter>
+
+## Radar
+
+<Radar axes="Perf,DX,Tests,Docs,Security" title="service health">
+  <Series name="api" values="80,65,90,40,70" />
+  <Series name="web" tone="emerald" values="60,85,55,70,60" />
+</Radar>
+
+## Funnel
+
+<Funnel title="signup funnel" unit="users">
+  <Stage name="visited" value="12800" />
+  <Stage name="signed up" value="3400" />
+  <Stage name="activated" value="1100" />
+  <Stage name="paid" tone="emerald" value="420" />
+</Funnel>
+
+## Quadrant
+
+<Quadrant title="capability map" x="adoption" y="impact" quadrants="invest,bet,maintain,drop">
+  <Pin name="mdxr" tone="sky" x="78" y="85" />
+  <Pin name="charts" tone="emerald" x="60" y="70" />
+  <Pin name="legacy" tone="red" x="15" y="15" />
+</Quadrant>
+
+## Bridge
+
+<Bridge title="FY revenue bridge" unit="M$">
+  <Delta name="FY24" total value="120" />
+  <Delta name="new sales" value="48" />
+  <Delta name="expansion" value="22" />
+  <Delta name="churn" value="-15" />
+  <Delta name="FY25" total value="175" />
+</Bridge>
+
+## Treemap
+
+<Treemap title="bundle by workspace" unit="kB">
+  <Tile name="ui" value="184" />
+  <Tile name="vendor" note="react+mdx" value="260" />
+  <Tile name="cli" value="72" />
+  <Tile name="hydrate" value="41" />
+</Treemap>
+
+## Sankey
+
+<Sankey stages="source,grid,use" title="energy flow" unit="TWh">
+  <Link from="solar" to="grid" value="40" />
+  <Link from="wind" to="grid" value="35" />
+  <Link from="gas" to="grid" value="25" />
+  <Link from="grid" to="homes" value="55" />
+  <Link from="grid" to="industry" value="20" />
+</Sankey>
+
+## Venn
+
+<Venn title="skill coverage" unit="devs">
+  <Set name="frontend" value="14" />
+  <Set name="backend" value="18" />
+  <Set name="infra" value="9" />
+  <Overlap sets="frontend,backend" value="6" />
+  <Overlap sets="backend,infra" value="4" />
+</Venn>

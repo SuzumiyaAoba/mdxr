@@ -1,0 +1,69 @@
+---
+title: Layout
+---
+
+Grids, rows, stacks, and compare panels.
+
+## Columns
+
+<Columns cols="2">
+  <Column>
+    Left column — prose, lists, or any component.
+  </Column>
+  <Column>
+    Right column — rendered side by side.
+  </Column>
+</Columns>
+
+## Grid
+
+<Grid>
+  <Cell span="8">Main narrative — spans 8 of 12 tracks.</Cell>
+  <Cell span="4">Sidebar — meta, links.</Cell>
+</Grid>
+
+<Grid cols="4" flow="row-dense">
+  <Cell span="2">
+    <Stat label="Coverage" value="92%" />
+  </Cell>
+  <Cell span="2">
+    <Stat label="Tests" value="148" />
+  </Cell>
+  <Cell span="2" rowSpan="2">
+    Tall notes panel — spans two rows.
+  </Cell>
+  <Cell span="2">
+    <Stat label="p95" value="120ms" />
+  </Cell>
+</Grid>
+
+<Grid min="12rem" gap="sm">
+  <Option title="A" status="recommended">First choice.</Option>
+  <Option title="B" status="considered">Fallback.</Option>
+  <Option title="C" status="rejected">Dropped.</Option>
+</Grid>
+
+## Row & stack
+
+<Row>
+  <Button>Default</Button>
+  <Button variant="outline">Outline</Button>
+  <Badge variant="secondary">beta</Badge>
+  <StatusBadge status="doing" />
+</Row>
+
+<Stack gap="sm">
+  <Progress value="60" />
+  <Progress value="30" />
+</Stack>
+
+## Before / after
+
+<Columns cols="2">
+  <Before>
+    String concatenation with manual escaping.
+  </Before>
+  <After>
+    Typed component pipeline with validation.
+  </After>
+</Columns>

@@ -1,0 +1,113 @@
+---
+title: Planning & status
+---
+
+Implementation plans, milestones, task tracking, and decision records.
+
+:::phase{title="Phase 1 — Foundation" status="done"}
+
+<Steps progress>
+  <Step status="done">Read the existing parser</Step>
+  <Step status="done">MDX compile via evaluate()</Step>
+</Steps>
+
+:::
+
+:::phase{title="Phase 2 — Migration" status="doing" owner="@alice" due="2026-09-30"}
+
+<Steps progress>
+  <Step status="done" effort="s">Directive transform</Step>
+  <Step status="doing" owner="@alice" priority="p1" due="2026-09-25">
+    Component catalog
+  </Step>
+  <Step status="todo" effort="m" owner="@bob">Update snapshots</Step>
+  <Step status="blocked">Publish release</Step>
+</Steps>
+
+:::
+
+## Timeline
+
+<Timeline title="Milestones">
+  <Event date="2026-09-10" status="done" title="Skeleton merged" />
+  <Event date="2026-09-16" status="doing" title="Catalog complete" />
+  <Event date="2026-09-30" status="todo" title="v1.0 freeze" />
+</Timeline>
+
+## Gantt
+
+<Gantt title="v1.0 release">
+  <Task name="API design" start="2026-09-01" end="2026-09-05" status="done" />
+  <Task name="Implementation" start="2026-09-08" end="2026-09-18" status="doing" progress="40" owner="alice" />
+  <Task name="Docs" start="2026-09-21" end="2026-09-25" />
+  <Milestone name="v1.0 freeze" date="2026-09-30" />
+</Gantt>
+
+## Decision & options
+
+<Columns>
+  <Option title="Template literals" status="rejected">
+    Escaping bugs keep recurring.
+  </Option>
+  <Option title="Component pipeline" status="recommended">
+    Deterministic + validated.
+  </Option>
+</Columns>
+
+<Decision title="Use renderToStaticMarkup" status="accepted" date="2026-09-12">
+Documents have no data fetching — a synchronous renderer keeps the CLI simple.
+</Decision>
+
+## Risk & approvals
+
+<Risk level="high" title="Ecosystem drift" mitigation="Pin @mdx-js/mdx">
+`evaluate()` semantics changed across majors before.
+</Risk>
+
+<Approvals>
+  <Approval name="alice" role="tech lead" status="approved" date="2026-09-14" />
+  <Approval name="bob" role="security" status="pending" />
+</Approvals>
+
+## Stats, chips & progress
+
+<Stats>
+  <Stat value="68" label="call sites migrated" delta="+12" />
+  <Stat value="120ms" label="p95 render" delta="-34%" />
+  <Stat value="9" label="packages" />
+</Stats>
+
+Inline chips: <Priority level="p1" /> <Effort size="m">3d</Effort> <Due date="2026-10-01" /> <Owner name="alice" role="lead" /> <StatusBadge status="doing" />
+
+<Summary done="4" total="9" label="Overall progress" />
+
+## Requirements
+
+<Reqs>
+  <Req id="REQ-1" status="done">Documents render without client JS</Req>
+  <Req id="REQ-2" status="doing">Interactive primitives hydrate</Req>
+</Reqs>
+
+## Board
+
+<Board title="Sprint 12">
+  <Lane title="Todo" status="todo">
+    <BoardCard title="Write migration guide" priority="p1" owner="alice" />
+  </Lane>
+  <Lane title="In progress" status="doing">
+    <BoardCard title="Graph component" due="2026-09-20">
+      dagre layout + svg edges
+    </BoardCard>
+  </Lane>
+  <Lane title="Done" status="done">
+    <BoardCard title="Ship v0.1" status="done" />
+  </Lane>
+</Board>
+
+## Matrix
+
+<Matrix title="Renderer comparison" cols="mdxr,raw mdx,astro">
+- standalone html | yes | no | partial
+- editor links | yes | no | no
+- hydration | no | yes | yes
+</Matrix>

@@ -1,0 +1,124 @@
+---
+title: Code investigation
+---
+
+Findings, hypotheses, and the evidence trail — terminals, traces, searches, files.
+
+## Findings
+
+<Findings title="Investigation results">
+  <Finding confidence="confirmed" title="Rendering is synchronous">
+    `mdxToHtml` awaits `evaluate()` then calls `renderToStaticMarkup`.
+  </Finding>
+  <Finding confidence="inferred" title="Directives expand before eval">
+    The remark pass rewrites `:::x` containers into JSX elements.
+  </Finding>
+  <Finding confidence="unverified" title="Watch-mode reloads">
+    Probably, but no test covers it.
+  </Finding>
+</Findings>
+
+## Hypotheses
+
+<Hypotheses title="Hypotheses tested">
+  <Hypothesis status="refuted" title="CSS loads at runtime">
+    Ruled out — the stylesheet is inlined into the HTML.
+  </Hypothesis>
+  <Hypothesis status="supported" title="Directives expand before eval" />
+  <Hypothesis status="untested" title="HMR works in serve" />
+</Hypotheses>
+
+## Terminal & trace
+
+<Terminal cmd="pnpm test" exit="1" title="test run">
+
+```
+FAIL  tests/render.test.ts
+  ✗ renders markdown prose
+```
+
+</Terminal>
+
+<Trace error="TypeError: Cannot read properties of undefined (reading 'kind')">
+  <TraceFrame name="toMdxComponent" path="src/remark/directives.ts" lines="64">
+    leaf directives have no attributes record
+  </TraceFrame>
+  <TraceFrame name="visit" path="node_modules/unist-util-visit/index.js" kind="lib" />
+  <TraceFrame name="remarkMdxrDirectives" path="src/remark/directives.ts" lines="91" />
+</Trace>
+
+## Searches
+
+<Searches title="How the code was searched">
+  <Search pattern="evaluate" path="src/" tool="rg" hits="3" />
+  <Search pattern="hydrateRoot" path="src/" tool="rg" hits="0">
+    Dead end — there is no client entry point.
+  </Search>
+</Searches>
+
+## Files & changes
+
+<Files title="Files involved">
+  <File path="src/mdx.ts" kind="entry" lines="70-106">
+    Pipeline entry.
+  </File>
+  <File path="src/define.ts" kind="types" />
+  <File path="tests/render.test.ts" kind="test" />
+</Files>
+
+<Changes>
+  <Change kind="add" path="src/remark/headings.ts">slug + toc expansion</Change>
+  <Change kind="modify" path="src/mdx.ts" />
+  <Change kind="rename" path="src/old.ts" to="src/new.ts" />
+  <Change kind="delete" path="src/dead.ts" />
+</Changes>
+
+<Deps title="Module dependencies">
+  <Dep from="src/cli.ts" to="src/render.ts" kind="calls" />
+  <Dep from="src/mdx.ts" to="remark-directive" kind="imports" />
+  <Dep from="src/render.ts" to="dist/out.html" kind="writes" />
+</Deps>
+
+## Flow
+
+<Flow title="Request path">
+  <FlowStep name="cli()" path="src/cli.ts" lines="12-30">
+    Parses argv, loads config.
+  </FlowStep>
+  <FlowStep name="mdxToHtml()" path="src/mdx.ts">
+    Compiles MDX and evaluates it.
+  </FlowStep>
+  <FlowStep name="renderToStaticMarkup()">
+    Produces the final HTML string.
+  </FlowStep>
+</Flow>
+
+## Tree
+
+<Tree root="mdxr/">
+
+- src/
+  - render.ts — pipeline entry
+  - ui/
+    - **plan.tsx**
+    - steps.tsx
+    - …
+- package.json
+- ...
+
+</Tree>
+
+## Inline references & props
+
+See <FileRef path="mdxr.config.ts" /> for the config that registered the components on the custom page. <SymbolRef name="mdxToHtml" kind="fn" path="src/mdx.ts" lines="70-106" /> returns <SymbolRef name="MdxResult" kind="interface" />.
+
+<Props of="Step">
+  <Prop name="status" type="todo | doing | done | blocked" required>
+    Marker state.
+  </Prop>
+  <Prop name="effort" type="xs | s | m | l | xl" default="m" />
+</Props>
+
+## Embedded source
+
+<CodeFile path="mdxr.config.ts" />

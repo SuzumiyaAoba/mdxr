@@ -2,3 +2,4 @@ node_modules/
 dist/
 .blume/
 public/examples/*.html
+public/components/*.html

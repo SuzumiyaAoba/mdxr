@@ -1,0 +1,35 @@
+---
+title: Project-defined components
+---
+
+The components on this page are **not** built into mdxr — they are plain TSX defined next to this document. `mdxr.config.ts` points at a components module and every named export becomes an MDX tag.
+
+## Wiring
+
+<CodeFile path="mdxr.config.ts" />
+
+## LinkCard — props + children
+
+<LinkCard href="https://mdxjs.com" title="MDX documentation">
+  Component model used by the renderer.
+</LinkCard>
+
+## FeatureCard — composing built-ins
+
+`@suzumiyaaoba/mdxr/components` re-exports the catalog, so custom components wrap `<Icon>` and `<StatusBadge>` instead of re-styling from scratch.
+
+<FeatureCard title="MDX component pipeline" status="done" icon="lucide:puzzle">
+  Replaced the string-template renderer with typed components.
+</FeatureCard>
+<FeatureCard title="Custom component loading" status="doing" icon="lucide:blocks">
+  esbuild bundles the module; React and valibot resolve to mdxr's own copy.
+</FeatureCard>
+<FeatureCard title="Remote component registries" status="blocked">
+  Waiting on a sandboxed evaluator.
+</FeatureCard>
+
+## Counter — hydration
+
+Project components join the hydration bundle, so hooks work after load — this counter is operable in the rendered HTML:
+
+<Counter label="widgets" start="3" /> <Counter />

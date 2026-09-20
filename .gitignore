@@ -1,6 +1,6 @@
 node_modules/
 dist/
 .mdxr-cache/
-examples/*.html
+examples/**/*.html
 storybook-static/
 *.log

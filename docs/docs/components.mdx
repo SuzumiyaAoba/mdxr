@@ -7,6 +7,8 @@ sidebar:
 
 The catalog is organized by the kind of document each group serves. `mdxr catalog` lists every component available in your project — built-ins plus [project-defined](/configuration#project-defined-components) ones — and `mdxr catalog --json` is the machine-readable source of truth for names and attributes.
 
+Each section embeds a live render at the bottom: a real `.mdx` document from [`examples/catalog/`](https://github.com/SuzumiyaAoba/mdxr/tree/master/examples/catalog) rendered by `mdxr render` during the docs build — hydration included, so interactive components work inside the frame.
+
 ## Document scaffolding
 
 The frame every deliverable sits in: headers, callouts, navigation, references.
@@ -24,6 +26,10 @@ The frame every deliverable sits in: headers, callouts, navigation, references.
 | `<Cmd>` | Inline command chip with copy button |
 | `<Icon>` | Inline Iconify SVG — `lucide` + `vscode-icons` bundled, no runtime fetch |
 | fenced code / math | Highlighted code block with filename bar and line markers; ` ```mermaid ` diagrams; KaTeX `$…$` |
+
+<iframe src={`${import.meta.env.BASE_URL}/components/scaffolding.html`} title="Document scaffolding components rendered to HTML" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/components/scaffolding.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/catalog/scaffolding.mdx)
 
 ## Planning & status
 
@@ -47,6 +53,10 @@ Implementation plans, milestones, task tracking, and decision records.
 | `<Summary>` | Progress bar |
 | `<StatusBadge>` | Standalone status pill |
 
+<iframe src={`${import.meta.env.BASE_URL}/components/planning.html`} title="Planning and status components rendered to HTML" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/components/planning.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/catalog/planning.mdx)
+
 ## Code investigation
 
 Findings, hypotheses, and the evidence trail — terminals, traces, searches, files.
@@ -67,6 +77,10 @@ Findings, hypotheses, and the evidence trail — terminals, traces, searches, fi
 | `<CodeFile>` | Embeds a real file from disk as a code block |
 | `<Props>` / `<Prop>` | API/props table for a component or function |
 
+<iframe src={`${import.meta.env.BASE_URL}/components/investigation.html`} title="Code investigation components rendered to HTML" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/components/investigation.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/catalog/investigation.mdx)
+
 ## Output artifacts
 
 The things a change produces: diffs, graphs, test runs, endpoints, timing.
@@ -81,6 +95,10 @@ The things a change produces: diffs, graphs, test runs, endpoints, timing.
 | `<Json>` | Collapsible JSON tree on nested `<details>` |
 | `<Waterfall>` / `<Span>` | Timing waterfall (OTel-trace-style bars) — `:::waterfall` |
 | `<Ins>` / `<Del>` | Inline word-level edits — semantic `<ins>`/`<del>` |
+
+<iframe src={`${import.meta.env.BASE_URL}/components/artifacts.html`} title="Output artifact components rendered to HTML" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/components/artifacts.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/catalog/artifacts.mdx)
 
 ## Reports
 
@@ -108,6 +126,10 @@ Review results, verification status, security and dependency scans, metrics, and
 | `<Pathway>` / `<Stop>` | Migration/rollout stepper — version paths, env promotion — `:::pathway` |
 | `<Incident>` | Incident/postmortem header — severity + status pills, timeline meta — `:::incident` |
 
+<iframe src={`${import.meta.env.BASE_URL}/components/reports.html`} title="Report components rendered to HTML" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/components/reports.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/catalog/reports.mdx)
+
 ## Data visualization
 
 All charts are static SVG/HTML at render time (no client JS); `tone` pins a color, `unit` labels values.
@@ -126,6 +148,10 @@ All charts are static SVG/HTML at render time (no client JS); `tone` pins a colo
 | `<Sankey>` / `<Link>` / `<Node>` | Flow split/merge across stage columns — `:::sankey` |
 | `<Venn>` / `<Set>` / `<Overlap>` | 2–3 set overlap diagram — `:::venn` |
 
+<iframe src={`${import.meta.env.BASE_URL}/components/charts.html`} title="Chart components rendered to HTML" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/components/charts.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/catalog/charts.mdx)
+
 ## Layout
 
 | Component | What it is |
@@ -136,16 +162,32 @@ All charts are static SVG/HTML at render time (no client JS); `tone` pins a colo
 | `<Stack>` | Vertical stack with `gap` |
 | `<Before>` / `<After>` | Red/green compare panels |
 
+<iframe src={`${import.meta.env.BASE_URL}/components/layout.html`} title="Layout components rendered to HTML" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/components/layout.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/catalog/layout.mdx)
+
 ## Reader input
 
 | Component | What it is |
 | --- | --- |
 | `<Ask>` / `<Question>` / `<Choice>` | Native-form question blocks; answers render live as copyable Markdown |
 
+<iframe src={`${import.meta.env.BASE_URL}/components/forms.html`} title="Reader input components rendered to HTML" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/components/forms.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/catalog/forms.mdx)
+
 ## shadcn/ui
 
 The full shadcn/ui (Base UI) set is registered — `Button`, `Card`, `Table`, `Tabs`, `Accordion`, `Dialog`, … Rendered documents carry a hydration bundle, so stateful primitives are interactive in the browser; pass `--no-hydrate` for purely static output.
 
+<iframe src={`${import.meta.env.BASE_URL}/components/shadcn.html`} title="shadcn/ui components rendered to HTML" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/components/shadcn.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/catalog/shadcn.mdx)
+
 ## Project-defined components
 
 Projects register their own components via `mdxr.config.ts` + `defineComponent`; a same-name component overrides the built-in. See [Configuration](/configuration).
+
+<iframe src={`${import.meta.env.BASE_URL}/components/custom.html`} title="Project-defined components rendered to HTML" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/components/custom.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/tree/master/examples/catalog)

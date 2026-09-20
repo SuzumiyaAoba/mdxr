@@ -60,11 +60,12 @@ jobs:
       # the library's dependency graph stays untouched.
       - run: pnpm --dir docs install --frozen-lockfile
 
-      # The gallery embeds real mdxr output — build the CLI and render
-      # examples/*.mdx into docs/public/examples/ so the docs always show
-      # what the current renderer produces.
+      # The gallery and component catalog embed real mdxr output — build
+      # the CLI, render examples/*.mdx → docs/public/examples/ and
+      # examples/catalog/*.mdx → docs/public/components/ so the docs
+      # always show what the current renderer produces.
       - run: pnpm build
-      - run: pnpm docs:examples
+      - run: pnpm docs:render
 
       # Blume builds static HTML + search index + llms.txt into docs/dist/.
       - run: pnpm --dir docs build

@@ -53,7 +53,9 @@
     "docs:dev": "pnpm --dir docs dev",
     "docs:build": "pnpm --dir docs build",
     "docs:preview": "pnpm --dir docs preview",
-    "docs:examples": "node scripts/render-examples.ts docs/public/examples",
+    "docs:demos": "node scripts/render-examples.ts examples/catalog docs/public/components",
+    "docs:examples": "node scripts/render-examples.ts examples docs/public/examples",
+    "docs:render": "pnpm docs:examples && pnpm docs:demos",
     "prepare": "lefthook install",
     "prepack": "pnpm build",
     "react-doctor": "react-doctor"

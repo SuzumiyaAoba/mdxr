@@ -1,0 +1,90 @@
+---
+title: Output artifacts
+---
+
+The things a change produces: diffs, graphs, test runs, endpoints, timing.
+
+## Diff cards
+
+```diff title="src/render.ts"
+@@ -40,7 +40,8 @@
+   const doc = compile(src);
+-  const out = doc;
++  const out = minify(doc);
++  log.info("rendered");
+   return out;
+```
+
+## Anchored comments
+
+<Comments>
+
+```ts title="src/x.ts"
+const a = 1;
+const b = 2;
+const c = a + b;
+```
+
+<Comment lines="2" author="@devin" severity="medium">
+derive b from a
+</Comment>
+
+<Comment lines="3" author="@alice" severity="low">
+consider a comment on the intent
+</Comment>
+
+</Comments>
+
+## Graph
+
+<Graph title="mdx → html pipeline" direction="right">
+  <Node id="doc" label="plan.mdx" path="examples/plan.mdx" />
+  <Node id="eval" label="evaluate" note="@mdx-js/mdx" />
+  <Node id="out" label="out.html" path="examples/out.html" />
+  <Edge from="doc" to="eval" kind="reads" />
+  <Edge from="eval" to="out" kind="writes" label="static markup" />
+</Graph>
+
+## Tests
+
+<Tests title="render.test.ts" tool="vitest">
+  <Test name="renders markdown prose" status="pass" duration="12ms" />
+  <Test name="renders a Plan header" status="pass" duration="31ms" />
+  <Test name="rejects invalid props" status="fail" duration="800ms" file="tests/render.test.ts" lines="96">
+    AssertionError: expected body to contain "Invalid props"
+  </Test>
+</Tests>
+
+## Endpoints
+
+<Endpoints title="User service" base="/api/v1">
+  <Endpoint method="GET" path="/users">
+    List users, paginated.
+  </Endpoint>
+  <Endpoint method="POST" path="/users" auth="admin">
+    Create a user.
+  </Endpoint>
+  <Endpoint method="GET" path="/legacy/users" deprecated="true" />
+</Endpoints>
+
+## JSON
+
+<Json title="tool result">
+
+```json
+{ "name": "mdxr", "stats": { "files": 12 }, "tags": ["agent", "render"] }
+```
+
+</Json>
+
+## Waterfall
+
+<Waterfall title="GET /api/users" unit="ms">
+  <Span name="route match" start="0" duration="3ms" />
+  <Span name="db query" start="21" duration="120ms" note="users + roles" />
+  <Span name="serialize" start="141" duration="9ms" />
+</Waterfall>
+
+## Inline edits
+
+The compiler <Del>concatenates strings</Del> <Ins>streams tokens</Ins> and <Del>always</Del> <Ins>optionally</Ins> minifies the output.

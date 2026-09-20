@@ -1,0 +1,42 @@
+---
+title: mdxr
+description: Render agent-authored MDX documents — plans, reports, reviews — to standalone HTML with a semantic component catalog.
+---
+
+mdxr turns MDX documents written by coding agents into self-contained, styled HTML pages. Agents write Markdown plus a catalog of semantic components — `<Steps>`, `<Findings>`, `<Gantt>`, `<BarChart>`, … — and `mdxr render` compiles the document deterministically: markup, styling, and scripts are never emitted by the model.
+
+```sh
+npx @suzumiyaaoba/mdxr render plan.mdx --open
+```
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" href="/quickstart" icon="rocket">
+    Render your first document in under a minute.
+  </Card>
+  <Card title="CLI reference" href="/cli" icon="terminal">
+    `render`, `serve`, `text`, `catalog`, and `init`.
+  </Card>
+  <Card title="Component catalog" href="/components" icon="layout-grid">
+    80+ semantic components for plans, reports, and investigations.
+  </Card>
+  <Card title="Gallery" href="/gallery" icon="image">
+    Live rendered output — real documents embedded as HTML.
+  </Card>
+</CardGroup>
+
+## Why mdxr
+
+- **Standalone output** — one `.html` file with inlined CSS and a small hydration bundle. No server, no build step for the reader.
+- **Deterministic** — documents are data: no `import`, no `{expressions}`, no raw HTML. The renderer controls the markup.
+- **A catalog built for deliverables** — status badges, phases, timelines, gantt charts, diffs, findings, kanban boards, charts, and the full shadcn/ui set.
+- **Plain-text fallback** — `mdxr text` renders the same document to Markdown that stays readable in a terminal or any Markdown viewer.
+- **Agent-native** — ships an installable skill so coding agents learn the catalog and the render workflow once, then produce consistent documents.
+
+## Install
+
+```sh
+npm install -g @suzumiyaaoba/mdxr          # global CLI
+npm install @suzumiyaaoba/mdxr            # project dependency
+```
+
+Or skip the install entirely — `npx @suzumiyaaoba/mdxr` runs the CLI directly.

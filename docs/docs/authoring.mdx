@@ -1,0 +1,73 @@
+---
+title: Authoring documents
+description: The mdxr document model — Markdown plus a semantic component catalog, with strict rules that keep output deterministic.
+sidebar:
+  order: 3
+---
+
+An mdxr document is an `.mdx` file: Markdown prose plus JSX components from the [catalog](/components). Documents are **data, not programs** — the renderer compiles them deterministically so the model never emits markup, styles, or scripts.
+
+## Rules
+
+- **No JavaScript.** `import`/`export` statements and `{expressions}` are rejected.
+- **String attributes only.** Write `<Step status="done">`, never `status={...}`.
+- **`children` is Markdown.** Components and prose nest freely.
+- **Prefer plain Markdown for prose.** Reach for components when structure earns its keep.
+
+Violations fail the render with a `file:line:col` error — fix the source and re-run.
+
+## Frontmatter
+
+YAML frontmatter drives the document header:
+
+```mdx
+---
+title: Renderer rewrite
+status: doing        # todo | doing | done | blocked
+date: 2026-09-10
+updated: 2026-09-16
+owner: "@suzumiyaaoba"
+version: v3
+editor: cursor       # editor-link scheme, overrides mdxr.config.ts
+---
+```
+
+With a `title`, mdxr renders a document header — status badge plus a meta row — automatically. It is skipped when the body already opens with a `<Plan>`-style root, which takes the same props itself (`<Plan title="…" status="…">`).
+
+## Markdown conventions compile to components
+
+The author writes Markdown; the renderer turns shorthands into catalog components:
+
+| Write | Get |
+| --- | --- |
+| `:::note` / `:::warning` / `:::decision` | `<Callout>` |
+| `:::goal` / `:::nongoal` / `:::question` / `:::answer` | goal / non-goal / open-question / conclusion callouts |
+| `:::phase{title="…" status="doing"}` | `<Phase>` heading with status badge |
+| `> [!NOTE]` GitHub alert | `<Callout>` |
+| `- [ ]` / `- [x]` | styled task list |
+| `` ```ts title="src/x.ts" `` | highlighted code block + filename bar |
+| `` ```diff `` / `` ```patch `` | structured per-file diff cards |
+| `` ```mermaid `` | rendered diagram |
+| `` ```console `` | terminal transcript |
+| `$…$` / `$$…$$` | KaTeX math |
+| `` `src/x.ts` `` naming a real file | `<FileRef>` chip with editor link |
+
+The `:::` directive syntax wraps most container components — `:::findings`, `:::gantt`, `:::barchart`, `:::board`, `:::tests`, … — see the [catalog](/components) for the full mapping, or `mdxr catalog --json` for the machine-readable version.
+
+## Editor links
+
+Components that carry `path` — `<FileRef>`, `<SymbolRef>`, `<File>`, `<TraceFrame>`, `<FlowStep>`, `<Change>` — and code-block filename headers become `vscode://file/…` links when the file exists on disk (resolved relative to the document). Inline code works too: `` `src/mdx.ts:40-52` `` auto-converts to a `<FileRef>` when it resolves to a real file, while a bare `mdx.ts` without a `/` stays plain code.
+
+Pick the scheme with `editor` in `mdxr.config.ts` or per-document frontmatter: `vscode` (default), `cursor`, `zed`, `vscode-insiders`, `windsurf`, `sublime`, `textmate`, `idea`, a custom `{path}`/`{line}` URL template like `"myed://open?f={path}&l={line}"`, or `none` to disable. `href="…"` on a component overrides the URL entirely.
+
+## Rendering pipelines
+
+The same source feeds three outputs:
+
+| Command | Output |
+| --- | --- |
+| `mdxr render` | Standalone HTML — inlined Tailwind CSS, syntax highlighting, hydration bundle |
+| `mdxr serve` | Live-reloading browser preview |
+| `mdxr text` | Plain Markdown with ASCII component stand-ins |
+
+Every document renders its Tailwind CSS at render time — only the utilities the document (and its components) actually use are emitted, so output stays small.

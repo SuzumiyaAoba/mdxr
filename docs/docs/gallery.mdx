@@ -1,0 +1,64 @@
+---
+title: Gallery
+description: Real mdxr documents rendered to standalone HTML — embedded live, exactly as the CLI produces them.
+sidebar:
+  order: 4
+---
+
+Every example below is a real `.mdx` document from the [`examples/`](https://github.com/SuzumiyaAoba/mdxr/tree/master/examples) directory, rendered by `mdxr render` during the docs build. The embedded frames show the actual output — hydration included, so interactive components work inside the frame.
+
+## Implementation plan — `plan.mdx`
+
+`<Plan>` header, phases, status steps, gantt schedule, decisions, risks, approvals.
+
+<iframe src={`${import.meta.env.BASE_URL}/examples/plan.html`} title="plan.mdx rendered to HTML" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/examples/plan.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/plan.mdx)
+
+## Status report — `report.mdx`
+
+`<Stats>` metrics, `<Checks>` CI status, `<Gauges>` coverage, benchmarks, verdict.
+
+<iframe src={`${import.meta.env.BASE_URL}/examples/report.html`} title="report.mdx rendered to HTML" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/examples/report.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/report.mdx)
+
+## Code investigation — `investigation.mdx`
+
+`<Findings>`, `<Hypotheses>`, terminal transcripts, stack traces, search logs.
+
+<iframe src={`${import.meta.env.BASE_URL}/examples/investigation.html`} title="investigation.mdx rendered to HTML" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/examples/investigation.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/investigation.mdx)
+
+## Code explanation — `code.mdx`
+
+`<FileRef>` chips, `<Flow>` call chains, annotated code blocks.
+
+<iframe src={`${import.meta.env.BASE_URL}/examples/code.html`} title="code.mdx rendered to HTML" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/examples/code.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/code.mdx)
+
+## Output artifacts — `artifacts.mdx`
+
+Diff cards, `<Graph>` diagrams, `<Tests>` reports, endpoints, JSON trees.
+
+<iframe src={`${import.meta.env.BASE_URL}/examples/artifacts.html`} title="artifacts.mdx rendered to HTML" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/examples/artifacts.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/artifacts.mdx)
+
+## shadcn/ui — `ui.mdx`
+
+The interactive primitives — tabs, accordion, switch, slider — hydrated and operable in the output.
+
+<iframe src={`${import.meta.env.BASE_URL}/examples/ui.html`} title="ui.mdx rendered to HTML" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/examples/ui.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/ui.mdx)
+
+## Custom components — `custom.mdx`
+
+Project-defined TSX components registered via `mdxr.config.ts`.
+
+<iframe src={`${import.meta.env.BASE_URL}/examples/custom.html`} title="custom.mdx rendered to HTML" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/examples/custom.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/custom.mdx)

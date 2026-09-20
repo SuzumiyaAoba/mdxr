@@ -1,0 +1,57 @@
+---
+title: エージェントスキル
+description: mdxr スキルをインストールして、コーディングエージェントにコンポーネントカタログとレンダリングワークフローを覚えさせます。
+sidebar:
+  order: 7
+---
+
+mdxr には[エージェントスキル](https://github.com/vercel-labs/skills) — `SKILL.md` とリファレンスドキュメント — が同梱されており、コーディングエージェントにコンポーネントカタログ、オーサリングルール、レンダリングワークフローを教えます。インストール後、エージェントは計画書・レポート・レビューなど、スタイル付き HTML として読ませる構造化ドキュメントを書くたびにスキルを使います。
+
+## インストール
+
+最も手軽なのは `mdxr init` で、バンドル済みのスキルをプロジェクトにコピーします:
+
+```sh
+mdxr init                  # → .agents/skills/mdxr/
+mdxr init --tool claude    # → .claude/skills/mdxr/
+mdxr init --tool devin     # → .devin/skills/mdxr/
+mdxr init --tool all       # 対応する全ツール
+mdxr init --global         # プロジェクトではなくホームディレクトリへ
+mdxr init --force          # 既存のインストールを上書き
+```
+
+リポジトリから [`skills` CLI](https://github.com/vercel-labs/skills) でインストールすることもできます:
+
+```sh
+npx skills add Suzumiyaaoba/mdxr --skill mdxr
+# グローバルなら -g、特定エージェントを指定するなら -a claude-code
+```
+
+## 使い方
+
+インストール後は成果物を頼むだけです:
+
+> mdxr スキルを使って auth 機能の実装計画を書いて、HTML にレンダリングして。
+
+計画書だけでなく、レポート、レビュー、調査サマリー、リリースノート、ポストモーテムにも使えます。自動化するには、エージェント設定（`AGENTS.md`、`CLAUDE.md` など）に常設の指示を追加します:
+
+```md
+- Whenever the user explicitly asks for a deliverable with mdxr, use the mdxr skill to write and render it.
+```
+
+## スキルの内容
+
+| ファイル | 内容 |
+| --- | --- |
+| `SKILL.md` | ワークフロー — `.mdx` を書く、`render`、`serve`、`text` — とオーサリングルール、構文チートシート |
+| `references/components.md` | カタログ索引: 全コンポーネントの役割をドキュメント種別ごとに整理 |
+| `references/components/*.md` | グループ別の詳細ファイル。全シグネチャと例。エージェントは必要なものだけを読む |
+| `references/extending.md` | `mdxr.config.ts` でプロジェクト定義コンポーネントを登録する方法 |
+
+スキルは読み取りオンデマンド方式を教えます: エージェントはまず索引を見て、ドキュメントが実際に使う詳細ファイルだけを読み込みます — 計画書を書くのにチャートのリファレンス分のコンテキストコストを払いません。
+
+## エージェントが正確に書ける仕組み
+
+- ドキュメントに JS は書けません — `import`、`{expressions}`、文字列でない属性は `file:line:col` 付きのエラーでレンダリングに失敗し、エージェントが自己修正できます。
+- `mdxr catalog --json` が、プロジェクト定義コンポーネントを含む現在のコンポーネントセットをエージェントに提供します。
+- `mdxr render --format json` は機械可読なエラーを返し、自動リトライに使えます。

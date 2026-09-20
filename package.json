@@ -50,6 +50,10 @@
     "fix": "ultracite fix",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
+    "docs:dev": "pnpm --dir docs dev",
+    "docs:build": "pnpm --dir docs build",
+    "docs:preview": "pnpm --dir docs preview",
+    "docs:examples": "node scripts/render-examples.ts docs/public/examples",
     "prepare": "lefthook install",
     "prepack": "pnpm build",
     "react-doctor": "react-doctor"

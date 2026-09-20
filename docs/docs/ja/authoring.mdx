@@ -1,0 +1,73 @@
+---
+title: ドキュメントの書き方
+description: mdxr のドキュメントモデル — Markdown とセマンティックコンポーネントカタログ。出力を決定論的に保つ厳格なルール。
+sidebar:
+  order: 3
+---
+
+mdxr ドキュメントは `.mdx` ファイルです。Markdown の本文に [カタログ](/ja/components) の JSX コンポーネントを混ぜて書きます。ドキュメントは**プログラムではなくデータ** — レンダラーが決定論的にコンパイルするため、モデルがマークアップ・スタイル・スクリプトを出力することはありません。
+
+## ルール
+
+- **JavaScript は書けません。** `import`/`export` 文と `{expressions}` は拒否されます。
+- **属性は文字列のみ。** `<Step status="done">` と書き、`status={...}` は使えません。
+- **`children` は Markdown。** コンポーネントと本文は自由にネストできます。
+- **本文はプレーンな Markdown を優先。** 構造が意味を持つ場面でのみコンポーネントを使います。
+
+違反は `file:line:col` 付きのエラーでレンダリングに失敗します — ソースを直して再実行してください。
+
+## Frontmatter
+
+YAML frontmatter がドキュメントヘッダーを駆動します:
+
+```mdx
+---
+title: Renderer rewrite
+status: doing        # todo | doing | done | blocked
+date: 2026-09-10
+updated: 2026-09-16
+owner: "@suzumiyaaoba"
+version: v3
+editor: cursor       # エディタリンクのスキーム。mdxr.config.ts を上書き
+---
+```
+
+`title` があれば、mdxr はドキュメントヘッダー — ステータスバッジとメタ行 — を自動で描画します。本文がすでに `<Plan>` 系のルートで始まる場合（そちらが同じ props を自分で持つため）はスキップされます。
+
+## Markdown 規約はコンポーネントにコンパイルされる
+
+書くのは Markdown、レンダラーがショートハンドをカタログコンポーネントに変換します:
+
+| 書くもの | 得られるもの |
+| --- | --- |
+| `:::note` / `:::warning` / `:::decision` | `<Callout>` |
+| `:::goal` / `:::nongoal` / `:::question` / `:::answer` | ゴール / 非ゴール / 未解決の問い / 結論のコールアウト |
+| `:::phase{title="…" status="doing"}` | ステータスバッジ付き `<Phase>` 見出し |
+| `> [!NOTE]` GitHub アラート | `<Callout>` |
+| `- [ ]` / `- [x]` | スタイル付きタスクリスト |
+| `` ```ts title="src/x.ts" `` | ハイライト済みコードブロック + ファイル名バー |
+| `` ```diff `` / `` ```patch `` | ファイルごとの構造化 diff カード |
+| `` ```mermaid `` | レンダリング済みダイアグラム |
+| `` ```console `` | ターミナルトランスクリプト |
+| `$…$` / `$$…$$` | KaTeX 数式 |
+| `` `src/x.ts` ``（実在するファイル） | エディタリンク付き `<FileRef>` チップ |
+
+`:::` ディレクティブ構文はほとんどのコンテナコンポーネントを包みます — `:::findings`、`:::gantt`、`:::barchart`、`:::board`、`:::tests` など。全マッピングは [カタログ](/ja/components)、機械可読版は `mdxr catalog --json` を参照してください。
+
+## エディタリンク
+
+`path` を持つコンポーネント — `<FileRef>`、`<SymbolRef>`、`<File>`、`<TraceFrame>`、`<FlowStep>`、`<Change>` — とコードブロックのファイル名ヘッダーは、ファイルがディスク上に存在する場合 `vscode://file/…` リンクになります（ドキュメントからの相対パスで解決）。インラインコードも同様です: `` `src/mdx.ts:40-52` `` は実在ファイルに解決できれば `<FileRef>` に自動変換され、`/` を含まない素の `mdx.ts` はプレーンなコードのままです。
+
+スキームは `mdxr.config.ts` の `editor` かドキュメントの frontmatter で選びます: `vscode`（デフォルト）、`cursor`、`zed`、`vscode-insiders`、`windsurf`、`sublime`、`textmate`、`idea`、`"myed://open?f={path}&l={line}"` のような `{path}`/`{line}` カスタムテンプレート、または無効化する `none`。コンポーネントの `href="…"` は URL を完全に上書きします。
+
+## レンダリングパイプライン
+
+同じソースから 3 つの出力が得られます:
+
+| コマンド | 出力 |
+| --- | --- |
+| `mdxr render` | スタンドアロン HTML — インライン Tailwind CSS、シンタックスハイライト、ハイドレーションバンドル |
+| `mdxr serve` | ライブリロード付きブラウザプレビュー |
+| `mdxr text` | ASCII 表現のコンポーネントを含むプレーン Markdown |
+
+すべてのドキュメントで Tailwind CSS がレンダリング時に生成されます — ドキュメント（とそのコンポーネント）が実際に使うユーティリティだけが出力されるため、サイズは小さく保たれます。

@@ -1,0 +1,88 @@
+---
+title: Quickstart
+description: Render your first mdxr document in under a minute — no install required.
+sidebar:
+  order: 1
+---
+
+## Requirements
+
+- Node.js 20 or newer
+
+## Render your first document
+
+<Steps>
+  <Step title="Write a document">
+
+    Create `plan.mdx` — plain Markdown plus mdxr components:
+
+    ```mdx plan.mdx
+    ---
+    title: Migration plan
+    status: doing
+    owner: "@you"
+    ---
+
+    :::goal
+    Ship the new renderer behind a flag.
+    :::
+
+    :::phase{title="Phase 1 — scaffolding" status="doing"}
+
+    <Steps progress>
+      <Step status="done">Compile MDX</Step>
+      <Step status="doing">Wire up hydration</Step>
+      <Step status="todo">Ship it</Step>
+    </Steps>
+
+    :::
+    ```
+
+  </Step>
+  <Step title="Render it">
+
+    ```sh
+    npx @suzumiyaaoba/mdxr render plan.mdx --open
+    ```
+
+    Writes `plan.html` next to the document and opens it in your default browser. The HTML is standalone — CSS and the hydration bundle are inlined — so the file works anywhere.
+
+  </Step>
+  <Step title="Preview while you edit">
+
+    ```sh
+    npx @suzumiyaaoba/mdxr serve plan.mdx --open
+    ```
+
+    A live-reloading preview at `http://localhost:3737`. Saves rebuild instantly; config and theme changes are picked up too.
+
+  </Step>
+</Steps>
+
+## Read it in the terminal
+
+`mdxr text` renders the same document to plain Markdown — components become ASCII stand-ins (checkbox lists, block-bar charts, GFM tables, `<details>` disclosures):
+
+```sh
+npx @suzumiyaaoba/mdxr text plan.mdx      # → plan.txt.md
+```
+
+## Teach your agent the catalog
+
+```sh
+npx @suzumiyaaoba/mdxr init               # → .agents/skills/mdxr/
+npx @suzumiyaaoba/mdxr init --tool all    # every supported agent tool
+```
+
+Then ask your agent for a deliverable — "write an implementation plan for the auth feature and render it to HTML" — and it will use the catalog correctly. See [Agent skill](/agent-skill).
+
+## What's next
+
+<CardGroup cols={2}>
+  <Card title="Authoring documents" href="/authoring" icon="pen-line">
+    The document model, frontmatter, and Markdown conventions.
+  </Card>
+  <Card title="Component catalog" href="/components" icon="layout-grid">
+    Everything a document can use.
+  </Card>
+</CardGroup>

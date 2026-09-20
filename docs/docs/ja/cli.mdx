@@ -1,0 +1,101 @@
+---
+title: CLI リファレンス
+description: mdxr の全コマンド — render、serve、text、catalog、init — と全フラグ。
+sidebar:
+  order: 2
+---
+
+`mdxr` はレンダリング・プレビュー・オーサリングのための単一 CLI です。`npx @suzumiyaaoba/mdxr <command>` で都度実行するか、グローバルインストール（`npm i -g @suzumiyaaoba/mdxr`）して使います。
+
+## mdxr render
+
+`.mdx` ドキュメント（ファイル引数または stdin）をスタンドアロン HTML ファイルにレンダリングします。
+
+```sh
+mdxr render plan.mdx                  # → plan.html
+mdxr render plan.mdx -o out.html      # 出力先を指定
+cat plan.mdx | mdxr render > out.html # stdin → stdout
+mdxr render plan.mdx --open           # plan.html をブラウザで開く
+mdxr render plan.mdx --no-hydrate     # クライアントバンドルなしの静的 HTML
+mdxr render plan.mdx --format json    # 機械可読なエラー出力
+```
+
+| フラグ | 説明 |
+| --- | --- |
+| `-o, --out <path>` | 出力パス。デフォルトは `<file>.html`。stdin 入力または `-` 指定時は stdout |
+| `--format <format>` | エラー出力形式: `text`（デフォルト）または `json` |
+| `--no-hydrate` | クライアントのハイドレーションバンドルなしで静的 HTML を出力 |
+| `--open` | 出力ファイルをデフォルトブラウザで開く。出力ファイルが必要 |
+
+:::note
+ステートフルなコンポーネント（`Tabs`、`Accordion`、`Switch`、カンバンの `<Board>` など）は、インライン化されたクライアントバンドルによってブラウザ上でハイドレートされます。ハイドレート対象のコンポーネントを使わないドキュメントではバンドル自体が省略されるため、純粋な Markdown ドキュメントは軽量なままです。`--no-hydrate` を指定すると完全に無効化できます。
+:::
+
+エラーは `file:line:col` 付きで報告されるため、エージェント（あるいは人間）がソースを修正して再実行できます。`--format json` は同じメッセージを機械可読な出力に包みます。
+
+## mdxr serve
+
+ドキュメントをライブリロード付きでブラウザプレビューします。`render` と同様に stdin も受け付けます。
+
+```sh
+mdxr serve plan.mdx                   # http://localhost:3737
+mdxr serve plan.mdx -p 8080 --open
+cat plan.mdx | mdxr serve --open
+```
+
+| フラグ | 説明 |
+| --- | --- |
+| `-p, --port <port>` | 待ち受けポート（デフォルト `3737`） |
+| `--open` | サーバー起動後にデフォルトブラウザでプレビューを開く |
+
+ウォッチャーはドキュメントのレンダリング依存関係をたどります — `theme` の CSS ファイルとそのインポートも変更でプレビューが再読み込みされます。
+
+## mdxr text
+
+`.mdx` ドキュメントをプレーンな Markdown に変換します。すべてのコンポーネントが ASCII/テキスト表現 — ステータス付きチェックボックスリスト、ブロックバーチャート、GFM テーブル、`<details>` 開閉ブロック — に置き換わるため、任意の Markdown ビューアやターミナルで読めます。
+
+```sh
+mdxr text plan.mdx                    # → plan.txt.md
+mdxr text plan.mdx -o plan.md         # 出力先を指定
+cat plan.mdx | mdxr text > plan.md    # stdin → stdout
+```
+
+インタラクティブ専用のウィジェット（ダイアログ、メニュー、shadcn 系）はテキスト内容にフォールバックし、未知のコンポーネントは stderr に警告を出しつつ子要素をそのまま保持します。
+
+| フラグ | 説明 |
+| --- | --- |
+| `-o, --out <path>` | 出力パス。デフォルトは `<file>.txt.md`。stdin 入力または `-` 指定時は stdout |
+
+## mdxr catalog
+
+ドキュメントで利用可能なコンポーネント — ビルトインに加えて `mdxr.config.ts` で定義されたプロジェクト固有コンポーネント — を一覧します。エージェントは `--json` を名前と属性の機械可読な信頼ソースとして使います。
+
+```sh
+mdxr catalog                          # 人間向け一覧
+mdxr catalog --json                   # 名前・メタ情報・オーサリング規約
+mdxr catalog --dir ./my-project       # 別プロジェクトの設定を読む
+```
+
+| フラグ | 説明 |
+| --- | --- |
+| `--json` | 機械可読な JSON を出力 |
+| `--dir <dir>` | `mdxr.config.ts` を読み込むプロジェクトディレクトリ（デフォルトは cwd） |
+
+## mdxr init
+
+mdxr のエージェントスキルをインストールし、コーディングエージェントがコンポーネントカタログとレンダリングワークフローを使えるようにします。[エージェントスキル](/ja/agent-skill) も参照してください。
+
+```sh
+mdxr init                             # → .agents/skills/mdxr/
+mdxr init --tool claude               # → .claude/skills/mdxr/
+mdxr init --tool devin                # → .devin/skills/mdxr/
+mdxr init --tool all                  # 対応する全ツール
+mdxr init --global                    # プロジェクトではなくホームディレクトリへ
+mdxr init --force                     # 既存のインストールを上書き
+```
+
+| フラグ | 説明 |
+| --- | --- |
+| `--tool <tool>` | `agents`（デフォルト）、`claude`、`devin`、または `all` |
+| `--global` | プロジェクトではなくホームディレクトリにインストール |
+| `--force` | 既存のスキルディレクトリを上書き |

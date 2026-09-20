@@ -1,0 +1,151 @@
+---
+title: コンポーネントカタログ
+description: mdxr ドキュメントを構成するセマンティックコンポーネント群 — スキャフォールディング、計画、調査、成果物、レポート、チャート、レイアウト、フォーム、shadcn/ui。
+sidebar:
+  order: 5
+---
+
+カタログはドキュメントの種類ごとにグループ化されています。`mdxr catalog` でプロジェクトで利用可能な全コンポーネント — ビルトインと[プロジェクト定義](/ja/configuration#プロジェクト定義コンポーネント)のもの — を一覧でき、`mdxr catalog --json` が名前と属性の機械可読な信頼ソースです。実際のレンダリング結果は[ギャラリー](/ja/gallery)で確認できます。
+
+## ドキュメントのスキャフォールディング
+
+あらゆる成果物を支える枠組み: ヘッダー、コールアウト、ナビゲーション、参照。
+
+| コンポーネント | 説明 |
+| --- | --- |
+| `<Plan>` | ドキュメントルート — タイトルヘッダー、ステータスバッジ、メタ行（frontmatter から自動構築） |
+| `<Meta>` / `<MetaItem>` | メタデータ行（`Date · Owner · …`）。アイコン付きカスタム項目 |
+| `<Callout>` | 強調ブロック — `:::note`/`:::warning`/`:::goal`/`:::decision`/…、`> [!NOTE]` |
+| `<Details>` | ネイティブ `<details>` の折りたたみセクション（JS なしで動作） |
+| `<Toc>` | 自動構築される折りたたみ式目次 — `:::toc` |
+| `<Glossary>` / `<Term>` | ドメイン用語の定義リスト |
+| `<Figure>` | キャプション付き画像 |
+| `<Ref>` / `<Issue>` / `<PR>` / `<Commit>` | リンク付き参照カード / インライン GitHub チップ |
+| `<Cmd>` | コピーボタン付きインラインコマンドチップ |
+| `<Icon>` | インライン Iconify SVG — `lucide` と `vscode-icons` をバンドル、実行時フェッチなし |
+| フェンスコード / 数式 | ファイル名バーと行マーカー付きハイライトコードブロック。` ```mermaid ` ダイアグラム。KaTeX `$…$` |
+
+## 計画とステータス
+
+実装計画、マイルストーン、タスク管理、決定記録。
+
+| コンポーネント | 説明 |
+| --- | --- |
+| `<Phase>` | ステータスバッジ付きセクション見出し — `:::phase` |
+| `<Steps>` / `<Step>` | ステータス対応タスクリスト。プログレスバー、owner/effort/priority/due チップ |
+| `<Timeline>` / `<Event>` | 日付付きマイルストーンレール — `:::timeline` |
+| `<Gantt>` / `<Task>` / `<Milestone>` | 日付ベースのスケジュールチャート — `:::gantt` |
+| `<Decision>` | ADR ライクな決定記録 |
+| `<Option>` | 代替案の比較カード（recommended/considered/rejected） |
+| `<Risk>` | リスクブロック — severity ピル + 緩和策 |
+| `<Approvals>` / `<Approval>` | 承認リスト |
+| `<Stats>` / `<Stat>` | メトリクスカードグリッド。`delta` は符号で色付け |
+| `<Priority>` `<Effort>` `<Due>` `<Owner>` | インラインチップ（優先度、Tシャツサイズ工数、期限、担当者） |
+| `<Reqs>` / `<Req>` | 要件 / 受け入れ条件の行 |
+| `<Board>` / `<Lane>` / `<BoardCard>` | インタラクティブなカンバン — カードをレーン間でドラッグ、"Copy markdown" で更新後のマークアップを出力 — `:::board` |
+| `<Matrix>` | 比較グリッド — `yes`/`no`/`partial`/`✓`/`✗`/`△` セルがアイコン化 — `:::matrix` |
+| `<Summary>` | プログレスバー |
+| `<StatusBadge>` | 単体のステータスピル |
+
+## コード調査
+
+検出結果、仮説、証拠の軌跡 — ターミナル、トレース、検索、ファイル。
+
+| コンポーネント | 説明 |
+| --- | --- |
+| `<Findings>` / `<Finding>` | confidence ピル付き番号付き検出結果 — `:::findings` |
+| `<Hypotheses>` / `<Hypothesis>` | 仮説台帳（supported/refuted/untested）— `:::hypotheses` |
+| `<Terminal>` | コマンドトランスクリプト（`$` プロンプト、出力、終了バッジ）— `:::terminal`、` ```console ` |
+| `<Trace>` / `<TraceFrame>` | エラー行とライブラリフレーム減光のスタック/コールトレース — `:::trace` |
+| `<Searches>` / `<Search>` | 検索クエリログ（pattern/scope/tool/hits）— `:::searches` |
+| `<Files>` / `<File>` | 関連ファイル一覧 — `:::files` |
+| `<Deps>` / `<Dep>` | 依存エッジリスト — `:::deps` |
+| `<Changes>` / `<Change>` | 変更セット一覧（add/modify/delete/rename） |
+| `<Flow>` / `<FlowStep>` | 番号付きコール/実行チェーン — `:::flow` |
+| `<Tree>` | ネストしたリストからのファイルツリー — 折りたたみ可能なフォルダ、自動アイコン |
+| `<FileRef>` / `<SymbolRef>` | コピーボタン付きインライン ファイル/シンボル参照チップ |
+| `<CodeFile>` | ディスク上の実ファイルをコードブロックとして埋め込み |
+| `<Props>` / `<Prop>` | コンポーネントや関数の API/props テーブル |
+
+## 出力アーティファクト
+
+変更が生み出すもの: diff、グラフ、テスト実行、エンドポイント、タイミング。
+
+| コンポーネント | 説明 |
+| --- | --- |
+| ` ```diff ` / ` ```patch ` フェンス | ファイルごとの構造化 diff カード — エディタリンク、`+N −M` 統計、ハンク行番号 |
+| `<Comments>` / `<Comment>` | コード/diff 行にアンカーされたコメントスレッド — `:::comments` |
+| `<Graph>` / `<Node>` / `<Edge>` | 静的ノード/エッジダイアグラム — レンダリング時に dagre レイアウト — `:::graph` |
+| `<Tests>` / `<Test>` | テスト実行レポート — ステータスピル、件数と時間の自動集計 — `:::tests` |
+| `<Endpoints>` / `<Endpoint>` | API ルート一覧 — メソッドチップ、`base` プレフィックス、`auth`/`deprecated` — `:::endpoints` |
+| `<Json>` | ネストした `<details>` 上の折りたたみ式 JSON ツリー |
+| `<Waterfall>` / `<Span>` | タイミングウォーターフォール（OTel トレース風バー）— `:::waterfall` |
+| `<Ins>` / `<Del>` | インラインの単語レベル編集 — セマンティックな `<ins>`/`<del>` |
+
+## レポート
+
+レビュー結果、検証ステータス、セキュリティ・依存関係スキャン、メトリクス、運用サマリー。
+
+| コンポーネント | 説明 |
+| --- | --- |
+| `<Review>` / `<Comment>` | コードレビューレポート — severity ピル付き番号付き指摘、`file:line` リンク、verdict ピル — `:::review` |
+| `<Verdict>` | 色付き verdict バナー — approve/pass/warn/fail/info — `:::verdict` |
+| `<Severity>` | インライン severity ピル — critical/high/medium/low/info |
+| `<Checks>` / `<Check>` | CI チェック一覧 — ステータスアイコン、required チップ、自動集計 — `:::checks` |
+| `<Audit>` / `<Vuln>` | 脆弱性レポート — severity 集計、CVE/GHSA リンク、修正バージョン — `:::audit` |
+| `<Bumps>` / `<Bump>` | 依存関係アップグレード計画 — `from → to`、major/minor/patch 自動判定 — `:::bumps` |
+| `<Packages>` / `<Package>` | パッケージ一覧 — kind/license チップ — `:::packages` |
+| `<Gauges>` / `<Gauge>` | パーセントバー一覧 — カバレッジ/スコアを自動で pass/fail 色付け — `:::gauges` |
+| `<Score>` | 0–100 のリングゲージ — ヘルス/品質スコア |
+| `<Spark>` | 本文中のトレンドを示すインラインスパークライン |
+| `<Benchmarks>` / `<Bench>` | 前後比較の計測テーブル — % delta 自動計算 — `:::benchmarks` |
+| `<DiffStat>` | 比例バー付きインライン `+N −M across F files` チップ |
+| `<Schema>` / `<DbTable>` / `<DbField>` | DB スキーマドキュメント — PK/FK/unique/null チップ — `:::schema` |
+| `<EnvVars>` / `<EnvVar>` | 環境変数リファレンス — required/secret チップ、マスク済み値 — `:::envvars` |
+| `<StatusPage>` / `<Service>` | サービス健全性サマリー — 最悪ステータスのロールアップ、稼働率 — `:::statuspage` |
+| `<Uptime>` / `<Day>` | ステータスページ風の日別稼働バー — `:::uptime` |
+| `<Release>` / `<Entry>` | リリースノート — kind ごとに自動グループ化 — `:::release` |
+| `<Pathway>` / `<Stop>` | マイグレーション/ロールアウトのステッパー — バージョンパス、環境プロモーション — `:::pathway` |
+| `<Incident>` | インシデント/ポストモーテムヘッダー — severity + status ピル、タイムラインメタ — `:::incident` |
+
+## データ可視化
+
+すべてのチャートはレンダリング時の静的 SVG/HTML（クライアント JS なし）。`tone` で色を固定、`unit` で値にラベルを付けます。
+
+| コンポーネント | 説明 |
+| --- | --- |
+| `<BarChart>` / `<Bar>` | カテゴリ比較 — 縦/横、グループ化または積み上げ — `:::barchart` |
+| `<LineChart>` / `<Series>` | 順序付きカテゴリのトレンドライン。`area` 塗り、`dash` 系列 — `:::linechart` |
+| `<PieChart>` / `<Slice>` | 凡例付きの全体に対する部分の円/ドーナツ — `:::piechart` |
+| `<Scatter>` / `<Point>` | 2 軸の相関。`size` でバブル — `:::scatter` |
+| `<Radar>` / `<Series>` | 3 軸以上のスパイダーチャート — `:::radar` |
+| `<Funnel>` / `<Stage>` | コンバージョン率付き段階的絞り込み — `:::funnel` |
+| `<Quadrant>` / `<Pin>` | ラベル付き領域を持つ 2 軸ポジショニングマップ — `:::quadrant` |
+| `<Bridge>` / `<Delta>` | 累計ウォーターフォール（start→deltas→end）— `:::bridge` |
+| `<Treemap>` / `<Tile>` | スクエア化された全体に対する部分の面積 — `:::treemap` |
+| `<Sankey>` / `<Link>` / `<Node>` | ステージ列をまたぐフローの分岐/合流 — `:::sankey` |
+| `<Venn>` / `<Set>` / `<Overlap>` | 2–3 集合のオーバーラップ図 — `:::venn` |
+
+## レイアウト
+
+| コンポーネント | 説明 |
+| --- | --- |
+| `<Columns>` / `<Column>` | シンプルな並列グリッド（2–4 列） |
+| `<Grid>` / `<Cell>` | 12 トラックグリッド — スパン、dense フロー、auto-fit カードグリッド |
+| `<Row>` | インラインコンポーネント用の水平 flex-wrap 行 |
+| `<Stack>` | `gap` 付き垂直スタック |
+| `<Before>` / `<After>` | 赤/緑の比較パネル |
+
+## 読者からの入力
+
+| コンポーネント | 説明 |
+| --- | --- |
+| `<Ask>` / `<Question>` / `<Choice>` | ネイティブフォームの質問ブロック。回答はコピー可能な Markdown としてライブ表示 |
+
+## shadcn/ui
+
+shadcn/ui（Base UI）の全セットが登録されています — `Button`、`Card`、`Table`、`Tabs`、`Accordion`、`Dialog` など。レンダリング済みドキュメントにはハイドレーションバンドルが含まれるため、ステートフルなプリミティブはブラウザ上でインタラクティブに動作します。完全に静的な出力には `--no-hydrate` を渡してください。
+
+## プロジェクト定義コンポーネント
+
+プロジェクトは `mdxr.config.ts` + `defineComponent` で独自コンポーネントを登録できます。同名のコンポーネントはビルトインを上書きします。[設定](/ja/configuration) を参照してください。

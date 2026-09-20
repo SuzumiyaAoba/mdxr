@@ -1,0 +1,85 @@
+---
+title: Configuration
+description: mdxr.config.ts — project-defined components, theme overrides, and editor links.
+sidebar:
+  order: 6
+---
+
+Projects configure mdxr with `mdxr.config.ts` in the directory the render runs from (`mdxr.config.mts`, `.js`, and `.mjs` are also picked up). Every field is optional.
+
+```ts mdxr.config.ts
+import { defineConfig } from "@suzumiyaaoba/mdxr";
+
+export default defineConfig({
+  components: "./components/index.tsx", // named exports become MDX components
+  theme: "./mdxr.css",                  // optional: @theme token overrides
+  editor: "vscode",                     // optional: file-link target
+});
+```
+
+| Field | Description |
+| --- | --- |
+| `components` | Path to a TS/TSX module (or a directory with an index file) whose named exports become extra MDX components |
+| `theme` | Path to a CSS file with `@theme` overrides / extra utilities |
+| `editor` | URL scheme for file links — see below |
+
+## Editor links
+
+`editor` controls where `path`-carrying components and code-block filename headers link:
+
+- A known name — `vscode` (default), `cursor`, `zed`, `vscode-insiders`, `windsurf`, `sublime`, `textmate`, `idea`
+- A custom `{path}`/`{line}` URL template — `"myed://open?f={path}&l={line}"`
+- `"none"` to disable links entirely
+
+Frontmatter `editor:` overrides it per document, and `href="…"` on a component overrides the URL entirely.
+
+## Project-defined components
+
+Define components with `defineComponent` and a [valibot](https://valibot.dev) schema — the schema validates props at render time **and** documents the component in `mdxr catalog`. Document attributes always arrive as strings, so schemas coerce and validate accordingly.
+
+```tsx components/index.tsx
+import { defineComponent, v } from "@suzumiyaaoba/mdxr";
+
+export const LinkCard = defineComponent(
+  {
+    description: "External reference card",
+    schema: v.looseObject({ href: v.string(), title: v.string() }),
+  },
+  ({ href, title, children }) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block rounded-lg border p-3 no-underline"
+    >
+      <div className="font-medium">{title} ↗</div>
+      {children}
+    </a>
+  )
+);
+```
+
+Each named export registers under its export name — `<LinkCard>` above — and a same-name export **overrides the built-in** (a warning is printed to stderr).
+
+Components are ordinary React function components; Tailwind classes in your module are picked up by the render-time CSS build. Compose built-ins and the shadcn/ui set by importing from `@suzumiyaaoba/mdxr/components`:
+
+```tsx
+import { Card } from "@suzumiyaaoba/mdxr/components";
+```
+
+`textOf(children)` — also exported — flattens a children tree to plain text, handy for copy-to-clipboard payloads.
+
+## Theme overrides
+
+`theme` points at a CSS file evaluated as a Tailwind v4 source. Use `@theme` to override design tokens or add utilities; relative `@import`s inside the theme resolve against the theme's own directory, and every file the render pulls in becomes a watch dependency for `mdxr serve`.
+
+```css mdxr.css
+@theme {
+  --color-brand: #7c3aed;
+  --font-display: "Geist", sans-serif;
+}
+```
+
+## Discovery
+
+`mdxr catalog` lists everything a project exposes — built-ins plus your components, with the `description` and schema-derived props for each. Agents read the same list via `mdxr catalog --json`.

@@ -1,0 +1,88 @@
+---
+title: クイックスタート
+description: インストール不要で、1 分で最初の mdxr ドキュメントをレンダリングします。
+sidebar:
+  order: 1
+---
+
+## 前提条件
+
+- Node.js 20 以降
+
+## 最初のドキュメントをレンダリングする
+
+<Steps>
+  <Step title="ドキュメントを書く">
+
+    `plan.mdx` を作成します — プレーンな Markdown に mdxr コンポーネントを加えたものです:
+
+    ```mdx plan.mdx
+    ---
+    title: Migration plan
+    status: doing
+    owner: "@you"
+    ---
+
+    :::goal
+    Ship the new renderer behind a flag.
+    :::
+
+    :::phase{title="Phase 1 — scaffolding" status="doing"}
+
+    <Steps progress>
+      <Step status="done">Compile MDX</Step>
+      <Step status="doing">Wire up hydration</Step>
+      <Step status="todo">Ship it</Step>
+    </Steps>
+
+    :::
+    ```
+
+  </Step>
+  <Step title="レンダリングする">
+
+    ```sh
+    npx @suzumiyaaoba/mdxr render plan.mdx --open
+    ```
+
+    ドキュメントの隣に `plan.html` を書き出し、デフォルトブラウザで開きます。CSS とハイドレーションバンドルはインライン化されているため、この HTML はどこでも動きます。
+
+  </Step>
+  <Step title="編集しながらプレビュー">
+
+    ```sh
+    npx @suzumiyaaoba/mdxr serve plan.mdx --open
+    ```
+
+    `http://localhost:3737` でライブリロード付きプレビュー。保存すると即座に再ビルドされ、設定やテーマの変更も拾います。
+
+  </Step>
+</Steps>
+
+## ターミナルで読む
+
+`mdxr text` は同じドキュメントをプレーンな Markdown に変換します — コンポーネントは ASCII 表現（チェックボックスリスト、ブロックバーチャート、GFM テーブル、`<details>`）に置き換わります:
+
+```sh
+npx @suzumiyaaoba/mdxr text plan.mdx      # → plan.txt.md
+```
+
+## エージェントにカタログを教える
+
+```sh
+npx @suzumiyaaoba/mdxr init               # → .agents/skills/mdxr/
+npx @suzumiyaaoba/mdxr init --tool all    # 対応する全エージェントツール
+```
+
+あとはエージェントに成果物を頼むだけです — 「mdxr スキルを使って auth 機能の実装計画を書いて HTML にレンダリングして」と言えば、カタログを正しく使ってくれます。詳しくは [エージェントスキル](/ja/agent-skill) を参照してください。
+
+## 次のステップ
+
+<CardGroup cols={2}>
+  <Card title="ドキュメントの書き方" href="/ja/authoring" icon="pen-line">
+    ドキュメントモデル、frontmatter、Markdown 規約。
+  </Card>
+  <Card title="コンポーネントカタログ" href="/ja/components" icon="layout-grid">
+    ドキュメントで使えるすべてのコンポーネント。
+  </Card>
+</CardGroup>

@@ -1,0 +1,19 @@
+{
+  "name": "mdxr-docs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "blume dev",
+    "build": "blume build",
+    "preview": "blume preview",
+    "check": "blume check",
+    "validate": "blume validate"
+  },
+  "devDependencies": {
+    "blume": "^1.7.0"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "packageManager": "pnpm@11.25.0"
+}

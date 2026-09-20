@@ -1,0 +1,42 @@
+---
+title: mdxr
+description: エージェントが書いた MDX ドキュメント（計画書・レポートなど）を、セマンティックなコンポーネントカタログでスタンドアロン HTML にレンダリングします。
+---
+
+mdxr は、コーディングエージェントが書いた MDX ドキュメントを、自己完結したスタイル付き HTML ページに変換します。エージェントは Markdown とセマンティックコンポーネント（`<Steps>`・`<Findings>`・`<Gantt>`・`<BarChart>` など）を書くだけ。`mdxr render` がドキュメントを決定論的にコンパイルするため、マークアップ・スタイル・スクリプトをモデルが生成することはありません。
+
+```sh
+npx @suzumiyaaoba/mdxr render plan.mdx --open
+```
+
+<CardGroup cols={2}>
+  <Card title="クイックスタート" href="/ja/quickstart" icon="rocket">
+    1 分で最初のドキュメントをレンダリング。
+  </Card>
+  <Card title="CLI リファレンス" href="/ja/cli" icon="terminal">
+    `render`・`serve`・`text`・`catalog`・`init`。
+  </Card>
+  <Card title="コンポーネントカタログ" href="/ja/components" icon="layout-grid">
+    計画・レポート・調査のための 80 以上のセマンティックコンポーネント。
+  </Card>
+  <Card title="ギャラリー" href="/ja/gallery" icon="image">
+    実際のレンダリング結果をライブ埋め込みで閲覧。
+  </Card>
+</CardGroup>
+
+## mdxr の特徴
+
+- **スタンドアロンな出力** — CSS と小さなハイドレーションバンドルをインライン化した単一の `.html` ファイル。読む側にサーバーもビルドも不要です。
+- **決定論的** — ドキュメントはデータです。`import` も `{expressions}` も生 HTML も使えません。マークアップはレンダラーが制御します。
+- **成果物向けのカタログ** — ステータスバッジ、フェーズ、タイムライン、ガントチャート、diff、検出結果、カンバンボード、チャート、そして shadcn/ui 一式。
+- **プレーンテキストへのフォールバック** — `mdxr text` で同じドキュメントを、ターミナルや任意の Markdown ビューアで読める Markdown に変換できます。
+- **エージェントネイティブ** — インストール可能なスキルを同梱。コーディングエージェントがカタログとレンダリングワークフローを一度学べば、一貫したドキュメントを生成できます。
+
+## インストール
+
+```sh
+npm install -g @suzumiyaaoba/mdxr          # グローバル CLI
+npm install @suzumiyaaoba/mdxr            # プロジェクトの依存関係
+```
+
+インストールなしでも `npx @suzumiyaaoba/mdxr` で CLI を直接実行できます。

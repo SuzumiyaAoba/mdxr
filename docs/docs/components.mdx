@@ -1,0 +1,151 @@
+---
+title: Component catalog
+description: The semantic component set mdxr documents are built from — scaffolding, planning, investigation, artifacts, reports, charts, layout, forms, and shadcn/ui.
+sidebar:
+  order: 5
+---
+
+The catalog is organized by the kind of document each group serves. `mdxr catalog` lists every component available in your project — built-ins plus [project-defined](/configuration#project-defined-components) ones — and `mdxr catalog --json` is the machine-readable source of truth for names and attributes.
+
+## Document scaffolding
+
+The frame every deliverable sits in: headers, callouts, navigation, references.
+
+| Component | What it is |
+| --- | --- |
+| `<Plan>` | Document root — title header, status badge, meta row (auto-built from frontmatter) |
+| `<Meta>` / `<MetaItem>` | Metadata row (`Date · Owner · …`); custom items with an icon |
+| `<Callout>` | Highlighted block — `:::note`/`:::warning`/`:::goal`/`:::decision`/…, `> [!NOTE]` |
+| `<Details>` | Collapsible section on native `<details>` (works without JS) |
+| `<Toc>` | Collapsible, auto-built table of contents — `:::toc` |
+| `<Glossary>` / `<Term>` | Definition list for domain terms |
+| `<Figure>` | Image with a caption |
+| `<Ref>` / `<Issue>` / `<PR>` / `<Commit>` | Linked reference card / inline GitHub chips |
+| `<Cmd>` | Inline command chip with copy button |
+| `<Icon>` | Inline Iconify SVG — `lucide` + `vscode-icons` bundled, no runtime fetch |
+| fenced code / math | Highlighted code block with filename bar and line markers; ` ```mermaid ` diagrams; KaTeX `$…$` |
+
+## Planning & status
+
+Implementation plans, milestones, task tracking, and decision records.
+
+| Component | What it is |
+| --- | --- |
+| `<Phase>` | Section heading with a status badge — `:::phase` |
+| `<Steps>` / `<Step>` | Status-aware task list with optional progress bar; owner/effort/priority/due chips |
+| `<Timeline>` / `<Event>` | Dated milestone rail — `:::timeline` |
+| `<Gantt>` / `<Task>` / `<Milestone>` | Date-based schedule chart — `:::gantt` |
+| `<Decision>` | ADR-lite decision record |
+| `<Option>` | Alternative-comparison card (recommended/considered/rejected) |
+| `<Risk>` | Risk block — severity pill + mitigation line |
+| `<Approvals>` / `<Approval>` | Sign-off list |
+| `<Stats>` / `<Stat>` | Metric card grid; `delta` colored by sign |
+| `<Priority>` `<Effort>` `<Due>` `<Owner>` | Inline chips (priority, T-shirt effort, deadline, person) |
+| `<Reqs>` / `<Req>` | Requirement / acceptance-criteria rows |
+| `<Board>` / `<Lane>` / `<BoardCard>` | Interactive kanban — cards drag between lanes, "Copy markdown" emits the updated markup — `:::board` |
+| `<Matrix>` | Comparison grid — `yes`/`no`/`partial`/`✓`/`✗`/`△` cells render as icons — `:::matrix` |
+| `<Summary>` | Progress bar |
+| `<StatusBadge>` | Standalone status pill |
+
+## Code investigation
+
+Findings, hypotheses, and the evidence trail — terminals, traces, searches, files.
+
+| Component | What it is |
+| --- | --- |
+| `<Findings>` / `<Finding>` | Numbered findings with confidence pills — `:::findings` |
+| `<Hypotheses>` / `<Hypothesis>` | Hypothesis ledger (supported/refuted/untested) — `:::hypotheses` |
+| `<Terminal>` | Command transcript (`$` prompts, output, exit badge) — `:::terminal`, ` ```console ` |
+| `<Trace>` / `<TraceFrame>` | Stack/call trace with error line, dimmed lib frames — `:::trace` |
+| `<Searches>` / `<Search>` | Search-query log (pattern/scope/tool/hits) — `:::searches` |
+| `<Files>` / `<File>` | Related-file inventory — `:::files` |
+| `<Deps>` / `<Dep>` | Dependency-edge list — `:::deps` |
+| `<Changes>` / `<Change>` | Change-set list (add/modify/delete/rename) |
+| `<Flow>` / `<FlowStep>` | Numbered call/execution chain — `:::flow` |
+| `<Tree>` | File tree from a nested list — collapsible folders, automatic icons |
+| `<FileRef>` / `<SymbolRef>` | Inline file / symbol reference chips with copy button |
+| `<CodeFile>` | Embeds a real file from disk as a code block |
+| `<Props>` / `<Prop>` | API/props table for a component or function |
+
+## Output artifacts
+
+The things a change produces: diffs, graphs, test runs, endpoints, timing.
+
+| Component | What it is |
+| --- | --- |
+| ` ```diff ` / ` ```patch ` fence | Structured per-file diff cards — editor links, `+N −M` stats, hunk line numbers |
+| `<Comments>` / `<Comment>` | Comment threads anchored to code/diff lines — `:::comments` |
+| `<Graph>` / `<Node>` / `<Edge>` | Static node/edge diagram — dagre layout at render time — `:::graph` |
+| `<Tests>` / `<Test>` | Test-run report — status pills, auto counts and duration sum — `:::tests` |
+| `<Endpoints>` / `<Endpoint>` | API route list — method chips, `base` prefix, `auth`/`deprecated` — `:::endpoints` |
+| `<Json>` | Collapsible JSON tree on nested `<details>` |
+| `<Waterfall>` / `<Span>` | Timing waterfall (OTel-trace-style bars) — `:::waterfall` |
+| `<Ins>` / `<Del>` | Inline word-level edits — semantic `<ins>`/`<del>` |
+
+## Reports
+
+Review results, verification status, security and dependency scans, metrics, and ops summaries.
+
+| Component | What it is |
+| --- | --- |
+| `<Review>` / `<Comment>` | Code-review report — numbered findings with severity pills, `file:line` links, verdict pill — `:::review` |
+| `<Verdict>` | Colored verdict banner — approve/pass/warn/fail/info — `:::verdict` |
+| `<Severity>` | Inline severity pill — critical/high/medium/low/info |
+| `<Checks>` / `<Check>` | CI check list — status icons, required chips, auto counts — `:::checks` |
+| `<Audit>` / `<Vuln>` | Vulnerability report — severity tally, CVE/GHSA links, fix versions — `:::audit` |
+| `<Bumps>` / `<Bump>` | Dependency upgrade plan — `from → to`, auto major/minor/patch detection — `:::bumps` |
+| `<Packages>` / `<Package>` | Package inventory — kind/license chips — `:::packages` |
+| `<Gauges>` / `<Gauge>` | Percent-bar list — coverage/scores with auto pass/fail coloring — `:::gauges` |
+| `<Score>` | 0–100 ring gauge — health/quality scores |
+| `<Spark>` | Inline sparkline for prose trends |
+| `<Benchmarks>` / `<Bench>` | Before/after measurement table — auto % delta — `:::benchmarks` |
+| `<DiffStat>` | Inline `+N −M across F files` chip with proportional bar |
+| `<Schema>` / `<DbTable>` / `<DbField>` | Database schema docs — PK/FK/unique/null chips — `:::schema` |
+| `<EnvVars>` / `<EnvVar>` | Env-var reference — required/secret chips, masked values — `:::envvars` |
+| `<StatusPage>` / `<Service>` | Service-health summary — worst-status rollup, uptime figures — `:::statuspage` |
+| `<Uptime>` / `<Day>` | Statuspage-style daily uptime bar — `:::uptime` |
+| `<Release>` / `<Entry>` | Release notes — entries auto-grouped by kind — `:::release` |
+| `<Pathway>` / `<Stop>` | Migration/rollout stepper — version paths, env promotion — `:::pathway` |
+| `<Incident>` | Incident/postmortem header — severity + status pills, timeline meta — `:::incident` |
+
+## Data visualization
+
+All charts are static SVG/HTML at render time (no client JS); `tone` pins a color, `unit` labels values.
+
+| Component | What it is |
+| --- | --- |
+| `<BarChart>` / `<Bar>` | Category comparison — vertical/horizontal, grouped or stacked — `:::barchart` |
+| `<LineChart>` / `<Series>` | Trend lines over ordered categories; `area` fill, `dash` series — `:::linechart` |
+| `<PieChart>` / `<Slice>` | Part-of-whole pie/donut with legend — `:::piechart` |
+| `<Scatter>` / `<Point>` | Two-axis correlation; `size` bubbles — `:::scatter` |
+| `<Radar>` / `<Series>` | Spider chart on 3+ shared axes — `:::radar` |
+| `<Funnel>` / `<Stage>` | Stage-by-stage narrowing with conversion percents — `:::funnel` |
+| `<Quadrant>` / `<Pin>` | 2-axis positioning map with labeled regions — `:::quadrant` |
+| `<Bridge>` / `<Delta>` | Running-total waterfall (start→deltas→end) — `:::bridge` |
+| `<Treemap>` / `<Tile>` | Squarified part-of-whole areas — `:::treemap` |
+| `<Sankey>` / `<Link>` / `<Node>` | Flow split/merge across stage columns — `:::sankey` |
+| `<Venn>` / `<Set>` / `<Overlap>` | 2–3 set overlap diagram — `:::venn` |
+
+## Layout
+
+| Component | What it is |
+| --- | --- |
+| `<Columns>` / `<Column>` | Simple side-by-side grid (2–4 columns) |
+| `<Grid>` / `<Cell>` | 12-track grid — spans, dense flow, auto-fit card grids |
+| `<Row>` | Horizontal flex-wrap row for inline components |
+| `<Stack>` | Vertical stack with `gap` |
+| `<Before>` / `<After>` | Red/green compare panels |
+
+## Reader input
+
+| Component | What it is |
+| --- | --- |
+| `<Ask>` / `<Question>` / `<Choice>` | Native-form question blocks; answers render live as copyable Markdown |
+
+## shadcn/ui
+
+The full shadcn/ui (Base UI) set is registered — `Button`, `Card`, `Table`, `Tabs`, `Accordion`, `Dialog`, … Rendered documents carry a hydration bundle, so stateful primitives are interactive in the browser; pass `--no-hydrate` for purely static output.
+
+## Project-defined components
+
+Projects register their own components via `mdxr.config.ts` + `defineComponent`; a same-name component overrides the built-in. See [Configuration](/configuration).

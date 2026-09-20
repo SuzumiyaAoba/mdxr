@@ -1,0 +1,7 @@
+# Nested workspace root: keeps the docs site's dependency graph (Blume/Astro,
+# Node >= 22.12) out of the library's lockfile and install.
+minimumReleaseAge: 4320
+allowBuilds:
+  esbuild: true
+  # scarf-js is install-time telemetry — explicitly declined, not needed.
+  "@scarf/scarf": false

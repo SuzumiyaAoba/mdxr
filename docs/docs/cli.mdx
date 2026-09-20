@@ -1,0 +1,101 @@
+---
+title: CLI reference
+description: Every mdxr command — render, serve, text, catalog, and init — with all flags.
+sidebar:
+  order: 2
+---
+
+`mdxr` is a single CLI for rendering, previewing, and authoring. Run it ad hoc with `npx @suzumiyaaoba/mdxr <command>` or install it globally (`npm i -g @suzumiyaaoba/mdxr`).
+
+## mdxr render
+
+Render an `.mdx` document — a file argument or stdin — to a standalone HTML file.
+
+```sh
+mdxr render plan.mdx                  # → plan.html
+mdxr render plan.mdx -o out.html      # custom output path
+cat plan.mdx | mdxr render > out.html # stdin → stdout
+mdxr render plan.mdx --open           # also open plan.html in the browser
+mdxr render plan.mdx --no-hydrate     # static HTML, no client bundle
+mdxr render plan.mdx --format json    # machine-readable errors
+```
+
+| Flag | Description |
+| --- | --- |
+| `-o, --out <path>` | Output path. Defaults to `<file>.html`; stdout for stdin input or `-` |
+| `--format <format>` | Error output: `text` (default) or `json` |
+| `--no-hydrate` | Emit static HTML without the client hydration bundle |
+| `--open` | Open the rendered file in the default browser. Requires an output file |
+
+:::note
+Stateful components (`Tabs`, `Accordion`, `Switch`, the kanban `<Board>`, …) hydrate in the browser via an inlined client bundle. The bundle is skipped automatically when a document uses no hydratable components, so pure-Markdown docs stay lean; `--no-hydrate` disables it entirely.
+:::
+
+Errors report `file:line:col` so the agent (or you) can fix the source and re-run; `--format json` wraps the same message in machine-readable output.
+
+## mdxr serve
+
+Preview a document in the browser with live reload. Also accepts stdin, like `render`.
+
+```sh
+mdxr serve plan.mdx                   # http://localhost:3737
+mdxr serve plan.mdx -p 8080 --open
+cat plan.mdx | mdxr serve --open
+```
+
+| Flag | Description |
+| --- | --- |
+| `-p, --port <port>` | Port to listen on (default `3737`) |
+| `--open` | Open the preview in the default browser once serving |
+
+The watcher follows the document's render dependencies — a `theme` CSS file and its imports reload the preview too.
+
+## mdxr text
+
+Render an `.mdx` document to plain Markdown. Every component becomes an ASCII/text stand-in — status checkbox lists, block-bar charts, GFM tables, `<details>` disclosures — so the document stays readable in any Markdown viewer or terminal.
+
+```sh
+mdxr text plan.mdx                    # → plan.txt.md
+mdxr text plan.mdx -o plan.md         # custom output path
+cat plan.mdx | mdxr text > plan.md    # stdin → stdout
+```
+
+Interactive-only widgets (dialogs, menus, shadcn chrome) degrade to their text content; unknown components warn to stderr and keep their children.
+
+| Flag | Description |
+| --- | --- |
+| `-o, --out <path>` | Output path. Defaults to `<file>.txt.md`; stdout for stdin input or `-` |
+
+## mdxr catalog
+
+List the components available to documents — built-ins plus any project-defined components from `mdxr.config.ts`. Agents use `--json` as the machine-readable source of truth for names and attributes.
+
+```sh
+mdxr catalog                          # human-readable list
+mdxr catalog --json                   # names, meta, and authoring conventions
+mdxr catalog --dir ./my-project       # read another project's config
+```
+
+| Flag | Description |
+| --- | --- |
+| `--json` | Print machine-readable JSON |
+| `--dir <dir>` | Project directory to read `mdxr.config.ts` from (defaults to cwd) |
+
+## mdxr init
+
+Install the mdxr agent skill so coding agents know the component catalog and the render workflow. See [Agent skill](/agent-skill).
+
+```sh
+mdxr init                             # → .agents/skills/mdxr/
+mdxr init --tool claude               # → .claude/skills/mdxr/
+mdxr init --tool devin                # → .devin/skills/mdxr/
+mdxr init --tool all                  # all supported tools
+mdxr init --global                    # into your home directory instead
+mdxr init --force                     # overwrite an existing install
+```
+
+| Flag | Description |
+| --- | --- |
+| `--tool <tool>` | `agents` (default), `claude`, `devin`, or `all` |
+| `--global` | Install into your home directory instead of the project |
+| `--force` | Overwrite an existing skill directory |

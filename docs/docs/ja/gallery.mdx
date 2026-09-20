@@ -1,0 +1,64 @@
+---
+title: ギャラリー
+description: 実際の mdxr ドキュメントをスタンドアロン HTML にレンダリングしたもの — CLI が生成する出力そのままをライブ埋め込み。
+sidebar:
+  order: 4
+---
+
+以下の例はすべて [`examples/`](https://github.com/SuzumiyaAoba/mdxr/tree/master/examples) ディレクトリにある実際の `.mdx` ドキュメントで、ドキュメントサイトのビルド時に `mdxr render` でレンダリングしています。埋め込みフレームは実際の出力そのものです — ハイドレーション込みなので、フレーム内でインタラクティブなコンポーネントも動作します。
+
+## 実装計画 — `plan.mdx`
+
+`<Plan>` ヘッダー、フェーズ、ステータス付きステップ、ガントスケジュール、決定、リスク、承認。
+
+<iframe src={`${import.meta.env.BASE_URL}/examples/plan.html`} title="plan.mdx のレンダリング結果" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/examples/plan.html`}>全画面で開く</a> · [ソース](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/plan.mdx)
+
+## ステータスレポート — `report.mdx`
+
+`<Stats>` メトリクス、`<Checks>` CI ステータス、`<Gauges>` カバレッジ、ベンチマーク、verdict。
+
+<iframe src={`${import.meta.env.BASE_URL}/examples/report.html`} title="report.mdx のレンダリング結果" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/examples/report.html`}>全画面で開く</a> · [ソース](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/report.mdx)
+
+## コード調査 — `investigation.mdx`
+
+`<Findings>`、`<Hypotheses>`、ターミナルトランスクリプト、スタックトレース、検索ログ。
+
+<iframe src={`${import.meta.env.BASE_URL}/examples/investigation.html`} title="investigation.mdx のレンダリング結果" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/examples/investigation.html`}>全画面で開く</a> · [ソース](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/investigation.mdx)
+
+## コード解説 — `code.mdx`
+
+`<FileRef>` チップ、`<Flow>` コールチェーン、注釈付きコードブロック。
+
+<iframe src={`${import.meta.env.BASE_URL}/examples/code.html`} title="code.mdx のレンダリング結果" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/examples/code.html`}>全画面で開く</a> · [ソース](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/code.mdx)
+
+## 出力アーティファクト — `artifacts.mdx`
+
+diff カード、`<Graph>` ダイアグラム、`<Tests>` レポート、エンドポイント、JSON ツリー。
+
+<iframe src={`${import.meta.env.BASE_URL}/examples/artifacts.html`} title="artifacts.mdx のレンダリング結果" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/examples/artifacts.html`}>全画面で開く</a> · [ソース](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/artifacts.mdx)
+
+## shadcn/ui — `ui.mdx`
+
+インタラクティブなプリミティブ — タブ、アコーディオン、スイッチ、スライダー — がハイドレートされ、出力上で操作可能です。
+
+<iframe src={`${import.meta.env.BASE_URL}/examples/ui.html`} title="ui.mdx のレンダリング結果" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/examples/ui.html`}>全画面で開く</a> · [ソース](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/ui.mdx)
+
+## カスタムコンポーネント — `custom.mdx`
+
+`mdxr.config.ts` で登録したプロジェクト定義の TSX コンポーネント。
+
+<iframe src={`${import.meta.env.BASE_URL}/examples/custom.html`} title="custom.mdx のレンダリング結果" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+<a href={`${import.meta.env.BASE_URL}/examples/custom.html`}>全画面で開く</a> · [ソース](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/custom.mdx)

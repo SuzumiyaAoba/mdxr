@@ -1,0 +1,85 @@
+---
+title: 設定
+description: mdxr.config.ts — プロジェクト定義コンポーネント、テーマの上書き、エディタリンク。
+sidebar:
+  order: 6
+---
+
+プロジェクトは、レンダリングを実行するディレクトリの `mdxr.config.ts` で mdxr を設定します（`mdxr.config.mts`、`.js`、`.mjs` も検出されます）。すべてのフィールドはオプションです。
+
+```ts mdxr.config.ts
+import { defineConfig } from "@suzumiyaaoba/mdxr";
+
+export default defineConfig({
+  components: "./components/index.tsx", // named exports が MDX コンポーネントになる
+  theme: "./mdxr.css",                  // 任意: @theme トークンの上書き
+  editor: "vscode",                     // 任意: ファイルリンクのスキーム
+});
+```
+
+| フィールド | 説明 |
+| --- | --- |
+| `components` | named exports が追加の MDX コンポーネントになる TS/TSX モジュール（または index ファイルを持つディレクトリ）へのパス |
+| `theme` | `@theme` オーバーライド / 追加ユーティリティを持つ CSS ファイルへのパス |
+| `editor` | ファイルリンクの URL スキーム — 後述 |
+
+## エディタリンク
+
+`editor` は `path` を持つコンポーネントとコードブロックのファイル名ヘッダーのリンク先を制御します:
+
+- 既知の名前 — `vscode`（デフォルト）、`cursor`、`zed`、`vscode-insiders`、`windsurf`、`sublime`、`textmate`、`idea`
+- `{path}`/`{line}` のカスタム URL テンプレート — `"myed://open?f={path}&l={line}"`
+- リンクを完全に無効化する `"none"`
+
+frontmatter の `editor:` がドキュメントごとに上書きし、コンポーネントの `href="…"` は URL を完全に上書きします。
+
+## プロジェクト定義コンポーネント
+
+`defineComponent` と [valibot](https://valibot.dev) スキーマでコンポーネントを定義します — スキーマはレンダリング時の props 検証**と** `mdxr catalog` でのドキュメント化の両方に使われます。ドキュメントの属性は常に文字列として渡されるため、スキーマはそれに応じて強制変換と検証を行います。
+
+```tsx components/index.tsx
+import { defineComponent, v } from "@suzumiyaaoba/mdxr";
+
+export const LinkCard = defineComponent(
+  {
+    description: "External reference card",
+    schema: v.looseObject({ href: v.string(), title: v.string() }),
+  },
+  ({ href, title, children }) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block rounded-lg border p-3 no-underline"
+    >
+      <div className="font-medium">{title} ↗</div>
+      {children}
+    </a>
+  )
+);
+```
+
+各 named export は export 名で登録されます — 上記は `<LinkCard>` — 同名の export は**ビルトインを上書き**します（stderr に警告が出ます）。
+
+コンポーネントは通常の React 関数コンポーネントです。モジュール内の Tailwind クラスはレンダリング時の CSS ビルドに拾われます。ビルトインや shadcn/ui セットは `@suzumiyaaoba/mdxr/components` からインポートして組み合わせられます:
+
+```tsx
+import { Card } from "@suzumiyaaoba/mdxr/components";
+```
+
+同じく export されている `textOf(children)` は children ツリーをプレーンテキストに平坦化します — クリップボードへのコピー用ペイロードに便利です。
+
+## テーマの上書き
+
+`theme` は Tailwind v4 ソースとして評価される CSS ファイルを指します。`@theme` でデザイントークンを上書きしたりユーティリティを追加できます。テーマ内の相対 `@import` はテーマ自身のディレクトリから解決され、レンダリングが取り込んだすべてのファイルが `mdxr serve` のウォッチ対象になります。
+
+```css mdxr.css
+@theme {
+  --color-brand: #7c3aed;
+  --font-display: "Geist", sans-serif;
+}
+```
+
+## ディスカバリ
+
+`mdxr catalog` はプロジェクトが公開するすべて — ビルトインと独自コンポーネント、`description` とスキーマ由来の props — を一覧します。エージェントも `mdxr catalog --json` で同じ一覧を読みます。

@@ -152,3 +152,16 @@ Notes:
 
 - `pnpm publish` runs `prepack` (`pnpm build`) automatically, so `dist/` is always rebuilt before packing.
 - Node >= 22.13 is required for the dev toolchain (pnpm 11 uses `node:sqlite`; ultracite pulls in execa 10 which needs `Set.prototype.union`; `vp pack` uses `Promise.withResolvers`). CI uses standalone pnpm so `pnpm test` still runs on the Node 20 matrix leg — `pnpm check` is gated to `node-version != 20`, and `pnpm build` runs under Node 22 even on the 20 leg (tests self-import `@suzumiyaaoba/mdxr`, which resolves via `exports` to `dist/`, so the build must precede tests).
+
+---
+
+## Documentation site
+
+The docs site in `docs/` is a [Blume](https://useblume.dev) project — a nested pnpm workspace root with its own lockfile and `minimumReleaseAge`, so its deps (Blume/Astro, Node >= 22.12) never touch the library's install.
+
+- **Dev**: `pnpm docs:dev` (or `pnpm --dir docs dev`); **build**: `pnpm docs:build` → `docs/dist/`; **preview**: `pnpm docs:preview`
+- Content lives in `docs/docs/` (`.mdx`; frontmatter `title`/`description`/`sidebar.order`). Site config is `docs/blume.config.ts` — `deployment.base` is `/mdxr` for the GitHub Pages project-site path, and `github` powers the header repo link + edit links.
+- i18n: `en` is the default locale (unprefixed URLs); Japanese translations mirror the tree under `docs/docs/ja/` → `/ja/…`. Untranslated pages fall back to English automatically.
+- The gallery page iframes real rendered output: `pnpm docs:examples` renders `examples/*.mdx` → `docs/public/examples/*.html` (needs `dist/cli.mjs`, so run `pnpm build` first; the docs workflow does both).
+- A static build emits `llms.txt`/`llms-full.txt`, per-page `.md` mirrors, `sitemap.xml`, and `robots.txt` — no extra setup for AI/agent consumers.
+- Deploy: `.github/workflows/docs.yml` builds on pushes/PRs touching `docs/**` and publishes to GitHub Pages (`https://suzumiyaaoba.github.io/mdxr`) via `actions/deploy-pages`. The repo's Pages source must be set to **GitHub Actions** (Settings → Pages).

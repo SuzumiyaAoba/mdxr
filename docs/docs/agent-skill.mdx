@@ -1,0 +1,57 @@
+---
+title: Agent skill
+description: Install the mdxr skill so coding agents know the component catalog and the render workflow.
+sidebar:
+  order: 7
+---
+
+mdxr ships an [agent skill](https://github.com/vercel-labs/skills) — a `SKILL.md` plus reference docs — that teaches coding agents the component catalog, the authoring rules, and the render workflow. Once installed, the agent picks the skill up whenever it writes a plan, report, review, or any structured document meant to be read as styled HTML.
+
+## Install
+
+The fastest path is `mdxr init`, which copies the bundled skill into your project:
+
+```sh
+mdxr init                  # → .agents/skills/mdxr/
+mdxr init --tool claude    # → .claude/skills/mdxr/
+mdxr init --tool devin     # → .devin/skills/mdxr/
+mdxr init --tool all       # all supported tools
+mdxr init --global         # your home directory instead of the project
+mdxr init --force          # overwrite an existing install
+```
+
+Alternatively, install it from the repo with the [`skills` CLI](https://github.com/vercel-labs/skills):
+
+```sh
+npx skills add Suzumiyaaoba/mdxr --skill mdxr
+# add -g for a global install, or -a claude-code to target a specific agent
+```
+
+## Use it
+
+Once installed, just ask for a deliverable:
+
+> Use the mdxr skill to write an implementation plan for the auth feature and render it to HTML.
+
+Not just plans — reports, reviews, investigation summaries, release notes, and postmortems all work. To make it automatic, add a standing instruction to your agent config (`AGENTS.md`, `CLAUDE.md`, …):
+
+```md
+- Whenever the user explicitly asks for a deliverable with mdxr, use the mdxr skill to write and render it.
+```
+
+## What the skill contains
+
+| File | Contents |
+| --- | --- |
+| `SKILL.md` | The workflow — write `.mdx`, `render`, `serve`, `text` — the authoring rules, and a syntax cheatsheet |
+| `references/components.md` | The catalog index: what every component does, grouped by document type |
+| `references/components/*.md` | Per-group detail files with full signatures and examples — the agent reads only what the document needs |
+| `references/extending.md` | How to register project-defined components via `mdxr.config.ts` |
+
+The skill teaches a read-on-demand pattern: the agent consults the index first, then loads only the detail files the document actually uses — so a plan doesn't pay the context cost of the chart reference.
+
+## How agents stay honest
+
+- Documents carry no JS — `import`, `{expressions}`, and non-string attributes fail the render with `file:line:col` errors the agent can self-correct.
+- `mdxr catalog --json` gives the agent the live component set, including your project-defined components.
+- `mdxr render --format json` returns machine-readable errors for automated retries.

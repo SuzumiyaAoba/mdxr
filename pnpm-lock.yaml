@@ -74,6 +74,21 @@ importers:
       lucide-react:
         specifier: ^1.45.0
         version: 1.45.0(react@19.3.0)
+      mdast-util-directive:
+        specifier: 3.1.0
+        version: 3.1.0(supports-color@7.2.0)
+      mdast-util-frontmatter:
+        specifier: 2.0.1
+        version: 2.0.1(supports-color@7.2.0)
+      mdast-util-gfm:
+        specifier: 3.1.0
+        version: 3.1.0(supports-color@7.2.0)
+      mdast-util-math:
+        specifier: 3.0.0
+        version: 3.0.0(supports-color@7.2.0)
+      mdast-util-to-markdown:
+        specifier: 2.1.2
+        version: 2.1.2
       react:
         specifier: ^19.3.0
         version: 19.3.0
@@ -104,6 +119,12 @@ importers:
       remark-math:
         specifier: ^6.0.0
         version: 6.0.0(supports-color@7.2.0)
+      remark-mdx:
+        specifier: 3.1.1
+        version: 3.1.1(supports-color@7.2.0)
+      remark-parse:
+        specifier: 11.0.0
+        version: 11.0.0(supports-color@7.2.0)
       shiki:
         specifier: ^4.4.3
         version: 4.4.3
@@ -113,6 +134,9 @@ importers:
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0
+      unified:
+        specifier: 11.0.5
+        version: 11.0.5
       unist-util-visit:
         specifier: ^5.0.0
         version: 5.1.0

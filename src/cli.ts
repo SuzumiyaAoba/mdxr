@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-import { writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { cac } from "cac";
 
+import { mdxToAscii } from "./ascii/index.js";
 import { catalogEntries, formatCatalog, CONVENTIONS } from "./catalog.js";
 import { loadConfig } from "./config.js";
 import { formatError, parseErrorFormat } from "./format-error.js";
@@ -155,6 +156,48 @@ cli
       }
     }
   );
+
+cli
+  .command(
+    "text [file]",
+    "Render an .mdx document to plain Markdown (components become ASCII/text)"
+  )
+  .option(
+    "-o, --out <path>",
+    "Output path (default: <file>.txt.md; stdout for stdin input or '-')"
+  )
+  .action(async (file: string | undefined, opts: { out?: string }) => {
+    try {
+      const fromStdin = file === undefined || file === "-";
+      if (fromStdin) {
+        requireStdinSource();
+      }
+
+      const { markdown, warnings } = fromStdin
+        ? await mdxToAscii(await readStdin(), "<stdin>")
+        : await mdxToAscii(await readFile(file, "utf-8"), file);
+      for (const w of warnings) {
+        console.error(`mdxr: warning: ${w}`);
+      }
+
+      const out =
+        opts.out === "-"
+          ? undefined
+          : (opts.out ??
+            (fromStdin
+              ? undefined
+              : `${file.replace(/\.(?:mdx|md)$/u, "")}.txt.md`));
+
+      if (out === undefined) {
+        writeStdout(markdown);
+        return;
+      }
+      await writeFile(path.resolve(out), markdown);
+      console.log(`mdxr: wrote ${out}`);
+    } catch (error) {
+      fail(error, false);
+    }
+  });
 
 cli
   .command("catalog", "List available components (built-in + project-defined)")

@@ -37,6 +37,16 @@ mdxr render plan.mdx --format json   # machine-readable errors
 
 Preview a document in the browser with live reload (`-p, --port`, default `3737`; `--open` to launch the browser once serving).
 
+### `mdxr text [file]`
+
+Render an `.mdx` document to plain Markdown — every component becomes an ASCII/text stand-in (status checkbox lists, block-bar charts, GFM tables, `<details>` disclosures) so the document stays readable in any Markdown viewer or terminal. Interactive-only widgets (dialogs, menus, shadcn chrome) degrade to their text content; unknown components warn to stderr and keep their children.
+
+```sh
+mdxr text plan.mdx                  # → plan.txt.md
+mdxr text plan.mdx -o plan.md       # custom output path
+cat plan.mdx | mdxr text > plan.md  # stdin → stdout
+```
+
 ### `mdxr catalog`
 
 List built-in and project-defined components (`--json` for machine-readable output, `--dir` to target a project).

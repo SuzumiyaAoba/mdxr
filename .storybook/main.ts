@@ -1,4 +1,4 @@
-import { readdir } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { StorybookConfig } from "@storybook/react-vite";
@@ -11,11 +11,14 @@ import { importBundledCode } from "../src/load-user-module.js";
 
 const VIRTUAL_ID = "virtual:mdxr-documents";
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
+const ASCII_ID = "virtual:mdxr-ascii";
+const ASCII_RESOLVED_ID = `\0${ASCII_ID}`;
 
 const rootDir = process.cwd();
 const docsDir = path.join(rootDir, "examples");
 const srcDir = path.join(rootDir, "src");
 const rendererEntry = path.join(srcDir, "render.ts");
+const asciiEntry = path.join(srcDir, "ascii", "index.ts");
 
 const listFiles = async (dir: string): Promise<string[]> => {
   try {
@@ -32,6 +35,7 @@ const listFiles = async (dir: string): Promise<string[]> => {
 };
 
 type RenderFile = (mdxPath: string) => Promise<string>;
+type RenderAscii = (mdxPath: string) => Promise<string>;
 
 /**
  * Bundle the real renderer (`src/render.ts`) on every call and import it.
@@ -63,6 +67,40 @@ const loadRenderer = async (): Promise<RenderFile> => {
   return renderFile as RenderFile;
 };
 
+/** Bundle `src/ascii/index.ts` the same way and import `mdxToAscii`. */
+const loadAscii = async (): Promise<RenderAscii> => {
+  const result = await build({
+    bundle: true,
+    entryPoints: [asciiEntry],
+    format: "esm",
+    jsx: "automatic",
+    jsxImportSource: "react",
+    logLevel: "silent",
+    packages: "external",
+    platform: "node",
+    target: "node20",
+    write: false,
+  });
+  const mod = await importBundledCode(
+    result.outputFiles[0]?.text ?? "",
+    "storybook"
+  );
+  const { mdxToAscii } = mod;
+  if (typeof mdxToAscii !== "function") {
+    throw new TypeError("mdxr: ascii module did not export mdxToAscii");
+  }
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion
+  const toAscii = mdxToAscii as (
+    source: string,
+    filePath: string
+  ) => Promise<{ markdown: string }>;
+  return async (mdxPath) => {
+    const source = await readFile(mdxPath, "utf-8");
+    const { markdown } = await toAscii(source, mdxPath);
+    return markdown;
+  };
+};
+
 const errorPage = (err: unknown): string => {
   const msg = err instanceof Error ? err.message : String(err);
   return `<!doctype html><meta charset="utf-8"><body style="font-family:monospace;background:#1c1917;color:#fca5a5;padding:2rem"><h1>mdxr render error</h1><pre>${msg.replaceAll("<", "&lt;")}</pre></body>`;
@@ -81,17 +119,20 @@ const mdxrDocuments = (): Plugin => ({
   },
   handleHotUpdate: ({ file, server }) => {
     const watched = file.startsWith(docsDir) || file.startsWith(srcDir);
-    const mod = watched
-      ? server.moduleGraph.getModuleById(RESOLVED_ID)
-      : undefined;
-    if (mod !== undefined) {
+    const mods = watched
+      ? [RESOLVED_ID, ASCII_RESOLVED_ID].flatMap((id) => {
+          const m = server.moduleGraph.getModuleById(id);
+          return m === undefined ? [] : [m];
+        })
+      : [];
+    for (const mod of mods) {
       server.moduleGraph.invalidateModule(mod);
     }
     // Returning undefined lets Vite's default HMR pipeline continue.
-    return mod === undefined ? undefined : [mod];
+    return mods.length === 0 ? undefined : mods;
   },
   async load(id) {
-    if (id !== RESOLVED_ID) {
+    if (id !== RESOLVED_ID && id !== ASCII_RESOLVED_ID) {
       return null;
     }
     const watched = [
@@ -101,7 +142,8 @@ const mdxrDocuments = (): Plugin => ({
     for (const file of watched) {
       this.addWatchFile(file);
     }
-    const renderFile = await loadRenderer();
+    const render =
+      id === RESOLVED_ID ? await loadRenderer() : await loadAscii();
     const docs: Record<string, string> = {};
     const docFiles = await listFiles(docsDir);
     const mdxFiles = docFiles.filter((f) => f.endsWith(".mdx"));
@@ -109,7 +151,7 @@ const mdxrDocuments = (): Plugin => ({
       mdxFiles.map(async (file) => {
         const name = path.relative(docsDir, file);
         try {
-          docs[name] = await renderFile(file);
+          docs[name] = await render(file);
         } catch (error) {
           docs[name] = errorPage(error);
         }
@@ -118,7 +160,15 @@ const mdxrDocuments = (): Plugin => ({
     return `export default ${JSON.stringify(docs)};`;
   },
   name: "mdxr-documents",
-  resolveId: (id) => (id === VIRTUAL_ID ? RESOLVED_ID : undefined),
+  resolveId: (id) => {
+    if (id === VIRTUAL_ID) {
+      return RESOLVED_ID;
+    }
+    if (id === ASCII_ID) {
+      return ASCII_RESOLVED_ID;
+    }
+    return null;
+  },
 });
 
 const config: StorybookConfig = {

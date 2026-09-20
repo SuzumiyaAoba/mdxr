@@ -4,10 +4,12 @@ export default defineConfig({
   ai: {
     llmsTxt: true,
   },
-  // GitHub Pages project site: https://suzumiyaaoba.github.io/mdxr
+  // GitHub Pages project site; the account's user Pages uses the custom
+  // domain suzumiyaaoba.com, so this site is served at
+  // https://suzumiyaaoba.com/mdxr (suzumiyaaoba.github.io/mdxr redirects).
   deployment: {
     base: "/mdxr",
-    site: "https://suzumiyaaoba.github.io",
+    site: "https://suzumiyaaoba.com",
   },
   description:
     "Render agent-authored MDX documents to standalone HTML with a semantic component catalog.",

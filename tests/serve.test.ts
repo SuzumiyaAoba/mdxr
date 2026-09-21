@@ -34,4 +34,27 @@ describe(serveSource, () => {
       server.close();
     }
   });
+
+  it("honors hydrate: false while retaining live reload", async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), "mdxr-serve-"));
+    tmpDirs.push(dir);
+    const server = await serveSource('<Switch aria-label="Enabled" />', 0, {
+      dir,
+      hydrate: false,
+    });
+    try {
+      const address = server.address();
+      if (typeof address !== "object" || address === null) {
+        throw new Error("server is not listening");
+      }
+      const res = await fetch(`http://127.0.0.1:${address.port}/`);
+      const html = await res.text();
+      expect(html).toContain('role="switch"');
+      expect(html).toContain("/__mdxr_events");
+      expect(html.includes("hydrateRoot")).toBeFalsy();
+    } finally {
+      server.closeAllConnections();
+      server.close();
+    }
+  });
 });

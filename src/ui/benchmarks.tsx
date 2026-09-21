@@ -25,7 +25,10 @@ const BetterCtx = createContext<BenchBetter>("higher");
 /** Signed pct change, formatted `+21%` / `−8%` / `±0%`. */
 const deltaOf = (before: number, after: number): string => {
   if (before === 0) {
-    return after === 0 ? "±0%" : "+∞";
+    if (after === 0) {
+      return "±0%";
+    }
+    return after > 0 ? "+∞" : "−∞";
   }
   const d = ((after - before) / Math.abs(before)) * 100;
   if (Math.abs(d) < 0.5) {

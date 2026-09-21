@@ -40,9 +40,11 @@ export const NoTitle: Story = {
 
 export const StandaloneStep: Story = {
   render: () => (
-    <p>
-      A <FlowStep name="helper()" path="src/util.ts" /> used outside a Flow — no
-      number is shown.
-    </p>
+    <div>
+      <p>A step used outside a Flow — no number is shown.</p>
+      <ul className="not-prose m-0 list-none p-0">
+        <FlowStep name="helper()" path="src/util.ts" />
+      </ul>
+    </div>
   ),
 };

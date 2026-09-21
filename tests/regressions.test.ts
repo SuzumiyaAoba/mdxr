@@ -127,6 +127,31 @@ describe("heading slugs", () => {
   });
 });
 
+describe("multiple tables of contents", () => {
+  it("lists each nested heading once in each table", async () => {
+    const { body } = await ssr(
+      "<Toc />\n\n<Toc />\n\n## Parent\n\n### Child\n"
+    );
+    const tables = body.match(/<nav\b[\s\S]*?<\/nav>/gu) ?? [];
+    expect(tables).toHaveLength(2);
+    for (const table of tables) {
+      expect(table.match(/href="#child"/gu)).toHaveLength(1);
+    }
+  });
+
+  it("applies each table's depth limit independently", async () => {
+    const { body } = await ssr(
+      '<Toc depth="4" />\n\n<Toc depth="2" />\n\n## Parent\n\n### Child\n\n#### Grandchild\n'
+    );
+    const tables = body.match(/<nav\b[\s\S]*?<\/nav>/gu) ?? [];
+    expect(tables).toHaveLength(2);
+    expect(tables[0]).toContain('href="#grandchild"');
+    expect(tables[1]).toContain('href="#parent"');
+    expect(tables[1]).not.toContain('href="#child"');
+    expect(tables[1]).not.toContain('href="#grandchild"');
+  });
+});
+
 describe("Summary", () => {
   it("renders unparseable done/total as 0, never NaN", async () => {
     const { body } = await ssr('<Summary done="x" total="y" />');

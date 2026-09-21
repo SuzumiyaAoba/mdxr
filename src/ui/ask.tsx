@@ -56,17 +56,11 @@ const questionType = (q: QuestionEl): QuestionType =>
 
 const selectAnswer = (q: QuestionEl): string => {
   const [checked] = checkedChoicesOf(q);
-  // <select defaultValue> only lands when the checked choice's `value` is
-  // non-empty; otherwise the browser stays on the first option — the
-  // placeholder (value "", i.e. unanswered) when present, else the first
-  // choice. The client reads s.value, so a picked option with value=""
-  // still reports "".
-  const sel =
-    checked !== undefined && nonEmpty(propOf(checked, "value"))
-      ? checked
-      : undefined;
+  // Match SelectControl's defaultValue, including an explicitly checked
+  // empty value. The client treats value="" as unanswered.
   const picked =
-    sel ?? (nonEmpty(propOf(q, "placeholder")) ? undefined : choicesOf(q)[0]);
+    checked ??
+    (nonEmpty(propOf(q, "placeholder")) ? undefined : choicesOf(q)[0]);
   if (picked === undefined || !nonEmpty(propOf(picked, "value"))) {
     return "";
   }

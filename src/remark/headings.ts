@@ -40,7 +40,9 @@ interface TocItem {
 const nest = (headings: TocItem[]): TocItem[] => {
   const roots: TocItem[] = [];
   const stack: TocItem[] = [];
-  for (const h of headings) {
+  for (const item of headings) {
+    // Each table owns its nesting; another <Toc> may use a different depth.
+    const h: TocItem = { ...item, children: [] };
     while (stack.length > 0 && (stack.at(-1)?.depth ?? 0) >= h.depth) {
       stack.pop();
     }

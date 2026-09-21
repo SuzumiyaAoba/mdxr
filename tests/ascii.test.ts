@@ -159,6 +159,31 @@ Use a join instead.
     expect(markdown).toContain("`( )` prod");
   });
 
+  it("preserves choice labels, defaults, and the inferred question type", async () => {
+    const { markdown } = await render(`<Ask>
+<Question name="env">
+<Choice value="dev" checked>Development</Choice>
+<Choice value="prod" checked="false">Production</Choice>
+</Question>
+</Ask>`);
+    expect(markdown).toContain("pick one");
+    expect(markdown).not.toContain("short answer");
+    expect(markdown).toContain("`(x)` Development");
+    expect(markdown).toContain("`( )` Production");
+  });
+
+  it("preserves multi-choice selection and standalone choice labels", async () => {
+    const { markdown } = await render(`<Question name="scope" type="multi">
+<Choice value="api" checked>API changes</Choice>
+<Choice value="ui" checked="false">UI changes</Choice>
+</Question>
+
+<Choice value="standalone">Standalone label</Choice>`);
+    expect(markdown).toContain("[x] API changes");
+    expect(markdown).toContain("[ ] UI changes");
+    expect(markdown).toContain("Standalone label");
+  });
+
   it("keeps code fences and frontmatter intact", async () => {
     const src = `---\ndraft: true\n---\n\n\`\`\`ts\nconst x: number = 1\n\`\`\`\n`;
     const { markdown } = await render(src);

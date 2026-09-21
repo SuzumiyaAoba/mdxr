@@ -131,6 +131,20 @@ describe("report components", () => {
     expect(body).toContain("+50%");
   });
 
+  it.each([
+    ["-1", "−∞"],
+    ["0", "±0%"],
+    ["1", "+∞"],
+  ])(
+    "keeps the delta sign from a zero baseline to %s",
+    async (after, delta) => {
+      const { body } = await render(
+        `<Bench name="change" before="0" after="${after}" />`
+      );
+      expect(body).toContain(delta);
+    }
+  );
+
   it("renders DiffStat inline", async () => {
     const { body } = await render(
       '<DiffStat files="12" adds="340" dels="120" />'

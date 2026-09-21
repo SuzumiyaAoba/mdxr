@@ -1,4 +1,4 @@
-import { nonEmpty, urlScheme } from "./guards.js";
+import { nonEmpty, own, urlScheme } from "./guards.js";
 
 type EditorLink = (absPath: string, line?: string) => string;
 
@@ -56,7 +56,7 @@ const build = (
   if (e === "none") {
     return undefined;
   }
-  const known = EDITORS[e];
+  const known = own(EDITORS, e);
   if (known !== undefined) {
     return known(absPath, line);
   }

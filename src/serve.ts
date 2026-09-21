@@ -121,6 +121,7 @@ const servePreview = async (
   port: number
 ): Promise<http.Server> => {
   let html = "";
+  let closed = false;
   const clients = new Set<http.ServerResponse>();
   const server = http.createServer((req, res) => {
     if (req.url === "/__mdxr_events") {
@@ -176,7 +177,9 @@ const servePreview = async (
     } catch (error) {
       html = errorPage(error);
     }
-    armDeps(onEvent);
+    if (!closed) {
+      armDeps(onEvent);
+    }
   };
 
   // Rebuilds chain onto each other: a change burst during a slow rebuild
@@ -188,6 +191,9 @@ const servePreview = async (
     const prev = reloading;
     reloading = (async () => {
       await prev;
+      if (closed) {
+        return;
+      }
       try {
         await rebuild(onEvent);
         for (const c of clients) {
@@ -204,7 +210,13 @@ const servePreview = async (
     })();
   };
 
-  const notify = (): void => {
+  const notify = (_event?: string, filename?: string | null): void => {
+    if (
+      closed ||
+      filename?.split(path.sep).some((part) => SKIP_DIRS.has(part)) === true
+    ) {
+      return;
+    }
     clearTimeout(timer);
     timer = setTimeout(() => {
       reload(notify);
@@ -227,17 +239,20 @@ const servePreview = async (
     }
   }
   server.on("close", () => {
+    closed = true;
     clearTimeout(timer);
     watch.close();
   });
 
-  await rebuild(notify);
+  // Edits during startup must wait for the initial render too.
+  reloading = rebuild(notify);
+  await reloading;
 
   // Bind loopback only — the startup log says localhost, and a preview
   // server has no auth: listening on 0.0.0.0 would expose the document
   // (and its file links) to the LAN.
-  server.listen(port, "127.0.0.1");
   try {
+    server.listen(port, "127.0.0.1");
     // Rejects on 'error' (e.g. EADDRINUSE) before 'listening'.
     await once(server, "listening");
   } catch (error) {
@@ -337,6 +352,7 @@ export const serveSource = async (
           await render(source, {
             dir,
             filePath: opts.filePath,
+            hydrate: opts.hydrate,
             liveReload: true,
             onDependencies: onDeps,
           })

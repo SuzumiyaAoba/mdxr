@@ -1,10 +1,21 @@
 /** ASCII renderers for the <Ask> form components — interactive widgets
  *  degrade to a readable questionnaire in plain markdown. */
 
-import type { RootContent } from "mdast";
+import type { PhrasingContent, RootContent } from "mdast";
 
-import { nonEmpty } from "../guards.js";
-import { attr, els, em, icode, item, list, para, strong, txt } from "./ast.js";
+import { nonEmpty, own } from "../guards.js";
+import {
+  attr,
+  els,
+  em,
+  flag,
+  icode,
+  item,
+  list,
+  para,
+  strong,
+  txt,
+} from "./ast.js";
 import type { AsciiCtx, AsciiRegistry, MdxTarget } from "./ast.js";
 import { caption, suffix } from "./parts.js";
 
@@ -18,25 +29,38 @@ const TYPE_LABEL: Record<string, string> = {
   toggle: "yes/no",
 };
 
-/** `multi` → a real `- [ ]` checkbox; anything else → a `` `( )` `` radio chip. */
-const choice = (node: MdxTarget, multi: boolean): ReturnType<typeof item> =>
+const choiceLabel = (node: MdxTarget, ctx: AsciiCtx): PhrasingContent[] => {
+  const label = ctx.inline(node);
+  return label.length === 0 ? [txt(attr(node, "value") ?? "")] : label;
+};
+
+/** Preserve default selections in checkbox lists and radio chips. */
+const choice = (
+  node: MdxTarget,
+  multi: boolean,
+  ctx: AsciiCtx
+): ReturnType<typeof item> =>
   item(
     [
       para([
-        ...(multi ? [] : [icode("( )"), txt(" ")]),
-        txt(attr(node, "value") ?? ""),
+        ...(multi
+          ? []
+          : [icode(flag(node, "checked") ? "(x)" : "( )"), txt(" ")]),
+        ...choiceLabel(node, ctx),
         ...(nonEmpty(attr(node, "description"))
           ? [txt(" — "), em([txt(attr(node, "description") ?? "")])]
           : []),
       ]),
     ],
-    multi ? false : undefined
+    multi ? flag(node, "checked") : undefined
   );
 
-const question = (node: MdxTarget, _ctx: AsciiCtx): RootContent[] => {
-  const type = (attr(node, "type") ?? "text").toLowerCase();
-  const label = attr(node, "label") ?? attr(node, "name") ?? "";
+const question = (node: MdxTarget, ctx: AsciiCtx): RootContent[] => {
   const choices = els(node, "Choice");
+  const type = (
+    attr(node, "type") ?? (choices.length > 0 ? "choice" : "text")
+  ).toLowerCase();
+  const label = attr(node, "label") ?? attr(node, "name") ?? "";
   const multi = type === "multi";
   const head: RootContent[] = [
     para([
@@ -45,7 +69,7 @@ const question = (node: MdxTarget, _ctx: AsciiCtx): RootContent[] => {
         ? [txt(" "), icode(attr(node, "name") ?? "")]
         : []),
       ...suffix([
-        TYPE_LABEL[type] ?? type,
+        own(TYPE_LABEL, type) ?? type,
         nonEmpty(attr(node, "placeholder"))
           ? `e.g. ${attr(node, "placeholder")}`
           : undefined,
@@ -56,7 +80,7 @@ const question = (node: MdxTarget, _ctx: AsciiCtx): RootContent[] => {
       : []),
   ];
   if (choices.length > 0) {
-    head.push(list(choices.map((c) => choice(c, multi))));
+    head.push(list(choices.map((c) => choice(c, multi, ctx))));
   } else if (type === "text" || type === "textarea") {
     head.push(para([icode("[____________________]")]));
   }
@@ -77,16 +101,16 @@ export const formRenderers: AsciiRegistry = {
     ],
   },
   Choice: {
-    flow: (n) => [
+    flow: (n, ctx) => [
       para([
         txt("- "),
-        txt(attr(n, "value") ?? ""),
+        ...choiceLabel(n, ctx),
         ...(nonEmpty(attr(n, "description"))
           ? [txt(" — "), em([txt(attr(n, "description") ?? "")])]
           : []),
       ]),
     ],
-    text: (n) => [icode(attr(n, "value") ?? "")],
+    text: choiceLabel,
   },
   Question: { flow: question },
 };

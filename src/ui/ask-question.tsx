@@ -1,16 +1,10 @@
-import {
-  createContext,
-  isValidElement,
-  useContext,
-  useId,
-  useMemo,
-} from "react";
+import { createContext, useContext, useId, useMemo } from "react";
 import type { ReactElement, ReactNode } from "react";
 import * as v from "valibot";
 
 import type { DocProps } from "../define.js";
 import { defineComponent, flattenChildren } from "../define.js";
-import { nonEmpty } from "../guards.js";
+import { asString, nonEmpty } from "../guards.js";
 import { attrTrue, BOOLISH_PROP } from "./attrs.js";
 import { isEl, propOf } from "./children.js";
 import { Icon } from "./icon.js";
@@ -113,7 +107,7 @@ export const Choice = defineComponent(
 );
 
 const isCheckedChoice = (node: ReactNode): node is ReactElement<DocProps> =>
-  isValidElement<DocProps>(node) && truthy(propOf(node, "checked"));
+  isEl<DocProps>(node, Choice) && truthy(propOf(node, "checked"));
 
 /** Label/description/data-attrs chrome shared by every question frame. */
 interface QuestionChrome {
@@ -215,12 +209,11 @@ const SelectControl = ({
   placeholder: string | undefined;
 }): ReactElement => {
   const sel = flattenChildren(children).find(isCheckedChoice);
-  const selValue = nonEmpty(sel?.props.value) ? sel.props.value : undefined;
+  const selValue =
+    asString(sel?.props.value) ?? (nonEmpty(placeholder) ? "" : undefined);
   return (
-    // No defaultValue when nothing is checked: the browser picks the first
-    // option on both SSR and hydration, so the two agree. (With a
-    // placeholder option present it is first, so it gets picked — same as
-    // the intended "unanswered" display.)
+    // Explicitly select the disabled placeholder; without defaultValue the
+    // browser selects the first enabled choice and invents an answer.
     <select className={CONTROL_CLS} defaultValue={selValue} id={id} name={name}>
       {nonEmpty(placeholder) ? (
         <option disabled value="">

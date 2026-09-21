@@ -35,6 +35,19 @@ describe(editorUrl, () => {
     );
   });
 
+  it.each(["constructor", "toString", "hasOwnProperty"])(
+    "treats inherited object names as unknown editors: %s",
+    (editor) => {
+      expect(editorUrl(editor, "/repo/a.ts", "4")).toBe(
+        `${editor}://file/repo/a.ts:4`
+      );
+    }
+  );
+
+  it("rejects prototype names that are not URI schemes", () => {
+    expect(editorUrl("__proto__", "/repo/a.ts")).toBeUndefined();
+  });
+
   it("URI-encodes paths with spaces", () => {
     expect(editorUrl("vscode", "/repo/my dir/a.ts")).toBe(
       "vscode://file/repo/my%20dir/a.ts"

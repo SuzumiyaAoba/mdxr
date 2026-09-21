@@ -9,3 +9,9 @@ declare module "virtual:mdxr-ascii" {
   const documents: Record<string, string>;
   export default documents;
 }
+
+declare module "virtual:mdxr-component/*" {
+  /** Standalone HTML for one component's compile-time integration fixture. */
+  const html: string;
+  export default html;
+}

@@ -8,6 +8,7 @@ import type { Plugin } from "vite";
 import { mergeConfig } from "vite";
 
 import { importBundledCode } from "../src/load-user-module.js";
+import { mdxrComponentDocuments } from "./component-documents.js";
 
 const VIRTUAL_ID = "virtual:mdxr-documents";
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
@@ -195,10 +196,15 @@ const config: StorybookConfig = {
     "@storybook/addon-vitest",
   ],
   framework: "@storybook/react-vite",
+  staticDirs: [{ from: "../examples/catalog/assets", to: "/assets" }],
   stories: ["../stories/**/*.stories.@(ts|tsx)"],
   viteFinal: (viteConfig) =>
     mergeConfig(viteConfig, {
-      plugins: [tailwindcss(), mdxrDocuments()],
+      plugins: [
+        tailwindcss(),
+        mdxrDocuments(),
+        mdxrComponentDocuments(rootDir, loadRenderer),
+      ],
       resolve: { alias: { "@": srcDir } },
     }),
 };

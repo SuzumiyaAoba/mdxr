@@ -184,3 +184,20 @@ Markdown shorthands and what they render as — the reverse lookup of the index 
 | `- [ ]` / `- [x]` | styled task list |
 | nested list inside `<Tree>` | file tree |
 | `<Icon name="lucide:rocket">` / `icon-[lucide--rocket]` class | inline Iconify icon |
+
+## Extended components
+
+120 feature families, plus supporting children. Shared data: literal JSON/CSV, fenced data, Markdown tables or RecordItem. Dynamic controls require hydrated HTML; ASCII preserves static results.
+
+- [Evidence](components/extended-evidence.md): Sources, CrossRef, Evidence, Provenance, Assumptions, Limitations, Sidenote, TermRef, Include, DocumentHistory
+- [Planning](components/extended-planning.md): Traceability, DecisionMatrix, RiskRegister, Scope, ActionItems, Estimate, DependencyPlan, RACI, Objectives, CapacityPlan
+- [Investigation](components/extended-investigation.md): Reproduction, Logs, JsonDiff, ConfigDiff, ApiDiff, SchemaDiff, ImpactMap, DataLineage, SymbolOutline, CodeWalkthrough
+- [Reference](components/extended-reference.md): CodeGroup, PackageInstall, ApiExample, ApiParams, ObjectSchema, CliReference, ConfigReference, ErrorCatalog, CompatibilityMatrix, DeprecationTimeline
+- [Quality](components/extended-quality.md): TestMatrix, Coverage, BenchmarkSuite, TestHistory, VisualDiff, AccessibilityReport, BundleReport, Flamegraph, QueryPlan, ContractResults
+- [Operations](components/extended-operations.md): Runbook, Rollout, SLO, AlertRules, FeatureFlags, RecoveryPlan, PermissionMatrix, ThreatModel, Remediation, MaintenanceWindow
+- [Statistics](components/extended-statistics.md): Heatmap, Histogram, BoxPlot, ECDF, IntervalPlot, BulletChart, CalendarHeatmap, ParetoChart, CohortTable, ConfusionMatrix
+- [Charts](components/extended-charts.md): ViolinPlot, RidgelinePlot, DotPlot, SlopeChart, BumpChart, DumbbellChart, Sunburst, ChordDiagram, UpSetPlot, SmallMultiples
+- [Diagrams](components/extended-diagrams.md): SequenceDiagram, StateDiagram, EntityRelations, Swimlane, Architecture, DecisionTree, MindMap, JourneyMap, ServiceTopology, DependencyMatrix
+- [Interactive](components/extended-interactive.md): DataTable, FilterPanel, Checklist, Ranking, Calculator, Wizard, SyncedTabs, DocumentSearch, AnswerSheet, DownloadData
+- [Media](components/extended-media.md): ImageGallery, AnnotatedImage, ImageCompare, Video, AudioTranscript, PdfPreview, PrintLayout, TableOfFigures, NumberedEquation, Theorem
+- [Evaluation](components/extended-evaluation.md): EvalReport, ModelComparison, Conversation, ToolCall, TokenUsage, PromptTemplate, DatasetProfile, DataValidation, Experiment, DatasetDiff

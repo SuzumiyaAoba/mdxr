@@ -1,0 +1,47 @@
+---
+title: Extended components — Planning
+---
+
+# Planning
+
+## Traceability
+
+<Traceability data='[{"id":"REQ-1","requirement":"Offline export","tasks":["T-1"],"files":["src/render.ts"],"tests":["export.test.ts"]},{"id":"REQ-2","requirement":"Keyboard support","tasks":["T-2"],"files":["src/ui/data-table.tsx"],"tests":[]}]' />
+
+## DecisionMatrix
+
+<DecisionMatrix data='[{"name":"Simple","cost":9,"reliability":6},{"name":"Resilient","cost":5,"reliability":9}]' options='{"weights":{"cost":0.4,"reliability":0.6}}' />
+
+## RiskRegister
+
+<RiskRegister data='[{"id":"R1","risk":"Migration delay","likelihood":3,"impact":4,"owner":"Platform","mitigation":"Staged rollout","status":"open"}]' />
+
+## Scope
+
+<Scope data='[{"item":"Item","scope":"Renderer","reason":"Required for release","phase":"Phase"}]' />
+
+## ActionItems
+
+<ActionItems data='[{"action":"Run the verification suite","owner":"Platform","due":"Due","acceptance":"Acceptance","evidence":"tests/release.test.ts","status":"open"}]' />
+
+## Estimate
+
+<Estimate data='[{"name":"Parser","optimistic":2,"likely":4,"pessimistic":8,"unit":"days"}]' />
+
+## DependencyPlan
+
+<DependencyPlan data='[{"id":"design","duration":2},{"id":"build","duration":5,"depends":["design"]},{"id":"docs","duration":2,"depends":["design"]},{"id":"release","duration":1,"depends":["build","docs"]}]' />
+
+## RACI
+
+<RACI data='[{"task":"Task","responsible":"Responsible","accountable":"Accountable","consulted":"Consulted","informed":"Informed"}]' />
+
+## Objectives
+
+<Objectives data='[{"objective":"Objective","keyResults":"Keyresults","owner":"Platform","due":"Due","status":"open"}]' />
+
+<KeyResults data='[{"name":"Pass rate","baseline":80,"current":92,"target":99}]' />
+
+## CapacityPlan
+
+<CapacityPlan data='[{"name":"Platform","capacity":40,"allocated":32},{"name":"Design","capacity":20,"allocated":24}]' />

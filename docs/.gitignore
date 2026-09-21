@@ -3,3 +3,5 @@ dist/
 .blume/
 public/examples/*.html
 public/components/*.html
+public/components/assets/
+public/examples/assets/

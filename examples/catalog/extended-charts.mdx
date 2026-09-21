@@ -1,0 +1,51 @@
+---
+title: Extended components — Charts
+---
+
+# Charts
+
+## ViolinPlot
+
+<ViolinPlot data='[{"name":"A","values":[1,2,2,3,4,5,6]},{"name":"B","values":[3,4,4,5,6,8]}]' />
+
+## RidgelinePlot
+
+<RidgelinePlot data='[{"name":"A","values":[1,2,2,3,4,5,6]},{"name":"B","values":[3,4,4,5,6,8]}]' />
+
+## DotPlot
+
+<DotPlot data='[{"name":"A","value":12},{"name":"B","value":8}]' />
+
+## SlopeChart
+
+<SlopeChart data='[{"name":"A","before":5,"after":9},{"name":"B","before":8,"after":6}]' />
+
+## BumpChart
+
+<BumpChart data='[{"name":"A","values":[1,2,1]},{"name":"B","values":[2,1,2]}]' options='{"labels":["Q1","Q2","Q3"]}' />
+
+## DumbbellChart
+
+<DumbbellChart data='[{"name":"A","before":5,"after":9},{"name":"B","before":8,"after":6}]' />
+
+## Sunburst
+
+<Sunburst data='[{"id":"app","name":"App"},{"id":"ui","parent":"app","name":"UI","value":60},{"id":"core","parent":"app","name":"Core","value":40}]' />
+
+## ChordDiagram
+
+<ChordDiagram data='[{"from":"API","to":"DB","value":30},{"from":"Worker","to":"DB","value":20},{"from":"API","to":"Worker","value":10}]' />
+
+## UpSetPlot
+
+<UpSetPlot data='[{"sets":["A"],"value":10},{"sets":["B"],"value":7},{"sets":["A","B"],"value":4}]' />
+
+## SmallMultiples
+
+<SmallMultiples>
+
+<DotPlot data='[{"name":"A","value":12}]' title='January' />
+
+<DotPlot data='[{"name":"A","value":25}]' title='February' />
+
+</SmallMultiples>

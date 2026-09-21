@@ -1,0 +1,47 @@
+---
+title: Extended components — Operations
+---
+
+# Operations
+
+## Runbook
+
+<Runbook data='[{"step":"Step","prerequisite":"Prerequisite","command":"Command","expected":"Ready","stop":"Stop","recovery":"Recovery"}]' />
+
+## Rollout
+
+<Rollout data='[{"stage":"Stage","target":"Target","percent":"Percent","metric":"Metric","gate":"Gate","rollback":"Rollback","status":"open"}]' />
+
+## SLO
+
+<SLO data='[{"name":"API availability","target":99.9,"total":100000,"bad":40}]' />
+
+<ErrorBudget data='[{"name":"API availability","target":99.9,"total":100000,"bad":40}]' />
+
+## AlertRules
+
+<AlertRules data='[{"name":"Example","metric":"Metric","condition":"Condition","duration":"Duration","owner":"Platform","runbook":"Runbook"}]' />
+
+## FeatureFlags
+
+<FeatureFlags data='[{"flag":"Flag","environment":"staging","enabled":"Enabled","condition":"Condition","owner":"Platform","retire":"Retire"}]' />
+
+## RecoveryPlan
+
+<RecoveryPlan data='[{"step":"Step","depends":"Depends","service":"Service","rpo":"Rpo","rto":"Rto","backup":"Backup","action":"Run the verification suite","verification":"Verification"}]' />
+
+## PermissionMatrix
+
+<PermissionMatrix data='[{"role":"Role","resource":"Resource","action":"Run the verification suite","allowed":"Allowed","condition":"Condition"}]' />
+
+## ThreatModel
+
+<ThreatModel data='[{"asset":"Asset","threat":"Threat","path":"Path","control":"Control","residual":"Residual","owner":"Platform"}]' />
+
+## Remediation
+
+<Remediation data='[{"vulnerability":"Vulnerability","severity":"Severity","owner":"Platform","due":"Due","fix":"Fix","verification":"Verification","status":"open"}]' />
+
+## MaintenanceWindow
+
+<MaintenanceWindow data='[{"name":"Database upgrade","start":"2026-09-01T02:00:00Z","end":"2026-09-01T02:30:00Z","owner":"Platform","status":"planned"}]' />

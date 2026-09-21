@@ -428,40 +428,51 @@ export const transformAscii = (
   serialize: (children: RootContent[]) => string,
   warn: (name: string) => void
 ): void => {
+  const transformElement = (n: Node, ctx: AsciiCtx): RootContent[] => {
+    if (isMdxEl(n)) {
+      const name = n.name ?? "";
+      const entry = own(registry, name);
+      if (entry === undefined) {
+        // Lowercase tags are raw HTML; unknown components unwrap.
+        if (/^[a-z]/u.test(name)) {
+          return htmlEl(n, ctx, n.type === "mdxJsxTextElement");
+        }
+        warn(name);
+        return ctx.children(n);
+      }
+      if (n.type === "mdxJsxTextElement") {
+        const out =
+          entry.text?.(n, ctx) ??
+          phrasing(entry.flow?.(n, ctx) ?? ctx.children(n));
+        return out;
+      }
+      if (entry.flow !== undefined) {
+        return entry.flow(n, ctx);
+      }
+      const inlineOut = entry.text?.(n, ctx);
+      return inlineOut === undefined ? ctx.children(n) : [para(inlineOut)];
+    }
+    if (isParent(n)) {
+      n.children = ctx.children(n);
+    }
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- inputs are root children by construction
+    return [n as RootContent];
+  };
   const transformNodes = (nodes: Node[], ctx: AsciiCtx): RootContent[] =>
-    nodes.flatMap((n): RootContent[] => {
-      if (isMdxEl(n)) {
-        const name = n.name ?? "";
-        const entry = own(registry, name);
-        if (entry === undefined) {
-          // Lowercase tags are raw HTML; unknown components unwrap.
-          if (/^[a-z]/u.test(name)) {
-            return htmlEl(n, ctx, n.type === "mdxJsxTextElement");
-          }
-          warn(name);
-          return transformNodes(n.children ?? [], ctx);
-        }
-        if (n.type === "mdxJsxTextElement") {
-          const out =
-            entry.text?.(n, ctx) ??
-            phrasing(
-              entry.flow?.(n, ctx) ?? transformNodes(n.children ?? [], ctx)
-            );
-          return out;
-        }
-        if (entry.flow !== undefined) {
-          return entry.flow(n, ctx);
-        }
-        const inlineOut = entry.text?.(n, ctx);
-        return inlineOut === undefined
-          ? transformNodes(n.children ?? [], ctx)
-          : [para(inlineOut)];
+    nodes.flatMap((node): RootContent[] => {
+      const id: unknown = isRecord(node.data)
+        ? node.data.mdxrReferenceId
+        : undefined;
+      const output = transformElement(node, ctx);
+      if (typeof id !== "string") {
+        return output;
       }
-      if (isParent(n)) {
-        n.children = transformNodes(n.children, ctx);
-      }
-      // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- inputs are root children by construction
-      return [n as RootContent];
+      const escaped = id
+        .replaceAll("&", "&amp;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+      return [{ type: "html", value: `<a id="${escaped}"></a>` }, ...output];
     });
 
   const ctx: AsciiCtx = {

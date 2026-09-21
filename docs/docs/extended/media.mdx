@@ -1,0 +1,126 @@
+---
+title: Media
+description: Media — component examples
+sidebar:
+  order: 101
+---
+
+See [Extended components](/mdxr/extended-components) for shared data contracts and calculation semantics.
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-media.html`} title="Media" loading="lazy" style="width:100%;height:720px;border:1px solid #8884;border-radius:12px" />
+
+## 101. ImageGallery
+
+
+
+````mdx
+<ImageGallery data='[{"src":"assets/before.svg","alt":"Before layout","caption":"Before"},{"src":"assets/after.svg","alt":"After layout","caption":"After"}]' />
+````
+
+## 102. AnnotatedImage
+
+
+
+````mdx
+<AnnotatedImage data='[{"x":15,"y":25,"width":30,"height":35,"label":"Navigation","note":"Persistent navigation area."}]' src='assets/after.svg' alt='Example navigation layout' />
+````
+
+## 103. ImageCompare
+
+
+
+````mdx
+<ImageCompare before='assets/before.svg' after='assets/after.svg' beforeAlt='Before layout' afterAlt='After layout' />
+````
+
+## 104. Video
+
+
+
+````mdx
+<Video src='assets/example.webm' captions='assets/captions.vtt' poster='assets/before.svg' />
+````
+
+## 105. AudioTranscript
+
+
+
+````mdx
+<AudioTranscript data='[{"time":0,"text":"An example tone starts here."},{"time":0.5,"text":"The example ends."}]' src='assets/tone.wav' captions='assets/captions.vtt' />
+````
+
+## 106. PdfPreview
+
+
+
+````mdx
+<PdfPreview src='assets/example.pdf' title='Example report' page='1' height='300' />
+````
+
+## 107. PrintLayout
+
+
+
+Supporting components: `PageBreak`.
+
+````mdx
+<PrintLayout columns='2'>
+
+First page.
+
+<PageBreak />
+
+Second page.
+
+</PrintLayout>
+````
+
+## 108. TableOfFigures
+
+
+
+````mdx
+<TableOfFigures />
+
+<Figure src='assets/after.svg' id='listed-figure' caption='Listed figure'>
+
+Figure content.
+
+</Figure>
+````
+
+## 109. NumberedEquation
+
+
+
+````mdx
+<NumberedEquation id='velocity'>
+
+$$
+v = d / t
+$$
+
+</NumberedEquation>
+
+See <CrossRef target="velocity" />.
+````
+
+## 110. Theorem
+
+
+
+Supporting components: `Proof`.
+
+````mdx
+<Theorem id='even-sum' title='Even sums'>
+
+The sum of two even integers is even.
+
+</Theorem>
+
+<Proof id='even-proof'>
+
+Write the integers as $2a$ and $2b$. Their sum is $2(a+b)$.
+
+</Proof>
+````

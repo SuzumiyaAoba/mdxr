@@ -1,0 +1,92 @@
+---
+title: 構造・関係図
+description: 構造・関係図 — component examples
+sidebar:
+  order: 81
+---
+
+共通の入力形式と計算仕様は[拡張コンポーネント](/mdxr/ja/extended-components)を参照してください。
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-diagrams.html`} title="構造・関係図" loading="lazy" style="width:100%;height:720px;border:1px solid #8884;border-radius:12px" />
+
+## 81. SequenceDiagram
+
+
+
+````mdx
+<SequenceDiagram nodes='[{"id":"client","label":"Client","lane":"Application"},{"id":"api","label":"API","lane":"Server"},{"id":"db","label":"Database","lane":"Server"}]' edges='[{"from":"client","to":"api","label":"Request"},{"from":"api","to":"db","label":"Query"}]' />
+````
+
+## 82. StateDiagram
+
+
+
+````mdx
+<StateDiagram nodes='[{"id":"client","label":"Client","lane":"Application"},{"id":"api","label":"API","lane":"Server"},{"id":"db","label":"Database","lane":"Server"}]' edges='[{"from":"client","to":"api","label":"Request","guard":"valid","action":"load"},{"from":"api","to":"db","label":"Query"}]' />
+````
+
+## 83. EntityRelations
+
+
+
+````mdx
+<EntityRelations data='[{"table":"users","name":"id","type":"uuid"},{"table":"orders","name":"id","type":"uuid"},{"table":"orders","name":"user_id","type":"uuid","fk":"users.id","relation":"many-to-one"}]' />
+````
+
+## 84. Swimlane
+
+
+
+````mdx
+<Swimlane nodes='[{"id":"client","label":"Client","lane":"Application"},{"id":"api","label":"API","lane":"Server"},{"id":"db","label":"Database","lane":"Server"}]' edges='[{"from":"client","to":"api","label":"Request"},{"from":"api","to":"db","label":"Query"}]' />
+````
+
+## 85. Architecture
+
+
+
+````mdx
+<Architecture nodes='[{"id":"client","label":"Client","lane":"Application","group":"Application"},{"id":"api","label":"API","lane":"Server","group":"Server"},{"id":"db","label":"Database","lane":"Server","group":"Server"}]' edges='[{"from":"client","to":"api","label":"Request"},{"from":"api","to":"db","label":"Query"}]' />
+````
+
+## 86. DecisionTree
+
+
+
+````mdx
+<DecisionTree nodes='[{"id":"client","label":"Client","lane":"Application","condition":"Request valid?"},{"id":"api","label":"API","lane":"Server"},{"id":"db","label":"Database","lane":"Server"}]' edges='[{"from":"client","to":"api","label":"Request"},{"from":"api","to":"db","label":"Query"}]' />
+````
+
+## 87. MindMap
+
+
+
+````mdx
+<MindMap nodes='[{"id":"client","label":"Client","lane":"Application"},{"id":"api","label":"API","lane":"Server"},{"id":"db","label":"Database","lane":"Server"}]' edges='[{"from":"client","to":"api","label":"Request"},{"from":"api","to":"db","label":"Query"}]' />
+````
+
+## 88. JourneyMap
+
+Journey stages, user actions, touchpoints, pain points and improvements.
+
+データ列: `stage,action,touchpoint,pain,improvement`.
+
+````mdx
+<JourneyMap data='[{"stage":"Stage","action":"Run the verification suite","touchpoint":"Touchpoint","pain":"Pain","improvement":"Improvement"}]' />
+````
+
+## 89. ServiceTopology
+
+
+
+````mdx
+<ServiceTopology nodes='[{"id":"client","label":"Client","lane":"Application","group":"Application"},{"id":"api","label":"API","lane":"Server","group":"Server"},{"id":"db","label":"Database","lane":"Server","group":"Server"}]' edges='[{"from":"client","to":"api","label":"Request"},{"from":"api","to":"db","label":"Query"}]' />
+````
+
+## 90. DependencyMatrix
+
+
+
+````mdx
+<DependencyMatrix data='[{"from":"API","to":"DB","value":3},{"from":"Worker","to":"DB","value":1}]' />
+````

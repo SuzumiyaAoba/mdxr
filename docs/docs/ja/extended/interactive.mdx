@@ -1,0 +1,139 @@
+---
+title: 操作・入力
+description: 操作・入力 — component examples
+sidebar:
+  order: 91
+---
+
+共通の入力形式と計算仕様は[拡張コンポーネント](/mdxr/ja/extended-components)を参照してください。
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-interactive.html`} title="操作・入力" loading="lazy" style="width:100%;height:720px;border:1px solid #8884;border-radius:12px" />
+
+## 91. DataTable
+
+
+
+````mdx
+<DataTable data='[{"id":"alpha","name":"Alpha","value":20,"status":"ready"},{"id":"beta","name":"Beta","value":10,"status":"pending"},{"id":"gamma","name":"Gamma","value":30,"status":"ready"}]' />
+````
+
+## 92. FilterPanel
+
+
+
+````mdx
+<FilterPanel fields='status'>
+
+<DataTable data='[{"id":"alpha","name":"Alpha","value":20,"status":"ready"},{"id":"beta","name":"Beta","value":10,"status":"pending"},{"id":"gamma","name":"Gamma","value":30,"status":"ready"}]' />
+
+<DotPlot data='[{"name":"Alpha","value":20,"status":"ready"},{"name":"Beta","value":10,"status":"pending"}]' />
+
+</FilterPanel>
+````
+
+## 93. Checklist
+
+
+
+````mdx
+<Checklist data='[{"id":"tests","label":"Run tests","checked":true,"owner":"Platform"},{"id":"review","label":"Review changes","checked":false}]' />
+````
+
+## 94. Ranking
+
+
+
+````mdx
+<Ranking data='[{"id":"speed","label":"Performance"},{"id":"clarity","label":"Clarity"},{"id":"cost","label":"Cost"}]' />
+````
+
+## 95. Calculator
+
+
+
+````mdx
+<Calculator data='[{"name":"users","label":"Users","value":100,"min":0},{"name":"price","label":"Price","value":12,"min":0}]' operation='product' unit='USD' />
+````
+
+## 96. Wizard
+
+
+
+````mdx
+<Wizard data='[{"name":"target","label":"Target","options":["Web","CLI"],"required":true},{"name":"url","label":"Site URL","when":{"target":"Web"},"required":true},{"name":"notes","label":"Notes","type":"textarea"}]' />
+````
+
+## 97. SyncedTabs
+
+
+
+補助要素: `TabItem`.
+
+````mdx
+<SyncedTabs syncKey='platform'>
+
+<TabItem label='Linux'>
+
+Linux instructions 1
+
+</TabItem>
+
+<TabItem label='macOS'>
+
+macOS instructions 1
+
+</TabItem>
+
+</SyncedTabs>
+
+<SyncedTabs syncKey='platform'>
+
+<TabItem label='Linux'>
+
+Linux instructions 2
+
+</TabItem>
+
+<TabItem label='macOS'>
+
+macOS instructions 2
+
+</TabItem>
+
+</SyncedTabs>
+````
+
+## 98. DocumentSearch
+
+
+
+````mdx
+<DocumentSearch />
+
+### Searchable section
+
+The search finds rendering instructions in this document.
+````
+
+## 99. AnswerSheet
+
+
+
+````mdx
+<AnswerSheet>
+
+<Ask title="Project">
+<Question name="project" type="text" label="Project name" />
+<Question name="ready" type="toggle" label="Ready" />
+</Ask>
+
+</AnswerSheet>
+````
+
+## 100. DownloadData
+
+
+
+````mdx
+<DownloadData data='[{"id":"alpha","name":"Alpha","value":20,"status":"ready"},{"id":"beta","name":"Beta","value":10,"status":"pending"},{"id":"gamma","name":"Gamma","value":30,"status":"ready"}]' filename='example' />
+````

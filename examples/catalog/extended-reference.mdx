@@ -1,0 +1,61 @@
+---
+title: Extended components — Reference
+---
+
+# Reference
+
+## CodeGroup
+
+<CodeGroup syncKey='language'>
+
+```ts
+const value = 1;
+```
+
+```python
+value = 1
+```
+
+</CodeGroup>
+
+## PackageInstall
+
+<PackageInstall packages='@suzumiyaaoba/mdxr' dev='true' />
+
+## ApiExample
+
+<ApiExample>
+
+<Request method='GET' path='/items' headers='Accept: application/json' />
+
+<Response status='200' body='{"items":["one"]}' />
+
+</ApiExample>
+
+## ApiParams
+
+<ApiParams data='[{"name":"Example","in":"In","type":"Type","required":"Required","default":"Default","constraints":"Constraints","example":"Example","description":"Review the result before release."}]' />
+
+## ObjectSchema
+
+<ObjectSchema schema='{"type":"object","required":["id"],"properties":{"id":{"type":"string","description":"Stable identifier"},"tags":{"type":"array","items":{"type":"string"}},"details":{"oneOf":[{"type":"string"},{"type":"number"}]}}}' />
+
+## CliReference
+
+<CliReference data='[{"command":"Command","argument":"Argument","flag":"Flag","type":"Type","default":"Default","conflicts":"Conflicts","example":"Example","description":"Review the result before release."}]' />
+
+## ConfigReference
+
+<ConfigReference data='[{"key":"Key","type":"Type","default":"Default","env":"Env","flag":"Flag","precedence":"Precedence","description":"Review the result before release."}]' />
+
+## ErrorCatalog
+
+<ErrorCatalog data='[{"code":"Code","message":"Message","cause":"Cause","action":"Run the verification suite","retry":"Retry","href":"Href"}]' />
+
+## CompatibilityMatrix
+
+<CompatibilityMatrix data='[{"platform":"Platform","runtime":"Runtime","version":"1.2.0","status":"open","notes":"Reviewed with the team."}]' />
+
+## DeprecationTimeline
+
+<DeprecationTimeline data='[{"feature":"Feature","deprecated":"Deprecated","removal":"Removal","replacement":"Replacement","migration":"Migration"}]' />

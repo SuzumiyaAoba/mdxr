@@ -117,6 +117,7 @@ interface QuestionChrome {
   qAttrs: {
     readonly "data-mdxr-q": "";
     readonly "data-q-label": string;
+    readonly "data-q-name": string;
     readonly "data-q-type": QuestionType;
   };
 }
@@ -346,6 +347,7 @@ export const Question = defineComponent(
       qAttrs: {
         "data-mdxr-q": "",
         "data-q-label": labelText,
+        "data-q-name": name,
         "data-q-type": t,
       } as const,
     };

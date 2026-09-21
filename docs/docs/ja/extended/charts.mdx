@@ -1,0 +1,96 @@
+---
+title: 比較・分布
+description: 比較・分布 — component examples
+sidebar:
+  order: 71
+---
+
+共通の入力形式と計算仕様は[拡張コンポーネント](/mdxr/ja/extended-components)を参照してください。
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-charts.html`} title="比較・分布" loading="lazy" style="width:100%;height:720px;border:1px solid #8884;border-radius:12px" />
+
+## 71. ViolinPlot
+
+
+
+````mdx
+<ViolinPlot data='[{"name":"A","values":[1,2,2,3,4,5,6]},{"name":"B","values":[3,4,4,5,6,8]}]' />
+````
+
+## 72. RidgelinePlot
+
+
+
+````mdx
+<RidgelinePlot data='[{"name":"A","values":[1,2,2,3,4,5,6]},{"name":"B","values":[3,4,4,5,6,8]}]' />
+````
+
+## 73. DotPlot
+
+
+
+````mdx
+<DotPlot data='[{"name":"A","value":12},{"name":"B","value":8}]' />
+````
+
+## 74. SlopeChart
+
+
+
+````mdx
+<SlopeChart data='[{"name":"A","before":5,"after":9},{"name":"B","before":8,"after":6}]' />
+````
+
+## 75. BumpChart
+
+
+
+````mdx
+<BumpChart data='[{"name":"A","values":[1,2,1]},{"name":"B","values":[2,1,2]}]' options='{"labels":["Q1","Q2","Q3"]}' />
+````
+
+## 76. DumbbellChart
+
+
+
+````mdx
+<DumbbellChart data='[{"name":"A","before":5,"after":9},{"name":"B","before":8,"after":6}]' />
+````
+
+## 77. Sunburst
+
+
+
+````mdx
+<Sunburst data='[{"id":"app","name":"App"},{"id":"ui","parent":"app","name":"UI","value":60},{"id":"core","parent":"app","name":"Core","value":40}]' />
+````
+
+## 78. ChordDiagram
+
+
+
+````mdx
+<ChordDiagram data='[{"from":"API","to":"DB","value":30},{"from":"Worker","to":"DB","value":20},{"from":"API","to":"Worker","value":10}]' />
+````
+
+## 79. UpSetPlot
+
+
+
+````mdx
+<UpSetPlot data='[{"sets":["A"],"value":10},{"sets":["B"],"value":7},{"sets":["A","B"],"value":4}]' />
+````
+
+## 80. SmallMultiples
+
+
+
+````mdx
+<SmallMultiples>
+
+<DotPlot data='[{"name":"A","value":12}]' title='January' />
+
+<DotPlot data='[{"name":"A","value":25}]' title='February' />
+
+</SmallMultiples>
+````

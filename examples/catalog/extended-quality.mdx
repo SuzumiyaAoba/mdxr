@@ -1,0 +1,45 @@
+---
+title: Extended components — Quality
+---
+
+# Quality
+
+## TestMatrix
+
+<TestMatrix data='[{"os":"linux","runtime":"22","status":"pass"}]' options='{"axes":{"os":["linux","mac"],"runtime":["22","24"]}}' />
+
+## Coverage
+
+<Coverage data='[{"name":"Parser","covered":88,"total":100}]' />
+
+## BenchmarkSuite
+
+<BenchmarkSuite data='[{"name":"Render","samples":[9,10,12,8,11],"unit":"ms"}]' />
+
+## TestHistory
+
+<TestHistory data='[{"name":"Compile","runs":["pass","pass","pass"]},{"name":"Network","runs":["pass","fail","pass"]}]' />
+
+## VisualDiff
+
+<VisualDiff expected='assets/before.svg' actual='assets/after.svg' diff='assets/diff.svg' threshold='0.01' mismatch='0.02' />
+
+## AccessibilityReport
+
+<AccessibilityReport data='[{"rule":"Rule","element":"Element","severity":"Severity","description":"Review the result before release.","fix":"Fix","status":"open"}]' />
+
+## BundleReport
+
+<BundleReport data='[{"id":"app","name":"App"},{"id":"ui","parent":"app","value":60000,"before":70000,"gzip":18000,"reason":"Document controls"},{"id":"core","parent":"app","value":40000,"before":35000,"gzip":12000,"reason":"Compiler"}]' />
+
+## Flamegraph
+
+<Flamegraph data='[{"id":"render","value":100},{"id":"parse","parent":"render","value":25},{"id":"compile","parent":"render","value":60},{"id":"highlight","parent":"compile","value":20}]' />
+
+## QueryPlan
+
+<QueryPlan data='[{"id":"scan","operation":"Index scan","estimatedRows":100,"actualRows":120,"time":5},{"id":"join","parent":"scan","operation":"Nested loop","estimatedRows":10,"actualRows":100,"time":12}]' />
+
+## ContractResults
+
+<ContractResults data='[{"provider":"Provider","consumer":"Consumer","contract":"Contract","expected":"Ready","actual":"Ready","status":"open"}]' />

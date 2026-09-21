@@ -27,7 +27,9 @@ import { remarkCodeMeta } from "./remark/code-meta.js";
 import { remarkMdxrDirectives } from "./remark/directives.js";
 import { remarkFilePaths } from "./remark/file-paths.js";
 import { remarkMdxrHeadings } from "./remark/headings.js";
+import { remarkInclude } from "./remark/include.js";
 import { remarkNoJs } from "./remark/no-js.js";
+import { remarkReferences } from "./remark/references.js";
 import { takeUsedIcons } from "./ui/icon.js";
 
 export interface MdxResult {
@@ -165,12 +167,14 @@ export const mdxToHtml = async (
       remarkMath,
       remarkDirective,
       remarkMdxrDirectives,
+      remarkInclude,
       remarkMdxrAlerts,
       remarkNoJs,
       remarkMdxrHeadings,
       remarkCodeFile,
       remarkCodeMeta,
       remarkFilePaths,
+      remarkReferences,
     ],
   });
   // Non-fatal plugin diagnostics (unknown directives, …) reach the user here.

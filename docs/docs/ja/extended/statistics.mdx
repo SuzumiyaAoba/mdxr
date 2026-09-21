@@ -1,0 +1,90 @@
+---
+title: 統計
+description: 統計 — component examples
+sidebar:
+  order: 61
+---
+
+共通の入力形式と計算仕様は[拡張コンポーネント](/mdxr/ja/extended-components)を参照してください。
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-statistics.html`} title="統計" loading="lazy" style="width:100%;height:720px;border:1px solid #8884;border-radius:12px" />
+
+## 61. Heatmap
+
+
+
+````mdx
+<Heatmap data='[{"x":"Mon","y":"API","value":3},{"x":"Tue","y":"API","value":8},{"x":"Mon","y":"Worker","value":5},{"x":"Tue","y":"Worker","value":2}]' />
+````
+
+## 62. Histogram
+
+
+
+````mdx
+<Histogram data='[{"values":[1,1,2,3,3,3,4,5,8,9]}]' options='{"bins":4}' />
+````
+
+## 63. BoxPlot
+
+
+
+````mdx
+<BoxPlot data='[{"name":"A","values":[1,2,3,4,5,20]},{"name":"B","values":[2,3,4,5,6]}]' />
+````
+
+## 64. ECDF
+
+
+
+````mdx
+<ECDF data='[{"values":[1,1,2,3,4,5,8]}]' />
+````
+
+## 65. IntervalPlot
+
+
+
+````mdx
+<IntervalPlot data='[{"name":"A","value":5,"low":3,"high":7},{"name":"B","value":8,"low":6,"high":9}]' />
+````
+
+## 66. BulletChart
+
+
+
+````mdx
+<BulletChart data='[{"name":"Revenue","value":72,"target":85,"ranges":[50,75,100]}]' />
+````
+
+## 67. CalendarHeatmap
+
+
+
+````mdx
+<CalendarHeatmap data='[{"date":"2026-09-01","value":1},{"date":"2026-09-02","value":2},{"date":"2026-09-03","value":3},{"date":"2026-09-04","value":4},{"date":"2026-09-05","value":5},{"date":"2026-09-06","value":6},{"date":"2026-09-07","value":0},{"date":"2026-09-08","value":1},{"date":"2026-09-09","value":2},{"date":"2026-09-10","value":3},{"date":"2026-09-11","value":4},{"date":"2026-09-12","value":5},{"date":"2026-09-13","value":6},{"date":"2026-09-14","value":0},{"date":"2026-09-15","value":1},{"date":"2026-09-16","value":2},{"date":"2026-09-17","value":3},{"date":"2026-09-18","value":4},{"date":"2026-09-19","value":5},{"date":"2026-09-20","value":6},{"date":"2026-09-21","value":0}]' />
+````
+
+## 68. ParetoChart
+
+
+
+````mdx
+<ParetoChart data='[{"name":"Network","value":50},{"name":"Parser","value":30},{"name":"Other","value":20}]' />
+````
+
+## 69. CohortTable
+
+
+
+````mdx
+<CohortTable data='[{"cohort":"July","period":"Week 1","retained":80,"total":100},{"cohort":"July","period":"Week 2","retained":60,"total":100},{"cohort":"August","period":"Week 1","retained":90,"total":100}]' />
+````
+
+## 70. ConfusionMatrix
+
+
+
+````mdx
+<ConfusionMatrix data='[{"actual":"yes","predicted":"yes","count":40},{"actual":"yes","predicted":"no","count":10},{"actual":"no","predicted":"yes","count":5},{"actual":"no","predicted":"no","count":45}]' />
+````

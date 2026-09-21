@@ -11,13 +11,15 @@ export const Figure = defineComponent(
     schema: v.looseObject({
       alt: v.optional(v.string()),
       caption: v.optional(v.string()),
+      id: v.optional(v.string()),
+      number: v.optional(v.string()),
       src: v.string(),
     }),
   },
-  ({ src, alt, caption, children }) => {
+  ({ src, alt, caption, children, id, number }) => {
     const cap = nonEmpty(caption) ? caption : children;
     return (
-      <figure className="not-prose my-6">
+      <figure className="not-prose my-6" id={id}>
         <img
           src={src}
           alt={alt ?? ""}
@@ -28,6 +30,7 @@ export const Figure = defineComponent(
           <figcaption
             className={`mt-2 text-center text-sm ${TEXT.muted} ${TRIM_CLS}`}
           >
+            {number !== undefined && number !== "" ? `Figure ${number}: ` : ""}
             {cap}
           </figcaption>
         )}

@@ -106,6 +106,27 @@ const errorPage = (err: unknown): string => {
   return `<!doctype html><meta charset="utf-8"><body style="font-family:monospace;background:#1c1917;color:#fca5a5;padding:2rem"><h1>mdxr render error</h1><pre>${msg.replaceAll("<", "&lt;")}</pre></body>`;
 };
 
+const renderDocument = async (
+  file: string,
+  render: RenderFile
+): Promise<readonly [string, string]> => {
+  const name = path.relative(docsDir, file);
+  try {
+    return [name, await render(file)];
+  } catch (error) {
+    return [name, errorPage(error)];
+  }
+};
+
+const renderDocuments = async function* renderDocuments(
+  files: string[],
+  render: RenderFile
+): AsyncGenerator<readonly [string, string]> {
+  for (const file of files) {
+    yield renderDocument(file, render);
+  }
+};
+
 /**
  * Exposes `virtual:mdxr-documents`: every .mdx file under examples/ rendered
  * through the real `renderFile` pipeline (frontmatter, project components,
@@ -147,16 +168,11 @@ const mdxrDocuments = (): Plugin => ({
     const docs: Record<string, string> = {};
     const docFiles = await listFiles(docsDir);
     const mdxFiles = docFiles.filter((f) => f.endsWith(".mdx"));
-    await Promise.all(
-      mdxFiles.map(async (file) => {
-        const name = path.relative(docsDir, file);
-        try {
-          docs[name] = await render(file);
-        } catch (error) {
-          docs[name] = errorPage(error);
-        }
-      })
-    );
+    // Each render builds CSS and hydration bundles. Keep Vite responsive to
+    // browser imports while the growing catalog is compiled on a cold start.
+    for await (const [name, html] of renderDocuments(mdxFiles, render)) {
+      docs[name] = html;
+    }
     return `export default ${JSON.stringify(docs)};`;
   },
   name: "mdxr-documents",

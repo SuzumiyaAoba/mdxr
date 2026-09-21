@@ -1,0 +1,842 @@
+[
+  {
+    "category": "evidence",
+    "name": "Sources",
+    "components": ["Sources", "Source", "Cite"],
+    "number": 1,
+    "source": "A documented claim <Cite source=\"manual\" />.\n\n<Sources>\n\n<Source id='manual' href='https://example.com/manual' title='Example manual' author='Example team' published='2026-09-01' />\n\n</Sources>"
+  },
+  {
+    "category": "evidence",
+    "name": "CrossRef",
+    "components": ["CrossRef"],
+    "number": 2,
+    "source": "See <CrossRef target=\"reference-figure\" />.\n\n<Figure src='assets/before.svg' id='reference-figure' caption='Document rendering'>\n\nAn example figure.\n\n</Figure>"
+  },
+  {
+    "category": "evidence",
+    "name": "Evidence",
+    "components": ["Evidence"],
+    "number": 3,
+    "source": "<Evidence data='[{\"claim\":\"Claim\",\"source\":\"Source\",\"captured\":\"Captured\",\"commit\":\"Commit\",\"environment\":\"staging\",\"result\":\"pass\"}]' />"
+  },
+  {
+    "category": "evidence",
+    "name": "Provenance",
+    "components": ["Provenance"],
+    "number": 4,
+    "source": "<Provenance data='[{\"input\":\"Input\",\"tool\":\"Tool\",\"version\":\"1.2.0\",\"config\":\"Config\",\"hash\":\"Hash\",\"generated\":\"Generated\"}]' />"
+  },
+  {
+    "category": "evidence",
+    "name": "Assumptions",
+    "components": ["Assumptions"],
+    "number": 5,
+    "source": "<Assumptions data='[{\"assumption\":\"Assumption\",\"status\":\"open\",\"owner\":\"Platform\",\"evidence\":\"tests/release.test.ts\",\"revisit\":\"Revisit\"}]' />"
+  },
+  {
+    "category": "evidence",
+    "name": "Limitations",
+    "components": ["Limitations"],
+    "number": 6,
+    "source": "<Limitations data='[{\"limitation\":\"Limitation\",\"scope\":\"Renderer\",\"consequence\":\"Consequence\",\"followup\":\"Followup\"}]' />"
+  },
+  {
+    "category": "evidence",
+    "name": "Sidenote",
+    "components": ["Sidenote"],
+    "number": 7,
+    "source": "<Sidenote title='Context'>\n\nThis note stays close to the discussion.\n\n</Sidenote>"
+  },
+  {
+    "category": "evidence",
+    "name": "TermRef",
+    "components": ["TermRef"],
+    "number": 8,
+    "source": "<Glossary>\n<Term name=\"cache\">Stored results reused for later requests.</Term>\n</Glossary>\n\nUse a <TermRef term=\"cache\" />."
+  },
+  {
+    "category": "evidence",
+    "name": "Include",
+    "components": ["Include"],
+    "number": 9,
+    "source": "<Include path='../../tests/fixtures/extended-include.mdx' section='shared-context' />"
+  },
+  {
+    "category": "evidence",
+    "name": "DocumentHistory",
+    "components": ["DocumentHistory"],
+    "number": 10,
+    "source": "<DocumentHistory data='[{\"version\":\"1.2.0\",\"date\":\"2026-09-01\",\"author\":\"Author\",\"reason\":\"Required for release\",\"supersededBy\":\"Supersededby\"}]' />"
+  },
+  {
+    "category": "planning",
+    "name": "Traceability",
+    "components": ["Traceability"],
+    "number": 11,
+    "source": "<Traceability data='[{\"id\":\"REQ-1\",\"requirement\":\"Offline export\",\"tasks\":[\"T-1\"],\"files\":[\"src/render.ts\"],\"tests\":[\"export.test.ts\"]},{\"id\":\"REQ-2\",\"requirement\":\"Keyboard support\",\"tasks\":[\"T-2\"],\"files\":[\"src/ui/data-table.tsx\"],\"tests\":[]}]' />"
+  },
+  {
+    "category": "planning",
+    "name": "DecisionMatrix",
+    "components": ["DecisionMatrix"],
+    "number": 12,
+    "source": "<DecisionMatrix data='[{\"name\":\"Simple\",\"cost\":9,\"reliability\":6},{\"name\":\"Resilient\",\"cost\":5,\"reliability\":9}]' options='{\"weights\":{\"cost\":0.4,\"reliability\":0.6}}' />"
+  },
+  {
+    "category": "planning",
+    "name": "RiskRegister",
+    "components": ["RiskRegister"],
+    "number": 13,
+    "source": "<RiskRegister data='[{\"id\":\"R1\",\"risk\":\"Migration delay\",\"likelihood\":3,\"impact\":4,\"owner\":\"Platform\",\"mitigation\":\"Staged rollout\",\"status\":\"open\"}]' />"
+  },
+  {
+    "category": "planning",
+    "name": "Scope",
+    "components": ["Scope"],
+    "number": 14,
+    "source": "<Scope data='[{\"item\":\"Item\",\"scope\":\"Renderer\",\"reason\":\"Required for release\",\"phase\":\"Phase\"}]' />"
+  },
+  {
+    "category": "planning",
+    "name": "ActionItems",
+    "components": ["ActionItems"],
+    "number": 15,
+    "source": "<ActionItems data='[{\"action\":\"Run the verification suite\",\"owner\":\"Platform\",\"due\":\"Due\",\"acceptance\":\"Acceptance\",\"evidence\":\"tests/release.test.ts\",\"status\":\"open\"}]' />"
+  },
+  {
+    "category": "planning",
+    "name": "Estimate",
+    "components": ["Estimate"],
+    "number": 16,
+    "source": "<Estimate data='[{\"name\":\"Parser\",\"optimistic\":2,\"likely\":4,\"pessimistic\":8,\"unit\":\"days\"}]' />"
+  },
+  {
+    "category": "planning",
+    "name": "DependencyPlan",
+    "components": ["DependencyPlan"],
+    "number": 17,
+    "source": "<DependencyPlan data='[{\"id\":\"design\",\"duration\":2},{\"id\":\"build\",\"duration\":5,\"depends\":[\"design\"]},{\"id\":\"docs\",\"duration\":2,\"depends\":[\"design\"]},{\"id\":\"release\",\"duration\":1,\"depends\":[\"build\",\"docs\"]}]' />"
+  },
+  {
+    "category": "planning",
+    "name": "RACI",
+    "components": ["RACI"],
+    "number": 18,
+    "source": "<RACI data='[{\"task\":\"Task\",\"responsible\":\"Responsible\",\"accountable\":\"Accountable\",\"consulted\":\"Consulted\",\"informed\":\"Informed\"}]' />"
+  },
+  {
+    "category": "planning",
+    "name": "Objectives",
+    "components": ["Objectives", "KeyResults"],
+    "number": 19,
+    "source": "<Objectives data='[{\"objective\":\"Objective\",\"keyResults\":\"Keyresults\",\"owner\":\"Platform\",\"due\":\"Due\",\"status\":\"open\"}]' />\n\n<KeyResults data='[{\"name\":\"Pass rate\",\"baseline\":80,\"current\":92,\"target\":99}]' />"
+  },
+  {
+    "category": "planning",
+    "name": "CapacityPlan",
+    "components": ["CapacityPlan"],
+    "number": 20,
+    "source": "<CapacityPlan data='[{\"name\":\"Platform\",\"capacity\":40,\"allocated\":32},{\"name\":\"Design\",\"capacity\":20,\"allocated\":24}]' />"
+  },
+  {
+    "category": "investigation",
+    "name": "Reproduction",
+    "components": ["Reproduction"],
+    "number": 21,
+    "source": "<Reproduction data='[{\"step\":\"Step\",\"environment\":\"staging\",\"prerequisite\":\"Prerequisite\",\"action\":\"Run the verification suite\",\"expected\":\"Ready\",\"actual\":\"Ready\"}]' />"
+  },
+  {
+    "category": "investigation",
+    "name": "Logs",
+    "components": ["Logs"],
+    "number": 22,
+    "source": "<Logs data='[{\"time\":\"2026-09-01T09:00:00Z\",\"level\":\"Level\",\"source\":\"Source\",\"message\":\"Message\"}]' />"
+  },
+  {
+    "category": "investigation",
+    "name": "JsonDiff",
+    "components": ["JsonDiff"],
+    "number": 23,
+    "source": "<JsonDiff before='{\"type\":\"string\",\"description\":\"Identifier\"}' after='{\"type\":\"number\",\"description\":\"Identifier\"}' />"
+  },
+  {
+    "category": "investigation",
+    "name": "ConfigDiff",
+    "components": ["ConfigDiff"],
+    "number": 24,
+    "source": "<ConfigDiff before='[{\"name\":\"defaults\",\"values\":{\"retries\":2}}]' after='[{\"name\":\"defaults\",\"values\":{\"retries\":2}},{\"name\":\"production\",\"values\":{\"retries\":4}}]' />"
+  },
+  {
+    "category": "investigation",
+    "name": "ApiDiff",
+    "components": ["ApiDiff"],
+    "number": 25,
+    "source": "<ApiDiff before='{\"type\":\"string\",\"description\":\"Identifier\"}' after='{\"type\":\"number\",\"description\":\"Identifier\"}' />"
+  },
+  {
+    "category": "investigation",
+    "name": "SchemaDiff",
+    "components": ["SchemaDiff"],
+    "number": 26,
+    "source": "<SchemaDiff before='{\"type\":\"string\",\"description\":\"Identifier\"}' after='{\"type\":\"number\",\"description\":\"Identifier\"}' />"
+  },
+  {
+    "category": "investigation",
+    "name": "ImpactMap",
+    "components": ["ImpactMap"],
+    "number": 27,
+    "source": "<ImpactMap nodes='[{\"id\":\"client\",\"label\":\"Client\",\"lane\":\"Application\"},{\"id\":\"api\",\"label\":\"API\",\"lane\":\"Server\"},{\"id\":\"db\",\"label\":\"Database\",\"lane\":\"Server\"}]' edges='[{\"from\":\"client\",\"to\":\"api\",\"label\":\"Request\"},{\"from\":\"api\",\"to\":\"db\",\"label\":\"Query\"}]' options='{\"changed\":[\"api\"]}' />"
+  },
+  {
+    "category": "investigation",
+    "name": "DataLineage",
+    "components": ["DataLineage"],
+    "number": 28,
+    "source": "<DataLineage nodes='[{\"id\":\"client\",\"label\":\"Client\",\"lane\":\"Application\"},{\"id\":\"api\",\"label\":\"API\",\"lane\":\"Server\"},{\"id\":\"db\",\"label\":\"Database\",\"lane\":\"Server\"}]' edges='[{\"from\":\"client\",\"to\":\"api\",\"label\":\"Request\"},{\"from\":\"api\",\"to\":\"db\",\"label\":\"Query\"}]' />"
+  },
+  {
+    "category": "investigation",
+    "name": "SymbolOutline",
+    "components": ["SymbolOutline"],
+    "number": 29,
+    "source": "<SymbolOutline data='[{\"name\":\"Example\",\"kind\":\"Kind\",\"parent\":\"Parent\",\"signature\":\"Signature\",\"file\":\"File\",\"lines\":\"Lines\"}]' />"
+  },
+  {
+    "category": "investigation",
+    "name": "CodeWalkthrough",
+    "components": ["CodeWalkthrough"],
+    "number": 30,
+    "source": "<CodeWalkthrough data='[{\"title\":\"Parse\",\"code\":\"const value = 2;\\nreturn value * 3;\",\"lines\":\"1\",\"explanation\":\"Read the input.\"},{\"title\":\"Compute\",\"code\":\"const value = 2;\\nreturn value * 3;\",\"lines\":\"2\",\"explanation\":\"Return three times the input.\"}]' />"
+  },
+  {
+    "category": "reference",
+    "name": "CodeGroup",
+    "components": ["CodeGroup"],
+    "number": 31,
+    "source": "<CodeGroup syncKey='language'>\n\n```ts\nconst value = 1;\n```\n\n```python\nvalue = 1\n```\n\n</CodeGroup>"
+  },
+  {
+    "category": "reference",
+    "name": "PackageInstall",
+    "components": ["PackageInstall"],
+    "number": 32,
+    "source": "<PackageInstall packages='@suzumiyaaoba/mdxr' dev='true' />"
+  },
+  {
+    "category": "reference",
+    "name": "ApiExample",
+    "components": ["ApiExample", "Request", "Response"],
+    "number": 33,
+    "source": "<ApiExample>\n\n<Request method='GET' path='/items' headers='Accept: application/json' />\n\n<Response status='200' body='{\"items\":[\"one\"]}' />\n\n</ApiExample>"
+  },
+  {
+    "category": "reference",
+    "name": "ApiParams",
+    "components": ["ApiParams"],
+    "number": 34,
+    "source": "<ApiParams data='[{\"name\":\"Example\",\"in\":\"In\",\"type\":\"Type\",\"required\":\"Required\",\"default\":\"Default\",\"constraints\":\"Constraints\",\"example\":\"Example\",\"description\":\"Review the result before release.\"}]' />"
+  },
+  {
+    "category": "reference",
+    "name": "ObjectSchema",
+    "components": ["ObjectSchema"],
+    "number": 35,
+    "source": "<ObjectSchema schema='{\"type\":\"object\",\"required\":[\"id\"],\"properties\":{\"id\":{\"type\":\"string\",\"description\":\"Stable identifier\"},\"tags\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"details\":{\"oneOf\":[{\"type\":\"string\"},{\"type\":\"number\"}]}}}' />"
+  },
+  {
+    "category": "reference",
+    "name": "CliReference",
+    "components": ["CliReference"],
+    "number": 36,
+    "source": "<CliReference data='[{\"command\":\"Command\",\"argument\":\"Argument\",\"flag\":\"Flag\",\"type\":\"Type\",\"default\":\"Default\",\"conflicts\":\"Conflicts\",\"example\":\"Example\",\"description\":\"Review the result before release.\"}]' />"
+  },
+  {
+    "category": "reference",
+    "name": "ConfigReference",
+    "components": ["ConfigReference"],
+    "number": 37,
+    "source": "<ConfigReference data='[{\"key\":\"Key\",\"type\":\"Type\",\"default\":\"Default\",\"env\":\"Env\",\"flag\":\"Flag\",\"precedence\":\"Precedence\",\"description\":\"Review the result before release.\"}]' />"
+  },
+  {
+    "category": "reference",
+    "name": "ErrorCatalog",
+    "components": ["ErrorCatalog"],
+    "number": 38,
+    "source": "<ErrorCatalog data='[{\"code\":\"Code\",\"message\":\"Message\",\"cause\":\"Cause\",\"action\":\"Run the verification suite\",\"retry\":\"Retry\",\"href\":\"Href\"}]' />"
+  },
+  {
+    "category": "reference",
+    "name": "CompatibilityMatrix",
+    "components": ["CompatibilityMatrix"],
+    "number": 39,
+    "source": "<CompatibilityMatrix data='[{\"platform\":\"Platform\",\"runtime\":\"Runtime\",\"version\":\"1.2.0\",\"status\":\"open\",\"notes\":\"Reviewed with the team.\"}]' />"
+  },
+  {
+    "category": "reference",
+    "name": "DeprecationTimeline",
+    "components": ["DeprecationTimeline"],
+    "number": 40,
+    "source": "<DeprecationTimeline data='[{\"feature\":\"Feature\",\"deprecated\":\"Deprecated\",\"removal\":\"Removal\",\"replacement\":\"Replacement\",\"migration\":\"Migration\"}]' />"
+  },
+  {
+    "category": "quality",
+    "name": "TestMatrix",
+    "components": ["TestMatrix"],
+    "number": 41,
+    "source": "<TestMatrix data='[{\"os\":\"linux\",\"runtime\":\"22\",\"status\":\"pass\"}]' options='{\"axes\":{\"os\":[\"linux\",\"mac\"],\"runtime\":[\"22\",\"24\"]}}' />"
+  },
+  {
+    "category": "quality",
+    "name": "Coverage",
+    "components": ["Coverage"],
+    "number": 42,
+    "source": "<Coverage data='[{\"name\":\"Parser\",\"covered\":88,\"total\":100}]' />"
+  },
+  {
+    "category": "quality",
+    "name": "BenchmarkSuite",
+    "components": ["BenchmarkSuite"],
+    "number": 43,
+    "source": "<BenchmarkSuite data='[{\"name\":\"Render\",\"samples\":[9,10,12,8,11],\"unit\":\"ms\"}]' />"
+  },
+  {
+    "category": "quality",
+    "name": "TestHistory",
+    "components": ["TestHistory"],
+    "number": 44,
+    "source": "<TestHistory data='[{\"name\":\"Compile\",\"runs\":[\"pass\",\"pass\",\"pass\"]},{\"name\":\"Network\",\"runs\":[\"pass\",\"fail\",\"pass\"]}]' />"
+  },
+  {
+    "category": "quality",
+    "name": "VisualDiff",
+    "components": ["VisualDiff"],
+    "number": 45,
+    "source": "<VisualDiff expected='assets/before.svg' actual='assets/after.svg' diff='assets/diff.svg' threshold='0.01' mismatch='0.02' />"
+  },
+  {
+    "category": "quality",
+    "name": "AccessibilityReport",
+    "components": ["AccessibilityReport"],
+    "number": 46,
+    "source": "<AccessibilityReport data='[{\"rule\":\"Rule\",\"element\":\"Element\",\"severity\":\"Severity\",\"description\":\"Review the result before release.\",\"fix\":\"Fix\",\"status\":\"open\"}]' />"
+  },
+  {
+    "category": "quality",
+    "name": "BundleReport",
+    "components": ["BundleReport"],
+    "number": 47,
+    "source": "<BundleReport data='[{\"id\":\"app\",\"name\":\"App\"},{\"id\":\"ui\",\"parent\":\"app\",\"value\":60000,\"before\":70000,\"gzip\":18000,\"reason\":\"Document controls\"},{\"id\":\"core\",\"parent\":\"app\",\"value\":40000,\"before\":35000,\"gzip\":12000,\"reason\":\"Compiler\"}]' />"
+  },
+  {
+    "category": "quality",
+    "name": "Flamegraph",
+    "components": ["Flamegraph"],
+    "number": 48,
+    "source": "<Flamegraph data='[{\"id\":\"render\",\"value\":100},{\"id\":\"parse\",\"parent\":\"render\",\"value\":25},{\"id\":\"compile\",\"parent\":\"render\",\"value\":60},{\"id\":\"highlight\",\"parent\":\"compile\",\"value\":20}]' />"
+  },
+  {
+    "category": "quality",
+    "name": "QueryPlan",
+    "components": ["QueryPlan"],
+    "number": 49,
+    "source": "<QueryPlan data='[{\"id\":\"scan\",\"operation\":\"Index scan\",\"estimatedRows\":100,\"actualRows\":120,\"time\":5},{\"id\":\"join\",\"parent\":\"scan\",\"operation\":\"Nested loop\",\"estimatedRows\":10,\"actualRows\":100,\"time\":12}]' />"
+  },
+  {
+    "category": "quality",
+    "name": "ContractResults",
+    "components": ["ContractResults"],
+    "number": 50,
+    "source": "<ContractResults data='[{\"provider\":\"Provider\",\"consumer\":\"Consumer\",\"contract\":\"Contract\",\"expected\":\"Ready\",\"actual\":\"Ready\",\"status\":\"open\"}]' />"
+  },
+  {
+    "category": "operations",
+    "name": "Runbook",
+    "components": ["Runbook"],
+    "number": 51,
+    "source": "<Runbook data='[{\"step\":\"Step\",\"prerequisite\":\"Prerequisite\",\"command\":\"Command\",\"expected\":\"Ready\",\"stop\":\"Stop\",\"recovery\":\"Recovery\"}]' />"
+  },
+  {
+    "category": "operations",
+    "name": "Rollout",
+    "components": ["Rollout"],
+    "number": 52,
+    "source": "<Rollout data='[{\"stage\":\"Stage\",\"target\":\"Target\",\"percent\":\"Percent\",\"metric\":\"Metric\",\"gate\":\"Gate\",\"rollback\":\"Rollback\",\"status\":\"open\"}]' />"
+  },
+  {
+    "category": "operations",
+    "name": "SLO",
+    "components": ["SLO", "ErrorBudget"],
+    "number": 53,
+    "source": "<SLO data='[{\"name\":\"API availability\",\"target\":99.9,\"total\":100000,\"bad\":40}]' />\n\n<ErrorBudget data='[{\"name\":\"API availability\",\"target\":99.9,\"total\":100000,\"bad\":40}]' />"
+  },
+  {
+    "category": "operations",
+    "name": "AlertRules",
+    "components": ["AlertRules"],
+    "number": 54,
+    "source": "<AlertRules data='[{\"name\":\"Example\",\"metric\":\"Metric\",\"condition\":\"Condition\",\"duration\":\"Duration\",\"owner\":\"Platform\",\"runbook\":\"Runbook\"}]' />"
+  },
+  {
+    "category": "operations",
+    "name": "FeatureFlags",
+    "components": ["FeatureFlags"],
+    "number": 55,
+    "source": "<FeatureFlags data='[{\"flag\":\"Flag\",\"environment\":\"staging\",\"enabled\":\"Enabled\",\"condition\":\"Condition\",\"owner\":\"Platform\",\"retire\":\"Retire\"}]' />"
+  },
+  {
+    "category": "operations",
+    "name": "RecoveryPlan",
+    "components": ["RecoveryPlan"],
+    "number": 56,
+    "source": "<RecoveryPlan data='[{\"step\":\"Step\",\"depends\":\"Depends\",\"service\":\"Service\",\"rpo\":\"Rpo\",\"rto\":\"Rto\",\"backup\":\"Backup\",\"action\":\"Run the verification suite\",\"verification\":\"Verification\"}]' />"
+  },
+  {
+    "category": "operations",
+    "name": "PermissionMatrix",
+    "components": ["PermissionMatrix"],
+    "number": 57,
+    "source": "<PermissionMatrix data='[{\"role\":\"Role\",\"resource\":\"Resource\",\"action\":\"Run the verification suite\",\"allowed\":\"Allowed\",\"condition\":\"Condition\"}]' />"
+  },
+  {
+    "category": "operations",
+    "name": "ThreatModel",
+    "components": ["ThreatModel"],
+    "number": 58,
+    "source": "<ThreatModel data='[{\"asset\":\"Asset\",\"threat\":\"Threat\",\"path\":\"Path\",\"control\":\"Control\",\"residual\":\"Residual\",\"owner\":\"Platform\"}]' />"
+  },
+  {
+    "category": "operations",
+    "name": "Remediation",
+    "components": ["Remediation"],
+    "number": 59,
+    "source": "<Remediation data='[{\"vulnerability\":\"Vulnerability\",\"severity\":\"Severity\",\"owner\":\"Platform\",\"due\":\"Due\",\"fix\":\"Fix\",\"verification\":\"Verification\",\"status\":\"open\"}]' />"
+  },
+  {
+    "category": "operations",
+    "name": "MaintenanceWindow",
+    "components": ["MaintenanceWindow"],
+    "number": 60,
+    "source": "<MaintenanceWindow data='[{\"name\":\"Database upgrade\",\"start\":\"2026-09-01T02:00:00Z\",\"end\":\"2026-09-01T02:30:00Z\",\"owner\":\"Platform\",\"status\":\"planned\"}]' />"
+  },
+  {
+    "category": "statistics",
+    "name": "Heatmap",
+    "components": ["Heatmap"],
+    "number": 61,
+    "source": "<Heatmap data='[{\"x\":\"Mon\",\"y\":\"API\",\"value\":3},{\"x\":\"Tue\",\"y\":\"API\",\"value\":8},{\"x\":\"Mon\",\"y\":\"Worker\",\"value\":5},{\"x\":\"Tue\",\"y\":\"Worker\",\"value\":2}]' />"
+  },
+  {
+    "category": "statistics",
+    "name": "Histogram",
+    "components": ["Histogram"],
+    "number": 62,
+    "source": "<Histogram data='[{\"values\":[1,1,2,3,3,3,4,5,8,9]}]' options='{\"bins\":4}' />"
+  },
+  {
+    "category": "statistics",
+    "name": "BoxPlot",
+    "components": ["BoxPlot"],
+    "number": 63,
+    "source": "<BoxPlot data='[{\"name\":\"A\",\"values\":[1,2,3,4,5,20]},{\"name\":\"B\",\"values\":[2,3,4,5,6]}]' />"
+  },
+  {
+    "category": "statistics",
+    "name": "ECDF",
+    "components": ["ECDF"],
+    "number": 64,
+    "source": "<ECDF data='[{\"values\":[1,1,2,3,4,5,8]}]' />"
+  },
+  {
+    "category": "statistics",
+    "name": "IntervalPlot",
+    "components": ["IntervalPlot"],
+    "number": 65,
+    "source": "<IntervalPlot data='[{\"name\":\"A\",\"value\":5,\"low\":3,\"high\":7},{\"name\":\"B\",\"value\":8,\"low\":6,\"high\":9}]' />"
+  },
+  {
+    "category": "statistics",
+    "name": "BulletChart",
+    "components": ["BulletChart"],
+    "number": 66,
+    "source": "<BulletChart data='[{\"name\":\"Revenue\",\"value\":72,\"target\":85,\"ranges\":[50,75,100]}]' />"
+  },
+  {
+    "category": "statistics",
+    "name": "CalendarHeatmap",
+    "components": ["CalendarHeatmap"],
+    "number": 67,
+    "source": "<CalendarHeatmap data='[{\"date\":\"2026-09-01\",\"value\":1},{\"date\":\"2026-09-02\",\"value\":2},{\"date\":\"2026-09-03\",\"value\":3},{\"date\":\"2026-09-04\",\"value\":4},{\"date\":\"2026-09-05\",\"value\":5},{\"date\":\"2026-09-06\",\"value\":6},{\"date\":\"2026-09-07\",\"value\":0},{\"date\":\"2026-09-08\",\"value\":1},{\"date\":\"2026-09-09\",\"value\":2},{\"date\":\"2026-09-10\",\"value\":3},{\"date\":\"2026-09-11\",\"value\":4},{\"date\":\"2026-09-12\",\"value\":5},{\"date\":\"2026-09-13\",\"value\":6},{\"date\":\"2026-09-14\",\"value\":0},{\"date\":\"2026-09-15\",\"value\":1},{\"date\":\"2026-09-16\",\"value\":2},{\"date\":\"2026-09-17\",\"value\":3},{\"date\":\"2026-09-18\",\"value\":4},{\"date\":\"2026-09-19\",\"value\":5},{\"date\":\"2026-09-20\",\"value\":6},{\"date\":\"2026-09-21\",\"value\":0}]' />"
+  },
+  {
+    "category": "statistics",
+    "name": "ParetoChart",
+    "components": ["ParetoChart"],
+    "number": 68,
+    "source": "<ParetoChart data='[{\"name\":\"Network\",\"value\":50},{\"name\":\"Parser\",\"value\":30},{\"name\":\"Other\",\"value\":20}]' />"
+  },
+  {
+    "category": "statistics",
+    "name": "CohortTable",
+    "components": ["CohortTable"],
+    "number": 69,
+    "source": "<CohortTable data='[{\"cohort\":\"July\",\"period\":\"Week 1\",\"retained\":80,\"total\":100},{\"cohort\":\"July\",\"period\":\"Week 2\",\"retained\":60,\"total\":100},{\"cohort\":\"August\",\"period\":\"Week 1\",\"retained\":90,\"total\":100}]' />"
+  },
+  {
+    "category": "statistics",
+    "name": "ConfusionMatrix",
+    "components": ["ConfusionMatrix"],
+    "number": 70,
+    "source": "<ConfusionMatrix data='[{\"actual\":\"yes\",\"predicted\":\"yes\",\"count\":40},{\"actual\":\"yes\",\"predicted\":\"no\",\"count\":10},{\"actual\":\"no\",\"predicted\":\"yes\",\"count\":5},{\"actual\":\"no\",\"predicted\":\"no\",\"count\":45}]' />"
+  },
+  {
+    "category": "charts",
+    "name": "ViolinPlot",
+    "components": ["ViolinPlot"],
+    "number": 71,
+    "source": "<ViolinPlot data='[{\"name\":\"A\",\"values\":[1,2,2,3,4,5,6]},{\"name\":\"B\",\"values\":[3,4,4,5,6,8]}]' />"
+  },
+  {
+    "category": "charts",
+    "name": "RidgelinePlot",
+    "components": ["RidgelinePlot"],
+    "number": 72,
+    "source": "<RidgelinePlot data='[{\"name\":\"A\",\"values\":[1,2,2,3,4,5,6]},{\"name\":\"B\",\"values\":[3,4,4,5,6,8]}]' />"
+  },
+  {
+    "category": "charts",
+    "name": "DotPlot",
+    "components": ["DotPlot"],
+    "number": 73,
+    "source": "<DotPlot data='[{\"name\":\"A\",\"value\":12},{\"name\":\"B\",\"value\":8}]' />"
+  },
+  {
+    "category": "charts",
+    "name": "SlopeChart",
+    "components": ["SlopeChart"],
+    "number": 74,
+    "source": "<SlopeChart data='[{\"name\":\"A\",\"before\":5,\"after\":9},{\"name\":\"B\",\"before\":8,\"after\":6}]' />"
+  },
+  {
+    "category": "charts",
+    "name": "BumpChart",
+    "components": ["BumpChart"],
+    "number": 75,
+    "source": "<BumpChart data='[{\"name\":\"A\",\"values\":[1,2,1]},{\"name\":\"B\",\"values\":[2,1,2]}]' options='{\"labels\":[\"Q1\",\"Q2\",\"Q3\"]}' />"
+  },
+  {
+    "category": "charts",
+    "name": "DumbbellChart",
+    "components": ["DumbbellChart"],
+    "number": 76,
+    "source": "<DumbbellChart data='[{\"name\":\"A\",\"before\":5,\"after\":9},{\"name\":\"B\",\"before\":8,\"after\":6}]' />"
+  },
+  {
+    "category": "charts",
+    "name": "Sunburst",
+    "components": ["Sunburst"],
+    "number": 77,
+    "source": "<Sunburst data='[{\"id\":\"app\",\"name\":\"App\"},{\"id\":\"ui\",\"parent\":\"app\",\"name\":\"UI\",\"value\":60},{\"id\":\"core\",\"parent\":\"app\",\"name\":\"Core\",\"value\":40}]' />"
+  },
+  {
+    "category": "charts",
+    "name": "ChordDiagram",
+    "components": ["ChordDiagram"],
+    "number": 78,
+    "source": "<ChordDiagram data='[{\"from\":\"API\",\"to\":\"DB\",\"value\":30},{\"from\":\"Worker\",\"to\":\"DB\",\"value\":20},{\"from\":\"API\",\"to\":\"Worker\",\"value\":10}]' />"
+  },
+  {
+    "category": "charts",
+    "name": "UpSetPlot",
+    "components": ["UpSetPlot"],
+    "number": 79,
+    "source": "<UpSetPlot data='[{\"sets\":[\"A\"],\"value\":10},{\"sets\":[\"B\"],\"value\":7},{\"sets\":[\"A\",\"B\"],\"value\":4}]' />"
+  },
+  {
+    "category": "charts",
+    "name": "SmallMultiples",
+    "components": ["SmallMultiples"],
+    "number": 80,
+    "source": "<SmallMultiples>\n\n<DotPlot data='[{\"name\":\"A\",\"value\":12}]' title='January' />\n\n<DotPlot data='[{\"name\":\"A\",\"value\":25}]' title='February' />\n\n</SmallMultiples>"
+  },
+  {
+    "category": "diagrams",
+    "name": "SequenceDiagram",
+    "components": ["SequenceDiagram"],
+    "number": 81,
+    "source": "<SequenceDiagram nodes='[{\"id\":\"client\",\"label\":\"Client\",\"lane\":\"Application\"},{\"id\":\"api\",\"label\":\"API\",\"lane\":\"Server\"},{\"id\":\"db\",\"label\":\"Database\",\"lane\":\"Server\"}]' edges='[{\"from\":\"client\",\"to\":\"api\",\"label\":\"Request\"},{\"from\":\"api\",\"to\":\"db\",\"label\":\"Query\"}]' />"
+  },
+  {
+    "category": "diagrams",
+    "name": "StateDiagram",
+    "components": ["StateDiagram"],
+    "number": 82,
+    "source": "<StateDiagram nodes='[{\"id\":\"client\",\"label\":\"Client\",\"lane\":\"Application\"},{\"id\":\"api\",\"label\":\"API\",\"lane\":\"Server\"},{\"id\":\"db\",\"label\":\"Database\",\"lane\":\"Server\"}]' edges='[{\"from\":\"client\",\"to\":\"api\",\"label\":\"Request\",\"guard\":\"valid\",\"action\":\"load\"},{\"from\":\"api\",\"to\":\"db\",\"label\":\"Query\"}]' />"
+  },
+  {
+    "category": "diagrams",
+    "name": "EntityRelations",
+    "components": ["EntityRelations"],
+    "number": 83,
+    "source": "<EntityRelations data='[{\"table\":\"users\",\"name\":\"id\",\"type\":\"uuid\"},{\"table\":\"orders\",\"name\":\"id\",\"type\":\"uuid\"},{\"table\":\"orders\",\"name\":\"user_id\",\"type\":\"uuid\",\"fk\":\"users.id\",\"relation\":\"many-to-one\"}]' />"
+  },
+  {
+    "category": "diagrams",
+    "name": "Swimlane",
+    "components": ["Swimlane"],
+    "number": 84,
+    "source": "<Swimlane nodes='[{\"id\":\"client\",\"label\":\"Client\",\"lane\":\"Application\"},{\"id\":\"api\",\"label\":\"API\",\"lane\":\"Server\"},{\"id\":\"db\",\"label\":\"Database\",\"lane\":\"Server\"}]' edges='[{\"from\":\"client\",\"to\":\"api\",\"label\":\"Request\"},{\"from\":\"api\",\"to\":\"db\",\"label\":\"Query\"}]' />"
+  },
+  {
+    "category": "diagrams",
+    "name": "Architecture",
+    "components": ["Architecture"],
+    "number": 85,
+    "source": "<Architecture nodes='[{\"id\":\"client\",\"label\":\"Client\",\"lane\":\"Application\",\"group\":\"Application\"},{\"id\":\"api\",\"label\":\"API\",\"lane\":\"Server\",\"group\":\"Server\"},{\"id\":\"db\",\"label\":\"Database\",\"lane\":\"Server\",\"group\":\"Server\"}]' edges='[{\"from\":\"client\",\"to\":\"api\",\"label\":\"Request\"},{\"from\":\"api\",\"to\":\"db\",\"label\":\"Query\"}]' />"
+  },
+  {
+    "category": "diagrams",
+    "name": "DecisionTree",
+    "components": ["DecisionTree"],
+    "number": 86,
+    "source": "<DecisionTree nodes='[{\"id\":\"client\",\"label\":\"Client\",\"lane\":\"Application\",\"condition\":\"Request valid?\"},{\"id\":\"api\",\"label\":\"API\",\"lane\":\"Server\"},{\"id\":\"db\",\"label\":\"Database\",\"lane\":\"Server\"}]' edges='[{\"from\":\"client\",\"to\":\"api\",\"label\":\"Request\"},{\"from\":\"api\",\"to\":\"db\",\"label\":\"Query\"}]' />"
+  },
+  {
+    "category": "diagrams",
+    "name": "MindMap",
+    "components": ["MindMap"],
+    "number": 87,
+    "source": "<MindMap nodes='[{\"id\":\"client\",\"label\":\"Client\",\"lane\":\"Application\"},{\"id\":\"api\",\"label\":\"API\",\"lane\":\"Server\"},{\"id\":\"db\",\"label\":\"Database\",\"lane\":\"Server\"}]' edges='[{\"from\":\"client\",\"to\":\"api\",\"label\":\"Request\"},{\"from\":\"api\",\"to\":\"db\",\"label\":\"Query\"}]' />"
+  },
+  {
+    "category": "diagrams",
+    "name": "JourneyMap",
+    "components": ["JourneyMap"],
+    "number": 88,
+    "source": "<JourneyMap data='[{\"stage\":\"Stage\",\"action\":\"Run the verification suite\",\"touchpoint\":\"Touchpoint\",\"pain\":\"Pain\",\"improvement\":\"Improvement\"}]' />"
+  },
+  {
+    "category": "diagrams",
+    "name": "ServiceTopology",
+    "components": ["ServiceTopology"],
+    "number": 89,
+    "source": "<ServiceTopology nodes='[{\"id\":\"client\",\"label\":\"Client\",\"lane\":\"Application\",\"group\":\"Application\"},{\"id\":\"api\",\"label\":\"API\",\"lane\":\"Server\",\"group\":\"Server\"},{\"id\":\"db\",\"label\":\"Database\",\"lane\":\"Server\",\"group\":\"Server\"}]' edges='[{\"from\":\"client\",\"to\":\"api\",\"label\":\"Request\"},{\"from\":\"api\",\"to\":\"db\",\"label\":\"Query\"}]' />"
+  },
+  {
+    "category": "diagrams",
+    "name": "DependencyMatrix",
+    "components": ["DependencyMatrix"],
+    "number": 90,
+    "source": "<DependencyMatrix data='[{\"from\":\"API\",\"to\":\"DB\",\"value\":3},{\"from\":\"Worker\",\"to\":\"DB\",\"value\":1}]' />"
+  },
+  {
+    "category": "interactive",
+    "name": "DataTable",
+    "components": ["DataTable"],
+    "number": 91,
+    "source": "<DataTable data='[{\"id\":\"alpha\",\"name\":\"Alpha\",\"value\":20,\"status\":\"ready\"},{\"id\":\"beta\",\"name\":\"Beta\",\"value\":10,\"status\":\"pending\"},{\"id\":\"gamma\",\"name\":\"Gamma\",\"value\":30,\"status\":\"ready\"}]' />"
+  },
+  {
+    "category": "interactive",
+    "name": "FilterPanel",
+    "components": ["FilterPanel"],
+    "number": 92,
+    "source": "<FilterPanel fields='status'>\n\n<DataTable data='[{\"id\":\"alpha\",\"name\":\"Alpha\",\"value\":20,\"status\":\"ready\"},{\"id\":\"beta\",\"name\":\"Beta\",\"value\":10,\"status\":\"pending\"},{\"id\":\"gamma\",\"name\":\"Gamma\",\"value\":30,\"status\":\"ready\"}]' />\n\n<DotPlot data='[{\"name\":\"Alpha\",\"value\":20,\"status\":\"ready\"},{\"name\":\"Beta\",\"value\":10,\"status\":\"pending\"}]' />\n\n</FilterPanel>"
+  },
+  {
+    "category": "interactive",
+    "name": "Checklist",
+    "components": ["Checklist"],
+    "number": 93,
+    "source": "<Checklist data='[{\"id\":\"tests\",\"label\":\"Run tests\",\"checked\":true,\"owner\":\"Platform\"},{\"id\":\"review\",\"label\":\"Review changes\",\"checked\":false}]' />"
+  },
+  {
+    "category": "interactive",
+    "name": "Ranking",
+    "components": ["Ranking"],
+    "number": 94,
+    "source": "<Ranking data='[{\"id\":\"speed\",\"label\":\"Performance\"},{\"id\":\"clarity\",\"label\":\"Clarity\"},{\"id\":\"cost\",\"label\":\"Cost\"}]' />"
+  },
+  {
+    "category": "interactive",
+    "name": "Calculator",
+    "components": ["Calculator"],
+    "number": 95,
+    "source": "<Calculator data='[{\"name\":\"users\",\"label\":\"Users\",\"value\":100,\"min\":0},{\"name\":\"price\",\"label\":\"Price\",\"value\":12,\"min\":0}]' operation='product' unit='USD' />"
+  },
+  {
+    "category": "interactive",
+    "name": "Wizard",
+    "components": ["Wizard"],
+    "number": 96,
+    "source": "<Wizard data='[{\"name\":\"target\",\"label\":\"Target\",\"options\":[\"Web\",\"CLI\"],\"required\":true},{\"name\":\"url\",\"label\":\"Site URL\",\"when\":{\"target\":\"Web\"},\"required\":true},{\"name\":\"notes\",\"label\":\"Notes\",\"type\":\"textarea\"}]' />"
+  },
+  {
+    "category": "interactive",
+    "name": "SyncedTabs",
+    "components": ["SyncedTabs", "TabItem"],
+    "number": 97,
+    "source": "<SyncedTabs syncKey='platform'>\n\n<TabItem label='Linux'>\n\nLinux instructions 1\n\n</TabItem>\n\n<TabItem label='macOS'>\n\nmacOS instructions 1\n\n</TabItem>\n\n</SyncedTabs>\n\n<SyncedTabs syncKey='platform'>\n\n<TabItem label='Linux'>\n\nLinux instructions 2\n\n</TabItem>\n\n<TabItem label='macOS'>\n\nmacOS instructions 2\n\n</TabItem>\n\n</SyncedTabs>"
+  },
+  {
+    "category": "interactive",
+    "name": "DocumentSearch",
+    "components": ["DocumentSearch"],
+    "number": 98,
+    "source": "<DocumentSearch />\n\n### Searchable section\n\nThe search finds rendering instructions in this document."
+  },
+  {
+    "category": "interactive",
+    "name": "AnswerSheet",
+    "components": ["AnswerSheet"],
+    "number": 99,
+    "source": "<AnswerSheet>\n\n<Ask title=\"Project\">\n<Question name=\"project\" type=\"text\" label=\"Project name\" />\n<Question name=\"ready\" type=\"toggle\" label=\"Ready\" />\n</Ask>\n\n</AnswerSheet>"
+  },
+  {
+    "category": "interactive",
+    "name": "DownloadData",
+    "components": ["DownloadData"],
+    "number": 100,
+    "source": "<DownloadData data='[{\"id\":\"alpha\",\"name\":\"Alpha\",\"value\":20,\"status\":\"ready\"},{\"id\":\"beta\",\"name\":\"Beta\",\"value\":10,\"status\":\"pending\"},{\"id\":\"gamma\",\"name\":\"Gamma\",\"value\":30,\"status\":\"ready\"}]' filename='example' />"
+  },
+  {
+    "category": "media",
+    "name": "ImageGallery",
+    "components": ["ImageGallery"],
+    "number": 101,
+    "source": "<ImageGallery data='[{\"src\":\"assets/before.svg\",\"alt\":\"Before layout\",\"caption\":\"Before\"},{\"src\":\"assets/after.svg\",\"alt\":\"After layout\",\"caption\":\"After\"}]' />"
+  },
+  {
+    "category": "media",
+    "name": "AnnotatedImage",
+    "components": ["AnnotatedImage"],
+    "number": 102,
+    "source": "<AnnotatedImage data='[{\"x\":15,\"y\":25,\"width\":30,\"height\":35,\"label\":\"Navigation\",\"note\":\"Persistent navigation area.\"}]' src='assets/after.svg' alt='Example navigation layout' />"
+  },
+  {
+    "category": "media",
+    "name": "ImageCompare",
+    "components": ["ImageCompare"],
+    "number": 103,
+    "source": "<ImageCompare before='assets/before.svg' after='assets/after.svg' beforeAlt='Before layout' afterAlt='After layout' />"
+  },
+  {
+    "category": "media",
+    "name": "Video",
+    "components": ["Video"],
+    "number": 104,
+    "source": "<Video src='assets/example.webm' captions='assets/captions.vtt' poster='assets/before.svg' />"
+  },
+  {
+    "category": "media",
+    "name": "AudioTranscript",
+    "components": ["AudioTranscript"],
+    "number": 105,
+    "source": "<AudioTranscript data='[{\"time\":0,\"text\":\"An example tone starts here.\"},{\"time\":0.5,\"text\":\"The example ends.\"}]' src='assets/tone.wav' captions='assets/captions.vtt' />"
+  },
+  {
+    "category": "media",
+    "name": "PdfPreview",
+    "components": ["PdfPreview"],
+    "number": 106,
+    "source": "<PdfPreview src='assets/example.pdf' title='Example report' page='1' height='300' />"
+  },
+  {
+    "category": "media",
+    "name": "PrintLayout",
+    "components": ["PrintLayout", "PageBreak"],
+    "number": 107,
+    "source": "<PrintLayout columns='2'>\n\nFirst page.\n\n<PageBreak />\n\nSecond page.\n\n</PrintLayout>"
+  },
+  {
+    "category": "media",
+    "name": "TableOfFigures",
+    "components": ["TableOfFigures"],
+    "number": 108,
+    "source": "<TableOfFigures />\n\n<Figure src='assets/after.svg' id='listed-figure' caption='Listed figure'>\n\nFigure content.\n\n</Figure>"
+  },
+  {
+    "category": "media",
+    "name": "NumberedEquation",
+    "components": ["NumberedEquation"],
+    "number": 109,
+    "source": "<NumberedEquation id='velocity'>\n\n$$\nv = d / t\n$$\n\n</NumberedEquation>\n\nSee <CrossRef target=\"velocity\" />."
+  },
+  {
+    "category": "media",
+    "name": "Theorem",
+    "components": ["Theorem", "Proof"],
+    "number": 110,
+    "source": "<Theorem id='even-sum' title='Even sums'>\n\nThe sum of two even integers is even.\n\n</Theorem>\n\n<Proof id='even-proof'>\n\nWrite the integers as $2a$ and $2b$. Their sum is $2(a+b)$.\n\n</Proof>"
+  },
+  {
+    "category": "evaluation",
+    "name": "EvalReport",
+    "components": ["EvalReport", "EvalCase"],
+    "number": 111,
+    "source": "<EvalReport data='[{\"id\":\"E1\",\"input\":\"2+2\",\"expected\":\"4\",\"actual\":\"4\"},{\"id\":\"E2\",\"input\":\"3+3\",\"expected\":\"6\",\"actual\":\"7\"}]' />\n\n<EvalCase data='[{\"id\":\"E1\",\"input\":\"2+2\",\"expected\":\"4\",\"actual\":\"4\"}]' />"
+  },
+  {
+    "category": "evaluation",
+    "name": "ModelComparison",
+    "components": ["ModelComparison"],
+    "number": 112,
+    "source": "<ModelComparison data='[{\"model\":\"Model\",\"task\":\"Task\",\"quality\":\"Quality\",\"latency\":\"Latency\",\"cost\":\"Cost\",\"failures\":\"Failures\",\"notes\":\"Reviewed with the team.\"}]' />"
+  },
+  {
+    "category": "evaluation",
+    "name": "Conversation",
+    "components": ["Conversation"],
+    "number": 113,
+    "source": "<Conversation data='[{\"role\":\"user\",\"content\":\"Summarize the build.\",\"time\":\"10:00\"},{\"role\":\"assistant\",\"content\":\"All checks passed.\",\"time\":\"10:01\"}]' />"
+  },
+  {
+    "category": "evaluation",
+    "name": "ToolCall",
+    "components": ["ToolCall"],
+    "number": 114,
+    "source": "<ToolCall data='[{\"tool\":\"Tool\",\"arguments\":\"Arguments\",\"result\":\"pass\",\"duration\":\"Duration\",\"status\":\"open\"}]' />"
+  },
+  {
+    "category": "evaluation",
+    "name": "TokenUsage",
+    "components": ["TokenUsage"],
+    "number": 115,
+    "source": "<TokenUsage data='[{\"name\":\"Example run\",\"input\":10000,\"cached\":6000,\"output\":800,\"inputRate\":2,\"cacheRate\":0.2,\"outputRate\":8}]' />"
+  },
+  {
+    "category": "evaluation",
+    "name": "PromptTemplate",
+    "components": ["PromptTemplate"],
+    "number": 116,
+    "source": "<PromptTemplate data='[{\"name\":\"topic\",\"label\":\"Topic\",\"value\":\"rendering\",\"description\":\"Subject of the summary.\"}]' template='Summarize {{topic}} in three sentences.' />"
+  },
+  {
+    "category": "evaluation",
+    "name": "DatasetProfile",
+    "components": ["DatasetProfile"],
+    "number": 117,
+    "source": "<DatasetProfile data='[{\"id\":\"a\",\"age\":21,\"team\":\"A\"},{\"id\":\"b\",\"age\":null,\"team\":\"B\"},{\"id\":\"c\",\"age\":35,\"team\":\"A\"}]' />"
+  },
+  {
+    "category": "evaluation",
+    "name": "DataValidation",
+    "components": ["DataValidation"],
+    "number": 118,
+    "source": "<DataValidation data='[{\"id\":\"a\",\"age\":21},{\"id\":\"b\",\"age\":-1}]' options='{\"rules\":[{\"field\":\"age\",\"type\":\"number\",\"min\":0,\"required\":true}]}' />"
+  },
+  {
+    "category": "evaluation",
+    "name": "Experiment",
+    "components": ["Experiment"],
+    "number": 119,
+    "source": "<Experiment data='[{\"name\":\"Control\",\"count\":1000,\"successes\":80},{\"name\":\"Variant\",\"count\":1000,\"successes\":105}]' />"
+  },
+  {
+    "category": "evaluation",
+    "name": "DatasetDiff",
+    "components": ["DatasetDiff"],
+    "number": 120,
+    "source": "<DatasetDiff before='[{\"id\":\"one\",\"value\":2},{\"id\":\"old\",\"value\":3}]' after='[{\"id\":\"new\",\"value\":4},{\"id\":\"one\",\"value\":5}]' />"
+  }
+]

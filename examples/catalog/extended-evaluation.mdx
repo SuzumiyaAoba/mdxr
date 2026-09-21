@@ -1,0 +1,47 @@
+---
+title: Extended components — Evaluation
+---
+
+# Evaluation
+
+## EvalReport
+
+<EvalReport data='[{"id":"E1","input":"2+2","expected":"4","actual":"4"},{"id":"E2","input":"3+3","expected":"6","actual":"7"}]' />
+
+<EvalCase data='[{"id":"E1","input":"2+2","expected":"4","actual":"4"}]' />
+
+## ModelComparison
+
+<ModelComparison data='[{"model":"Model","task":"Task","quality":"Quality","latency":"Latency","cost":"Cost","failures":"Failures","notes":"Reviewed with the team."}]' />
+
+## Conversation
+
+<Conversation data='[{"role":"user","content":"Summarize the build.","time":"10:00"},{"role":"assistant","content":"All checks passed.","time":"10:01"}]' />
+
+## ToolCall
+
+<ToolCall data='[{"tool":"Tool","arguments":"Arguments","result":"pass","duration":"Duration","status":"open"}]' />
+
+## TokenUsage
+
+<TokenUsage data='[{"name":"Example run","input":10000,"cached":6000,"output":800,"inputRate":2,"cacheRate":0.2,"outputRate":8}]' />
+
+## PromptTemplate
+
+<PromptTemplate data='[{"name":"topic","label":"Topic","value":"rendering","description":"Subject of the summary."}]' template='Summarize {{topic}} in three sentences.' />
+
+## DatasetProfile
+
+<DatasetProfile data='[{"id":"a","age":21,"team":"A"},{"id":"b","age":null,"team":"B"},{"id":"c","age":35,"team":"A"}]' />
+
+## DataValidation
+
+<DataValidation data='[{"id":"a","age":21},{"id":"b","age":-1}]' options='{"rules":[{"field":"age","type":"number","min":0,"required":true}]}' />
+
+## Experiment
+
+<Experiment data='[{"name":"Control","count":1000,"successes":80},{"name":"Variant","count":1000,"successes":105}]' />
+
+## DatasetDiff
+
+<DatasetDiff before='[{"id":"one","value":2},{"id":"old","value":3}]' after='[{"id":"new","value":4},{"id":"one","value":5}]' />

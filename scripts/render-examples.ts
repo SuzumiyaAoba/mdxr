@@ -4,7 +4,7 @@
 // The docs workflow renders examples/ → docs/public/examples/ and
 // examples/catalog/ → docs/public/components/.
 import { execFileSync } from "node:child_process";
-import { mkdirSync, readdirSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readdirSync } from "node:fs";
 import path from "node:path";
 
 const root = path.resolve(import.meta.dirname, "..");
@@ -12,6 +12,10 @@ const srcDir = path.resolve(root, process.argv[2] ?? "examples");
 const cli = path.join(root, "dist", "cli.mjs");
 const outDir = path.resolve(root, process.argv[3] ?? srcDir);
 mkdirSync(outDir, { recursive: true });
+const assets = path.join(srcDir, "assets");
+if (srcDir !== outDir && existsSync(assets)) {
+  cpSync(assets, path.join(outDir, "assets"), { recursive: true });
+}
 
 const docs = readdirSync(srcDir)
   .filter((name) => /\.mdx?$/u.test(name))

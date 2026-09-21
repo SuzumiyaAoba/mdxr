@@ -2,11 +2,17 @@ import type { Node, Parent } from "unist";
 import { visit } from "unist-util-visit";
 import type { VFile } from "vfile";
 
+import { EXTENDED_FEATURES } from "../extended/catalog.js";
 import { isRecord, own } from "../guards.js";
 import { isParent, textContent, toMdxElement } from "./ast.js";
 import { CALLOUT_KINDS, normalizeCalloutKind } from "./callouts.js";
 
 const CONTAINER_COMPONENTS: Record<string, string> = {
+  ...Object.fromEntries(
+    EXTENDED_FEATURES.flatMap((feature) =>
+      feature.components.map((name) => [name.toLowerCase(), name])
+    )
+  ),
   audit: "Audit",
   barchart: "BarChart",
   bench: "Bench",

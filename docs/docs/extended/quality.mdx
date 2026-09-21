@@ -1,0 +1,100 @@
+---
+title: Quality
+description: Quality — component examples
+sidebar:
+  order: 41
+---
+
+See [Extended components](/mdxr/extended-components) for shared data contracts and calculation semantics.
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-quality.html`} title="Quality" loading="lazy" style="width:100%;height:720px;border:1px solid #8884;border-radius:12px" />
+
+## 41. TestMatrix
+
+Test combinations with missing runs; options.axes enumerates the expected axes.
+
+Data fields: `name,environment,version,status,duration`.
+
+````mdx
+<TestMatrix data='[{"os":"linux","runtime":"22","status":"pass"}]' options='{"axes":{"os":["linux","mac"],"runtime":["22","24"]}}' />
+````
+
+## 42. Coverage
+
+Covered/total observations, coverage rate and uncovered count.
+
+Data fields: `file,kind,covered,total,coverage,uncovered,lines`.
+
+````mdx
+<Coverage data='[{"name":"Parser","covered":88,"total":100}]' />
+````
+
+## 43. BenchmarkSuite
+
+
+
+````mdx
+<BenchmarkSuite data='[{"name":"Render","samples":[9,10,12,8,11],"unit":"ms"}]' />
+````
+
+## 44. TestHistory
+
+Run history, pass rate and flaky classification.
+
+Data fields: `name,runs,attempts,passRate,flaky,retries`.
+
+````mdx
+<TestHistory data='[{"name":"Compile","runs":["pass","pass","pass"]},{"name":"Network","runs":["pass","fail","pass"]}]' />
+````
+
+## 45. VisualDiff
+
+
+
+````mdx
+<VisualDiff expected='assets/before.svg' actual='assets/after.svg' diff='assets/diff.svg' threshold='0.01' mismatch='0.02' />
+````
+
+## 46. AccessibilityReport
+
+Accessibility findings with rule, affected element, severity and fix.
+
+Data fields: `rule,element,severity,description,fix,status`.
+
+````mdx
+<AccessibilityReport data='[{"rule":"Rule","element":"Element","severity":"Severity","description":"Review the result before release.","fix":"Fix","status":"open"}]' />
+````
+
+## 47. BundleReport
+
+
+
+````mdx
+<BundleReport data='[{"id":"app","name":"App"},{"id":"ui","parent":"app","value":60000,"before":70000,"gzip":18000,"reason":"Document controls"},{"id":"core","parent":"app","value":40000,"before":35000,"gzip":12000,"reason":"Compiler"}]' />
+````
+
+## 48. Flamegraph
+
+
+
+````mdx
+<Flamegraph data='[{"id":"render","value":100},{"id":"parse","parent":"render","value":25},{"id":"compile","parent":"render","value":60},{"id":"highlight","parent":"compile","value":20}]' />
+````
+
+## 49. QueryPlan
+
+
+
+````mdx
+<QueryPlan data='[{"id":"scan","operation":"Index scan","estimatedRows":100,"actualRows":120,"time":5},{"id":"join","parent":"scan","operation":"Nested loop","estimatedRows":10,"actualRows":100,"time":12}]' />
+````
+
+## 50. ContractResults
+
+Provider/consumer contract expectations and actual test outcomes.
+
+Data fields: `provider,consumer,contract,expected,actual,status`.
+
+````mdx
+<ContractResults data='[{"provider":"Provider","consumer":"Consumer","contract":"Contract","expected":"Ready","actual":"Ready","status":"open"}]' />
+````

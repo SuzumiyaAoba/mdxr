@@ -1,0 +1,44 @@
+---
+title: Extended components
+description: 120 feature families plus supporting components, with executable examples and rendered demos for every family.
+sidebar:
+  order: 8
+---
+
+120 feature families plus supporting components, with executable examples and rendered demos for every family.
+
+## Shared data contract
+
+`data` is a JSON **string** containing an array of records. `format="csv"` accepts a header row and RFC 4180 quoting. A fenced `json`/`csv` block, a Markdown table, or `<RecordItem>` children can replace the data attribute. Keep a blank line around Markdown inside JSX. `columns="a,b"` selects table columns; `title` and `id` name a block. Options such as histogram bins and decision weights go in an `options` JSON string. MDX JavaScript expressions remain disabled.
+
+Reports use searchable, sortable tables, categorical filters and CSV/JSON export. Charts use SVG with accessible titles, descriptions and a data table. Interactive controls need the default hydrated HTML output. With hydration disabled, tables expose all rows and tabs expose all bodies. Markdown output preserves source data, computed summaries, relationships and media links, without browser interactions. Printing exposes all table rows and tab bodies.
+
+## Semantics and limits
+
+- `Include path="..." section="heading-slug"` expands local MD/MDX at compile time. Paths resolve relative to the including file. Relative links are rebased; cycles and executable MDX are rejected. Included files must be present when rendering. Files may reference trusted local content just like `CodeFile`.
+- `Source` / `Cite` and `CrossRef` resolve forward references at compile time. IDs must be unique; missing targets fail the render. `TableOfFigures kind="Figure"` also supports `DataTable`, `NumberedEquation` and `Theorem`.
+- Statistical conventions: quantiles use R7 interpolation; boxplots use 1.5×IQR whiskers; density plots use a Gaussian kernel (optional `bandwidth`); calendar dates use UTC. `Experiment` reports Wilson 95% intervals for binomial counts, not a causal conclusion or a significance test. Rates with a zero denominator are displayed as unavailable.
+- `DecisionMatrix` requires `options.weights`. `TestMatrix` accepts `options.axes` and labels unobserved combinations `not-run`. `DependencyPlan` uses nonnegative durations and predecessor IDs; calendars/resource leveling are not inferred. `DataValidation` accepts `options.rules` with `field`, `required`, `type`, `min`, `max`, `enum`. Types are `string`, `number`, `integer`, `boolean`, `array`, `object`, or `null`; optional missing/null/empty values are skipped. Invalid bounded values are reported as violations. `Experiment` requires nonnegative integer counts and successes no greater than the count.
+- `TokenUsage` rates are supplied by the author, per million tokens; cached tokens are a subset of input. No live provider prices or API calls are used. `EvalReport` defaults to structural equality, or accepts a supplied status for external graders. `ApiDiff`/`SchemaDiff` flag removals, type changes and stricter constraints conservatively; other changes require review.
+- Diagrams accept JSON-string `nodes` (`id`, `label`, optional `group`, `lane`, `note`, `status`, `file`, `href`) and `edges` (`from`, `to`, `label`, optional `guard`, `action`). `options.direction="down"` changes layout; `ImpactMap` accepts `options.changed`. `DecisionTree` uses `condition` on diamond nodes. `MindMap` requires a connected rooted tree. No scripts or remote diagram renderer are needed.
+- `Calculator` supports sum, product, min, max, weighted sum and two-value ratio; it does not evaluate arbitrary expressions. Wizard conditions are objects matching earlier named answers. `AnswerSheet` wraps `Ask`; give questions unique names for typed JSON import/export. Form state lasts for the current page; use export to save it.
+- `FilterPanel fields="status,environment"` shares categorical filters with descendant tables/reports and extended plots. `SmallMultiples` shares numeric min/max bounds across compatible plots; charts with inherently different axes retain their own semantics.
+- Media files remain authored assets. `Video` requires a WebVTT caption file; `AudioTranscript` takes timestamped transcript rows. `VisualDiff` displays expected/actual images and an optional externally computed difference image; it does not perform pixel comparison. PDF support depends on the browser, with a source link always available. Serve media from the document directory or use absolute URLs.
+
+
+## Categories
+
+| Category | Components |
+| --- | --- |
+| [Evidence](/mdxr/extended/evidence) | `Sources`, `CrossRef`, `Evidence`, `Provenance`, `Assumptions`, `Limitations`, `Sidenote`, `TermRef`, `Include`, `DocumentHistory` |
+| [Planning](/mdxr/extended/planning) | `Traceability`, `DecisionMatrix`, `RiskRegister`, `Scope`, `ActionItems`, `Estimate`, `DependencyPlan`, `RACI`, `Objectives`, `CapacityPlan` |
+| [Investigation](/mdxr/extended/investigation) | `Reproduction`, `Logs`, `JsonDiff`, `ConfigDiff`, `ApiDiff`, `SchemaDiff`, `ImpactMap`, `DataLineage`, `SymbolOutline`, `CodeWalkthrough` |
+| [Reference](/mdxr/extended/reference) | `CodeGroup`, `PackageInstall`, `ApiExample`, `ApiParams`, `ObjectSchema`, `CliReference`, `ConfigReference`, `ErrorCatalog`, `CompatibilityMatrix`, `DeprecationTimeline` |
+| [Quality](/mdxr/extended/quality) | `TestMatrix`, `Coverage`, `BenchmarkSuite`, `TestHistory`, `VisualDiff`, `AccessibilityReport`, `BundleReport`, `Flamegraph`, `QueryPlan`, `ContractResults` |
+| [Operations](/mdxr/extended/operations) | `Runbook`, `Rollout`, `SLO`, `AlertRules`, `FeatureFlags`, `RecoveryPlan`, `PermissionMatrix`, `ThreatModel`, `Remediation`, `MaintenanceWindow` |
+| [Statistics](/mdxr/extended/statistics) | `Heatmap`, `Histogram`, `BoxPlot`, `ECDF`, `IntervalPlot`, `BulletChart`, `CalendarHeatmap`, `ParetoChart`, `CohortTable`, `ConfusionMatrix` |
+| [Charts](/mdxr/extended/charts) | `ViolinPlot`, `RidgelinePlot`, `DotPlot`, `SlopeChart`, `BumpChart`, `DumbbellChart`, `Sunburst`, `ChordDiagram`, `UpSetPlot`, `SmallMultiples` |
+| [Diagrams](/mdxr/extended/diagrams) | `SequenceDiagram`, `StateDiagram`, `EntityRelations`, `Swimlane`, `Architecture`, `DecisionTree`, `MindMap`, `JourneyMap`, `ServiceTopology`, `DependencyMatrix` |
+| [Interactive](/mdxr/extended/interactive) | `DataTable`, `FilterPanel`, `Checklist`, `Ranking`, `Calculator`, `Wizard`, `SyncedTabs`, `DocumentSearch`, `AnswerSheet`, `DownloadData` |
+| [Media](/mdxr/extended/media) | `ImageGallery`, `AnnotatedImage`, `ImageCompare`, `Video`, `AudioTranscript`, `PdfPreview`, `PrintLayout`, `TableOfFigures`, `NumberedEquation`, `Theorem` |
+| [Evaluation](/mdxr/extended/evaluation) | `EvalReport`, `ModelComparison`, `Conversation`, `ToolCall`, `TokenUsage`, `PromptTemplate`, `DatasetProfile`, `DataValidation`, `Experiment`, `DatasetDiff` |

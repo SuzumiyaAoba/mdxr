@@ -1,0 +1,45 @@
+---
+title: Extended components — Investigation
+---
+
+# Investigation
+
+## Reproduction
+
+<Reproduction data='[{"step":"Step","environment":"staging","prerequisite":"Prerequisite","action":"Run the verification suite","expected":"Ready","actual":"Ready"}]' />
+
+## Logs
+
+<Logs data='[{"time":"2026-09-01T09:00:00Z","level":"Level","source":"Source","message":"Message"}]' />
+
+## JsonDiff
+
+<JsonDiff before='{"type":"string","description":"Identifier"}' after='{"type":"number","description":"Identifier"}' />
+
+## ConfigDiff
+
+<ConfigDiff before='[{"name":"defaults","values":{"retries":2}}]' after='[{"name":"defaults","values":{"retries":2}},{"name":"production","values":{"retries":4}}]' />
+
+## ApiDiff
+
+<ApiDiff before='{"type":"string","description":"Identifier"}' after='{"type":"number","description":"Identifier"}' />
+
+## SchemaDiff
+
+<SchemaDiff before='{"type":"string","description":"Identifier"}' after='{"type":"number","description":"Identifier"}' />
+
+## ImpactMap
+
+<ImpactMap nodes='[{"id":"client","label":"Client","lane":"Application"},{"id":"api","label":"API","lane":"Server"},{"id":"db","label":"Database","lane":"Server"}]' edges='[{"from":"client","to":"api","label":"Request"},{"from":"api","to":"db","label":"Query"}]' options='{"changed":["api"]}' />
+
+## DataLineage
+
+<DataLineage nodes='[{"id":"client","label":"Client","lane":"Application"},{"id":"api","label":"API","lane":"Server"},{"id":"db","label":"Database","lane":"Server"}]' edges='[{"from":"client","to":"api","label":"Request"},{"from":"api","to":"db","label":"Query"}]' />
+
+## SymbolOutline
+
+<SymbolOutline data='[{"name":"Example","kind":"Kind","parent":"Parent","signature":"Signature","file":"File","lines":"Lines"}]' />
+
+## CodeWalkthrough
+
+<CodeWalkthrough data='[{"title":"Parse","code":"const value = 2;\nreturn value * 3;","lines":"1","explanation":"Read the input."},{"title":"Compute","code":"const value = 2;\nreturn value * 3;","lines":"2","explanation":"Return three times the input."}]' />

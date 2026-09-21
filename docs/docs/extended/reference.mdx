@@ -1,0 +1,120 @@
+---
+title: Reference
+description: Reference — component examples
+sidebar:
+  order: 31
+---
+
+See [Extended components](/mdxr/extended-components) for shared data contracts and calculation semantics.
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-reference.html`} title="Reference" loading="lazy" style="width:100%;height:720px;border:1px solid #8884;border-radius:12px" />
+
+## 31. CodeGroup
+
+
+
+````mdx
+<CodeGroup syncKey='language'>
+
+```ts
+const value = 1;
+```
+
+```python
+value = 1
+```
+
+</CodeGroup>
+````
+
+## 32. PackageInstall
+
+
+
+````mdx
+<PackageInstall packages='@suzumiyaaoba/mdxr' dev='true' />
+````
+
+## 33. ApiExample
+
+
+
+Supporting components: `Request`, `Response`.
+
+````mdx
+<ApiExample>
+
+<Request method='GET' path='/items' headers='Accept: application/json' />
+
+<Response status='200' body='{"items":["one"]}' />
+
+</ApiExample>
+````
+
+## 34. ApiParams
+
+Request parameters by location, type, required flag, constraints and example.
+
+Data fields: `name,in,type,required,default,constraints,example,description`.
+
+````mdx
+<ApiParams data='[{"name":"Example","in":"In","type":"Type","required":"Required","default":"Default","constraints":"Constraints","example":"Example","description":"Review the result before release."}]' />
+````
+
+## 35. ObjectSchema
+
+
+
+````mdx
+<ObjectSchema schema='{"type":"object","required":["id"],"properties":{"id":{"type":"string","description":"Stable identifier"},"tags":{"type":"array","items":{"type":"string"}},"details":{"oneOf":[{"type":"string"},{"type":"number"}]}}}' />
+````
+
+## 36. CliReference
+
+Commands, positional arguments, flags, defaults and usage examples.
+
+Data fields: `command,argument,flag,type,default,conflicts,example,description`.
+
+````mdx
+<CliReference data='[{"command":"Command","argument":"Argument","flag":"Flag","type":"Type","default":"Default","conflicts":"Conflicts","example":"Example","description":"Review the result before release."}]' />
+````
+
+## 37. ConfigReference
+
+Configuration keys, environment and CLI overrides, precedence and defaults.
+
+Data fields: `key,type,default,env,flag,precedence,description`.
+
+````mdx
+<ConfigReference data='[{"key":"Key","type":"Type","default":"Default","env":"Env","flag":"Flag","precedence":"Precedence","description":"Review the result before release."}]' />
+````
+
+## 38. ErrorCatalog
+
+Error codes, causes, recovery actions and retry guidance.
+
+Data fields: `code,message,cause,action,retry,href`.
+
+````mdx
+<ErrorCatalog data='[{"code":"Code","message":"Message","cause":"Cause","action":"Run the verification suite","retry":"Retry","href":"Href"}]' />
+````
+
+## 39. CompatibilityMatrix
+
+Platform/runtime/version compatibility with supporting evidence.
+
+Data fields: `platform,runtime,version,status,notes`.
+
+````mdx
+<CompatibilityMatrix data='[{"platform":"Platform","runtime":"Runtime","version":"1.2.0","status":"open","notes":"Reviewed with the team."}]' />
+````
+
+## 40. DeprecationTimeline
+
+Deprecation and removal milestones linked to replacement and migration.
+
+Data fields: `feature,deprecated,removal,replacement,migration`.
+
+````mdx
+<DeprecationTimeline data='[{"feature":"Feature","deprecated":"Deprecated","removal":"Removal","replacement":"Replacement","migration":"Migration"}]' />
+````

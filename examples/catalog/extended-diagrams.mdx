@@ -1,0 +1,45 @@
+---
+title: Extended components — Diagrams
+---
+
+# Diagrams
+
+## SequenceDiagram
+
+<SequenceDiagram nodes='[{"id":"client","label":"Client","lane":"Application"},{"id":"api","label":"API","lane":"Server"},{"id":"db","label":"Database","lane":"Server"}]' edges='[{"from":"client","to":"api","label":"Request"},{"from":"api","to":"db","label":"Query"}]' />
+
+## StateDiagram
+
+<StateDiagram nodes='[{"id":"client","label":"Client","lane":"Application"},{"id":"api","label":"API","lane":"Server"},{"id":"db","label":"Database","lane":"Server"}]' edges='[{"from":"client","to":"api","label":"Request","guard":"valid","action":"load"},{"from":"api","to":"db","label":"Query"}]' />
+
+## EntityRelations
+
+<EntityRelations data='[{"table":"users","name":"id","type":"uuid"},{"table":"orders","name":"id","type":"uuid"},{"table":"orders","name":"user_id","type":"uuid","fk":"users.id","relation":"many-to-one"}]' />
+
+## Swimlane
+
+<Swimlane nodes='[{"id":"client","label":"Client","lane":"Application"},{"id":"api","label":"API","lane":"Server"},{"id":"db","label":"Database","lane":"Server"}]' edges='[{"from":"client","to":"api","label":"Request"},{"from":"api","to":"db","label":"Query"}]' />
+
+## Architecture
+
+<Architecture nodes='[{"id":"client","label":"Client","lane":"Application","group":"Application"},{"id":"api","label":"API","lane":"Server","group":"Server"},{"id":"db","label":"Database","lane":"Server","group":"Server"}]' edges='[{"from":"client","to":"api","label":"Request"},{"from":"api","to":"db","label":"Query"}]' />
+
+## DecisionTree
+
+<DecisionTree nodes='[{"id":"client","label":"Client","lane":"Application","condition":"Request valid?"},{"id":"api","label":"API","lane":"Server"},{"id":"db","label":"Database","lane":"Server"}]' edges='[{"from":"client","to":"api","label":"Request"},{"from":"api","to":"db","label":"Query"}]' />
+
+## MindMap
+
+<MindMap nodes='[{"id":"client","label":"Client","lane":"Application"},{"id":"api","label":"API","lane":"Server"},{"id":"db","label":"Database","lane":"Server"}]' edges='[{"from":"client","to":"api","label":"Request"},{"from":"api","to":"db","label":"Query"}]' />
+
+## JourneyMap
+
+<JourneyMap data='[{"stage":"Stage","action":"Run the verification suite","touchpoint":"Touchpoint","pain":"Pain","improvement":"Improvement"}]' />
+
+## ServiceTopology
+
+<ServiceTopology nodes='[{"id":"client","label":"Client","lane":"Application","group":"Application"},{"id":"api","label":"API","lane":"Server","group":"Server"},{"id":"db","label":"Database","lane":"Server","group":"Server"}]' edges='[{"from":"client","to":"api","label":"Request"},{"from":"api","to":"db","label":"Query"}]' />
+
+## DependencyMatrix
+
+<DependencyMatrix data='[{"from":"API","to":"DB","value":3},{"from":"Worker","to":"DB","value":1}]' />

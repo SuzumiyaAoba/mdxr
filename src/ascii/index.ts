@@ -33,12 +33,15 @@ import { remarkCodeMeta } from "../remark/code-meta.js";
 import { remarkMdxrDirectives } from "../remark/directives.js";
 import { remarkFilePaths } from "../remark/file-paths.js";
 import { remarkMdxrHeadings } from "../remark/headings.js";
+import { remarkInclude } from "../remark/include.js";
 import { remarkNoJs } from "../remark/no-js.js";
+import { remarkReferences } from "../remark/references.js";
 import { builtinComponents } from "../ui/index.js";
 import { heading, named, para, transformAscii, txt } from "./ast.js";
 import type { AsciiRegistry } from "./ast.js";
 import { chartRenderers } from "./charts.js";
 import { documentRenderers } from "./document.js";
+import { extendedRenderers } from "./extended.js";
 import { formRenderers } from "./forms.js";
 import { investigationRenderers } from "./investigation.js";
 import { layoutRenderers } from "./layout.js";
@@ -48,6 +51,7 @@ import { reportRenderers } from "./reports.js";
 import { shadcnRenderers } from "./shadcn.js";
 
 export const asciiRenderers: AsciiRegistry = {
+  ...extendedRenderers,
   ...documentRenderers,
   ...planningRenderers,
   ...investigationRenderers,
@@ -71,12 +75,14 @@ const processor = unified()
   .use(remarkMath)
   .use(remarkDirective)
   .use(remarkMdxrDirectives)
+  .use(remarkInclude)
   .use(remarkMdxrAlerts)
   .use(remarkNoJs)
   .use(remarkMdxrHeadings)
   .use(remarkCodeFile)
   .use(remarkCodeMeta)
-  .use(remarkFilePaths);
+  .use(remarkFilePaths)
+  .use(remarkReferences);
 
 const EXTENSIONS = [
   gfmToMarkdown(),

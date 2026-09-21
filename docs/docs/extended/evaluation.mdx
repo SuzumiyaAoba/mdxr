@@ -1,0 +1,106 @@
+---
+title: Evaluation
+description: Evaluation — component examples
+sidebar:
+  order: 111
+---
+
+See [Extended components](/mdxr/extended-components) for shared data contracts and calculation semantics.
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.html`} title="Evaluation" loading="lazy" style="width:100%;height:720px;border:1px solid #8884;border-radius:12px" />
+
+## 111. EvalReport
+
+Evaluation cases with inputs, expected/actual output, rubric and verdict.
+
+Supporting components: `EvalCase`.
+
+Data fields: `name,input,expected,actual,rubric,score,status`.
+
+````mdx
+<EvalReport data='[{"id":"E1","input":"2+2","expected":"4","actual":"4"},{"id":"E2","input":"3+3","expected":"6","actual":"7"}]' />
+
+<EvalCase data='[{"id":"E1","input":"2+2","expected":"4","actual":"4"}]' />
+````
+
+## 112. ModelComparison
+
+Model results under a shared task, with quality, latency, cost and failures.
+
+Data fields: `model,task,quality,latency,cost,failures,notes`.
+
+````mdx
+<ModelComparison data='[{"model":"Model","task":"Task","quality":"Quality","latency":"Latency","cost":"Cost","failures":"Failures","notes":"Reviewed with the team."}]' />
+````
+
+## 113. Conversation
+
+
+
+````mdx
+<Conversation data='[{"role":"user","content":"Summarize the build.","time":"10:00"},{"role":"assistant","content":"All checks passed.","time":"10:01"}]' />
+````
+
+## 114. ToolCall
+
+Tool calls including arguments, result, elapsed time and outcome.
+
+Data fields: `tool,arguments,result,duration,status`.
+
+````mdx
+<ToolCall data='[{"tool":"Tool","arguments":"Arguments","result":"pass","duration":"Duration","status":"open"}]' />
+````
+
+## 115. TokenUsage
+
+
+
+````mdx
+<TokenUsage data='[{"name":"Example run","input":10000,"cached":6000,"output":800,"inputRate":2,"cacheRate":0.2,"outputRate":8}]' />
+````
+
+## 116. PromptTemplate
+
+
+
+````mdx
+<PromptTemplate data='[{"name":"topic","label":"Topic","value":"rendering","description":"Subject of the summary."}]' template='Summarize {{topic}} in three sentences.' />
+````
+
+## 117. DatasetProfile
+
+Per-column types, missingness, uniqueness and numeric summaries.
+
+Data fields: `column,rows,missing,missingRate,unique,types,min,max,mean`.
+
+````mdx
+<DatasetProfile data='[{"id":"a","age":21,"team":"A"},{"id":"b","age":null,"team":"B"},{"id":"c","age":35,"team":"A"}]' />
+````
+
+## 118. DataValidation
+
+Data validation by field rules (required/type/min/max/enum) in options.rules.
+
+Data fields: `field,rule,violations,rows,status`.
+
+````mdx
+<DataValidation data='[{"id":"a","age":21},{"id":"b","age":-1}]' options='{"rules":[{"field":"age","type":"number","min":0,"required":true}]}' />
+````
+
+## 119. Experiment
+
+Binomial experiment results with Wilson 95% intervals; does not infer a winner.
+
+Data fields: `variant,count,successes,rate,lower95,upper95,condition`.
+
+````mdx
+<Experiment data='[{"name":"Control","count":1000,"successes":80},{"name":"Variant","count":1000,"successes":105}]' />
+````
+
+## 120. DatasetDiff
+
+
+
+````mdx
+<DatasetDiff before='[{"id":"one","value":2},{"id":"old","value":3}]' after='[{"id":"new","value":4},{"id":"one","value":5}]' />
+````

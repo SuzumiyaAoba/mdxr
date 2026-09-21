@@ -1,0 +1,122 @@
+---
+title: Evidence
+description: Evidence — component examples
+sidebar:
+  order: 1
+---
+
+See [Extended components](/mdxr/extended-components) for shared data contracts and calculation semantics.
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evidence.html`} title="Evidence" loading="lazy" style="width:100%;height:720px;border:1px solid #8884;border-radius:12px" />
+
+## 1. Sources
+
+
+
+Supporting components: `Source`, `Cite`.
+
+````mdx
+A documented claim <Cite source="manual" />.
+
+<Sources>
+
+<Source id='manual' href='https://example.com/manual' title='Example manual' author='Example team' published='2026-09-01' />
+
+</Sources>
+````
+
+## 2. CrossRef
+
+
+
+````mdx
+See <CrossRef target="reference-figure" />.
+
+<Figure src='assets/before.svg' id='reference-figure' caption='Document rendering'>
+
+An example figure.
+
+</Figure>
+````
+
+## 3. Evidence
+
+Evidence with source, revision, capture time and environment.
+
+Data fields: `claim,source,captured,commit,environment,result`.
+
+````mdx
+<Evidence data='[{"claim":"Claim","source":"Source","captured":"Captured","commit":"Commit","environment":"staging","result":"pass"}]' />
+````
+
+## 4. Provenance
+
+Reproducible report inputs, tools, versions and settings.
+
+Data fields: `input,tool,version,config,hash,generated`.
+
+````mdx
+<Provenance data='[{"input":"Input","tool":"Tool","version":"1.2.0","config":"Config","hash":"Hash","generated":"Generated"}]' />
+````
+
+## 5. Assumptions
+
+Assumptions with verification state, owner and review trigger.
+
+Data fields: `assumption,status,owner,evidence,revisit`.
+
+````mdx
+<Assumptions data='[{"assumption":"Assumption","status":"open","owner":"Platform","evidence":"tests/release.test.ts","revisit":"Revisit"}]' />
+````
+
+## 6. Limitations
+
+Scope and measurement limitations with their consequences.
+
+Data fields: `limitation,scope,consequence,followup`.
+
+````mdx
+<Limitations data='[{"limitation":"Limitation","scope":"Renderer","consequence":"Consequence","followup":"Followup"}]' />
+````
+
+## 7. Sidenote
+
+
+
+````mdx
+<Sidenote title='Context'>
+
+This note stays close to the discussion.
+
+</Sidenote>
+````
+
+## 8. TermRef
+
+
+
+````mdx
+<Glossary>
+<Term name="cache">Stored results reused for later requests.</Term>
+</Glossary>
+
+Use a <TermRef term="cache" />.
+````
+
+## 9. Include
+
+
+
+````mdx
+<Include path='../../tests/fixtures/extended-include.mdx' section='shared-context' />
+````
+
+## 10. DocumentHistory
+
+Document revisions, authors, reasons and superseding versions.
+
+Data fields: `version,date,author,reason,supersededBy`.
+
+````mdx
+<DocumentHistory data='[{"version":"1.2.0","date":"2026-09-01","author":"Author","reason":"Required for release","supersededBy":"Supersededby"}]' />
+````

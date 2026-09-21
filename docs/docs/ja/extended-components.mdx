@@ -1,0 +1,44 @@
+---
+title: 拡張コンポーネント
+description: 120の機能群と補助コンポーネントを追加しました。各分野のページに入力例と実際の描画結果があります。
+sidebar:
+  order: 8
+---
+
+120の機能群と補助コンポーネントを追加しました。各分野のページに入力例と実際の描画結果があります。
+
+## 共通の入力形式
+
+`data` にはレコード配列を表す **JSON文字列** を渡します。`format="csv"` ではヘッダー行付きCSVを読み込み、引用符や改行も扱います。属性の代わりに、`json` / `csv` コードブロック、Markdown表、`RecordItem` 子要素も使えます。JSX内のMarkdownの前後には空行を入れてください。`columns="a,b"` で表示列、`title` と `id` で見出しと識別子を指定します。ヒストグラムの区間数や評価の重みは `options` のJSON文字列で渡します。MDXのJavaScript式は引き続き使いません。
+
+レポートには検索・並べ替え・カテゴリーフィルター・CSV/JSON保存があります。グラフにはSVGの説明とデータ表を付けています。動的操作には通常のhydration付きHTMLを使ってください。hydration無効時は全行・全タブ本文を表示します。Markdownでは入力データ、計算結果、関係、メディアへのリンクを残します。印刷時も全行・全タブを表示します。
+
+## 計算と動作の仕様
+
+- `Include path="..." section="heading-slug"` はコンパイル時にローカルMD/MDXを展開します。パスは読み込み元のファイル基準です。相対リンクを補正し、循環と実行可能なMDXを拒否します。描画時には参照ファイルが必要です。`CodeFile` と同様、信頼するローカル文書を指定してください。
+- `Source` / `Cite` と `CrossRef` は後方に書いた参照先も解決します。IDの重複と参照先の欠落はエラーです。`TableOfFigures` の `kind` は `Figure` / `DataTable` / `NumberedEquation` / `Theorem` などを指定できます。
+- 分位点はR7補間、箱ひげは1.5×IQR、密度推定はGaussian kernelを使います。`bandwidth` は明示指定も可能です。カレンダーの日付はUTCです。`Experiment` は二項比率のWilson 95%区間を計算し、因果関係や有意差は判定しません。分母0の比率は計算不能として表示します。
+- `DecisionMatrix` は `options.weights` が必要です。`TestMatrix` は `options.axes` の未実施組み合わせを `not-run` とします。`DependencyPlan` は非負の期間と先行IDから計算し、営業日やリソース制約は推測しません。`DataValidation` の `options.rules` は `field` / `required` / `type` / `min` / `max` / `enum` を扱います。型は `string` / `number` / `integer` / `boolean` / `array` / `object` / `null` で、任意項目の欠落・null・空文字は検証対象外です。数値範囲を検証できない値も違反として集計します。`Experiment` の件数・成功数は非負の整数とし、成功数は件数以下にします。
+- `TokenUsage` の料金は100万トークンあたりの値を入力します。キャッシュ分は入力トークン数の内数です。最新料金の自動取得やAPI通信はしません。`EvalReport` は既定で構造比較し、外部採点の `status` も指定できます。`ApiDiff` / `SchemaDiff` は削除・型変更・制約強化を保守的に示し、それ以外はレビュー対象にします。
+- 関係図はJSON文字列の `nodes`（`id` / `label`、任意で `group` / `lane` / `note` / `status` / `file` / `href`）と `edges`（`from` / `to` / `label`、任意で `guard` / `action`）を受け取ります。`options.direction="down"` で縦配置、`ImpactMap` の `options.changed` で変更元を指定します。`DecisionTree` のひし形には `condition` を使います。`MindMap` は最初のノードを根とした連結木が必要です。
+- `Calculator` は合計・積・最小・最大・重み付き合計・2値の比を扱います。任意の式は実行しません。`Wizard` の `when` は先行回答との一致条件です。`AnswerSheet` は `Ask` を包み、質問の一意な `name` をキーに型付きJSONを保存・復元します。状態はページを開いている間だけ保持するため、保存にはエクスポートを使います。
+- `FilterPanel fields="status,environment"` は子の表・レポート・拡張グラフに共通のフィルターを適用します。`SmallMultiples` は互換性のある数値軸のmin/maxを共有します。軸の意味が異なるグラフはそれぞれの仕様を維持します。
+- メディアは利用者が用意したファイルを表示します。`Video` にはWebVTT字幕が必要です。`AudioTranscript` は秒数付き文字起こしを扱います。`VisualDiff` は期待画像・実画像・任意の計算済み差分画像を表示し、ピクセル比較処理は行いません。PDFはブラウザの対応に依存し、原本リンクを常に表示します。メディアは文書のディレクトリから配信するか絶対URLで指定してください。
+
+
+## 分野別一覧
+
+| 分野 | コンポーネント |
+| --- | --- |
+| [根拠・引用](/mdxr/ja/extended/evidence) | `Sources`, `CrossRef`, `Evidence`, `Provenance`, `Assumptions`, `Limitations`, `Sidenote`, `TermRef`, `Include`, `DocumentHistory` |
+| [計画・合意](/mdxr/ja/extended/planning) | `Traceability`, `DecisionMatrix`, `RiskRegister`, `Scope`, `ActionItems`, `Estimate`, `DependencyPlan`, `RACI`, `Objectives`, `CapacityPlan` |
+| [調査・差分](/mdxr/ja/extended/investigation) | `Reproduction`, `Logs`, `JsonDiff`, `ConfigDiff`, `ApiDiff`, `SchemaDiff`, `ImpactMap`, `DataLineage`, `SymbolOutline`, `CodeWalkthrough` |
+| [API・設定リファレンス](/mdxr/ja/extended/reference) | `CodeGroup`, `PackageInstall`, `ApiExample`, `ApiParams`, `ObjectSchema`, `CliReference`, `ConfigReference`, `ErrorCatalog`, `CompatibilityMatrix`, `DeprecationTimeline` |
+| [品質・性能](/mdxr/ja/extended/quality) | `TestMatrix`, `Coverage`, `BenchmarkSuite`, `TestHistory`, `VisualDiff`, `AccessibilityReport`, `BundleReport`, `Flamegraph`, `QueryPlan`, `ContractResults` |
+| [運用・セキュリティ](/mdxr/ja/extended/operations) | `Runbook`, `Rollout`, `SLO`, `AlertRules`, `FeatureFlags`, `RecoveryPlan`, `PermissionMatrix`, `ThreatModel`, `Remediation`, `MaintenanceWindow` |
+| [統計](/mdxr/ja/extended/statistics) | `Heatmap`, `Histogram`, `BoxPlot`, `ECDF`, `IntervalPlot`, `BulletChart`, `CalendarHeatmap`, `ParetoChart`, `CohortTable`, `ConfusionMatrix` |
+| [比較・分布](/mdxr/ja/extended/charts) | `ViolinPlot`, `RidgelinePlot`, `DotPlot`, `SlopeChart`, `BumpChart`, `DumbbellChart`, `Sunburst`, `ChordDiagram`, `UpSetPlot`, `SmallMultiples` |
+| [構造・関係図](/mdxr/ja/extended/diagrams) | `SequenceDiagram`, `StateDiagram`, `EntityRelations`, `Swimlane`, `Architecture`, `DecisionTree`, `MindMap`, `JourneyMap`, `ServiceTopology`, `DependencyMatrix` |
+| [操作・入力](/mdxr/ja/extended/interactive) | `DataTable`, `FilterPanel`, `Checklist`, `Ranking`, `Calculator`, `Wizard`, `SyncedTabs`, `DocumentSearch`, `AnswerSheet`, `DownloadData` |
+| [画像・音声・印刷](/mdxr/ja/extended/media) | `ImageGallery`, `AnnotatedImage`, `ImageCompare`, `Video`, `AudioTranscript`, `PdfPreview`, `PrintLayout`, `TableOfFigures`, `NumberedEquation`, `Theorem` |
+| [評価・データ](/mdxr/ja/extended/evaluation) | `EvalReport`, `ModelComparison`, `Conversation`, `ToolCall`, `TokenUsage`, `PromptTemplate`, `DatasetProfile`, `DataValidation`, `Experiment`, `DatasetDiff` |

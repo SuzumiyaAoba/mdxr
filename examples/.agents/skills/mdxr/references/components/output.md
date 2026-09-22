@@ -18,6 +18,52 @@ An ordinary unified-diff fence becomes one card per file: file-type icon, path (
 
 For word-level inline edits inside prose use `<Ins>`/`<Del>`; for block alternatives use `<Before>`/`<After>`.
 
+### `<Comments>` / `<Comment lines side file>` / `:::comments` — line-anchored comment threads
+
+GitHub review-comment UX for a fenced block: the **first fenced child** (any ` ```ts ` code block or ` ```diff `/` ```patch ` patch) is the subject, and each `<Comment>` child becomes a thread card rendered **inline under the line it references** — the body is MDX, so ` ```diff ` suggestion fences and inline code just work. Code fences get a line-number gutter automatically.
+
+`<Comment>` props in this context:
+
+- `lines` — `"40"`, `"40-52"` (inclusive range) or `"40-"` (to EOF). The thread lands under the **last** matching line. `lines` past the end of the block falls back to the file-level strip.
+- `side` — `new` (default) or `old`: which side's line numbers anchor the thread inside a diff (`old` comments get a red `old` chip — for deleted/context lines).
+- `file` — selects the file card in multi-file diffs (old or new path, or the fence `title`); absent/unmatched targets the first card.
+- `author` — avatar initials + name in the thread header.
+- `severity`, `title` — severity pill and a bold headline, same as `<Review>` comments.
+- `href` — overrides the `:lines` chip's editor link.
+
+Without `lines` the comment renders at the end of the block — GitHub's file-level comment. Without a fenced child at all, `<Comments>` degrades to the standalone card list.
+
+The block is interactive in rendered documents: hovering (or keyboard-focusing) a code/diff row reveals a **+** button that opens a comment form under that line, and every thread ends with a **Reply** button. Reader comments post locally into the page — nothing is sent to a server — and the block's **Copy markdown** button serializes the fence plus every thread (authored and reader-added alike, with their `lines`/`side`/`file`/`author` anchors) back into `<Comments>` markup. Pasting that output over the source block persists the review.
+
+````mdx
+<Comments>
+
+```diff title="src/render.ts"
+@@ -40,3 +40,4 @@
+   const src = await read(path);
+-  const out = compile(src);
++  const doc = compile(src);
++  const out = minify(doc);
+```
+
+<Comment lines="41" side="old" author="@alice" severity="high">
+  Why was this inlined — is `compile()` still pure?
+</Comment>
+
+<Comment lines="41-42" author="@devin">
+The replacement keeps semantics.
+
+```diff
++  const out = minify(compile(src));
+```
+
+</Comment>
+
+</Comments>
+````
+
+Use `<Review>` for a summarized verdict report (severity tally + verdict pill); use `<Comments>` when the threads belong _on_ the code.
+
 ### `<Graph title direction>` / `<Node>` / `<Edge>` / `:::graph`
 
 A static node/edge diagram — the "React Flow" shape without client JS: dagre computes the layout at render time and the output is absolute-positioned node cards over an SVG edge layer (printable, deterministic). Children are `<Node>` and `<Edge>` elements; anything else renders under the diagram.

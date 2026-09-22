@@ -66,12 +66,39 @@ This file is an index: each group lists what its components do and links to a de
 | Component | What it is |
 | --- | --- |
 | ` ```diff ` / ` ```patch ` fence | Structured per-file diff cards — editor links, `+N −M` stats, hunk line numbers |
+| `<Comments>` / `<Comment>` | GitHub-style comment threads anchored to code/diff lines — `lines`/`side`/`file` anchors, MDX bodies — `:::comments` |
 | `<Graph>` / `<Node>` / `<Edge>` | Static node/edge diagram — dagre layout at render time, SVG edges, editor-linked nodes — `:::graph` |
 | `<Tests>` / `<Test>` | Test-run report — status pills, auto counts and duration sum — `:::tests` |
 | `<Endpoints>` / `<Endpoint>` | API route list — method chips, `base` prefix, `auth`/`deprecated` — `:::endpoints` |
 | `<Json>` | Collapsible JSON tree on nested `<details>` — `value` attr or fenced child |
 | `<Waterfall>` / `<Span>` | Timing waterfall (OTel-trace-style bars) — `:::waterfall` |
 | `<Ins>` / `<Del>` | Inline word-level edits — semantic `<ins>`/`<del>` |
+
+## Reports — details: [components/reports.md](components/reports.md)
+
+Review results, verification status, security/dependency scans, metrics, config docs, and ops/release summaries.
+
+| Component | What it is |
+| --- | --- |
+| `<Review>` / `<Comment>` | Code-review report — numbered findings with severity pills, `file:line` links, verdict pill + severity tally — `:::review` |
+| `<Verdict>` | Colored verdict banner — approve/pass/warn/fail/info — `:::verdict` |
+| `<Severity>` | Inline severity pill — critical/high/medium/low/info |
+| `<Checks>` / `<Check>` | CI check list — status icons, required chips, auto counts + duration sum — `:::checks` |
+| `<Audit>` / `<Vuln>` | Vulnerability report — severity tally, CVE/GHSA links, fix versions — `:::audit` |
+| `<Bumps>` / `<Bump>` | Dependency upgrade plan — `from → to`, auto major/minor/patch detection — `:::bumps` |
+| `<Packages>` / `<Package>` | Package inventory — kind/license chips, count caption — `:::packages` |
+| `<Gauges>` / `<Gauge>` | Percent-bar list — coverage/scores with auto pass/fail coloring — `:::gauges` |
+| `<Score>` | 0–100 ring gauge — health/quality scores |
+| `<Spark>` | Inline sparkline for prose trends |
+| `<Benchmarks>` / `<Bench>` | Before/after measurement table — auto % delta, `better="lower"` flips colors — `:::benchmarks` |
+| `<DiffStat>` | Inline `+N −M across F files` chip with proportional bar |
+| `<Schema>` / `<DbTable>` / `<DbField>` | Database schema docs — PK/FK/unique/null chips — `:::schema` |
+| `<EnvVars>` / `<EnvVar>` | Env-var reference — required/secret chips, masked values, name-copy button — `:::envvars` |
+| `<StatusPage>` / `<Service>` | Service-health summary — worst-status rollup, uptime figures — `:::statuspage` |
+| `<Uptime>` / `<Day>` | Statuspage-style daily uptime bar — `:::uptime` |
+| `<Release>` / `<Entry>` | Release notes — entries auto-grouped by kind (breaking/added/…/security) — `:::release` |
+| `<Pathway>` / `<Stop>` | Migration/rollout stepper — version paths, env promotion — `:::pathway` |
+| `<Incident>` | Incident/postmortem header — severity + status pills, timeline meta, impact line — `:::incident` |
 
 ## Data visualization — details: [components/charts.md](components/charts.md)
 
@@ -133,6 +160,14 @@ Markdown shorthands and what they render as — the reverse lookup of the index 
 | `:::terminal{cmd="…" exit="…"}` / ` ```console ` fence | terminal transcript |
 | `:::files` / `:::deps` | `<Files>` related-file list / `<Deps>` dependency edges |
 | `:::tests` + `<Test>` / `:::endpoints` + `<Endpoint>` | `<Tests>` run report / `<Endpoints>` API list |
+| `:::review{verdict="changes"}` + `<Comment severity file>` | `<Review>` code-review report |
+| `:::verdict{status="approve"}` | `<Verdict>` conclusion banner |
+| `:::checks` + `<Check status>` / `:::audit` + `<Vuln severity>` | `<Checks>` CI status / `<Audit>` vulnerability report |
+| `:::bumps` + `<Bump from to>` / `:::packages` + `<Package>` | `<Bumps>` upgrade plan / `<Packages>` inventory |
+| `:::gauges` + `<Gauge value>` / `:::benchmarks` + `<Bench before after>` | `<Gauges>` percent bars / `<Benchmarks>` compare table |
+| `:::schema` + `<DbTable>`/`<DbField>` / `:::envvars` + `<EnvVar>` | `<Schema>` DB docs / `<EnvVars>` env reference |
+| `:::statuspage` + `<Service>` / `:::uptime` + `<Day>` | `<StatusPage>` health summary / `<Uptime>` daily bar |
+| `:::release{version="…"}` + `<Entry kind>` / `:::pathway` + `<Stop>` / `:::incident` | `<Release>` notes / `<Pathway>` stepper / `<Incident>` postmortem |
 | `:::board` + `<Lane>`/`<BoardCard>` | `<Board>` kanban |
 | `:::graph` + `<Node>`/`<Edge>` | `<Graph>` static node/edge diagram (dagre layout, no client JS) |
 | `:::waterfall` + `<Span>` / `:::matrix` + list | `<Waterfall>` timing bars / `<Matrix>` comparison grid |
@@ -144,7 +179,25 @@ Markdown shorthands and what they render as — the reverse lookup of the index 
 | `` `src/x.ts` `` inline code naming a real file (optional `:L`/`:L-M`) | `<FileRef>` chip — icon, copy button, editor link (a bare `x.ts` stays plain code) |
 | ` ```mermaid ` fenced block | rendered diagram |
 | ` ```diff ` / ` ```patch ` fenced block | structured per-file diff cards |
+| `:::comments` + fence + `<Comment lines>` | line-anchored comment threads on code/diff |
 | ` ```ts title="src/x.ts" ` | highlighted code block + filename bar with file-type icon |
 | `- [ ]` / `- [x]` | styled task list |
 | nested list inside `<Tree>` | file tree |
 | `<Icon name="lucide:rocket">` / `icon-[lucide--rocket]` class | inline Iconify icon |
+
+## Extended components
+
+120 feature families, plus supporting children. Shared data: literal JSON/CSV, fenced data, Markdown tables or RecordItem. Dynamic controls require hydrated HTML; ASCII preserves static results.
+
+- [Evidence](components/extended-evidence.md): Sources, CrossRef, Evidence, Provenance, Assumptions, Limitations, Sidenote, TermRef, Include, DocumentHistory
+- [Planning](components/extended-planning.md): Traceability, DecisionMatrix, RiskRegister, Scope, ActionItems, Estimate, DependencyPlan, RACI, Objectives, CapacityPlan
+- [Investigation](components/extended-investigation.md): Reproduction, Logs, JsonDiff, ConfigDiff, ApiDiff, SchemaDiff, ImpactMap, DataLineage, SymbolOutline, CodeWalkthrough
+- [Reference](components/extended-reference.md): CodeGroup, PackageInstall, ApiExample, ApiParams, ObjectSchema, CliReference, ConfigReference, ErrorCatalog, CompatibilityMatrix, DeprecationTimeline
+- [Quality](components/extended-quality.md): TestMatrix, Coverage, BenchmarkSuite, TestHistory, VisualDiff, AccessibilityReport, BundleReport, Flamegraph, QueryPlan, ContractResults
+- [Operations](components/extended-operations.md): Runbook, Rollout, SLO, AlertRules, FeatureFlags, RecoveryPlan, PermissionMatrix, ThreatModel, Remediation, MaintenanceWindow
+- [Statistics](components/extended-statistics.md): Heatmap, Histogram, BoxPlot, ECDF, IntervalPlot, BulletChart, CalendarHeatmap, ParetoChart, CohortTable, ConfusionMatrix
+- [Charts](components/extended-charts.md): ViolinPlot, RidgelinePlot, DotPlot, SlopeChart, BumpChart, DumbbellChart, Sunburst, ChordDiagram, UpSetPlot, SmallMultiples
+- [Diagrams](components/extended-diagrams.md): SequenceDiagram, StateDiagram, EntityRelations, Swimlane, Architecture, DecisionTree, MindMap, JourneyMap, ServiceTopology, DependencyMatrix
+- [Interactive](components/extended-interactive.md): DataTable, FilterPanel, Checklist, Ranking, Calculator, Wizard, SyncedTabs, DocumentSearch, AnswerSheet, DownloadData
+- [Media](components/extended-media.md): ImageGallery, AnnotatedImage, ImageCompare, Video, AudioTranscript, PdfPreview, PrintLayout, TableOfFigures, NumberedEquation, Theorem
+- [Evaluation](components/extended-evaluation.md): EvalReport, ModelComparison, Conversation, ToolCall, TokenUsage, PromptTemplate, DatasetProfile, DataValidation, Experiment, DatasetDiff

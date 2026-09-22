@@ -1,10 +1,17 @@
-import { mkdtemp, readdir, realpath, rm, writeFile } from "node:fs/promises";
+import {
+  mkdtemp,
+  readFile,
+  readdir,
+  realpath,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
 
-import { installSkill } from "../src/init.js";
+import { ensureDocsDirIgnored, installSkill } from "../src/init.js";
 
 describe(installSkill, () => {
   const tmpDirs: string[] = [];
@@ -105,5 +112,80 @@ describe(installSkill, () => {
       /unknown tool/u
     );
     await expect(readdir(dir)).resolves.toStrictEqual([]);
+  });
+
+  it("does not touch .gitignore — that's the init command's job", async () => {
+    const dir = await makeDir();
+    process.chdir(dir);
+    await installSkill({});
+    await expect(readdir(dir)).resolves.not.toContain(".gitignore");
+  });
+});
+
+describe(ensureDocsDirIgnored, () => {
+  const tmpDirs: string[] = [];
+
+  const makeDir = async (): Promise<string> => {
+    const dir = await realpath(
+      await mkdtemp(path.join(os.tmpdir(), "mdxr-ignore-"))
+    );
+    tmpDirs.push(dir);
+    return dir;
+  };
+
+  afterEach(async () => {
+    await Promise.all(
+      tmpDirs.splice(0).map(async (d) => {
+        await rm(d, { force: true, recursive: true });
+      })
+    );
+  });
+
+  it("creates .gitignore with .mdxr/ when missing", async () => {
+    const dir = await makeDir();
+    await expect(ensureDocsDirIgnored(dir)).resolves.toBe("added");
+    await expect(readFile(path.join(dir, ".gitignore"), "utf-8")).resolves.toBe(
+      ".mdxr/\n"
+    );
+  });
+
+  it("appends to an existing .gitignore", async () => {
+    const dir = await makeDir();
+    await writeFile(path.join(dir, ".gitignore"), "node_modules/\ndist/\n");
+    await expect(ensureDocsDirIgnored(dir)).resolves.toBe("added");
+    await expect(readFile(path.join(dir, ".gitignore"), "utf-8")).resolves.toBe(
+      "node_modules/\ndist/\n.mdxr/\n"
+    );
+  });
+
+  it("separates the entry when .gitignore lacks a trailing newline", async () => {
+    const dir = await makeDir();
+    await writeFile(path.join(dir, ".gitignore"), "dist/");
+    await ensureDocsDirIgnored(dir);
+    await expect(readFile(path.join(dir, ".gitignore"), "utf-8")).resolves.toBe(
+      "dist/\n.mdxr/\n"
+    );
+  });
+
+  it("does not duplicate an existing .mdxr rule", async () => {
+    await Promise.all(
+      [".mdxr/", ".mdxr", "/.mdxr/", ".mdxr/**"].map(async (line) => {
+        const dir = await makeDir();
+        await writeFile(path.join(dir, ".gitignore"), `${line}\n`);
+        await expect(ensureDocsDirIgnored(dir)).resolves.toBe("present");
+        await expect(
+          readFile(path.join(dir, ".gitignore"), "utf-8")
+        ).resolves.toBe(`${line}\n`);
+      })
+    );
+  });
+
+  it("ignores commented-out .mdxr lines", async () => {
+    const dir = await makeDir();
+    await writeFile(path.join(dir, ".gitignore"), "# .mdxr/\n");
+    await expect(ensureDocsDirIgnored(dir)).resolves.toBe("added");
+    await expect(readFile(path.join(dir, ".gitignore"), "utf-8")).resolves.toBe(
+      "# .mdxr/\n.mdxr/\n"
+    );
   });
 });

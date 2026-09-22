@@ -165,3 +165,9 @@ The docs site in `docs/` is a [Blume](https://useblume.dev) project — a nested
 - The gallery and component-catalog pages iframe real rendered output: `pnpm docs:render` renders `examples/*.mdx` → `docs/public/examples/` and `examples/catalog/*.mdx` → `docs/public/components/` (needs `dist/cli.mjs`, so run `pnpm build` first; the docs workflow does both). `examples/catalog/` holds one demo document per catalog section and carries its own `mdxr.config.ts` + `components/` for the project-defined-components demo.
 - A static build emits `llms.txt`/`llms-full.txt`, per-page `.md` mirrors, `sitemap.xml`, and `robots.txt` — no extra setup for AI/agent consumers.
 - Deploy: `.github/workflows/docs.yml` builds on pushes/PRs touching `docs/**` and publishes to GitHub Pages via `actions/deploy-pages`. The site is served at `https://suzumiyaaoba.com/mdxr` — the account's user Pages has the `suzumiyaaoba.com` custom domain, so `suzumiyaaoba.github.io/mdxr` redirects there.
+
+---
+
+## Working notes
+
+Write plan documents and other agent scratch files to `.mdxr/` in the repo root. The directory is gitignored — don't commit its contents, and don't confuse it with `.mdxr-cache/` (the tool's build cache). This convention is built into mdxr itself: the bundled agent skill writes documents there, and `mdxr init` adds `.mdxr/` to the consuming project's `.gitignore`.

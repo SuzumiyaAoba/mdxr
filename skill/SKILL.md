@@ -9,12 +9,12 @@ Write documents as **Markdown + a small set of JSX components** (MDX). Do NOT wr
 
 ## Workflow
 
-1. Write the document as `*.mdx` using Markdown plus the components below.
-2. Render and open it for the user: `npx @suzumiyaaoba/mdxr render plan.mdx -o plan.html --open` (`--open` launches the file in the user's default browser — `open` on macOS, `xdg-open` on Linux, `start` on Windows).
-3. Or pipe MDX directly: `cat plan.mdx | npx @suzumiyaaoba/mdxr render > plan.html` (`mdxr render -` also reads stdin; `-o out.html` writes a file — required for `--open`).
-4. On errors, the message includes `file:line:col` — fix and re-run. `npx @suzumiyaaoba/mdxr render plan.mdx --format json` prints machine-readable errors.
-5. Preview while editing: `npx @suzumiyaaoba/mdxr serve plan.mdx --open` — or pipe: `cat plan.mdx | npx @suzumiyaaoba/mdxr serve --open`
-6. Plain-text deliverable: `npx @suzumiyaaoba/mdxr text plan.mdx` renders the document to Markdown readable in a terminal — components become ASCII stand-ins (checkbox lists, bar charts, GFM tables); interactive-only widgets degrade to their text.
+1. Write the document as `.mdxr/<name>.mdx` at the project root, creating `.mdxr/` if needed (unless the user gave a path). `.mdxr/` is untracked scratch space: if the project is a git repo, make sure `.gitignore` lists `.mdxr/` — append it when missing.
+2. Render and open it for the user: `npx @suzumiyaaoba/mdxr render .mdxr/plan.mdx --open` (the default output is the source path with `.html` — `.mdxr/plan.html`; `--open` launches the file in the user's default browser: `open` on macOS, `xdg-open` on Linux, `start` on Windows).
+3. Or pipe MDX directly: `cat .mdxr/plan.mdx | npx @suzumiyaaoba/mdxr render > .mdxr/plan.html` (`mdxr render -` also reads stdin; `-o out.html` writes a file — required for `--open`).
+4. On errors, the message includes `file:line:col` — fix and re-run. `npx @suzumiyaaoba/mdxr render .mdxr/plan.mdx --format json` prints machine-readable errors.
+5. Preview while editing: `npx @suzumiyaaoba/mdxr serve .mdxr/plan.mdx --open` — or pipe: `cat .mdxr/plan.mdx | npx @suzumiyaaoba/mdxr serve --open`
+6. Plain-text deliverable: `npx @suzumiyaaoba/mdxr text .mdxr/plan.mdx` renders the document to Markdown readable in a terminal — components become ASCII stand-ins (checkbox lists, bar charts, GFM tables); interactive-only widgets degrade to their text.
 
 ## Rules
 

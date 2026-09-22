@@ -20,6 +20,8 @@ mdxr init --global         # your home directory instead of the project
 mdxr init --force          # overwrite an existing install
 ```
 
+A local install also adds `.mdxr/` to the project's `.gitignore` — the untracked scratch directory agents write documents and rendered HTML to.
+
 Alternatively, install it from the repo with the [`skills` CLI](https://github.com/vercel-labs/skills):
 
 ```sh
@@ -32,6 +34,8 @@ npx skills add Suzumiyaaoba/mdxr --skill mdxr
 Once installed, just ask for a deliverable:
 
 > Use the mdxr skill to write an implementation plan for the auth feature and render it to HTML.
+
+Documents land in `.mdxr/` at the repo root — `.mdxr/auth-plan.mdx` renders to `.mdxr/auth-plan.html` — unless you specify a location.
 
 Not just plans — reports, reviews, investigation summaries, release notes, and postmortems all work. To make it automatic, add a standing instruction to your agent config (`AGENTS.md`, `CLAUDE.md`, …):
 

@@ -20,6 +20,8 @@ mdxr init --global         # プロジェクトではなくホームディレク
 mdxr init --force          # 既存のインストールを上書き
 ```
 
+ローカルインストールでは、プロジェクトの `.gitignore` に `.mdxr/` も追加します — エージェントがドキュメントとレンダリング済み HTML を書き込む、Git 管理外のスクラッチ用ディレクトリです。
+
 リポジトリから [`skills` CLI](https://github.com/vercel-labs/skills) でインストールすることもできます:
 
 ```sh
@@ -32,6 +34,8 @@ npx skills add Suzumiyaaoba/mdxr --skill mdxr
 インストール後は成果物を頼むだけです:
 
 > mdxr スキルを使って auth 機能の実装計画を書いて、HTML にレンダリングして。
+
+場所を指定しない限り、ドキュメントはリポジトリルートの `.mdxr/` に作成されます — `.mdxr/auth-plan.mdx` は `.mdxr/auth-plan.html` にレンダリングされます。
 
 計画書だけでなく、レポート、レビュー、調査サマリー、リリースノート、ポストモーテムにも使えます。自動化するには、エージェント設定（`AGENTS.md`、`CLAUDE.md` など）に常設の指示を追加します:
 

@@ -62,6 +62,8 @@ mdxr init --tool all       # all supported tools
 mdxr init --global         # into your home directory instead
 ```
 
+Local installs also add `.mdxr/` to the project's `.gitignore` — the untracked scratch dir agents write documents to.
+
 ## Agent skill
 
 The `mdxr` skill teaches coding agents the component catalog and the render workflow. Install it into your project (or globally) with the [`skills` CLI](https://github.com/vercel-labs/skills):

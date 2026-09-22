@@ -18,6 +18,33 @@ export interface InitOptions {
   force?: boolean;
 }
 
+/** Scratch dir for agent-authored documents — must stay untracked. */
+const DOCS_IGNORE = ".mdxr/";
+
+/** Lines that already ignore the docs dir: .mdxr, .mdxr/, /.mdxr/, .mdxr/*, … */
+const DOCS_IGNORED = /^\/?\.mdxr\/?\*{0,2}$/u;
+
+/**
+ * Ensures the project's .gitignore covers `.mdxr/` — created or appended
+ * as needed. Returns "present" when an existing rule already covers it.
+ */
+export const ensureDocsDirIgnored = async (
+  base: string
+): Promise<"added" | "present"> => {
+  const file = path.join(base, ".gitignore");
+  const existing = await fsp.readFile(file, "utf-8").catch(() => null);
+  if (
+    existing?.split("\n").some((line) => DOCS_IGNORED.test(line.trim())) ===
+    true
+  ) {
+    return "present";
+  }
+  const needsNewline =
+    existing !== null && existing.length > 0 && !existing.endsWith("\n");
+  await fsp.appendFile(file, `${needsNewline ? "\n" : ""}${DOCS_IGNORE}\n`);
+  return "added";
+};
+
 export const installSkill = async (opts: InitOptions): Promise<string[]> => {
   const tool = opts.tool ?? "agents";
   const global = opts.global === true;

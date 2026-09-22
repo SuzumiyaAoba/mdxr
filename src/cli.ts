@@ -8,7 +8,7 @@ import { mdxToAscii } from "./ascii/index.js";
 import { catalogEntries, formatCatalog, CONVENTIONS } from "./catalog.js";
 import { loadConfig } from "./config.js";
 import { formatError, parseErrorFormat } from "./format-error.js";
-import { installSkill } from "./init.js";
+import { ensureDocsDirIgnored, installSkill } from "./init.js";
 import { openInBrowser } from "./open.js";
 import { loadUserComponents, render, renderFile } from "./render.js";
 import { serve, serveSource } from "./serve.js";
@@ -241,6 +241,17 @@ cli
       const paths = await installSkill(opts);
       for (const p of paths) {
         console.log(`mdxr: installed skill → ${p}`);
+      }
+      if (opts.global !== true) {
+        // Agents write mdxr documents to .mdxr/ — keep that scratch space
+        // out of git. A --global install is about the home dir, so the
+        // project's .gitignore is left alone.
+        const status = await ensureDocsDirIgnored(process.cwd());
+        console.log(
+          status === "added"
+            ? "mdxr: added .mdxr/ to .gitignore"
+            : "mdxr: .gitignore already covers .mdxr/"
+        );
       }
     } catch (error) {
       fail(error, false);

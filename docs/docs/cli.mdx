@@ -99,3 +99,5 @@ mdxr init --force                     # overwrite an existing install
 | `--tool <tool>` | `agents` (default), `claude`, `devin`, or `all` |
 | `--global` | Install into your home directory instead of the project |
 | `--force` | Overwrite an existing skill directory |
+
+A local install also adds `.mdxr/` to the project's `.gitignore` — the untracked scratch directory agents write documents (`*.mdx` and rendered `*.html`) to. `--global` installs leave the project untouched.

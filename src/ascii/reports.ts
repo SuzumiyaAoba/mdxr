@@ -2,7 +2,7 @@
 
 import type { RootContent } from "mdast";
 
-import { nonEmpty } from "../guards.js";
+import { nonEmpty, own } from "../guards.js";
 import {
   attr,
   els,
@@ -24,7 +24,7 @@ import {
 } from "./ast.js";
 import type { AsciiCtx, AsciiRegistry, MdxTarget } from "./ast.js";
 import { bar, statusIcon } from "./glyphs.js";
-import { caption, statusItem, suffix, tally } from "./parts.js";
+import { caption, joined, statusItem, suffix, tally } from "./parts.js";
 
 const VERDICT_LABEL: Record<string, string> = {
   approve: "Approved",
@@ -37,7 +37,7 @@ const VERDICT_LABEL: Record<string, string> = {
 };
 
 const verdictLabel = (s: string | undefined): string | undefined =>
-  s === undefined ? undefined : (VERDICT_LABEL[s.toLowerCase()] ?? s);
+  s === undefined ? undefined : (own(VERDICT_LABEL, s.toLowerCase()) ?? s);
 
 /* ------------------------------ checks ------------------------------ */
 
@@ -123,24 +123,29 @@ const uptimeStrip = (node: MdxTarget): string => {
     return "";
   }
   return days
-    .map((d) => DAY_CELL[(attr(d, "status") ?? "up").toLowerCase()] ?? "█")
+    .map((d) => own(DAY_CELL, (attr(d, "status") ?? "up").toLowerCase()) ?? "█")
     .join("");
 };
 
-const serviceRow = (node: MdxTarget): ReturnType<typeof item> =>
+const percentText = (value: string | undefined): string | undefined =>
+  nonEmpty(value) && !value.endsWith("%") ? `${value}%` : value;
+
+const serviceRow = (node: MdxTarget, ctx: AsciiCtx): ReturnType<typeof item> =>
   statusItem(
     attr(node, "status"),
     [
       txt(attr(node, "name") ?? ""),
-      ...suffix([
-        attr(node, "status"),
-        nonEmpty(attr(node, "uptime")) ? `${attr(node, "uptime")}%` : undefined,
-      ]),
+      ...suffix([attr(node, "status"), percentText(attr(node, "uptime"))]),
     ],
-    []
+    ctx.children(node)
   );
 
 /* ------------------------------ release ------------------------------ */
+
+const releaseVersion = (node: MdxTarget): string => {
+  const version = attr(node, "version") ?? "";
+  return version.startsWith("v") ? version : `v${version}`;
+};
 
 const entryRow = (node: MdxTarget, ctx: AsciiCtx): ReturnType<typeof item> => {
   const scope = attr(node, "scope");
@@ -207,7 +212,7 @@ export const reportRenderers: AsciiRegistry = {
               attr(b, "before") ?? "",
               attr(b, "after") ?? "",
               d,
-              attr(b, "note") ?? ctx.text(b),
+              joined([attr(b, "note"), ctx.text(b)]),
             ];
           })
         ),
@@ -317,7 +322,7 @@ export const reportRenderers: AsciiRegistry = {
         nonEmpty(attr(n, "note")) ? ` — ${attr(n, "note")}` : ""
       ),
       table(
-        ["field", "type", "flags", "default"],
+        ["field", "type", "flags", "default", "description"],
         els(n, "DbField").map((f) => {
           const flags = [
             flag(f, "pk") ? "pk" : undefined,
@@ -332,6 +337,7 @@ export const reportRenderers: AsciiRegistry = {
             [icode(attr(f, "type") ?? "")],
             flags,
             attr(f, "default") ?? "",
+            ctx.text(f),
           ];
         })
       ),
@@ -356,7 +362,7 @@ export const reportRenderers: AsciiRegistry = {
         ...(flag(n, "required") ? [txt(" "), icode("required")] : []),
         ...suffix([
           flag(n, "secret") ? "secret" : attr(n, "value"),
-          nonEmpty(attr(n, "default"))
+          !flag(n, "secret") && nonEmpty(attr(n, "default"))
             ? `default ${attr(n, "default")}`
             : undefined,
         ]),
@@ -373,7 +379,7 @@ export const reportRenderers: AsciiRegistry = {
           [icode(attr(e, "name") ?? "")],
           flag(e, "required") ? "yes" : "",
           flag(e, "secret") ? "•••" : (attr(e, "value") ?? ""),
-          attr(e, "default") ?? "",
+          flag(e, "secret") ? "•••" : (attr(e, "default") ?? ""),
           ctx.text(e),
         ])
       ),
@@ -493,7 +499,7 @@ export const reportRenderers: AsciiRegistry = {
           attr(p, "version") ?? "",
           attr(p, "kind") ?? "",
           attr(p, "license") ?? "",
-          ctx.text(p),
+          joined([attr(p, "note"), ctx.text(p)]),
         ])
       ),
       ...ctx.children(withoutEls(n, ["Package"])),
@@ -523,8 +529,8 @@ export const reportRenderers: AsciiRegistry = {
     flow: (n, ctx) => [
       heading(3, [
         ...(nonEmpty(attr(n, "href"))
-          ? [link(attr(n, "href") ?? "", [txt(`v${attr(n, "version") ?? ""}`)])]
-          : [icode(`v${attr(n, "version") ?? ""}`)]),
+          ? [link(attr(n, "href") ?? "", [txt(releaseVersion(n))])]
+          : [icode(releaseVersion(n))]),
         ...(nonEmpty(attr(n, "title")) ? [txt(` — ${attr(n, "title")}`)] : []),
       ]),
       ...(nonEmpty(attr(n, "date"))
@@ -557,15 +563,13 @@ export const reportRenderers: AsciiRegistry = {
     ],
   },
   Service: {
-    flow: (n) => [
+    flow: (n, ctx) => [
       para([
         txt(`${statusIcon(attr(n, "status"))} `),
         txt(attr(n, "name") ?? ""),
-        ...suffix([
-          attr(n, "status"),
-          nonEmpty(attr(n, "uptime")) ? `${attr(n, "uptime")}%` : undefined,
-        ]),
+        ...suffix([attr(n, "status"), percentText(attr(n, "uptime"))]),
       ]),
+      ...ctx.children(n),
     ],
   },
   Severity: { text: (n) => [icode((attr(n, "level") ?? "").toUpperCase())] },
@@ -599,7 +603,9 @@ export const reportRenderers: AsciiRegistry = {
                 ...(strip === "" ? [] : [pre(strip)]),
               ];
             })),
-        ...(services.length === 0 ? [] : [list(services.map(serviceRow))]),
+        ...(services.length === 0
+          ? []
+          : [list(services.map((service) => serviceRow(service, ctx)))]),
         ...ctx.children(withoutEls(n, ["Service", "Uptime"])),
       ];
     },

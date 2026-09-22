@@ -1,13 +1,13 @@
 import type { ReactElement, ReactNode } from "react";
 import * as v from "valibot";
 
-import { defineComponent, flattenChildren, parseProps } from "../define.js";
+import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { NUMISH, numOf } from "./attrs.js";
 import { CODE_CHIP_CLS } from "./bits.js";
 import { ChartPanel } from "./chart-bits.js";
 import { CHART_TONES, fmtNum, niceBounds, toneOf } from "./chart.js";
-import { isEl } from "./children.js";
+import { collectChildProps } from "./children.js";
 import { TEXT, TEXT_MICRO } from "./tones.js";
 
 /**
@@ -45,20 +45,17 @@ export const Point = defineComponent(
 const collectPoints = (
   children: ReactNode
 ): { pts: { spec: PointSpec; x: number; y: number }[]; rest: ReactNode[] } => {
-  const pts: { spec: PointSpec; x: number; y: number }[] = [];
-  const rest: ReactNode[] = [];
-  for (const child of flattenChildren(children)) {
-    if (isEl(child, Point)) {
-      const spec = parseProps(POINT_SCHEMA, child.props, "Point");
-      const x = numOf(spec.x);
-      const y = numOf(spec.y);
-      if (x !== undefined && y !== undefined) {
-        pts.push({ spec, x, y });
-      }
-    } else {
-      rest.push(child);
-    }
-  }
+  const { items, rest } = collectChildProps(
+    children,
+    Point,
+    POINT_SCHEMA,
+    "Point"
+  );
+  const pts = items.flatMap((spec) => {
+    const x = numOf(spec.x);
+    const y = numOf(spec.y);
+    return x === undefined || y === undefined ? [] : [{ spec, x, y }];
+  });
   return { pts, rest };
 };
 
@@ -190,7 +187,7 @@ export const Scatter = defineComponent(
               const r =
                 size === undefined || maxSize === 0
                   ? 4
-                  : 4 + Math.sqrt(size / maxSize) * 10;
+                  : 4 + Math.sqrt(Math.max(0, size) / maxSize) * 10;
               return (
                 <g key={i}>
                   <circle

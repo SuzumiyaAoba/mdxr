@@ -1,13 +1,13 @@
 import type { ReactElement, ReactNode } from "react";
 import * as v from "valibot";
 
-import { defineComponent, flattenChildren, parseProps } from "../define.js";
+import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { NUMISH, numOf } from "./attrs.js";
 import { CODE_CHIP_CLS } from "./bits.js";
 import { ChartPanel } from "./chart-bits.js";
 import { CHART_TONES, fmtNum, toneOf } from "./chart.js";
-import { isEl } from "./children.js";
+import { collectChildProps } from "./children.js";
 import { TEXT, TEXT_MICRO } from "./tones.js";
 
 /**
@@ -44,16 +44,16 @@ export const Stage = defineComponent(
 const collectStages = (
   children: ReactNode
 ): { rest: ReactNode[]; stages: { n: number; spec: StageSpec }[] } => {
-  const stages: { n: number; spec: StageSpec }[] = [];
-  const rest: ReactNode[] = [];
-  for (const child of flattenChildren(children)) {
-    if (isEl(child, Stage)) {
-      const spec = parseProps(STAGE_SCHEMA, child.props, "Stage");
-      stages.push({ n: Math.max(0, numOf(spec.value) ?? 0), spec });
-    } else {
-      rest.push(child);
-    }
-  }
+  const { items, rest } = collectChildProps(
+    children,
+    Stage,
+    STAGE_SCHEMA,
+    "Stage"
+  );
+  const stages = items.map((spec) => ({
+    n: Math.max(0, numOf(spec.value) ?? 0),
+    spec,
+  }));
   return { rest, stages };
 };
 

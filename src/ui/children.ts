@@ -1,7 +1,8 @@
 import { isValidElement } from "react";
 import type { ReactElement, ReactNode } from "react";
+import type { GenericSchema, InferOutput } from "valibot";
 
-import { flattenChildren } from "../define.js";
+import { flattenChildren, parseProps } from "../define.js";
 import { isRecord } from "../guards.js";
 
 /**
@@ -17,6 +18,25 @@ export const isEl = <P extends { children?: ReactNode }>(
 /** Read a single prop off an element, or `undefined` for non-elements. */
 export const propOf = (n: unknown, key: string): unknown =>
   isValidElement(n) && isRecord(n.props) ? n.props[key] : undefined;
+
+/** Validate structured children while preserving surrounding prose and its order. */
+export const collectChildProps = <S extends GenericSchema>(
+  children: ReactNode,
+  type: unknown,
+  schema: S,
+  tag: string
+): { items: InferOutput<S>[]; rest: ReactNode[] } => {
+  const items: InferOutput<S>[] = [];
+  const rest: ReactNode[] = [];
+  for (const child of flattenChildren(children)) {
+    if (isEl(child, type)) {
+      items.push(parseProps(schema, child.props, tag));
+    } else {
+      rest.push(child);
+    }
+  }
+  return { items, rest };
+};
 
 /**
  * Tally `prop` across `children` elements rendered by `of` — the count

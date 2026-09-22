@@ -7,7 +7,6 @@ import {
   attr,
   em,
   heading,
-  html,
   icode,
   link,
   para,
@@ -17,6 +16,7 @@ import {
   txt,
 } from "./ast.js";
 import type { AsciiCtx, AsciiRegistry, MdxTarget } from "./ast.js";
+import { detailsBlock } from "./parts.js";
 
 /** `Date: x · Owner: y` — labeled meta pairs, skipping absent attrs. */
 const metaLine = (
@@ -85,9 +85,7 @@ const term = (node: MdxTarget, ctx: AsciiCtx): RootContent[] => [
 const details = (node: MdxTarget, ctx: AsciiCtx): RootContent[] => {
   const summary = attr(node, "summary") ?? "Details";
   const body = ctx.serialize(ctx.children(node)).trim();
-  return [
-    html(`<details>\n<summary>${summary}</summary>\n\n${body}\n\n</details>`),
-  ];
+  return [detailsBlock(summary, body)];
 };
 
 export const documentRenderers: AsciiRegistry = {

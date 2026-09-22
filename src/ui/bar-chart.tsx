@@ -1,7 +1,7 @@
 import type { ReactElement, ReactNode } from "react";
 import * as v from "valibot";
 
-import { defineComponent, flattenChildren, parseProps } from "../define.js";
+import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { attrTrue, BOOLISH_PROP, NUMISH, numOf } from "./attrs.js";
 import { CODE_CHIP_CLS } from "./bits.js";
@@ -14,7 +14,7 @@ import {
   textList,
   toneOf,
 } from "./chart.js";
-import { isEl } from "./children.js";
+import { collectChildProps } from "./children.js";
 import { RAIL_BG_CLS, TEXT, TEXT_MICRO, TEXT_SUB, TRACK_CLS } from "./tones.js";
 
 /**
@@ -54,22 +54,15 @@ export const Bar = defineComponent(
 const collectBars = (
   children: ReactNode
 ): { bars: BarSpec[]; rest: ReactNode[] } => {
-  const bars: BarSpec[] = [];
-  const rest: ReactNode[] = [];
-  for (const child of flattenChildren(children)) {
-    if (isEl(child, Bar)) {
-      const spec = parseProps(BAR_SCHEMA, child.props, "Bar");
-      const nums = nonEmpty(spec.values)
-        ? numList(spec.values)
-        : (() => {
-            const n = numOf(spec.value);
-            return n === undefined ? [] : [n];
-          })();
-      bars.push({ ...spec, nums });
-    } else {
-      rest.push(child);
-    }
-  }
+  const { items, rest } = collectChildProps(children, Bar, BAR_SCHEMA, "Bar");
+  const bars = items.map((spec) => {
+    const value = numOf(spec.value);
+    const single = value === undefined ? [] : [value];
+    return {
+      ...spec,
+      nums: nonEmpty(spec.values) ? numList(spec.values) : single,
+    };
+  });
   return { bars, rest };
 };
 

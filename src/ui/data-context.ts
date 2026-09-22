@@ -2,6 +2,7 @@ import { createContext, useSyncExternalStore } from "react";
 
 import type { DataRecord } from "../extended/data.js";
 import { display } from "../extended/data.js";
+import { own } from "../guards.js";
 
 export const FilterContext = createContext<Record<string, string>>({});
 export const PlotScaleContext = createContext<DataRecord>({});
@@ -11,7 +12,7 @@ export const matchesFilters = (
   filters: Record<string, string>
 ): boolean =>
   Object.entries(filters).every(
-    ([key, value]) => !value || display(row[key]) === value
+    ([key, value]) => !value || display(own(row, key)) === value
   );
 
 const subscribe = (): (() => void) => () => {

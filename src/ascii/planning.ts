@@ -1,9 +1,10 @@
 /** ASCII renderers for planning & status components. */
 
+import { differenceInCalendarDays, isValid, parseISO } from "date-fns";
 import type { ListItem, PhrasingContent, RootContent } from "mdast";
 import type { Node } from "unist";
 
-import { nonEmpty } from "../guards.js";
+import { nonEmpty, own } from "../guards.js";
 import { isParent } from "../remark/ast.js";
 import {
   attr,
@@ -97,8 +98,10 @@ const dayOf = (iso: string | undefined): number | undefined => {
   if (iso === undefined) {
     return undefined;
   }
-  const t = Date.parse(iso);
-  return Number.isNaN(t) ? undefined : Math.floor(t / DAY_MS);
+  const date = parseISO(iso);
+  return isValid(date)
+    ? differenceInCalendarDays(date, new Date(1970, 0, 1))
+    : undefined;
 };
 
 const TASK_CHAR: Record<string, string> = {
@@ -108,101 +111,160 @@ const TASK_CHAR: Record<string, string> = {
   todo: "░",
 };
 
-const gantt = (node: MdxTarget, ctx: AsciiCtx): RootContent[] => {
-  const tasks = els(node, "Task").flatMap((t) => {
-    const start = dayOf(attr(t, "start"));
-    return start === undefined
-      ? []
-      : [
-          {
-            el: t,
-            end: dayOf(attr(t, "end")) ?? start,
-            name: attr(t, "name") ?? "",
-            progress: num(t, "progress"),
-            start,
-            status: (attr(t, "status") ?? "todo").toLowerCase(),
-          },
-        ];
+interface GanttTask {
+  el: MdxTarget;
+  end: number;
+  name: string;
+  progress?: number;
+  start: number;
+  status: string;
+}
+
+interface GanttMilestone {
+  date: number;
+  el: MdxTarget;
+  name: string;
+}
+
+interface GanttRange {
+  first: number;
+  last: number;
+}
+
+const GANTT_WIDTH = 40;
+
+const ganttTasks = (node: MdxTarget): GanttTask[] =>
+  els(node, "Task").flatMap((el) => {
+    const start = dayOf(attr(el, "start"));
+    if (start === undefined) {
+      return [];
+    }
+    return [
+      {
+        el,
+        end: Math.max(start, dayOf(attr(el, "end")) ?? start),
+        name: attr(el, "name") ?? "",
+        progress: num(el, "progress"),
+        start,
+        status: (attr(el, "status") ?? "todo").toLowerCase(),
+      },
+    ];
   });
-  const milestones = els(node, "Milestone").flatMap((m) => {
-    const date = dayOf(attr(m, "date"));
+
+const ganttMilestones = (node: MdxTarget): GanttMilestone[] =>
+  els(node, "Milestone").flatMap((el) => {
+    const date = dayOf(attr(el, "date"));
     return date === undefined
       ? []
-      : [
-          {
-            date,
-            el: m,
-            name: attr(m, "name") ?? "",
-          },
-        ];
+      : [{ date, el, name: attr(el, "name") ?? "" }];
   });
+
+const ganttRange = (
+  node: MdxTarget,
+  tasks: GanttTask[],
+  milestones: GanttMilestone[]
+): GanttRange => {
+  const start = dayOf(attr(node, "start"));
+  const end = dayOf(attr(node, "end"));
+  let first =
+    start ??
+    Math.min(
+      ...tasks.map((task) => task.start),
+      ...milestones.map((milestone) => milestone.date)
+    );
+  let last =
+    end ??
+    Math.max(
+      ...tasks.map((task) => task.end),
+      ...milestones.map((milestone) => milestone.date)
+    );
+  if (last < first) {
+    if (end !== undefined && start === undefined) {
+      first = last;
+    } else {
+      last = first;
+    }
+  }
+  return { first, last };
+};
+
+const ganttColumn = (day: number, range: GanttRange): number =>
+  Math.max(
+    0,
+    Math.min(
+      GANTT_WIDTH,
+      Math.round(
+        ((day - range.first) / (range.last - range.first + 1)) * GANTT_WIDTH
+      )
+    )
+  );
+
+const ganttTaskLine = (
+  task: GanttTask,
+  range: GanttRange,
+  nameWidth: number
+): string => {
+  const from = ganttColumn(task.start, range);
+  const to = Math.max(from + 1, ganttColumn(task.end + 1, range));
+  const outside = task.end < range.first || task.start > range.last;
+  const glyph = own(TASK_CHAR, task.status) ?? "░";
+  const filled =
+    ((to - from) * Math.min(100, Math.max(0, task.progress ?? 0))) / 100;
+  const cells = Array.from({ length: GANTT_WIDTH }, (_, i) => {
+    if (outside || i < from || i >= to) {
+      return " ";
+    }
+    return i - from < filled ? "█" : glyph;
+  }).join("");
+  const tail = joined([ownerChip(task.el), attr(task.el, "note")]);
+  return `${pad(task.name, nameWidth)} ${cells}${tail === "" ? "" : `  ${tail}`}`;
+};
+
+const ganttMilestoneLine = (
+  milestone: GanttMilestone,
+  range: GanttRange,
+  nameWidth: number
+): string => {
+  const position =
+    milestone.date < range.first || milestone.date > range.last
+      ? -1
+      : Math.min(GANTT_WIDTH - 1, ganttColumn(milestone.date, range));
+  const cells = Array.from({ length: GANTT_WIDTH }, (_, i) =>
+    i === position ? "◆" : " "
+  ).join("");
+  const tail = joined([
+    attr(milestone.el, "status"),
+    attr(milestone.el, "note"),
+  ]);
+  return `${pad(milestone.name, nameWidth)} ${cells}${tail === "" ? "" : `  ${tail}`}`;
+};
+
+const gantt = (node: MdxTarget, ctx: AsciiCtx): RootContent[] => {
+  const tasks = ganttTasks(node);
+  const milestones = ganttMilestones(node);
   if (tasks.length === 0 && milestones.length === 0) {
     return ctx.children(node);
   }
-
-  const lo =
-    dayOf(attr(node, "start")) ??
-    Math.min(...tasks.map((t) => t.start), ...milestones.map((m) => m.date));
-  const hi =
-    dayOf(attr(node, "end")) ??
-    Math.max(
-      ...tasks.map((t) => t.end + 1),
-      ...milestones.map((m) => m.date + 1)
-    );
-  const span = Math.max(1, hi - lo);
-  const W = 40;
-  const at = (day: number): number =>
-    Math.max(0, Math.min(W, Math.round(((day - lo) / span) * W)));
-
-  const nameW = Math.min(
+  const range = ganttRange(node, tasks, milestones);
+  const nameWidth = Math.min(
     24,
     Math.max(
       8,
-      ...tasks.map((t) => t.name.length),
-      ...milestones.map((m) => m.name.length)
+      ...tasks.map((task) => task.name.length),
+      ...milestones.map((milestone) => milestone.name.length)
     )
   );
-  const iso = (d: number): string =>
-    new Date(d * DAY_MS).toISOString().slice(0, 10);
-  const lines: string[] = [];
+  const iso = (day: number): string =>
+    new Date(day * DAY_MS).toISOString().slice(0, 10);
   const title = attr(node, "title");
-  if (nonEmpty(title)) {
-    lines.push(title);
-  }
-  lines.push(`${pad("", nameW)} ${iso(lo)} → ${iso(hi)}`);
-  for (const t of tasks) {
-    const from = at(t.start);
-    const to = Math.max(from + 1, at(t.end + 1));
-    const cells = Array.from({ length: W }, (_, i) => {
-      if (i < from || i >= to) {
-        return " ";
-      }
-      const ch = TASK_CHAR[t.status] ?? "░";
-      if (t.progress === undefined || t.progress <= 0) {
-        return ch;
-      }
-      return i - from < ((to - from) * Math.min(100, t.progress)) / 100
-        ? "█"
-        : ch;
-    }).join("");
-    const owner = attr(t.el, "owner");
-    const tail = joined([
-      nonEmpty(owner) ? `@${owner.replace(/^@+/u, "")}` : undefined,
-      attr(t.el, "note"),
-    ]);
-    lines.push(
-      `${pad(t.name, nameW)} ${cells}${tail === "" ? "" : `  ${tail}`}`
-    );
-  }
-  for (const m of milestones) {
-    const cells = Array.from({ length: W }, (_, i) =>
-      i === at(m.date) ? "◆" : " "
-    ).join("");
-    const tail = joined([attr(m.el, "status"), attr(m.el, "note")]);
-    lines.push(
-      `${pad(m.name, nameW)} ${cells}${tail === "" ? "" : `  ${tail}`}`
-    );
-  }
+  const lines = [
+    ...(nonEmpty(title) ? [title] : []),
+    `${pad("", nameWidth)} ${iso(range.first)} → ${iso(range.last)}`,
+    ...tasks.map((task) => ganttTaskLine(task, range, nameWidth)),
+    ...milestones.map((milestone) =>
+      ganttMilestoneLine(milestone, range, nameWidth)
+    ),
+  ];
   return [
     pre(lines.join("\n")),
     ...ctx.children(withoutEls(node, ["Task", "Milestone"])),
@@ -245,7 +307,7 @@ const CELL_GLYPH: Record<string, string> = {
 
 const matrixCell = (cell: string): string => {
   const key = cell.trim().toLowerCase();
-  return key === "" ? "—" : (CELL_GLYPH[key] ?? cell.trim());
+  return key === "" ? "—" : (own(CELL_GLYPH, key) ?? cell.trim());
 };
 
 /** `- label | a | b` list items → matrix rows. */
@@ -308,7 +370,7 @@ export const planningRenderers: AsciiRegistry = {
               strong([txt(attr(a, "name") ?? "")]),
               ...suffix([attr(a, "role"), attr(a, "status"), attr(a, "date")]),
             ],
-            []
+            ctx.children(a)
           )
         )
       ),
@@ -326,6 +388,7 @@ export const planningRenderers: AsciiRegistry = {
             strong([txt(`${attr(lane, "title") ?? ""} (${cards.length})`)]),
           ]),
           list(cards.map((c) => boardCard(c, ctx))),
+          ...ctx.children(withoutEls(lane, ["BoardCard"])),
         ];
       }),
       ...ctx.children(withoutEls(n, ["Lane"])),
@@ -481,7 +544,7 @@ export const planningRenderers: AsciiRegistry = {
     ],
   },
   Stats: {
-    flow: (n) => [
+    flow: (n, ctx) => [
       list(
         els(n, "Stat").map((s) =>
           item([
@@ -495,6 +558,7 @@ export const planningRenderers: AsciiRegistry = {
           ])
         )
       ),
+      ...ctx.children(withoutEls(n, ["Stat"])),
     ],
   },
   StatusBadge: {

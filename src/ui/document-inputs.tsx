@@ -15,6 +15,8 @@ import {
   words,
   isDataRecord as isRecord,
 } from "../extended/data.js";
+import { own } from "../guards.js";
+import { attrTrue } from "./attrs.js";
 import { CopyButton } from "./bits.js";
 import { rowsFrom } from "./data-children.js";
 import { downloadText } from "./data-download.js";
@@ -60,7 +62,7 @@ export const Checklist = defineComponent(
     const rows = rowsFrom(props);
     const [checked, setChecked] = useState<Record<string, boolean>>({});
     const isChecked = (row: DataRecord, i: number): boolean =>
-      checked[display(row.id) || String(i)] ??
+      own(checked, display(row.id) || String(i)) ??
       (row.checked === true || row.checked === "true");
     const done = rows.filter(isChecked).length;
     const output = rows
@@ -226,7 +228,7 @@ export const Calculator = defineComponent(
     uniqueIds(rows, "name");
     const [values, setValues] = useState<Record<string, string>>({});
     const inputs = rows.map(
-      (row) => values[display(row.name)] ?? display(row.value ?? 0)
+      (row) => own(values, display(row.name)) ?? display(row.value ?? 0)
     );
     const valid = inputs.every(
       (input, i) =>
@@ -289,7 +291,7 @@ const renderWizardControl = (
   if (choices.length) {
     return (
       <select
-        required={row.required === true}
+        required={attrTrue(row.required)}
         aria-label={display(row.label ?? row.name)}
         className={DATA_INPUT}
         value={value}
@@ -307,7 +309,7 @@ const renderWizardControl = (
   if (row.type === "textarea") {
     return (
       <textarea
-        required={row.required === true}
+        required={attrTrue(row.required)}
         aria-label={display(row.label ?? row.name)}
         className={DATA_INPUT}
         value={value}
@@ -320,7 +322,7 @@ const renderWizardControl = (
   }
   return (
     <input
-      required={row.required === true}
+      required={attrTrue(row.required)}
       aria-label={display(row.label ?? row.name)}
       className={DATA_INPUT}
       type={row.type === "number" ? "number" : "text"}
@@ -370,7 +372,7 @@ export const Wizard = defineComponent(
       (row) =>
         !isRecord(row.when) ||
         Object.entries(row.when).every(
-          ([key, value]) => answers[key] === display(value)
+          ([key, value]) => own(answers, key) === display(value)
         )
     );
     const index = Math.min(step, Math.max(0, active.length - 1));
@@ -378,7 +380,7 @@ export const Wizard = defineComponent(
     const output = formatAnswerSheet(
       props.title,
       active.map((row) => ({
-        answer: answers[display(row.name)] ?? "",
+        answer: own(answers, display(row.name)) ?? "",
         label: display(row.label ?? row.name),
       }))
     );
@@ -400,7 +402,7 @@ export const Wizard = defineComponent(
           ) : (
             <WizardField
               row={current}
-              value={answers[display(current.name)] ?? ""}
+              value={own(answers, display(current.name)) ?? ""}
               onChange={(value) => {
                 setAnswers({ ...answers, [display(current.name)]: value });
               }}
@@ -593,7 +595,8 @@ export const PromptTemplate = defineComponent(
     );
     const output = props.template.replaceAll(
       /\{\{\s*(?<variable>[\w.-]+)\s*\}\}/gu,
-      (match: string, name: string) => values[name] ?? defaults[name] ?? match
+      (match: string, name: string) =>
+        own(values, name) ?? own(defaults, name) ?? match
     );
     return (
       <DataPanel title={props.title ?? "Prompt template"} id={props.id}>
@@ -605,7 +608,7 @@ export const PromptTemplate = defineComponent(
                 className={DATA_INPUT}
                 rows={2}
                 aria-label={display(field.label ?? field.name)}
-                value={values[display(field.name)] ?? display(field.value)}
+                value={own(values, display(field.name)) ?? display(field.value)}
                 onChange={(event) => {
                   setValues({
                     ...values,

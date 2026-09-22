@@ -79,7 +79,7 @@ export const named = (n: Node, name: string): n is MdxTarget =>
  * `<Step>text</Step>` on its own line as a *text* element inside a paragraph,
  * so container renderers must look one level in to find their item children.
  */
-const hoistable = (c: Node): c is Parent =>
+const hoistable = (c: Node): c is Parent & { type: "paragraph" } =>
   c.type === "paragraph" &&
   isParent(c) &&
   c.children.every(
@@ -96,51 +96,43 @@ const hoistable = (c: Node): c is Parent =>
  * elements hoisted out of element-only paragraphs (see `hoistable`).
  */
 export const els = (node: MdxTarget, name?: string): MdxTarget[] => {
-  const out: MdxTarget[] = [];
-  for (const c of node.children ?? []) {
-    if (isMdxEl(c)) {
-      if (name === undefined || c.name === name) {
-        out.push(c);
-      }
-      continue;
-    }
-    if (hoistable(c)) {
-      for (const cc of c.children) {
-        if (isMdxEl(cc) && (name === undefined || cc.name === name)) {
-          out.push(cc);
-        }
-      }
-    }
-  }
-  return out;
+  const children = (node.children ?? []).flatMap((c) =>
+    hoistable(c) ? c.children : [c]
+  );
+  return children.filter(
+    (c): c is MdxTarget => isMdxEl(c) && (name === undefined || c.name === name)
+  );
 };
 
 /**
  * `node` minus the named JSX children — direct elements removed, matching
  * elements stripped out of paragraphs (now-empty paragraphs dropped).
  */
-export const withoutEls = (node: MdxTarget, names: string[]): MdxTarget => ({
-  ...node,
-  children: (node.children ?? []).flatMap((c): Node[] => {
-    if (isMdxEl(c)) {
-      return names.includes(c.name ?? "") ? [] : [c];
-    }
-    if (c.type === "paragraph" && isParent(c)) {
-      const kids = c.children.filter(
-        (cc) => !(isMdxEl(cc) && names.includes(cc.name ?? ""))
-      );
-      const empty = kids.every(
-        (cc) =>
-          cc.type === "text" &&
-          "value" in cc &&
-          typeof cc.value === "string" &&
-          cc.value.trim() === ""
-      );
-      return empty ? [] : [{ ...c, children: kids } as Node];
-    }
-    return [c];
-  }),
-});
+export const withoutEls = (node: MdxTarget, names: string[]): MdxTarget => {
+  const removed = new Set(names);
+  return {
+    ...node,
+    children: (node.children ?? []).flatMap((c): Node[] => {
+      if (isMdxEl(c)) {
+        return removed.has(c.name ?? "") ? [] : [c];
+      }
+      if (hoistable(c)) {
+        const kids = c.children.filter(
+          (cc) => !(isMdxEl(cc) && removed.has(cc.name ?? ""))
+        );
+        const empty = kids.every(
+          (cc) =>
+            cc.type === "text" &&
+            "value" in cc &&
+            typeof cc.value === "string" &&
+            cc.value.trim() === ""
+        );
+        return empty ? [] : [{ ...c, children: kids } as Node];
+      }
+      return [c];
+    }),
+  };
+};
 
 /** All literal text under `node` (text + inlineCode values, tree order). */
 export const textOf = (node: Node | Node[]): string =>
@@ -350,6 +342,59 @@ const phrasing = (nodes: RootContent[]): PhrasingContent[] =>
 
 /* ---------------------------- lowercase HTML ----------------------- */
 
+const boldHtml: InlineAscii = (node, ctx) => [strong(ctx.inline(node))];
+const emphasisHtml: InlineAscii = (node, ctx) => [em(ctx.inline(node))];
+const deleteHtml: InlineAscii = (node, ctx) => [del(ctx.inline(node))];
+const codeHtml: InlineAscii = (node) => [icode(deepText(node.children ?? []))];
+
+const HTML_INLINE: Record<string, InlineAscii> = {
+  a: (node, ctx) => {
+    const href = attr(node, "href");
+    const inner = ctx.inline(node);
+    return href === undefined ? inner : [link(href, inner)];
+  },
+  b: boldHtml,
+  br: () => [brk()],
+  code: codeHtml,
+  del: deleteHtml,
+  em: emphasisHtml,
+  i: emphasisHtml,
+  img: (node) => {
+    const im: Image = {
+      alt: attr(node, "alt"),
+      type: "image",
+      url: attr(node, "src") ?? "",
+    };
+    return [im];
+  },
+  kbd: codeHtml,
+  s: deleteHtml,
+  samp: codeHtml,
+  strike: deleteHtml,
+  strong: boldHtml,
+};
+
+/** Wrap adjacent inline nodes while retaining nested block structure. */
+const blocksOf = (nodes: RootContent[]): RootContent[] => {
+  const blocks: RootContent[] = [];
+  let inline: PhrasingContent[] = [];
+  for (const node of nodes) {
+    if (PHRASING.has(node.type)) {
+      inline.push(...phrasing([node]));
+      continue;
+    }
+    if (inline.length > 0) {
+      blocks.push(para(inline));
+      inline = [];
+    }
+    blocks.push(node);
+  }
+  if (inline.length > 0) {
+    blocks.push(para(inline));
+  }
+  return blocks;
+};
+
 /**
  * Raw HTML elements written into a document are mdxJsx elements too —
  * give the meaningful ones a markdown form (`<a>` → link, `<code>` →
@@ -363,33 +408,9 @@ const htmlEl = (
   const name = node.name ?? "";
   const kids = (): PhrasingContent[] => phrasing(ctx.children(node));
   const blocks = (): RootContent[] => ctx.children(node);
-  if (name === "a") {
-    const href = attr(node, "href");
-    const inner = kids();
-    return href === undefined ? inner : [link(href, inner)];
-  }
-  if (name === "img") {
-    const im: Image = {
-      alt: attr(node, "alt"),
-      type: "image",
-      url: attr(node, "src") ?? "",
-    };
-    return [im];
-  }
-  if (name === "br") {
-    return [brk()];
-  }
-  if (name === "strong" || name === "b") {
-    return [strong(kids())];
-  }
-  if (name === "em" || name === "i") {
-    return [em(kids())];
-  }
-  if (name === "del" || name === "s" || name === "strike") {
-    return [del(kids())];
-  }
-  if (name === "code" || name === "kbd" || name === "samp") {
-    return [icode(deepText(node.children ?? []))];
+  const inlineRenderer = own(HTML_INLINE, name);
+  if (inlineRenderer !== undefined) {
+    return inlineRenderer(node, ctx);
   }
   if (name === "hr") {
     return [thematic()];
@@ -413,12 +434,38 @@ const htmlEl = (
     return [pre(deepText(node.children ?? []))];
   }
   if (name === "ul" || name === "ol") {
-    const items = els(node, "li").map((li) =>
-      item([para(phrasing(ctx.children(li)))])
-    );
+    const items = els(node, "li").map((li) => item(blocksOf(ctx.children(li))));
     return items.length === 0 ? blocks() : [list(items, name === "ol")];
   }
   return inline ? kids() : blocks();
+};
+
+const renderMdxElement = (
+  node: MdxTarget,
+  ctx: AsciiCtx,
+  registry: AsciiRegistry
+): RootContent[] => {
+  const name = node.name ?? "";
+  const entry = own(registry, name);
+  if (entry === undefined) {
+    // Lowercase tags are raw HTML; unknown components unwrap.
+    if (/^[a-z]/u.test(name)) {
+      return htmlEl(node, ctx, node.type === "mdxJsxTextElement");
+    }
+    ctx.warn(name);
+    return ctx.children(node);
+  }
+  if (node.type === "mdxJsxTextElement") {
+    return (
+      entry.text?.(node, ctx) ??
+      phrasing(entry.flow?.(node, ctx) ?? ctx.children(node))
+    );
+  }
+  if (entry.flow !== undefined) {
+    return entry.flow(node, ctx);
+  }
+  const inlineOut = entry.text?.(node, ctx);
+  return inlineOut === undefined ? ctx.children(node) : [para(inlineOut)];
 };
 
 /** Replace every mdxJsx element under `root` with its ASCII representation. */
@@ -430,30 +477,20 @@ export const transformAscii = (
 ): void => {
   const transformElement = (n: Node, ctx: AsciiCtx): RootContent[] => {
     if (isMdxEl(n)) {
-      const name = n.name ?? "";
-      const entry = own(registry, name);
-      if (entry === undefined) {
-        // Lowercase tags are raw HTML; unknown components unwrap.
-        if (/^[a-z]/u.test(name)) {
-          return htmlEl(n, ctx, n.type === "mdxJsxTextElement");
-        }
-        warn(name);
-        return ctx.children(n);
-      }
-      if (n.type === "mdxJsxTextElement") {
-        const out =
-          entry.text?.(n, ctx) ??
-          phrasing(entry.flow?.(n, ctx) ?? ctx.children(n));
-        return out;
-      }
-      if (entry.flow !== undefined) {
-        return entry.flow(n, ctx);
-      }
-      const inlineOut = entry.text?.(n, ctx);
-      return inlineOut === undefined ? ctx.children(n) : [para(inlineOut)];
+      return renderMdxElement(n, ctx, registry);
     }
     if (isParent(n)) {
-      n.children = ctx.children(n);
+      if (hoistable(n)) {
+        const children = n.children.filter(isMdxEl).map((child) => ({
+          ...child,
+          type: "mdxJsxFlowElement",
+        }));
+        return blocksOf(ctx.children({ ...n, children }));
+      }
+      // Renderers may read a subtree more than once; retain the source AST
+      // so previous reads cannot duplicate generated anchors or lose JSX.
+      // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- the original node kind is preserved
+      return [{ ...n, children: ctx.children(n) } as RootContent];
     }
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- inputs are root children by construction
     return [n as RootContent];

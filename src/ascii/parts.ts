@@ -3,7 +3,7 @@
 import type { ListItem, PhrasingContent, RootContent } from "mdast";
 
 import { nonEmpty } from "../guards.js";
-import { attr, item, para, strong, txt } from "./ast.js";
+import { attr, html, item, para, strong, txt } from "./ast.js";
 import type { MdxTarget } from "./ast.js";
 import { statusIcon } from "./glyphs.js";
 
@@ -16,6 +16,17 @@ export const suffix = (parts: (string | undefined)[]): PhrasingContent[] => {
 /** Bare `a · b · c` joining (no leading separator). */
 export const joined = (parts: (string | undefined)[]): string =>
   parts.filter(nonEmpty).join(" · ");
+
+/** A disclosure with literal summary text and an already serialized body. */
+export const detailsBlock = (summary: string, body: string): RootContent => {
+  const escaped = summary
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+  return html(
+    `<details>\n<summary>${escaped}</summary>\n\n${body.trim()}\n\n</details>`
+  );
+};
 
 /**
  * `**Title — extra**` caption paragraph, emitted only when something is

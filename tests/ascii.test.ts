@@ -61,6 +61,36 @@ describe(mdxToAscii, () => {
     expect(markdown).toContain("2. `LOW` **Cosmetic drift**");
   });
 
+  it.each([
+    "",
+    '<Hypothesis title="First">First reason</Hypothesis>\n<Hypothesis title="Second">Second reason</Hypothesis>',
+  ])(
+    "preserves hypothesis commentary exactly once (%s)",
+    async (hypotheses) => {
+      const { markdown } = await render(
+        `<Hypotheses title="Investigation">\n${hypotheses}\n\nShared commentary.\n</Hypotheses>`
+      );
+      expect(markdown.match(/Shared commentary\./gu)).toHaveLength(1);
+    }
+  );
+
+  it("does not resolve unknown statuses through the object prototype", async () => {
+    const { markdown } = await render(
+      '<Hypothesis status="constructor" title="Unknown" />'
+    );
+    expect(markdown).toContain("• **Unknown**");
+    expect(markdown).not.toContain("function Object");
+  });
+
+  it("preserves nested tree entries, notes and placeholders", async () => {
+    const { markdown } = await render(
+      `<Tree root="project">\n- src/\n  - app.ts — entry point\n  - ...\n- README.md\n</Tree>`
+    );
+    expect(markdown).toContain(
+      "├── src/\n│   ├── app.ts — entry point\n│   └── …\n└── README.md"
+    );
+  });
+
   it("renders bar charts as an ASCII bar fence", async () => {
     const src = `<BarChart title="Coverage" unit="%">
 <Bar name="core" value="80" />
@@ -91,6 +121,61 @@ describe(mdxToAscii, () => {
     expect(markdown).toContain("2026-01-01 → 2026-01-11");
     expect(markdown).toMatch(/build\s+█+/u);
     expect(markdown).toContain("◆");
+  });
+
+  it.each(["2026-01-03", "2026-12-31"])(
+    "includes a milestone on the explicit final Gantt day %s",
+    async (end) => {
+      const { markdown } = await render(
+        `<Gantt start="2026-01-01" end="${end}"><Task name="Build" start="2026-01-01" end="${end}" /><Milestone name="Ship" date="${end}" /></Gantt>`
+      );
+      expect(markdown).toMatch(/Ship[^\n]*◆/u);
+    }
+  );
+
+  it("uses the inclusive task end in derived Gantt captions", async () => {
+    const { markdown } = await render(
+      '<Gantt><Task name="Build" start="2026-01-01" end="2026-01-03" /></Gantt>'
+    );
+    expect(markdown).toContain("2026-01-01 → 2026-01-03");
+  });
+
+  it("preserves arbitrary matrix values without accessing inherited properties", async () => {
+    const { markdown } = await render(
+      '<Matrix cols="value">\n- test | constructor\n</Matrix>'
+    );
+    expect(markdown).toContain("constructor");
+    expect(markdown).not.toContain("function Object");
+  });
+
+  it.each([
+    ['<Review title="Review" verdict="constructor" />', "constructor"],
+    ['<Verdict status="constructor" />', "constructor"],
+    ['<Uptime><Day status="constructor" /></Uptime>', "█"],
+  ])(
+    "handles unknown report status names safely (%s)",
+    async (source, expected) => {
+      const { markdown } = await render(source);
+      expect(markdown).toContain(expected);
+      expect(markdown).not.toContain("function Object");
+    }
+  );
+
+  it.each(["1.2.3", "v1.2.3"])(
+    "normalizes release version prefixes (%s)",
+    async (version) => {
+      const { markdown } = await render(`<Release version="${version}" />`);
+      expect(markdown).toContain("`v1.2.3`");
+      expect(markdown).not.toContain("vv1.2.3");
+    }
+  );
+
+  it("preserves package notes supplied as attributes", async () => {
+    const { markdown } = await render(
+      '<Packages><Package name="kit" version="1" note="Pinned dependency">Used for rendering</Package></Packages>'
+    );
+    expect(markdown).toContain("Pinned dependency");
+    expect(markdown).toContain("Used for rendering");
   });
 
   it("renders reviews with a verdict and quoted comments", async () => {

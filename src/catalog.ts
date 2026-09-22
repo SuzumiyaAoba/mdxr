@@ -15,59 +15,71 @@ export interface CatalogEntry {
   props: Record<string, PropInfo>;
 }
 
+// Only an outer optional wrapper lets a property be omitted from an object.
+// nullable(optional(...)) still requires the key to be present.
+const OPTIONAL_TYPES = new Set(["exact_optional", "nullish", "optional"]);
+
+const describeLiteral = (value: unknown): string => {
+  if (typeof value === "bigint") {
+    return `${value}n`;
+  }
+  return JSON.stringify(value) ?? String(value);
+};
+
+const pipeConstraint = (schema: Record<string, unknown>): unknown => {
+  if (!Array.isArray(schema.pipe)) {
+    return undefined;
+  }
+  return schema.pipe.find(
+    (s) =>
+      isRecord(s) &&
+      (s.type === "picklist" || s.type === "union" || s.type === "literal")
+  );
+};
+
 /** Structural view of a valibot schema — enough for catalog introspection. */
 const describeSchema = (schema: unknown): string => {
   if (!isRecord(schema)) {
     return "unknown";
   }
-  if (schema.type === "array") {
-    return `${describeSchema(schema.item)}[]`;
-  }
-  if (schema.type === "literal") {
-    return JSON.stringify(schema.literal);
-  }
-  if (schema.type === "picklist" && Array.isArray(schema.options)) {
-    return schema.options.map((o: unknown) => JSON.stringify(o)).join(" | ");
-  }
-  if (schema.type === "union" && Array.isArray(schema.options)) {
-    return schema.options.map(describeSchema).join(" | ");
+  switch (schema.type) {
+    case "nullable":
+    case "nullish": {
+      return `${describeSchema(schema.wrapped)} | null`;
+    }
+    case "optional":
+    case "exact_optional": {
+      return describeSchema(schema.wrapped);
+    }
+    case "array": {
+      const item = describeSchema(schema.item);
+      return item.includes(" | ") ? `(${item})[]` : `${item}[]`;
+    }
+    case "literal": {
+      return describeLiteral(schema.literal);
+    }
+    case "picklist":
+    case "union": {
+      if (Array.isArray(schema.options)) {
+        const describe =
+          schema.type === "picklist" ? describeLiteral : describeSchema;
+        return schema.options.map(describe).join(" | ");
+      }
+      break;
+    }
+    default: {
+      break;
+    }
   }
   // `v.pipe(v.string(), v.toUpperCase(), v.picklist(M))` keeps `type:
   // "string"` — the base type — and stores the actions in `.pipe`. The
   // constrained member (picklist/union/literal) reads better than "string";
   // transforms like trim/case don't describe accepted values.
-  if (Array.isArray(schema.pipe)) {
-    const pipe: unknown[] = schema.pipe;
-    const constrained = pipe.find(
-      (s) =>
-        isRecord(s) &&
-        (s.type === "picklist" || s.type === "union" || s.type === "literal")
-    );
-    if (constrained !== undefined) {
-      return describeSchema(constrained);
-    }
+  const constrained = pipeConstraint(schema);
+  if (constrained !== undefined) {
+    return describeSchema(constrained);
   }
   return typeof schema.type === "string" ? schema.type : "unknown";
-};
-
-// Wrapper schema types that mark a prop as non-required and may carry a
-// `default` (valibot's optional/nullish/nullable).
-const WRAPPER_TYPES = new Set(["nullable", "nullish", "optional"]);
-
-const unwrapProp = (
-  raw: unknown
-): { def: unknown; required: boolean; s: Record<string, unknown> } => {
-  let s: Record<string, unknown> = isRecord(raw) ? raw : {};
-  let required = true;
-  let def: unknown;
-  while (typeof s.type === "string" && WRAPPER_TYPES.has(s.type)) {
-    required = false;
-    // First (outermost) default wins: `v.optional(v.nullable(x, "a"), "b")`
-    // yields "b" for an absent prop — the inner default never applies.
-    def ??= s.default;
-    s = isRecord(s.wrapped) ? s.wrapped : {};
-  }
-  return { def, required, s };
 };
 
 const propsOf = (schema: unknown): Record<string, PropInfo> => {
@@ -76,15 +88,19 @@ const propsOf = (schema: unknown): Record<string, PropInfo> => {
   }
   const out: Record<string, PropInfo> = {};
   for (const [key, raw] of Object.entries(schema.entries)) {
-    const { def, required, s } = unwrapProp(raw);
+    const optional =
+      isRecord(raw) &&
+      typeof raw.type === "string" &&
+      OPTIONAL_TYPES.has(raw.type);
+    const def = optional ? raw.default : undefined;
     // defineProperty, not assignment: a prop literally named "__proto__"
     // would otherwise replace `out`'s prototype instead of being recorded.
     Object.defineProperty(out, key, {
       configurable: true,
       enumerable: true,
       value: {
-        required,
-        type: describeSchema(s),
+        required: !optional,
+        type: describeSchema(raw),
         ...(def === undefined ? {} : { default: def }),
       },
       writable: true,

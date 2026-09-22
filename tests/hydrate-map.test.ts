@@ -185,6 +185,23 @@ describe(scanMdxrImports, () => {
     expect(vProps).toStrictEqual(new Set(["string"]));
   });
 
+  it.each(["$v", "v$", "検証"])(
+    "scans valid JavaScript namespace aliases: %s",
+    async (alias) => {
+      const { vProps } = await scan(
+        `import { v as ${alias} } from "@suzumiyaaoba/mdxr";\nexport const s = ${alias}.string();`
+      );
+      expect(vProps).toStrictEqual(new Set(["string"]));
+    }
+  );
+
+  it("keeps dynamic accesses to dollar-prefixed namespaces", async () => {
+    const { vProps } = await scan(
+      'import { v as $v } from "@suzumiyaaoba/mdxr";\nexport const s = $v[key];'
+    );
+    expect(vProps).toBe("all");
+  });
+
   it("component re-exports don't force valibot", async () => {
     const { names, vProps } = await scan(
       'export { Plan } from "@suzumiyaaoba/mdxr/components";'

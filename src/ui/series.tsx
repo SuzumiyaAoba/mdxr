@@ -2,8 +2,7 @@ import type { ReactElement } from "react";
 import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
-import { nonEmpty } from "../guards.js";
-import { BOOLISH_PROP } from "./attrs.js";
+import { attrTrue, BOOLISH_PROP } from "./attrs.js";
 import { CODE_CHIP_CLS } from "./bits.js";
 import { CHART_TONES } from "./chart.js";
 
@@ -32,7 +31,7 @@ export const Series = defineComponent(
     <span className={`font-mono ${CODE_CHIP_CLS}`}>
       {name}
       <span className="opacity-70">{values}</span>
-      {nonEmpty(dash) ? <span className="opacity-70">dash</span> : null}
+      {attrTrue(dash) ? <span className="opacity-70">dash</span> : null}
     </span>
   )
 );

@@ -173,23 +173,27 @@ export const resolveConfig = (
 interface SchemaChild {
   value: unknown;
   path: string;
-  required: string[];
+  required: boolean;
 }
 
 const schemaChildren = (schema: DataRecord, prefix: string): SchemaChild[] => {
-  const required = Array.isArray(schema.required)
-    ? schema.required.map(display)
-    : [];
+  const required = new Set(
+    Array.isArray(schema.required) ? schema.required.map(display) : []
+  );
   const fields = isRecord(schema.properties)
     ? Object.entries(schema.properties)
     : [];
   const children = fields.map(([key, value]) => ({
     path: prefix ? `${prefix}.${key}` : key,
-    required,
+    required: required.has(key),
     value,
   }));
   if (schema.items !== undefined) {
-    children.push({ path: `${prefix}[]`, required: [], value: schema.items });
+    children.push({
+      path: `${prefix}[]`,
+      required: false,
+      value: schema.items,
+    });
   }
   for (const union of ["oneOf", "anyOf", "allOf"]) {
     if (!Array.isArray(schema[union])) {
@@ -199,7 +203,7 @@ const schemaChildren = (schema: DataRecord, prefix: string): SchemaChild[] => {
     children.push(
       ...values.map((value, index) => ({
         path: `${prefix}.${union}[${index}]`,
-        required: [],
+        required: false,
         value,
       }))
     );
@@ -210,7 +214,7 @@ const schemaChildren = (schema: DataRecord, prefix: string): SchemaChild[] => {
 export const schemaRows = (
   schema: unknown,
   prefix = "",
-  required: string[] = [],
+  required = false,
   depth = 0
 ): DataRecord[] => {
   if (depth > 40) {
@@ -229,7 +233,7 @@ export const schemaRows = (
       minimum: schema.minimum,
       path: prefix,
       ref: schema.$ref,
-      required: required.includes(prefix.split(".").at(-1) ?? ""),
+      required,
       type: schema.type ?? (isRecord(schema.properties) ? "object" : ""),
     });
   }

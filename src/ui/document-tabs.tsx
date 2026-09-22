@@ -5,6 +5,7 @@ import * as v from "valibot";
 import { defineComponent, flattenChildren } from "../define.js";
 import { display, keyed, recordKey } from "../extended/data.js";
 import { fenceFilename } from "../lines.js";
+import { attrTrue, BOOLISH_PROP } from "./attrs.js";
 import { CopyButton } from "./bits.js";
 import { rowsFrom } from "./data-children.js";
 import { useHydrated } from "./data-context.js";
@@ -186,7 +187,7 @@ export const PackageInstall = defineComponent(
     description:
       "npm/pnpm/yarn/bun installation commands with synchronized package-manager selection.",
     schema: v.looseObject({
-      dev: v.optional(v.picklist(["true", "false"]), "false"),
+      dev: BOOLISH_PROP,
       packages: v.string(),
       syncKey: v.optional(v.string(), "package-manager"),
       title: v.optional(v.string(), "Install"),
@@ -199,7 +200,7 @@ export const PackageInstall = defineComponent(
       );
     }
     const entries = ["npm", "pnpm", "yarn", "bun"].map((manager) => {
-      const command = `${manager} ${manager === "npm" ? "install" : "add"}${dev === "true" ? " -D" : ""} ${packages}`;
+      const command = `${manager} ${manager === "npm" ? "install" : "add"}${attrTrue(dev) ? " -D" : ""} ${packages}`;
       return {
         body: (
           <div className="flex items-center justify-between gap-3 p-3">
@@ -229,7 +230,7 @@ export const CodeWalkthrough = defineComponent(
     return (
       <DataPanel
         title={props.title ?? "Code walkthrough"}
-        summary={`${index + 1} / ${rows.length}`}
+        summary={`${rows.length ? index + 1 : 0} / ${rows.length}`}
       >
         <div className="flex flex-wrap gap-2 p-3">
           {keyed(rows, recordKey).map(({ key: entryKey, value: step }, i) => (

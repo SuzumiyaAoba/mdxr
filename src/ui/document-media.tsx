@@ -10,6 +10,7 @@ import {
   recordKey,
 } from "../extended/data.js";
 import { safeHref } from "../guards.js";
+import { attrTrue, BOOLISH_PROP } from "./attrs.js";
 import { rowsFrom } from "./data-children.js";
 import { DATA_BUTTON, DATA_PROPS } from "./data-props.js";
 import { DataPanel } from "./data-view.js";
@@ -462,14 +463,14 @@ export const PrintLayout = defineComponent(
       "Print layout with one/two columns and optional keep-together blocks.",
     schema: v.looseObject({
       columns: v.optional(v.picklist(["1", "2"]), "1"),
-      keepTogether: v.optional(v.picklist(["true", "false"]), "false"),
+      keepTogether: BOOLISH_PROP,
       title: v.optional(v.string()),
     }),
   },
   ({ columns, keepTogether, title, children }) => (
     <section
       aria-label={title}
-      className={`mdxr-print-layout ${columns === "2" ? "print:columns-2 print:gap-8" : ""} ${keepTogether === "true" ? "print:break-inside-avoid" : ""}`}
+      className={`mdxr-print-layout ${columns === "2" ? "print:columns-2 print:gap-8" : ""} ${attrTrue(keepTogether) ? "print:break-inside-avoid" : ""}`}
     >
       {children}
     </section>

@@ -341,8 +341,9 @@ const buildLayout = (
       height: Boolean(node.note) || Boolean(node.status) ? 62 : 42,
       width: Math.min(280, Math.max(130, nodeLabel(node).length * 8 + 28)),
     });
-    if (node.group !== undefined && node.group !== null) {
-      graph.setParent(display(node.id), `group:${display(node.group)}`);
+    const group = display(node.group);
+    if (group !== "") {
+      graph.setParent(display(node.id), `group:${group}`);
     }
   }
   for (const [i, edge] of edges.entries()) {

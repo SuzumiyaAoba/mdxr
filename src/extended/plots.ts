@@ -93,10 +93,21 @@ const circle = (
   label: string,
   r = 4
 ): PlotMark => ({ fill, kind: "circle", label, r, x, y });
+
+/** Normalize without overflowing when finite endpoints span zero. */
+const fraction = (value: number, min: number, max: number): number => {
+  const span = max - min;
+  return Number.isFinite(span)
+    ? (value - min) / (span || 1)
+    : (value / 2 - min / 2) / (max / 2 - min / 2);
+};
+const interpolate = (min: number, max: number, amount: number): number =>
+  min * (1 - amount) + max * amount;
+
 const scale =
   (min: number, max: number, start: number, end: number) =>
   (value: number): number =>
-    start + ((value - min) / (max - min || 1)) * (end - start);
+    start + fraction(value, min, max) * (end - start);
 const bounds = (
   values: number[],
   options: DataRecord,
@@ -116,8 +127,9 @@ const bounds = (
     throw new Error("Plot: min must not exceed max");
   }
   if (min === max) {
-    min -= 0.5;
-    max += 0.5;
+    const padding = Math.max(Number.MIN_VALUE, Math.abs(min) * 0.05 || 0.5);
+    min = Math.max(-Number.MAX_VALUE, min - padding);
+    max = Math.min(Number.MAX_VALUE, max + padding);
   }
   return [min, max];
 };
@@ -127,7 +139,7 @@ const axis = (min: number, max: number, horizontal = true): PlotMark[] => {
     line(LEFT, TOP, LEFT, BOTTOM),
   ];
   for (let i = 0; i <= 4; i += 1) {
-    const value = min + ((max - min) * i) / 4;
+    const value = interpolate(min, max, i / 4);
     if (horizontal) {
       marks.push(
         text(
@@ -186,7 +198,7 @@ const heatmap = (rows: DataRecord[], options: DataRecord): PlotModel => {
     const x = LEFT + xs.indexOf(display(row.x)) * cw;
     const y = 30 + ys.indexOf(display(row.y)) * ch;
     const value = numberValue(row.value);
-    const intensity = Math.max(0, Math.min(1, (value - min) / (max - min)));
+    const intensity = Math.max(0, Math.min(1, fraction(value, min, max)));
     marks.push(
       rect(
         x,
@@ -239,7 +251,7 @@ const histogram = (rows: DataRecord[], options: DataRecord): PlotModel => {
     }
     const index = Math.min(
       count - 1,
-      Math.floor(((value - min) / (max - min)) * count)
+      Math.floor(fraction(value, min, max) * count)
     );
     counts[index] = (counts[index] ?? 0) + 1;
   }
@@ -248,8 +260,8 @@ const histogram = (rows: DataRecord[], options: DataRecord): PlotModel => {
   const width = (RIGHT - LEFT) / count;
   const bins = counts.map((n, i) => ({
     count: n,
-    from: rounded(min + (i * (max - min)) / count),
-    to: rounded(min + ((i + 1) * (max - min)) / count),
+    from: rounded(interpolate(min, max, i / count)),
+    to: rounded(interpolate(min, max, (i + 1) / count)),
   }));
   for (const [i, bin] of bins.entries()) {
     marks.push(
@@ -318,14 +330,22 @@ const boxPlot = (rows: DataRecord[], options: DataRecord): PlotModel => {
 
 const ecdf = (rows: DataRecord[], options: DataRecord): PlotModel => {
   const values = samplesOf(rows).toSorted((a, b) => a - b);
+  if (values.length === 0) {
+    return model([], [], "No observations");
+  }
   const [min, max] = bounds(values, options);
   const x = scale(min, max, LEFT, RIGHT);
   const y = scale(0, 1, BOTTOM, TOP);
-  const unique = [...new Set(values)];
-  const points = unique.map((value) => ({
-    cumulative: values.filter((n) => n <= value).length / values.length,
-    value,
-  }));
+  const points: { cumulative: number; value: number }[] = [];
+  for (const [index, value] of values.entries()) {
+    const cumulative = (index + 1) / values.length;
+    const previous = points.at(-1);
+    if (previous?.value === value) {
+      previous.cumulative = cumulative;
+    } else {
+      points.push({ cumulative, value });
+    }
+  }
   let d = `M ${LEFT} ${BOTTOM}`;
   for (const point of points) {
     d += ` H ${x(point.value)} V ${y(point.cumulative)}`;
@@ -471,7 +491,7 @@ const calendar = (rows: DataRecord[], options: DataRecord): PlotModel => {
         30 + weekday * 24,
         size - 2,
         22,
-        `hsl(150 65% ${90 - ((day.value - min) / (max - min)) * 55}%)`,
+        `hsl(150 65% ${90 - fraction(day.value, min, max) * 55}%)`,
         `${day.date}: ${day.value}`
       )
     );
@@ -558,13 +578,13 @@ const distributions = (
     const bandwidth = numberValue(
       options.bandwidth,
       "bandwidth",
-      (max - min) / 15
+      max / 15 - min / 15
     );
     if (bandwidth <= 0) {
       throw new Error("Density bandwidth must be positive");
     }
     const points = Array.from({ length: 65 }, (_, j) => {
-      const value = min + ((max - min) * j) / 64;
+      const value = interpolate(min, max, j / 64);
       return { density: density(entry.values, value, bandwidth), value };
     });
     const peak = Math.max(...points.map((point) => point.density), 1e-12);

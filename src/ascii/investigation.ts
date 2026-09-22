@@ -1,7 +1,7 @@
 /** ASCII renderers for code-investigation components. */
 
 import type { ListItem, PhrasingContent, RootContent } from "mdast";
-import type { Node } from "unist";
+import type { Node, Parent } from "unist";
 
 import { nonEmpty } from "../guards.js";
 import { isParent } from "../remark/ast.js";
@@ -63,42 +63,44 @@ interface TreeEntry {
   note?: string;
 }
 
-const treeEntries = (nodes: Node[]): TreeEntry[] => {
-  const out: TreeEntry[] = [];
-  const walk = (n: Node): void => {
-    if (n.type === "list" && isParent(n)) {
-      for (const li of n.children) {
-        if (li.type !== "listItem" || !isParent(li)) {
-          continue;
-        }
-        const nested = li.children.filter((c) => c.type === "list");
-        const labelText = li.children
-          .filter((c) => c.type !== "list")
-          .map((c) => textOf(c))
-          .join("")
-          .trim();
-        const m = NOTE_RE.exec(labelText);
-        out.push({
-          children: treeEntries(nested),
-          name: (m === null ? labelText : labelText.slice(0, m.index)).trim(),
-          ...(m === null
-            ? {}
-            : { note: labelText.slice(m.index + m[0].length).trim() }),
-        });
-      }
-      return;
-    }
-    if (isParent(n)) {
-      for (const c of n.children) {
-        walk(c);
-      }
-    }
+const treeEntry = (node: Parent, children: TreeEntry[]): TreeEntry => {
+  const label = node.children
+    .filter((child) => child.type !== "list")
+    .map(textOf)
+    .join("")
+    .trim();
+  const note = NOTE_RE.exec(label);
+  return {
+    children,
+    name: (note === null ? label : label.slice(0, note.index)).trim(),
+    ...(note === null
+      ? {}
+      : { note: label.slice(note.index + note[0].length).trim() }),
   };
-  for (const c of nodes) {
-    walk(c);
-  }
-  return out;
 };
+
+const treeEntries = (nodes: Node[]): TreeEntry[] =>
+  nodes.flatMap((node) => {
+    if (!isParent(node)) {
+      return [];
+    }
+    if (node.type === "list") {
+      return node.children
+        .filter(
+          (child): child is Parent =>
+            child.type === "listItem" && isParent(child)
+        )
+        .map((child) =>
+          treeEntry(
+            child,
+            treeEntries(
+              child.children.filter((nested) => nested.type === "list")
+            )
+          )
+        );
+    }
+    return treeEntries(node.children);
+  });
 
 const treeLines = (entries: TreeEntry[], prefix: string): string[] =>
   entries.flatMap((e, i) => {
@@ -303,12 +305,12 @@ export const investigationRenderers: AsciiRegistry = {
                   ? []
                   : [txt(" — "), ...ctx.inline(h)]),
               ]),
-              ...ctx.children(withoutEls(n, ["Hypothesis"])),
             ],
             status === "supported" ? true : undefined
           );
         })
       ),
+      ...ctx.children(withoutEls(n, ["Hypothesis"])),
     ],
   },
   Hypothesis: {

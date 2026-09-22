@@ -11,6 +11,7 @@ import {
   numberValue,
   words,
 } from "../extended/data.js";
+import { own } from "../guards.js";
 import { attrFalse } from "./attrs.js";
 import { rowsFrom } from "./data-children.js";
 import { FilterContext } from "./data-context.js";
@@ -82,13 +83,13 @@ export const FilterPanel = defineComponent(
               <select
                 aria-label={field}
                 className={DATA_INPUT}
-                value={filters[field] ?? ""}
+                value={own(filters, field) ?? ""}
                 onChange={(event) => {
                   setFilters({ ...filters, [field]: event.target.value });
                 }}
               >
                 <option value="">All</option>
-                {[...new Set(rows.map((row) => display(row[field])))]
+                {[...new Set(rows.map((row) => display(own(row, field))))]
                   .filter(Boolean)
                   .map((value) => (
                     <option key={value}>{value}</option>

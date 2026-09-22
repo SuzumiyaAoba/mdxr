@@ -28,7 +28,11 @@ export const parseLineRange = (
   } else if (m.groups.end !== "") {
     end = Number(m.groups.end);
   }
-  if (start < 1 || (end !== undefined && end < start)) {
+  if (
+    !Number.isSafeInteger(start) ||
+    start < 1 ||
+    (end !== undefined && (!Number.isSafeInteger(end) || end < start))
+  ) {
     return undefined;
   }
   return { end, start };

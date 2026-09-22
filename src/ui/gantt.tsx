@@ -186,6 +186,24 @@ const Row = (props: {
   );
 };
 
+const taskBar = (
+  start: Date | undefined,
+  end: Date | undefined,
+  scale: GanttScale | undefined
+): { left: number; width: number } | undefined => {
+  if (scale === undefined || start === undefined || end === undefined) {
+    return undefined;
+  }
+  const from = pctOf(start, scale);
+  const to = pctOf(addDays(end, 1), scale);
+  if (from >= 100 || to <= 0) {
+    return undefined;
+  }
+  const left = clampPct(from);
+  const right = clampPct(to);
+  return { left, width: Math.min(100 - left, Math.max(right - left, 0.8)) };
+};
+
 export const Task = defineComponent(
   {
     description:
@@ -208,12 +226,7 @@ export const Task = defineComponent(
     const p = numOf(progress);
     const colors = status === undefined ? DEFAULT_BAR : BAR[status];
 
-    let bar: { left: number; width: number } | undefined;
-    if (scale !== undefined && s !== undefined && e !== undefined) {
-      const left = clampPct(pctOf(s, scale));
-      const right = clampPct(pctOf(addDays(e, 1), scale));
-      bar = { left, width: Math.max(right - left, 0.8) };
-    }
+    const bar = taskBar(s, e, scale);
     const dates = s === undefined ? start : fmtRange(s, e ?? s);
     const tip = `${name} · ${dates}${status === undefined ? "" : ` · ${status}`}`;
 
@@ -254,10 +267,12 @@ export const Milestone = defineComponent(
     const scale = useContext(ScaleCtx);
     const d = toDate(date);
     const cls = status === undefined ? DEFAULT_MILESTONE : BAR[status].solid;
+    const position =
+      scale === undefined || d === undefined ? undefined : pctOf(d, scale);
     const pct =
-      scale === undefined || d === undefined
-        ? undefined
-        : clampPct(pctOf(d, scale));
+      position !== undefined && position >= 0 && position < 100
+        ? position
+        : undefined;
     return (
       <Row
         dates={d === undefined ? date : format(d, "MMM d")}

@@ -1,13 +1,13 @@
 import type { ReactElement, ReactNode } from "react";
 import * as v from "valibot";
 
-import { defineComponent, flattenChildren, parseProps } from "../define.js";
+import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { attrTrue, BOOLISH_PROP, NUMISH, numOf } from "./attrs.js";
 import { CODE_CHIP_CLS } from "./bits.js";
 import { ChartPanel } from "./chart-bits.js";
 import { fmtNum, niceBounds } from "./chart.js";
-import { isEl } from "./children.js";
+import { collectChildProps } from "./children.js";
 import { RAIL_BG_CLS, TEXT, TEXT_MICRO, TEXT_SUB, TONE_TEXT } from "./tones.js";
 
 /**
@@ -74,20 +74,20 @@ const collectDeltas = (
   children: ReactNode
 ): { rest: ReactNode[]; steps: Step[] } => {
   const steps: Step[] = [];
-  const rest: ReactNode[] = [];
+  const { items, rest } = collectChildProps(
+    children,
+    Delta,
+    DELTA_SCHEMA,
+    "Delta"
+  );
   let sum = 0;
-  for (const child of flattenChildren(children)) {
-    if (isEl(child, Delta)) {
-      const spec = parseProps(DELTA_SCHEMA, child.props, "Delta");
-      const n = numOf(spec.value) ?? 0;
-      const isTotal = attrTrue(spec.total);
-      const low = isTotal ? Math.min(0, n) : Math.min(sum, sum + n);
-      const high = isTotal ? Math.max(0, n) : Math.max(sum, sum + n);
-      sum = isTotal ? n : sum + n;
-      steps.push({ high, low, n, spec, sum });
-    } else {
-      rest.push(child);
-    }
+  for (const spec of items) {
+    const n = numOf(spec.value) ?? 0;
+    const isTotal = attrTrue(spec.total);
+    const low = isTotal ? Math.min(0, n) : Math.min(sum, sum + n);
+    const high = isTotal ? Math.max(0, n) : Math.max(sum, sum + n);
+    sum = isTotal ? n : sum + n;
+    steps.push({ high, low, n, spec, sum });
   }
   return { rest, steps };
 };

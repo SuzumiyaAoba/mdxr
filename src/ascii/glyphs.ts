@@ -1,5 +1,7 @@
 /** ASCII/block-element drawing helpers shared by the chart renderers. */
 
+import { own } from "../guards.js";
+
 /** `█`-bar of `width` cells filled to `frac` (0–1), e.g. `██████░░░░`. */
 export const bar = (
   frac: number,
@@ -71,7 +73,7 @@ export const STATUS_ICON: Record<string, string> = {
 };
 
 export const statusIcon = (status: string | undefined): string =>
-  status === undefined ? "•" : (STATUS_ICON[status.toLowerCase()] ?? "•");
+  status === undefined ? "•" : (own(STATUS_ICON, status.toLowerCase()) ?? "•");
 
 /** Left-align `s` in a `width`-wide column (no padding past the width). */
 export const pad = (s: string, width: number): string =>

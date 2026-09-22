@@ -1,13 +1,13 @@
 import type { ReactElement, ReactNode } from "react";
 import * as v from "valibot";
 
-import { defineComponent, flattenChildren, parseProps } from "../define.js";
+import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { attrTrue, BOOLISH_PROP, NUMISH, numOf } from "./attrs.js";
 import { CODE_CHIP_CLS } from "./bits.js";
 import { ChartPanel } from "./chart-bits.js";
 import { CHART_TONES, fmtNum, sectorPath, toneOf } from "./chart.js";
-import { isEl } from "./children.js";
+import { collectChildProps } from "./children.js";
 import { TEXT, TEXT_MICRO } from "./tones.js";
 
 /**
@@ -43,16 +43,16 @@ export const Slice = defineComponent(
 const collectSlices = (
   children: ReactNode
 ): { rest: ReactNode[]; slices: { n: number; spec: SliceSpec }[] } => {
-  const slices: { n: number; spec: SliceSpec }[] = [];
-  const rest: ReactNode[] = [];
-  for (const child of flattenChildren(children)) {
-    if (isEl(child, Slice)) {
-      const spec = parseProps(SLICE_SCHEMA, child.props, "Slice");
-      slices.push({ n: Math.max(0, numOf(spec.value) ?? 0), spec });
-    } else {
-      rest.push(child);
-    }
-  }
+  const { items, rest } = collectChildProps(
+    children,
+    Slice,
+    SLICE_SCHEMA,
+    "Slice"
+  );
+  const slices = items.map((spec) => ({
+    n: Math.max(0, numOf(spec.value) ?? 0),
+    spec,
+  }));
   return { rest, slices };
 };
 

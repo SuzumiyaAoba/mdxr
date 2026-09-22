@@ -3,6 +3,7 @@
 import type { PhrasingContent, RootContent } from "mdast";
 
 import { nonEmpty } from "../guards.js";
+import { numList } from "../ui/chart.js";
 import {
   attr,
   csv,
@@ -25,9 +26,7 @@ import { caption, suffix } from "./parts.js";
 
 /** Attribute → number list (`values="12, 8, 4"`). */
 const nums = (node: MdxTarget, key: string): number[] =>
-  csv(node, key)
-    .map(Number)
-    .filter((v) => !Number.isNaN(v));
+  numList(attr(node, key));
 
 /** `label ██████░░ 42` fence rows from name/value pairs. */
 const barRows = (

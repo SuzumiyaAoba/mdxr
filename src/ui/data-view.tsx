@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import type { DataRecord } from "../extended/data.js";
 import { columnsOf, display, keyed, recordKey } from "../extended/data.js";
+import { own } from "../guards.js";
 import { DATA_PANEL } from "./data-props.js";
 
 export const DataPanel = ({
@@ -65,7 +66,7 @@ export const DataGrid = ({
                 className="border-b border-neutral-100 px-4 py-2 align-top whitespace-pre-wrap dark:border-neutral-800"
                 key={column}
               >
-                {display(row[column]) || "—"}
+                {display(own(row, column)) || "—"}
               </td>
             ))}
           </tr>

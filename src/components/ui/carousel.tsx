@@ -76,15 +76,26 @@ function Carousel({
 
   const handleKeyDown = React.useCallback(
     (event: React.KeyboardEvent<HTMLDivElement>) => {
-      if (event.key === "ArrowLeft") {
+      const target = event.target;
+      if (
+        event.defaultPrevented ||
+        (target instanceof HTMLElement &&
+          (target.isContentEditable ||
+            target.closest("input, textarea, select") !== null))
+      ) {
+        return;
+      }
+      const previousKey = orientation === "vertical" ? "ArrowUp" : "ArrowLeft";
+      const nextKey = orientation === "vertical" ? "ArrowDown" : "ArrowRight";
+      if (event.key === previousKey) {
         event.preventDefault();
         scrollPrev();
-      } else if (event.key === "ArrowRight") {
+      } else if (event.key === nextKey) {
         event.preventDefault();
         scrollNext();
       }
     },
-    [scrollPrev, scrollNext]
+    [orientation, scrollPrev, scrollNext]
   );
 
   React.useEffect(() => {
@@ -108,22 +119,33 @@ function Carousel({
     };
   }, [api, onSelect]);
 
+  const context = React.useMemo(
+    () => ({
+      api,
+      canScrollNext,
+      canScrollPrev,
+      carouselRef,
+      opts,
+      orientation,
+      scrollNext,
+      scrollPrev,
+    }),
+    [
+      api,
+      canScrollNext,
+      canScrollPrev,
+      carouselRef,
+      opts,
+      orientation,
+      scrollNext,
+      scrollPrev,
+    ]
+  );
+
   return (
-    <CarouselContext.Provider
-      value={{
-        api: api,
-        canScrollNext,
-        canScrollPrev,
-        carouselRef,
-        opts,
-        orientation:
-          orientation || (opts?.axis === "y" ? "vertical" : "horizontal"),
-        scrollNext,
-        scrollPrev,
-      }}
-    >
+    <CarouselContext.Provider value={context}>
       <div
-        onKeyDownCapture={handleKeyDown}
+        onKeyDown={handleKeyDown}
         className={cn("relative", className)}
         role="region"
         aria-roledescription="carousel"

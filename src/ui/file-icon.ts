@@ -1013,7 +1013,7 @@ export const fileIcon = (path: string): string => {
 
 /** Iconify name for a directory, picked from its name. */
 export const folderIcon = (name: string): string => {
-  const base = basename(name.replace(/\/+$/u, ""));
+  const base = basename(name.replace(/[/\\]+$/u, ""));
   const key = own(DIR_NAMES, base) ?? base;
   const probed = folderType(key);
   return hasIcon(probed) ? probed : DEFAULT_FOLDER;

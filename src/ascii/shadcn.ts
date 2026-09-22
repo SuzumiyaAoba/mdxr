@@ -15,8 +15,8 @@ import {
   els,
   em,
   flag,
+  flagOff,
   heading,
-  html,
   icode,
   item,
   link,
@@ -30,9 +30,11 @@ import {
   table,
   thematic,
   txt,
+  withoutEls,
 } from "./ast.js";
 import type { AsciiCtx, AsciiEntry, AsciiRegistry, MdxTarget } from "./ast.js";
 import { bar } from "./glyphs.js";
+import { detailsBlock } from "./parts.js";
 
 /** `ctx.inline` result wrapped so empty children fall back to `alt`. */
 const inlineOr = (
@@ -90,46 +92,43 @@ const menuItem: AsciiEntry = {
 };
 
 /** `[x]`/`[ ]`/`( )` control from a checked-ish attribute. */
+const controlOn = (n: MdxTarget): boolean => {
+  if (flag(n, "checked") || flagOff(n, "checked")) {
+    return flag(n, "checked");
+  }
+  return flag(n, "defaultChecked") || flag(n, "pressed");
+};
+
 const control = (mark: (on: boolean) => string): AsciiEntry => ({
   flow: (n, ctx) => {
     const inner = ctx.inline(n);
     const label = attr(n, "label");
     return [
       para([
-        icode(
-          mark(
-            flag(n, "checked") ||
-              flag(n, "defaultChecked") ||
-              flag(n, "pressed")
-          )
-        ),
+        icode(mark(controlOn(n))),
         ...(inner.length === 0 ? [] : [txt(" "), ...inner]),
         ...(nonEmpty(label) ? [txt(` ${label}`)] : []),
       ]),
     ];
   },
   text: (n, ctx) => [
-    icode(
-      mark(
-        flag(n, "checked") || flag(n, "defaultChecked") || flag(n, "pressed")
-      )
-    ),
+    icode(mark(controlOn(n))),
     ...(ctx.inline(n).length === 0 ? [] : [txt(" "), ...ctx.inline(n)]),
   ],
 });
 
 /** `` `[____]` ``-style empty input stand-in. */
+const inputText = (n: MdxTarget): string => {
+  const value = attr(n, "value") ?? attr(n, "defaultValue");
+  if (value !== undefined) {
+    return attr(n, "type") === "password" ? "••••" : value;
+  }
+  return attr(n, "placeholder") ?? attr(n, "label") ?? "____";
+};
+
 const input: AsciiEntry = {
-  flow: (n) => [
-    pre(
-      `[ ${attr(n, "placeholder") ?? attr(n, "value") ?? attr(n, "label") ?? "____"} ]`
-    ),
-  ],
-  text: (n) => [
-    icode(
-      `[${attr(n, "placeholder") ?? attr(n, "value") ?? attr(n, "label") ?? "____"}]`
-    ),
-  ],
+  flow: (n) => [pre(`[ ${inputText(n)} ]`)],
+  text: (n) => [icode(`[${inputText(n)}]`)],
 };
 
 /* ----------------------------- accordion ---------------------------- */
@@ -140,14 +139,9 @@ const disclosure = (trigger: string, fallback: string): AsciiEntry => ({
     const [head] = els(n, trigger);
     const summary =
       head === undefined ? (attr(n, "label") ?? fallback) : ctx.text(head);
-    const rest = ctx.children({
-      ...n,
-      children: (n.children ?? []).filter((c) => !named(c, trigger)),
-    });
+    const rest = ctx.children(withoutEls(n, [trigger]));
     const body = ctx.serialize(rest).trim();
-    return [
-      html(`<details>\n<summary>${summary}</summary>\n\n${body}\n\n</details>`),
-    ];
+    return [detailsBlock(summary, body)];
   },
 });
 
@@ -282,7 +276,7 @@ const frac = (n: MdxTarget): { text: string; v: number } => {
   const max = num(n, "max") ?? 100;
   return {
     text: `${attr(n, "value") ?? Math.round(value)}${nonEmpty(attr(n, "max")) ? `/${attr(n, "max")}` : "%"}`,
-    v: max === 0 ? 0 : Math.min(1, value / max),
+    v: max <= 0 ? 0 : Math.max(0, Math.min(1, value / max)),
   };
 };
 
@@ -358,7 +352,7 @@ const otp: AsciiEntry = {
     return [pre(`[ ${"_ ".repeat(count).trim()} ]`)];
   },
   text: (n) => {
-    const count = num(n, "maxLength") ?? 6;
+    const count = Math.max(0, num(n, "maxLength") ?? 6);
     return [icode(`[${"_".repeat(count)}]`)];
   },
 };

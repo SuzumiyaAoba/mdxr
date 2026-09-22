@@ -187,6 +187,18 @@ describe("prototype-named inputs", () => {
 });
 
 describe(safeHref, () => {
+  it("omits unsafe release comparison links", async () => {
+    const { body } = await ssr(
+      '<Release version="1.0" href="data:text/html,unsafe" />'
+    );
+    expect(body).not.toContain("data:text/html");
+    expect(body).not.toContain(">compare</a>");
+    const allowed = await ssr(
+      '<Release version="1.0" href="https://example.com/compare" />'
+    );
+    expect(allowed.body).toContain('href="https://example.com/compare"');
+  });
+
   it("rejects dangerous schemes hidden behind browser-stripped chars", () => {
     // URL parsers drop \t\n\r anywhere and C0 controls/spaces at the edges —
     // every variant below still resolves to javascript:/data: once loaded.

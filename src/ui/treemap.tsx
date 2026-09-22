@@ -1,13 +1,13 @@
 import type { ReactElement, ReactNode } from "react";
 import * as v from "valibot";
 
-import { defineComponent, flattenChildren, parseProps } from "../define.js";
+import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { NUMISH, numOf } from "./attrs.js";
 import { CODE_CHIP_CLS } from "./bits.js";
 import { ChartPanel } from "./chart-bits.js";
 import { CHART_TONES, fmtNum, squarify, toneOf } from "./chart.js";
-import { isEl } from "./children.js";
+import { collectChildProps } from "./children.js";
 import { TEXT_MICRO } from "./tones.js";
 
 /**
@@ -43,20 +43,20 @@ export const Tile = defineComponent(
 const collectTiles = (
   children: ReactNode
 ): { rest: ReactNode[]; tiles: { n: number; spec: TileSpec }[] } => {
-  const tiles: { n: number; spec: TileSpec }[] = [];
-  const rest: ReactNode[] = [];
-  for (const child of flattenChildren(children)) {
-    if (isEl(child, Tile)) {
-      const spec = parseProps(TILE_SCHEMA, child.props, "Tile");
-      tiles.push({ n: Math.max(0, numOf(spec.value) ?? 0), spec });
-    } else {
-      rest.push(child);
-    }
-  }
+  const { items, rest } = collectChildProps(
+    children,
+    Tile,
+    TILE_SCHEMA,
+    "Tile"
+  );
+  const tiles = items.map((spec) => ({
+    n: Math.max(0, numOf(spec.value) ?? 0),
+    spec,
+  }));
   return { rest, tiles };
 };
 
-/** Squarify space — a 16:9 canvas in percentage units. */
+/** Squarify space — a 16:9 canvas, converted to CSS percentages per axis. */
 const CANVAS = { h: 56.25, w: 100, x: 0, y: 0 };
 
 export const Treemap = defineComponent(
@@ -95,10 +95,10 @@ export const Treemap = defineComponent(
                   className={`absolute overflow-hidden rounded border border-white dark:border-neutral-950 ${toneOf(t.spec.tone, i).tile}`}
                   key={t.spec.name}
                   style={{
-                    height: `${r.h}%`,
-                    left: `${r.x}%`,
-                    top: `${r.y}%`,
-                    width: `${r.w}%`,
+                    height: `${(r.h / CANVAS.h) * 100}%`,
+                    left: `${(r.x / CANVAS.w) * 100}%`,
+                    top: `${(r.y / CANVAS.h) * 100}%`,
+                    width: `${(r.w / CANVAS.w) * 100}%`,
                   }}
                   title={`${t.spec.name} · ${fmtNum(t.n)}${unit ?? ""} (${Math.round(share)}%)`}
                 >

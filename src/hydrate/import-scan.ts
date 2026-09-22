@@ -27,19 +27,22 @@ export interface MdxrImports {
  */
 const scanVProps = (stripped: string, alias: string): Set<string> | "all" => {
   const esc = alias.replaceAll(/[$()*+.?[\\\]^{|}]/gu, "\\$&");
-  const access = new RegExp(
-    `\\b${esc}\\s*\\?\\.\\s*(\\w+)|\\b${esc}\\s*\\.\\s*(\\w+)`,
-    "gu"
-  );
+  // JavaScript identifiers also allow `$` and Unicode letters, for which
+  // regex word boundaries (`\b`) do not describe an identifier boundary.
+  const identifierPart = String.raw`[\p{ID_Continue}$\u200C\u200D]`;
+  const start = `(?<!${identifierPart})${esc}`;
+  const access = new RegExp(`${start}\\s*\\??\\.\\s*(\\w+)`, "gu");
   const props = new Set<string>();
   for (const use of stripped.matchAll(access)) {
-    const prop = use[1] ?? use[2];
+    const [, prop] = use;
     if (prop !== undefined) {
       props.add(prop);
     }
   }
   const leftover = stripped.replaceAll(access, "");
-  return new RegExp(`\\b${esc}\\b`, "u").test(leftover) ? "all" : props;
+  return new RegExp(`${start}(?!${identifierPart})`, "u").test(leftover)
+    ? "all"
+    : props;
 };
 
 /**

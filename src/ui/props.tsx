@@ -19,19 +19,21 @@ export const Props = defineComponent(
       {nonEmpty(of) ? (
         <CaptionBar className="font-mono">{of}</CaptionBar>
       ) : null}
-      <table className="m-0 w-full text-sm">
-        <thead>
-          <tr
-            className={`border-b text-left text-xs ${BORDER_CLS} ${TEXT.muted}`}
-          >
-            <th className="py-2 pr-3 pl-4 font-medium">Name</th>
-            <th className="px-3 py-2 font-medium">Type</th>
-            <th className="px-3 py-2 font-medium">Default</th>
-            <th className="py-2 pr-4 pl-3 font-medium">Description</th>
-          </tr>
-        </thead>
-        <tbody className={DIVIDE_CLS}>{children}</tbody>
-      </table>
+      <div className="overflow-x-auto">
+        <table className="m-0 w-full text-sm">
+          <thead>
+            <tr
+              className={`border-b text-left text-xs ${BORDER_CLS} ${TEXT.muted}`}
+            >
+              <th className="py-2 pr-3 pl-4 font-medium">Name</th>
+              <th className="px-3 py-2 font-medium">Type</th>
+              <th className="px-3 py-2 font-medium">Default</th>
+              <th className="py-2 pr-4 pl-3 font-medium">Description</th>
+            </tr>
+          </thead>
+          <tbody className={DIVIDE_CLS}>{children}</tbody>
+        </table>
+      </div>
     </Panel>
   )
 );

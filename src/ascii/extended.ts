@@ -24,12 +24,13 @@ import {
   dependencyMatrixModel,
 } from "../extended/profiles.js";
 import { REPORT_SPECS, reportModel } from "../extended/reports.js";
-import { safeHref } from "../guards.js";
+import { own, safeHref } from "../guards.js";
 import { isParent } from "../remark/ast.js";
 import type { AsciiCtx, AsciiEntry, AsciiRegistry, MdxTarget } from "./ast.js";
 import {
   attr,
   els,
+  flag,
   item,
   link,
   list,
@@ -118,7 +119,9 @@ const recordsTable = (rows: DataRecord[], cols?: string[]): RootContent[] =>
         table(
           cols ?? columnsOf(rows),
           rows.map((row) =>
-            (cols ?? columnsOf(rows)).map((key) => display(row[key]) || "—")
+            (cols ?? columnsOf(rows)).map(
+              (key) => display(own(row, key)) || "—"
+            )
           )
         ),
       ]
@@ -403,7 +406,7 @@ Object.assign(extendedRenderers, {
         ["npm", "pnpm", "yarn", "bun"]
           .map(
             (manager) =>
-              `${manager} ${manager === "npm" ? "install" : "add"}${attr(node, "dev") === "true" ? " -D" : ""} ${attr(node, "packages") ?? ""}`
+              `${manager} ${manager === "npm" ? "install" : "add"}${flag(node, "dev") ? " -D" : ""} ${attr(node, "packages") ?? ""}`
           )
           .join("\n"),
         "sh"
@@ -428,7 +431,7 @@ Object.assign(extendedRenderers, {
       );
       const prompt = (attr(node, "template") ?? "").replaceAll(
         /\{\{\s*(?<variable>[\w.-]+)\s*\}\}/gu,
-        (match: string, name: string) => defaults[name] ?? match
+        (match: string, name: string) => own(defaults, name) ?? match
       );
       return [
         ...caption(attr(node, "title") ?? "Prompt template"),

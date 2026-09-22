@@ -1,3 +1,4 @@
+import { own } from "../guards.js";
 import {
   isDataRecord as isRecord,
   columnsOf,
@@ -243,13 +244,17 @@ const slo = (rows: DataRecord[]): DataRecord[] =>
       throw new Error("SLO: target must be 0–100 and bad ≤ total");
     }
     const budget = total * (1 - target / 100);
+    const difference = budget - bad;
+    // Percent-to-count conversion can land just below an exact budget.
+    const remaining =
+      Math.abs(difference) <= Number.EPSILON * total * 8 ? 0 : difference;
     return {
       ...row,
       achieved: percentage(total - bad, total),
       budget: rounded(budget),
       consumed: percentage(bad, budget),
-      remaining: rounded(budget - bad),
-      status: bad <= budget ? "pass" : "fail",
+      remaining: rounded(remaining),
+      status: remaining >= 0 ? "pass" : "fail",
     };
   });
 
@@ -271,7 +276,7 @@ const tokenUsage = (rows: DataRecord[]): DataRecord[] =>
 
 const datasetProfile = (rows: DataRecord[]): DataRecord[] =>
   columnsOf(rows).map((column) => {
-    const values = rows.map((row) => row[column]);
+    const values = rows.map((row) => own(row, column));
     const present = values.filter(
       (value) => value !== undefined && value !== null && value !== ""
     );
@@ -348,7 +353,7 @@ const validateDataset = (
       throw new RangeError("DataValidation: min cannot exceed max");
     }
     const matches = rows.flatMap((row, i) => {
-      const value = row[key];
+      const value = own(row, key);
       const empty = value === null || value === undefined || value === "";
       const wrongType = !empty && checkType !== undefined && !checkType(value);
       const outOfBounds = !empty && !withinBounds(value, min, max);
@@ -729,7 +734,7 @@ export const reportModel = (
   input: DataRecord[],
   options: DataRecord = {}
 ): ReportModel => {
-  const spec = REPORT_SPECS[name];
+  const spec = own(REPORT_SPECS, name);
   if (!(spec !== undefined)) {
     throw new Error(`Unknown report ${name}`);
   }

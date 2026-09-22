@@ -381,12 +381,13 @@ const FORM_SUBMIT_CLS = `inline-flex cursor-pointer items-center rounded-md bord
  * names each fragment: `card` is the CommentCard skeleton with `data-cc-*`
  * fill slots, `form` the reply/new-comment form, `strip` a thread row (its
  * `bleed` variant follows the subject: code strips stretch across the px-4
- * code padding, diff strips don't). Templates keep this markup out of the
- * serializer's `[data-mdxr-comment]` scan and single-source the classes.
+ * code padding, diff strips don't). Hidden, inert containers keep the same
+ * DOM shape during hydration: native template children live in `.content`,
+ * where React cannot match them. The serializer excludes these containers.
  */
 const CommentTemplates = ({ bleed }: { bleed: boolean }): ReactElement => (
   <>
-    <template data-comment-tpl="card">
+    <div hidden inert data-comment-tpl="card">
       <div className="flex gap-2.5" data-mdxr-comment="">
         <span
           aria-hidden
@@ -421,8 +422,8 @@ const CommentTemplates = ({ bleed }: { bleed: boolean }): ReactElement => (
           />
         </article>
       </div>
-    </template>
-    <template data-comment-tpl="form">
+    </div>
+    <div hidden inert data-comment-tpl="form">
       <div
         className={`rounded-md border ${BORDER_CLS} bg-white p-2.5 dark:bg-neutral-950`}
         data-comment-form=""
@@ -460,14 +461,14 @@ const CommentTemplates = ({ bleed }: { bleed: boolean }): ReactElement => (
           </span>
         </div>
       </div>
-    </template>
-    <template data-comment-tpl="strip">
+    </div>
+    <div hidden inert data-comment-tpl="strip">
       <div className={commentStripCls(bleed)} data-comment-strip="">
         <div className="mdxr-thread-tools" data-thread-tools="">
           <CommentReplyButton />
         </div>
       </div>
-    </template>
+    </div>
   </>
 );
 

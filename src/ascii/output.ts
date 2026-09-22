@@ -65,6 +65,9 @@ const comment = (node: MdxTarget, ctx: AsciiCtx): RootContent[] => {
 const graph = (node: MdxTarget, ctx: AsciiCtx): RootContent[] => {
   const nodes = els(node, "Node");
   const edges = els(node, "Edge");
+  const connected = new Set(
+    edges.flatMap((edge) => [attr(edge, "from"), attr(edge, "to")])
+  );
   const nodeNotes = nodes.flatMap((nd) => {
     const label = attr(nd, "label");
     const note = attr(nd, "note");
@@ -74,7 +77,8 @@ const graph = (node: MdxTarget, ctx: AsciiCtx): RootContent[] => {
       (label === undefined || label === attr(nd, "id")) &&
       note === undefined &&
       path === undefined &&
-      status === undefined
+      status === undefined &&
+      connected.has(attr(nd, "id"))
     ) {
       return [];
     }
@@ -261,9 +265,13 @@ const waterfall = (node: MdxTarget, ctx: AsciiCtx): RootContent[] => {
     lines.push(`${title}  (0 → ${total}${unit})`);
   }
   for (const s of spans) {
-    const from = Math.round((s.start / Math.max(1, total)) * W);
-    const len = Math.max(1, Math.round((s.duration / Math.max(1, total)) * W));
-    const cells = `${" ".repeat(Math.min(W, from))}${"█".repeat(Math.min(len, W - from))}`;
+    const scale = Math.max(1, total);
+    const from = Math.max(0, Math.min(W, Math.round((s.start / scale) * W)));
+    const to = Math.max(
+      from,
+      Math.min(W, Math.round(((s.start + Math.max(0, s.duration)) / scale) * W))
+    );
+    const cells = `${" ".repeat(from)}${"█".repeat(to - from)}`;
     lines.push(
       `${pad(s.name, nameW)} ${cells} ${s.durationRaw || `${s.duration}${unit}`}${nonEmpty(s.note) ? `  ${s.note}` : ""}`
     );

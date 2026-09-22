@@ -1,13 +1,13 @@
 import type { ReactElement, ReactNode } from "react";
 import * as v from "valibot";
 
-import { defineComponent, flattenChildren, parseProps } from "../define.js";
+import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { NUMISH, numOf } from "./attrs.js";
 import { CODE_CHIP_CLS } from "./bits.js";
 import { ChartPanel } from "./chart-bits.js";
 import { CHART_TONES, textList, toneOf } from "./chart.js";
-import { isEl } from "./children.js";
+import { collectChildProps } from "./children.js";
 import { BORDER_CLS, RAIL_BG_CLS, TEXT, TEXT_MICRO } from "./tones.js";
 
 /**
@@ -46,20 +46,12 @@ export const Pin = defineComponent(
 const collectPins = (
   children: ReactNode
 ): { pins: { spec: PinSpec; x: number; y: number }[]; rest: ReactNode[] } => {
-  const pins: { spec: PinSpec; x: number; y: number }[] = [];
-  const rest: ReactNode[] = [];
-  for (const child of flattenChildren(children)) {
-    if (isEl(child, Pin)) {
-      const spec = parseProps(PIN_SCHEMA, child.props, "Pin");
-      const x = numOf(spec.x);
-      const y = numOf(spec.y);
-      if (x !== undefined && y !== undefined) {
-        pins.push({ spec, x, y });
-      }
-    } else {
-      rest.push(child);
-    }
-  }
+  const { items, rest } = collectChildProps(children, Pin, PIN_SCHEMA, "Pin");
+  const pins = items.flatMap((spec) => {
+    const x = numOf(spec.x);
+    const y = numOf(spec.y);
+    return x === undefined || y === undefined ? [] : [{ spec, x, y }];
+  });
   return { pins, rest };
 };
 

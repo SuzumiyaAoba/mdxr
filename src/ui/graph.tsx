@@ -227,7 +227,7 @@ export const Graph = defineComponent(
 
     if (uniqueNodes.length === 0) {
       // No <Node> children: render content as-is (standalone Node/Edge views).
-      return <Section title={title}>{rest}</Section>;
+      return <Section title={title}>{children}</Section>;
     }
 
     const { g, height, liveEdges, width } = layoutGraph(

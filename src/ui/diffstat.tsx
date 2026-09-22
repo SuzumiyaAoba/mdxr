@@ -16,11 +16,12 @@ export const DiffStat = defineComponent(
     }),
   },
   ({ files, adds, dels }) => {
-    const a = numOf(adds) ?? 0;
-    const d = numOf(dels) ?? 0;
+    const a = Math.max(0, numOf(adds) ?? 0);
+    const d = Math.max(0, numOf(dels) ?? 0);
     const f = numOf(files);
-    const total = a + d;
-    const aPct = total > 0 ? (a / total) * 100 : 50;
+    const largest = Math.max(a, d);
+    const aPct =
+      largest > 0 ? (a / largest / (a / largest + d / largest)) * 100 : 50;
     return (
       <span className="not-prose mx-0.5 inline-flex items-center gap-2 align-baseline text-xs">
         {f === undefined ? null : (
@@ -37,7 +38,7 @@ export const DiffStat = defineComponent(
         <span className={`font-mono font-medium tabular-nums ${TONE_TEXT.red}`}>
           −{d}
         </span>
-        {total > 0 ? (
+        {largest > 0 ? (
           <span
             aria-hidden
             className="inline-flex h-2 w-14 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-700"

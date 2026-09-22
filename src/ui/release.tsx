@@ -3,7 +3,7 @@ import { Fragment } from "react";
 import * as v from "valibot";
 
 import { defineComponent, flattenChildren } from "../define.js";
-import { isOneOf, nonEmpty } from "../guards.js";
+import { isOneOf, nonEmpty, safeHref } from "../guards.js";
 import { CaptionBar, Panel } from "./bits.js";
 import { isEl, propOf } from "./children.js";
 import { Icon } from "./icon.js";
@@ -108,6 +108,7 @@ export const Release = defineComponent(
     }),
   },
   ({ version, date, href, title, children }): ReactElement => {
+    const link = safeHref(href);
     const groups = new Map<EntryKind, ReactNode[]>();
     const rest: ReactNode[] = [];
     for (const node of flattenChildren(children)) {
@@ -117,7 +118,12 @@ export const Release = defineComponent(
       }
       const k = propOf(node, "kind");
       const kind = isEntryKind(k) ? k : "changed";
-      groups.set(kind, [...(groups.get(kind) ?? []), node]);
+      const group = groups.get(kind);
+      if (group === undefined) {
+        groups.set(kind, [node]);
+      } else {
+        group.push(node);
+      }
     }
     return (
       <Panel>
@@ -131,16 +137,16 @@ export const Release = defineComponent(
             {nonEmpty(date) ? (
               <span className={`${TEXT_SUB} ${TEXT.faint}`}>{date}</span>
             ) : null}
-            {nonEmpty(href) ? (
+            {link === undefined ? null : (
               <a
                 className={`${TEXT_SUB} ${TEXT.muted} no-underline hover:underline`}
-                href={href}
+                href={link}
                 rel="noopener noreferrer"
                 target="_blank"
               >
                 compare
               </a>
-            ) : null}
+            )}
           </span>
         </CaptionBar>
         <div className="py-2">

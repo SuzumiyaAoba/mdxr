@@ -1,4 +1,4 @@
-import { isRecord as isObject } from "../guards.js";
+import { isRecord as isObject, own } from "../guards.js";
 
 export type DataRecord = Record<string, unknown>;
 
@@ -176,7 +176,7 @@ export const columnsOf = (rows: DataRecord[], columns?: string): string[] =>
     : [...new Set(rows.flatMap(Object.keys))];
 
 export const csvOf = (rows: DataRecord[], columns = columnsOf(rows)): string =>
-  [columns, ...rows.map((row) => columns.map((key) => display(row[key])))]
+  [columns, ...rows.map((row) => columns.map((key) => display(own(row, key))))]
     .map((row) =>
       row.map((cell) => `"${cell.replaceAll('"', '""')}"`).join(",")
     )
@@ -213,7 +213,9 @@ export const deviation = (values: number[]): number => {
 };
 
 export const rounded = (value: number): number =>
-  Math.round(value * 1000) / 1000;
+  value !== 0 && Math.abs(value) < 0.001
+    ? Number(value.toPrecision(3))
+    : Number(value.toFixed(3));
 
 export const percentage = (part: number, total: number): string =>
   total === 0 ? "—" : `${rounded((part / total) * 100)}%`;
@@ -224,7 +226,7 @@ export const uniqueIds = (
 ): Map<string, DataRecord> => {
   const map = new Map<string, DataRecord>();
   for (const row of rows) {
-    const id = display(row[key]);
+    const id = display(own(row, key));
     if (!id || map.has(id)) {
       throw new Error(`Expected a unique, nonempty ${key}: ${id}`);
     }

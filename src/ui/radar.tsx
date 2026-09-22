@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import * as v from "valibot";
 
-import { defineComponent, flattenChildren, parseProps } from "../define.js";
+import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { NUMISH, numOf } from "./attrs.js";
 import { ChartLegend, ChartPanel } from "./chart-bits.js";
@@ -14,7 +14,7 @@ import {
   textList,
   toneOf,
 } from "./chart.js";
-import { isEl } from "./children.js";
+import { collectChildProps } from "./children.js";
 import { SERIES_SCHEMA, Series } from "./series.js";
 import type { SeriesSpec } from "./series.js";
 import { TEXT, TEXT_MICRO } from "./tones.js";
@@ -45,16 +45,13 @@ const anchorAt = (x: number): "end" | "middle" | "start" => {
 const collectSeries = (
   children: ReactNode
 ): { rest: ReactNode[]; series: { nums: number[]; spec: SeriesSpec }[] } => {
-  const series: { nums: number[]; spec: SeriesSpec }[] = [];
-  const rest: ReactNode[] = [];
-  for (const child of flattenChildren(children)) {
-    if (isEl(child, Series)) {
-      const spec = parseProps(SERIES_SCHEMA, child.props, "Series");
-      series.push({ nums: numList(spec.values), spec });
-    } else {
-      rest.push(child);
-    }
-  }
+  const { items, rest } = collectChildProps(
+    children,
+    Series,
+    SERIES_SCHEMA,
+    "Series"
+  );
+  const series = items.map((spec) => ({ nums: numList(spec.values), spec }));
   return { rest, series };
 };
 

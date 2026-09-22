@@ -581,7 +581,7 @@ const drop = (e: Event, el: Element): boolean => {
  * [data-comment-strip] threads, a [data-comment-add] "+" on every code/diff
  * row, [data-thread-tools] holding each thread's Reply affordance, and
  * [data-comments-copy] on the block's tools row. The strip/card/form markup
- * ships as inert <template data-comment-tpl> fragments inside the
+ * ships in hidden, inert [data-comment-tpl] containers inside the
  * [data-comments] root — handlers clone them so client-built markup stays
  * single-sourced in SSR. [data-comments-copy] serializes the block's DOM
  * back into <Comments> markup — paste it over the source block to persist
@@ -623,19 +623,16 @@ const setData = (
   }
 };
 
-// Clone one <template data-comment-tpl> fragment parked inside `root`
+// Clone one [data-comment-tpl] fragment parked inside `root`
 // (the [data-comments] block). Returns the fragment's single root element.
-// Parsed templates keep their kids in .content; hydrated ones (React
-// rebuilds them as real element children) keep them as direct children —
-// read both.
+// Read native template content too, for previously generated documents.
 const cloneTpl = (root: HTMLElement, kind: string): HTMLElement | null => {
-  const tpl = root.querySelector(`template[data-comment-tpl="${kind}"]`);
-  if (!(tpl instanceof HTMLTemplateElement)) {
+  const tpl = root.querySelector(`[data-comment-tpl="${kind}"]`);
+  if (!(tpl instanceof HTMLElement)) {
     return null;
   }
-  const node = (
-    tpl.content.firstElementChild ?? tpl.firstElementChild
-  )?.cloneNode(true);
+  const content = tpl instanceof HTMLTemplateElement ? tpl.content : tpl;
+  const node = content.firstElementChild?.cloneNode(true);
   return node instanceof HTMLElement ? node : null;
 };
 
@@ -892,9 +889,11 @@ const commentsMarkdown = (root: HTMLElement): string => {
     );
   }
   for (const c of root.querySelectorAll("[data-mdxr-comment]")) {
-    // Hydrated <template> kids are real children — the card skeleton inside
-    // the `card` template must not serialize as a phantom comment.
-    if (!(c instanceof HTMLElement) || c.closest("template") !== null) {
+    // The card skeleton must not serialize as a phantom comment.
+    if (
+      !(c instanceof HTMLElement) ||
+      c.closest("[data-comment-tpl]") !== null
+    ) {
       continue;
     }
     const d = c.dataset;

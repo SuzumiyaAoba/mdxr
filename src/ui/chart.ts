@@ -174,15 +174,54 @@ export const fmtNum = (n: number): string => {
   if (abs >= 1000) {
     return `${round2(n / 1000)}k`;
   }
+  if (abs > 0 && abs < 0.01) {
+    return String(Number(n.toPrecision(3)));
+  }
   return `${round2(n)}`;
 };
 
 const STEPS = [1, 2, 2.5, 5, 10] as const;
+const MAX_TICK_INTERVALS = 100;
+
+const tickCount = (count: number): number =>
+  Number.isFinite(count) && count > 0
+    ? Math.min(MAX_TICK_INTERVALS, Math.max(1, Math.floor(count)))
+    : 4;
 
 /** Round a span up to a 1/2/2.5/5×10^k step. */
 const niceStep = (rough: number): number => {
+  if (rough <= Number.MIN_VALUE) {
+    return Number.MIN_VALUE;
+  }
+  if (!Number.isFinite(rough)) {
+    return Number.MAX_VALUE;
+  }
   const mag = 10 ** Math.floor(Math.log10(rough));
-  return STEPS.map((m) => m * mag).find((s) => s >= rough - 1e-9) ?? 10 * mag;
+  if (mag === 0) {
+    return rough;
+  }
+  const normalized = rough / mag;
+  const multiplier = STEPS.find((s) => s >= normalized - 1e-9) ?? 10;
+  return Math.min(Number.MAX_VALUE, multiplier * mag);
+};
+
+/** Integer indices bound the work; repeatedly adding tiny floats may never advance. */
+const axisTicks = (first: number, last: number, step: number): number[] => {
+  const length = Math.min(
+    MAX_TICK_INTERVALS + 3,
+    Math.max(0, last - first + 1)
+  );
+  const decimals = Math.max(0, 1 - Math.floor(Math.log10(step)));
+  const ticks = Array.from({ length }, (_, i) => {
+    const value = (first + i) * step;
+    // Round relative to the step, preserving fractional ticks and removing
+    // arithmetic noise. toFixed only supports up to 100 decimal places.
+    const rounded = Number(
+      decimals <= 100 ? value.toFixed(decimals) : value.toPrecision(15)
+    );
+    return rounded === 0 ? 0 : rounded;
+  });
+  return [...new Set(ticks.filter(Number.isFinite))];
 };
 
 export interface AxisScale {
@@ -199,15 +238,13 @@ export interface AxisScale {
  * a 1/2/2.5/5 step and interior ticks land on step boundaries.
  */
 export const niceScale = (max: number, count = 4): AxisScale => {
-  if (!(max > 0)) {
+  if (!Number.isFinite(max) || !(max > 0)) {
     return { ceil: 1, step: 1, ticks: [1] };
   }
-  const step = niceStep(max / count);
-  const ceil = Math.ceil(max / step - 1e-9) * step;
-  const ticks: number[] = [];
-  for (let t = step; t <= ceil + 1e-9; t += step) {
-    ticks.push(round2(t));
-  }
+  const step = niceStep(max / tickCount(count));
+  const last = Math.ceil(max / step - 1e-9);
+  const ceil = Math.min(Number.MAX_VALUE, last * step);
+  const ticks = axisTicks(1, last, step);
   return { ceil, step, ticks };
 };
 
@@ -225,21 +262,22 @@ export interface ExtentScale {
 export const niceBounds = (lo: number, hi: number, count = 4): ExtentScale => {
   let min = lo;
   let max = hi;
-  if (!(min <= max)) {
+  if (!Number.isFinite(min) || !Number.isFinite(max) || !(min <= max)) {
     min = 0;
     max = 1;
   }
   if (min === max) {
-    min -= 1;
-    max += 1;
+    const padding = Math.max(1, Math.abs(min) * Number.EPSILON * 4);
+    min = Math.max(-Number.MAX_VALUE, min - padding);
+    max = Math.min(Number.MAX_VALUE, max + padding);
   }
-  const step = niceStep((max - min) / count);
-  const lo2 = Math.floor(min / step + 1e-9) * step;
-  const hi2 = Math.ceil(max / step - 1e-9) * step;
-  const ticks: number[] = [];
-  for (let t = lo2; t <= hi2 + 1e-9; t += step) {
-    ticks.push(round2(t));
-  }
+  const intervals = tickCount(count);
+  const step = niceStep(max / intervals - min / intervals);
+  const first = Math.floor(min / step + 1e-9);
+  const last = Math.ceil(max / step - 1e-9);
+  const lo2 = Math.max(-Number.MAX_VALUE, first * step);
+  const hi2 = Math.min(Number.MAX_VALUE, last * step);
+  const ticks = axisTicks(first, last, step);
   return { max: hi2, min: lo2, ticks };
 };
 
@@ -343,15 +381,27 @@ const worst = (row: readonly number[], w: number): number => {
   return m;
 };
 
+const positiveMaximum = (values: readonly number[]): number => {
+  let max = 0;
+  for (const value of values) {
+    if (Number.isFinite(value)) {
+      max = Math.max(max, value);
+    }
+  }
+  return max;
+};
+
 /**
  * Squarified treemap layout (Bruls et al.) — returns one rect per input
  * value in the same order, packed inside `rect`. Non-positive values are
  * dropped (they get a zero rect).
  */
 export const squarify = (values: readonly number[], rect: Rect): Rect[] => {
+  const maxValue = positiveMaximum(values);
   const pending = values
     .map((v, i) => ({ i, v }))
-    .filter((e) => e.v > 0)
+    .filter((e) => Number.isFinite(e.v) && e.v > 0)
+    .map(({ i, v }) => ({ i, v: v / maxValue }))
     .toSorted((a, b) => b.v - a.v);
   const placed = new Map<number, Rect>();
   let rest = { ...rect };
@@ -400,17 +450,15 @@ export const squarify = (values: readonly number[], rect: Rect): Rect[] => {
 
   for (const item of pending) {
     const side = Math.min(rest.w, rest.h);
+    // Aspect ratios compare areas, not raw values; changing the data's unit
+    // must not change the tiling.
+    const area = rest.w * rest.h;
+    const total = remaining;
+    const areaOf = (e: { v: number }): number => (e.v / total) * area;
     const withItem = [...row, item];
     if (
       row.length > 0 &&
-      worst(
-        withItem.map((e) => e.v),
-        side
-      ) >
-        worst(
-          row.map((e) => e.v),
-          side
-        )
+      worst(withItem.map(areaOf), side) > worst(row.map(areaOf), side)
     ) {
       closeRow();
       row = [item];
@@ -502,6 +550,24 @@ const sankeyValues = (links: SankeySpec["links"]): ((id: string) => number) => {
   };
 };
 
+const explicitSankeyStages = (
+  nodes: SankeySpec["nodes"]
+): Map<string, number | undefined> => {
+  const stages = new Map<string, number | undefined>();
+  for (const node of nodes) {
+    if (
+      node.stage !== undefined &&
+      (!Number.isSafeInteger(node.stage) || node.stage < 0)
+    ) {
+      throw new Error(
+        `Invalid Sankey stage for node "${node.id}": expected a non-negative integer`
+      );
+    }
+    stages.set(node.id, node.stage);
+  }
+  return stages;
+};
+
 /**
  * Sankey layout: nodes are vertical bars stacked per stage column, one
  * px-per-unit scale across the whole diagram (column totals equalize at the
@@ -514,11 +580,13 @@ export const layoutSankey = (
   height: number,
   gap: number
 ): SankeyLayout => {
-  const explicit = new Map(spec.nodes.map((n) => [n.id, n.stage]));
+  const explicit = explicitSankeyStages(spec.nodes);
   const stageOf = new Map<string, number>();
   const incoming = new Map<string, string[]>();
   for (const l of spec.links) {
-    incoming.set(l.to, [...(incoming.get(l.to) ?? []), l.from]);
+    const deps = incoming.get(l.to) ?? [];
+    deps.push(l.from);
+    incoming.set(l.to, deps);
   }
   const nodes = [...sankeyIds(spec)].map((id) => ({
     id,
@@ -527,25 +595,36 @@ export const layoutSankey = (
   const stages = Math.max(0, ...nodes.map((n) => n.stage)) + 1;
   const valueOf = sankeyValues(spec.links);
 
-  const columns: string[][] = Array.from({ length: stages }, () => []);
+  // Stage numbers can be sparse; allocating every intervening column would
+  // make a large explicit stage consume memory proportional to its index.
+  const byStage = new Map<number, string[]>();
   for (const n of nodes) {
-    columns[n.stage]?.push(n.id);
+    const column = byStage.get(n.stage) ?? [];
+    column.push(n.id);
+    byStage.set(n.stage, column);
   }
+  const columns = [...byStage.values()];
   const maxRows = Math.max(1, ...columns.map((col) => col.length));
   const maxTotal = Math.max(
     0,
     ...columns.map((col) => col.reduce((a, id) => a + valueOf(id), 0))
   );
+  const available = Math.max(0, height);
+  const spacing = Math.min(Math.max(0, gap), available / (2 * maxRows));
+  const minHeight = Math.min(2, available / (2 * maxRows));
   const k =
-    maxTotal <= 0 ? 0 : (height - gap * Math.max(0, maxRows - 1)) / maxTotal;
+    maxTotal <= 0
+      ? 0
+      : Math.max(0, available - spacing * (maxRows - 1) - minHeight * maxRows) /
+        maxTotal;
 
   const laid = new Map<string, { h: number; y: number }>();
   for (const col of columns) {
     let y = 0;
     for (const id of col) {
-      const h = Math.max(2, valueOf(id) * k);
+      const h = Math.max(minHeight, valueOf(id) * k);
       laid.set(id, { h, y });
-      y += h + gap;
+      y += h + spacing;
     }
   }
 

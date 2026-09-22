@@ -10,6 +10,8 @@ export const attrTrue = (x: unknown): boolean =>
 
 export const attrFalse = (x: unknown): boolean => x === false || x === "false";
 
+const NUMBER_PREFIX = /^\s*[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/u;
+
 /** Numeric part of `"40"`, `"-15"`, `"40%"`, `"120ms"`, `1.2` — suffix text is dropped. */
 export const numOf = (x: unknown): number | undefined => {
   if (typeof x === "number") {
@@ -18,8 +20,9 @@ export const numOf = (x: unknown): number | undefined => {
   if (typeof x !== "string") {
     return undefined;
   }
-  const m = /^\s*(?<n>[+-]?\d+(?:\.\d+)?)/u.exec(x);
-  return m?.groups === undefined ? undefined : Number(m.groups.n);
+  const match = NUMBER_PREFIX.exec(x);
+  const n = match === null ? Number.NaN : Number(match[0]);
+  return Number.isFinite(n) ? n : undefined;
 };
 
 /**

@@ -56,7 +56,9 @@ export const dependencyMatrixModel = (edges: DataRecord[]): PlotModel => {
   const rows = names.flatMap((from) =>
     names.map((to) => ({
       value: edges
-        .filter((edge) => edge.from === from && edge.to === to)
+        .filter(
+          (edge) => display(edge.from) === from && display(edge.to) === to
+        )
         .reduce((sum, edge) => sum + positive(edge.value, "value", 1), 0),
       x: to,
       y: from,

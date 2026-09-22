@@ -2,7 +2,7 @@ import { useId } from "react";
 import type { ReactElement, ReactNode } from "react";
 import * as v from "valibot";
 
-import { defineComponent, flattenChildren, parseProps } from "../define.js";
+import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
 import { attrTrue, BOOLISH_PROP, NUMISH, numOf } from "./attrs.js";
 import { ChartLegend, ChartPanel } from "./chart-bits.js";
@@ -15,7 +15,7 @@ import {
   textList,
   toneOf,
 } from "./chart.js";
-import { isEl } from "./children.js";
+import { collectChildProps } from "./children.js";
 import { SERIES_SCHEMA, Series } from "./series.js";
 import type { SeriesSpec } from "./series.js";
 import { TEXT, TEXT_MICRO } from "./tones.js";
@@ -46,21 +46,18 @@ interface SeriesData {
 const collectSeries = (
   children: ReactNode
 ): { rest: ReactNode[]; series: SeriesData[] } => {
-  const series: SeriesData[] = [];
-  const rest: ReactNode[] = [];
-  for (const child of flattenChildren(children)) {
-    if (isEl(child, Series)) {
-      const spec = parseProps(SERIES_SCHEMA, child.props, "Series");
-      series.push({
-        dash: attrTrue(spec.dash),
-        name: spec.name,
-        nums: numList(spec.values),
-        spec,
-      });
-    } else {
-      rest.push(child);
-    }
-  }
+  const { items, rest } = collectChildProps(
+    children,
+    Series,
+    SERIES_SCHEMA,
+    "Series"
+  );
+  const series = items.map((spec) => ({
+    dash: attrTrue(spec.dash),
+    name: spec.name,
+    nums: numList(spec.values),
+    spec,
+  }));
   return { rest, series };
 };
 

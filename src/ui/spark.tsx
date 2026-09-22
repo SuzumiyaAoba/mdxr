@@ -2,7 +2,7 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
-import { numOf } from "./attrs.js";
+import { numList } from "./chart.js";
 import { TONE_TEXT } from "./tones.js";
 
 export const SPARK_TONES = [
@@ -19,17 +19,6 @@ const PAD = 1.5;
 const W = 100;
 const H = 24;
 
-/** `"3, 8, 2, 12"` / `"3 8 2 12"` → finite numbers. */
-const parseValues = (x: unknown): number[] => {
-  if (typeof x !== "string") {
-    return [];
-  }
-  return x
-    .split(/[\s,]+/u)
-    .map((t) => numOf(t))
-    .filter((n): n is number => n !== undefined);
-};
-
 export const Spark = defineComponent(
   {
     description:
@@ -41,7 +30,7 @@ export const Spark = defineComponent(
     }),
   },
   ({ values, tone, label }) => {
-    const pts = parseValues(values);
+    const pts = numList(values);
     if (pts.length < 2) {
       return null;
     }

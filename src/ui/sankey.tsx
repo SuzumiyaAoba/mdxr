@@ -100,7 +100,7 @@ const collectFlow = (children: ReactNode): SankeyData => {
       data.links.push({
         from: spec.from,
         to: spec.to,
-        value: numOf(spec.value) ?? 0,
+        value: Math.max(0, numOf(spec.value) ?? 0),
       });
     } else if (isEl(child, Node)) {
       collectNode(child, data);
@@ -113,11 +113,11 @@ const collectFlow = (children: ReactNode): SankeyData => {
 
 const VB_W = 640;
 const VB_H = 340;
-const TOP = 26;
+const TOP = 44;
 const BOTTOM = 12;
 const H = VB_H - TOP - BOTTOM;
 const BAR_W = 10;
-const GAP = 14;
+const GAP = 24;
 const L_MARGIN = 96;
 const R_MARGIN = 96;
 
@@ -195,7 +195,7 @@ export const Sankey = defineComponent(
             {layout.links.map((l, i) => {
               const s = nodeById.get(l.from);
               const t = nodeById.get(l.to);
-              if (s === undefined || t === undefined) {
+              if (s === undefined || t === undefined || l.value <= 0) {
                 return null;
               }
               const x1 = colX(s.stage) + BAR_W;

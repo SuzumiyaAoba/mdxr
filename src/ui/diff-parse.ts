@@ -4,6 +4,8 @@
  * streams (no `diff --git`/`@@` headers) parse as a single anonymous file.
  */
 
+import { isRecord } from "../guards.js";
+
 export interface DiffRow {
   kind: "add" | "ctx" | "del" | "note";
   newLine?: number;
@@ -41,6 +43,20 @@ export interface DiffHlToken {
  */
 export type DiffHl = (DiffHlToken[] | null)[][][];
 
+const isHighlightToken = (value: unknown): value is DiffHlToken =>
+  isRecord(value) &&
+  typeof value.t === "string" &&
+  (value.s === undefined || typeof value.s === "string");
+
+const isHighlightRow = (value: unknown): value is DiffHlToken[] | null =>
+  value === null || (Array.isArray(value) && value.every(isHighlightToken));
+
+const isHighlightHunk = (value: unknown): value is (DiffHlToken[] | null)[] =>
+  Array.isArray(value) && value.every(isHighlightRow);
+
+const isHighlightFile = (value: unknown): value is DiffHl[number] =>
+  Array.isArray(value) && value.every(isHighlightHunk);
+
 /** JSON from the fence's `data-diffhl` attribute, or undefined when absent or
  * malformed — malformed data degrades to unhighlighted rows, never a crash. */
 export const parseDiffHl = (raw: string | undefined): DiffHl | undefined => {
@@ -49,7 +65,9 @@ export const parseDiffHl = (raw: string | undefined): DiffHl | undefined => {
   }
   try {
     const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as DiffHl) : undefined;
+    return Array.isArray(parsed) && parsed.every(isHighlightFile)
+      ? parsed
+      : undefined;
   } catch {
     return undefined;
   }

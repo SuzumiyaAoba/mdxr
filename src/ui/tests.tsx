@@ -57,15 +57,15 @@ export const parseDuration = (x: unknown): number | undefined => {
   if (m?.groups === undefined) {
     return undefined;
   }
-  const n = Number(m.groups.n);
+  let duration = Number(m.groups.n);
   const unit = m.groups.u ?? "ms";
   if (unit === "s") {
-    return n * 1000;
+    duration *= 1000;
   }
   if (unit === "m") {
-    return n * 60_000;
+    duration *= 60_000;
   }
-  return n;
+  return Number.isFinite(duration) ? duration : undefined;
 };
 
 export const formatDuration = (ms: number): string => {

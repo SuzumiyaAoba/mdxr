@@ -194,13 +194,22 @@ export const Matrix = defineComponent(
         {nonEmpty(title) ? (
           <CaptionBar className="font-medium">{title}</CaptionBar>
         ) : null}
-        {headers.length > 0 ? (
-          <MatrixHeader colCount={colCount} grid={grid} headers={headers} />
-        ) : null}
-        <div className={DIVIDE_CLS}>
-          {rows.map((cells, i) => (
-            <MatrixRow cells={cells} colCount={colCount} grid={grid} key={i} />
-          ))}
+        <div className="overflow-x-auto">
+          <div style={{ minWidth: `${8 + 4.5 * colCount}rem` }}>
+            {headers.length > 0 ? (
+              <MatrixHeader colCount={colCount} grid={grid} headers={headers} />
+            ) : null}
+            <div className={DIVIDE_CLS}>
+              {rows.map((cells, i) => (
+                <MatrixRow
+                  cells={cells}
+                  colCount={colCount}
+                  grid={grid}
+                  key={i}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </Panel>
     );

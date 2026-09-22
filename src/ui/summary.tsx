@@ -31,7 +31,7 @@ export const Summary = defineComponent(
         </div>
         <div className={`h-2 overflow-hidden rounded-full ${TRACK_CLS}`}>
           <div
-            className="h-full rounded-full bg-emerald-500 transition-all"
+            className="h-full rounded-full bg-emerald-500 transition-[width] motion-reduce:transition-none"
             style={{ width: `${pct}%` }}
           />
         </div>

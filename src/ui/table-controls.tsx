@@ -1,7 +1,8 @@
 import { useContext, useId, useState } from "react";
 
 import type { DataRecord } from "../extended/data.js";
-import { csvOf, display } from "../extended/data.js";
+import { csvOf, display, keyed, recordKey } from "../extended/data.js";
+import { own } from "../guards.js";
 import { FilterContext, matchesFilters, useHydrated } from "./data-context.js";
 import { downloadText } from "./data-download.js";
 import { DATA_BUTTON, DATA_INPUT } from "./data-props.js";
@@ -51,13 +52,13 @@ export const TableControls = ({
       matchesFilters(row, externalFilters) &&
       matchesFilters(row, filters) &&
       columns.some((key) =>
-        display(row[key]).toLowerCase().includes(query.toLowerCase())
+        display(own(row, key)).toLowerCase().includes(query.toLowerCase())
       )
   );
   const sorted = sort.column
     ? filtered.toSorted(
         (a, b) =>
-          compareValues(a[sort.column], b[sort.column]) *
+          compareValues(own(a, sort.column), own(b, sort.column)) *
           (sort.descending ? -1 : 1)
       )
     : filtered;
@@ -91,14 +92,14 @@ export const TableControls = ({
             <select
               aria-label={key}
               className={DATA_INPUT}
-              value={filters[key] ?? ""}
+              value={own(filters, key) ?? ""}
               onChange={(event) => {
                 setFilters({ ...filters, [key]: event.target.value });
                 setPage(0);
               }}
             >
               <option value="">All</option>
-              {[...new Set(rows.map((row) => display(row[key])))]
+              {[...new Set(rows.map((row) => display(own(row, key))))]
                 .filter(Boolean)
                 .map((value) => (
                   <option key={value}>{value}</option>
@@ -165,14 +166,14 @@ export const TableControls = ({
             </tr>
           </thead>
           <tbody>
-            {visible.map((row, index) => (
-              <tr key={display(row.id) || String(current * size + index)}>
+            {keyed(visible, recordKey).map(({ key, value: row }) => (
+              <tr key={key}>
                 {columns.map((column) => (
                   <td
                     key={column}
                     className="border-b border-neutral-100 px-4 py-2 align-top whitespace-pre-wrap dark:border-neutral-800"
                   >
-                    {display(row[column]) || "—"}
+                    {display(own(row, column)) || "—"}
                   </td>
                 ))}
               </tr>

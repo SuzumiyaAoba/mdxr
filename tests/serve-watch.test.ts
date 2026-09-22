@@ -76,12 +76,16 @@ describe("preview watcher lifecycle", () => {
     listener("change", "document.mdx");
     await vi.advanceTimersByTimeAsync(100);
     expect(render).toHaveBeenCalledTimes(2);
+    // Recursive fs.watch is native on darwin/win32 but emulated on other
+    // platforms, where the emulator itself calls fs.watch per directory —
+    // so assert no *new* watchers instead of a fixed call count.
+    const callsBeforeClose = watch.mock.calls.length;
     server.close();
     await once(server, "close");
     completion.dispatchEvent(new Event("finish"));
     await vi.advanceTimersByTimeAsync(0);
     try {
-      expect(watch).toHaveBeenCalledOnce();
+      expect(watch).toHaveBeenCalledTimes(callsBeforeClose);
     } finally {
       for (const result of watch.mock.results) {
         if (result.type === "return") {

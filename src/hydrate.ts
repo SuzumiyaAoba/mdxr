@@ -29,6 +29,8 @@ export interface HydrateSpec {
   header?: Record<string, string | undefined>;
   /** SSR render timestamp (ISO) — replayed into `DocContext.now`. */
   now?: string;
+  /** The page has a sidebar ToC — mount it with this bundle's React copy. */
+  pageToc?: boolean;
   /** Catalog keys the document referenced — only these get imported. */
   usedComponents: string[];
   /** Iconify names (`prefix:name`) resolved during SSR. */
@@ -73,6 +75,8 @@ export const buildHydrateScript = async (
   // bundle.
   const planHeader =
     spec.header === undefined ? "undefined" : bind("PlanHeader");
+  const mountPageToc =
+    spec.pageToc === true ? `${bind("mountPageToc")}();` : "";
 
   for (const name of spec.usedComponents) {
     // User components merge via their namespace below; the `hasOwn` check must
@@ -104,6 +108,7 @@ ${mountDocument}({
   planHeader: ${planHeader},
   userModule: ${spec.componentsPath === undefined ? "undefined" : "__mdxrUser"},
 });
+${mountPageToc}
 `;
 
   const result = await build({

@@ -26,6 +26,7 @@ import { remarkCodeFile } from "./remark/code-file.js";
 import { remarkCodeMeta } from "./remark/code-meta.js";
 import { remarkMdxrDirectives } from "./remark/directives.js";
 import { remarkFilePaths } from "./remark/file-paths.js";
+import type { DocHeading } from "./remark/headings.js";
 import { remarkMdxrHeadings } from "./remark/headings.js";
 import { remarkInclude } from "./remark/include.js";
 import { remarkNoJs } from "./remark/no-js.js";
@@ -73,6 +74,8 @@ export interface MdxResult {
   context: DocContextValue;
   /** True when the body was rendered for hydration (renderToString). */
   hydrated: boolean;
+  /** Every non-empty heading with its generated `id`, in document order. */
+  headings: DocHeading[];
   /**
    * Re-render the document with `header` as the first child of the same
    * Provider > Fragment > [header|null, doc] tree the hydration client
@@ -232,6 +235,7 @@ export const mdxToHtml = async (
     context,
     fileLinks: Object.fromEntries(fileLinks),
     frontmatter,
+    headings: compiled.data.mdxrHeadings ?? [],
     hydrated,
     renderWithHeader: (header) => {
       try {

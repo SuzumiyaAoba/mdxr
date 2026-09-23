@@ -29,10 +29,13 @@ updated: 2026-09-16
 owner: "@suzumiyaaoba"
 version: v3
 editor: cursor       # editor-link scheme, overrides mdxr.config.ts
+toc: false           # hide the "On this page" sidebar
 ---
 ```
 
 With a `title`, mdxr renders a document header — status badge plus a meta row — automatically. It is skipped when the body already opens with a `<Plan>`-style root, which takes the same props itself (`<Plan title="…" status="…">`).
+
+On wide screens every page with two or more h2–h3 headings also gets an "On this page" sidebar (the [Crux UI](https://abui.io/components/toc) ToC) that highlights the sections currently on screen. Set `toc: false` in frontmatter to hide it; the inline `:::toc` block is independent of it.
 
 ## Markdown conventions compile to components
 

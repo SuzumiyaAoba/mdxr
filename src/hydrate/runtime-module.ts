@@ -29,6 +29,7 @@ export const EXTRA_MODULES: Record<string, string> = {
   builtinComponents: path.join(srcDir, "ui/index.js"),
   defineConfig: path.join(srcDir, "config.js"),
   mountDocument: path.join(srcDir, "hydrate-runtime.js"),
+  mountPageToc: path.join(srcDir, "page-toc-runtime.js"),
 };
 
 /**

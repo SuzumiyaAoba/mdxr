@@ -1,5 +1,6 @@
 import type { Node, Parent } from "unist";
 import { visit } from "unist-util-visit";
+import type { VFile } from "vfile";
 
 import { isFlowElement, jsxAttr, setHProperty, textContent } from "./ast.js";
 
@@ -34,6 +35,20 @@ interface TocItem {
   depth: number;
   slug: string;
   text: string;
+}
+
+/** A document heading as recorded for the page-level sidebar ToC. */
+export interface DocHeading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+declare module "vfile" {
+  interface DataMap {
+    /** Every non-empty heading, in document order (set by remarkMdxrHeadings). */
+    mdxrHeadings: DocHeading[];
+  }
 }
 
 /** Nest a flat heading list by depth (an h3 under the previous h2, …). */
@@ -92,8 +107,11 @@ const toList = (items: TocItem[]): ListNode => ({
  * 2. `<Toc>` elements (`:::toc` included) get a nested link list injected as
  *    children — `depth`/`min` attributes bound the heading levels included
  *    (defaults: h2–h3, i.e. min=2 depth=3).
+ *
+ * The flat heading list is also left on `file.data.mdxrHeadings` for the
+ * page-level sidebar ToC.
  */
-export const remarkMdxrHeadings = () => (tree: Node) => {
+export const remarkMdxrHeadings = () => (tree: Node, file: VFile) => {
   const counts = new Map<string, number>();
   const used = new Set<string>();
   const headings: TocItem[] = [];
@@ -130,4 +148,8 @@ export const remarkMdxrHeadings = () => (tree: Node) => {
     );
     node.children = items.length === 0 ? [] : [toList(nest(items))];
   });
+
+  file.data.mdxrHeadings = headings
+    .filter((h) => h.text !== "")
+    .map(({ depth, slug, text }) => ({ depth, slug, text }));
 };

@@ -3,6 +3,7 @@ import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 
 import { createElement } from "react";
+import { renderToStaticMarkup, renderToString } from "react-dom/server";
 
 import { clientJs } from "./client-js.js";
 import { mergeUserComponents } from "./component-map.js";
@@ -11,14 +12,18 @@ import { loadConfig } from "./config.js";
 import type { ComponentMap } from "./define.js";
 import { formatError } from "./format-error.js";
 import { nonEmpty } from "./guards.js";
+import type { DocumentOptions } from "./html.js";
 import { htmlDocument } from "./html.js";
 import { buildHydrateScript } from "./hydrate.js";
 import { loadUserModule, resolveModuleEntry } from "./load-user-module.js";
 import { mdxToHtml } from "./mdx.js";
+import { pageTocJs } from "./page-toc-js.js";
 import { pkgRoot } from "./paths.js";
+import type { DocHeading } from "./remark/headings.js";
 import type { CssSource } from "./tailwind.js";
 import { buildCss } from "./tailwind.js";
 import { builtinComponents } from "./ui/index.js";
+import { PageToc, pageTocHeadings } from "./ui/page-toc.js";
 import { PlanHeader } from "./ui/plan.js";
 import { isStatus, STATUSES } from "./ui/status-badge.js";
 
@@ -117,6 +122,7 @@ const buildHydrateBundle = async (args: {
   headerProps?: Record<string, string | undefined>;
   hydrate?: boolean;
   now: string;
+  pageToc: boolean;
   usedComponents: string[];
   usedIcons: string[];
 }): Promise<string | undefined> => {
@@ -133,6 +139,7 @@ const buildHydrateBundle = async (args: {
       fileLinks: args.fileLinks,
       header: args.headerProps,
       now: args.now,
+      pageToc: args.pageToc,
       usedComponents: args.usedComponents,
       usedIcons: args.usedIcons,
     });
@@ -186,6 +193,39 @@ const frontmatterHeader = (
   };
 };
 
+/** Sidebar ToC entries — frontmatter `toc: false` opts the page out. */
+const sidebarHeadings = (
+  frontmatter: Record<string, unknown>,
+  headings: DocHeading[]
+): DocHeading[] =>
+  frontmatter.toc === false || frontmatter.toc === "false"
+    ? []
+    : pageTocHeadings(headings);
+
+/**
+ * SSR markup for the sidebar ToC plus the script that hydrates it. The
+ * document bundle mounts the ToC itself when there is one; otherwise the
+ * standalone bundle does. Without JS the sidebar stays plain anchor links.
+ */
+const renderPageToc = async (
+  headings: DocHeading[],
+  interactive: boolean,
+  hasDocumentBundle: boolean
+): Promise<Pick<DocumentOptions, "pageToc" | "pageTocJs">> => {
+  if (headings.length === 0) {
+    return {};
+  }
+  const toMarkup = interactive ? renderToString : renderToStaticMarkup;
+  return {
+    pageToc: {
+      headings,
+      html: toMarkup(createElement(PageToc, { headings })),
+    },
+    pageTocJs:
+      interactive && !hasDocumentBundle ? await pageTocJs() : undefined,
+  };
+};
+
 /** Render MDX source text to a standalone HTML document. */
 export const render = async (
   source: string,
@@ -221,6 +261,7 @@ export const render = async (
     code,
     fileLinks,
     frontmatter,
+    headings,
     renderedAt,
     renderWithHeader,
     usedComponents,
@@ -296,6 +337,8 @@ export const render = async (
   const { css, dependencies } = await buildCss(sources, config.themePath);
   opts.onDependencies?.(dependencies);
 
+  const tocHeadings = sidebarHeadings(frontmatter, headings);
+
   const [js, hydrateJs] = await Promise.all([
     clientJs(),
     buildHydrateBundle({
@@ -305,10 +348,16 @@ export const render = async (
       headerProps,
       hydrate: opts.hydrate,
       now: renderedAt,
+      pageToc: tocHeadings.length > 0,
       usedComponents,
       usedIcons: docIcons,
     }),
   ]);
+  const { pageToc, pageTocJs: tocJs } = await renderPageToc(
+    tocHeadings,
+    opts.hydrate ?? true,
+    hydrateJs !== undefined
+  );
 
   return htmlDocument({
     body: docBody,
@@ -318,6 +367,8 @@ export const render = async (
     liveReload: opts.liveReload,
     needsKatex: /class="[^"]*katex/u.test(docBody),
     needsMermaid: /class="[^"]*mermaid/u.test(docBody),
+    pageToc,
+    pageTocJs: tocJs,
     title,
   });
 };

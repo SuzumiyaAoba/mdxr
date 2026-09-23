@@ -6,6 +6,7 @@ import {
   MERMAID_JS,
   THEME_JS,
 } from "./assets/scripts.js";
+import { PAGE_TOC_DATA_ID, PAGE_TOC_ID } from "./ui/page-toc.js";
 
 /**
  * JS destined for an inline `<script>` element: neutralize the two byte
@@ -66,7 +67,24 @@ export interface DocumentOptions {
    * `<main id="mdxr-root">`, making Base UI primitives interactive.
    */
   hydrateJs?: string;
+  /**
+   * Sidebar ToC: SSR markup plus the headings it was rendered from (the
+   * hydrating client reads them back from a JSON island).
+   */
+  pageToc?: { html: string; headings: unknown[] };
+  /** Standalone bundle hydrating the sidebar ToC when `hydrateJs` is absent. */
+  pageTocJs?: string;
 }
+
+/** JSON for an inline `<script type="application/json">` island. */
+const jsonIsland = (data: unknown): string =>
+  JSON.stringify(data).replaceAll("<", String.raw`\u003c`);
+
+const pageTocHtml = (toc: DocumentOptions["pageToc"]): string =>
+  toc === undefined
+    ? ""
+    : `<aside id="${PAGE_TOC_ID}" aria-label="On this page" class="fixed top-20 left-[calc(50%+25.5rem)] hidden max-h-[calc(100vh-7rem)] w-52 flex-col xl:flex print:hidden">${toc.html}</aside>
+<script type="application/json" id="${PAGE_TOC_DATA_ID}">${jsonIsland(toc.headings)}</script>`;
 
 export const htmlDocument = (o: DocumentOptions): string => `<!doctype html>
 <html lang="en">
@@ -82,10 +100,12 @@ ${o.needsKatex === true ? `<link rel="stylesheet" href="${KATEX_CDN_URL}">` : ""
 <body class="bg-white text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100">
 ${THEME_TOGGLE_HTML}
 <main id="mdxr-root" class="prose prose-neutral dark:prose-invert mx-auto max-w-3xl px-6 py-10">${o.body}</main>
+${pageTocHtml(o.pageToc)}
 <script>${inlineScript(o.clientJs)}</script>
 ${o.needsMermaid ? `<script type="module">${inlineScript(MERMAID_JS)}</script>` : ""}
 ${o.liveReload === true ? `<script>${inlineScript(LIVE_RELOAD_JS)}</script>` : ""}
 ${o.hydrateJs === undefined ? "" : `<script>${inlineScript(o.hydrateJs)}</script>`}
+${o.pageTocJs === undefined ? "" : `<script>${inlineScript(o.pageTocJs)}</script>`}
 </body>
 </html>
 `;

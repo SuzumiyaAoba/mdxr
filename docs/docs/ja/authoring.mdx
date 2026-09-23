@@ -29,10 +29,13 @@ updated: 2026-09-16
 owner: "@suzumiyaaoba"
 version: v3
 editor: cursor       # エディタリンクのスキーム。mdxr.config.ts を上書き
+toc: false           # 「On this page」サイドバーを非表示
 ---
 ```
 
 `title` があれば、mdxr はドキュメントヘッダー — ステータスバッジとメタ行 — を自動で描画します。本文がすでに `<Plan>` 系のルートで始まる場合（そちらが同じ props を自分で持つため）はスキップされます。
+
+h2〜h3 の見出しが 2 つ以上あるページには、広い画面で「On this page」サイドバー（[Crux UI](https://abui.io/components/toc) の ToC）が付き、画面内に表示中のセクションをハイライトします。frontmatter で `toc: false` を指定すると非表示になります。インラインの `:::toc` ブロックとは独立しています。
 
 ## Markdown 規約はコンポーネントにコンパイルされる
 

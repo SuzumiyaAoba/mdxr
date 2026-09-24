@@ -26,9 +26,21 @@ Requirement → tasks → files → tests coverage with missing links.
 
 Data fields: `id,requirement,tasks,files,tests,missing,status`.
 
+<Tabs syncKey="extended-planning-traceability">
+  <Tab title="Preview">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-planning.html#traceability`} title="Traceability" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="Code">
+
 ````mdx
 <Traceability data='[{"id":"REQ-1","requirement":"Offline export","tasks":["T-1"],"files":["src/render.ts"],"tests":["export.test.ts"]},{"id":"REQ-2","requirement":"Keyboard support","tasks":["T-2"],"files":["src/ui/data-table.tsx"],"tests":[]}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 12. DecisionMatrix
 
@@ -36,9 +48,21 @@ Weighted criteria comparison; options.weights maps criteria to nonnegative weigh
 
 Data fields: `name,score`.
 
+<Tabs syncKey="extended-planning-decisionmatrix">
+  <Tab title="Preview">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-planning.html#decisionmatrix`} title="DecisionMatrix" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="Code">
+
 ````mdx
 <DecisionMatrix data='[{"name":"Simple","cost":9,"reliability":6},{"name":"Resilient","cost":5,"reliability":9}]' options='{"weights":{"cost":0.4,"reliability":0.6}}' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 13. RiskRegister
 
@@ -46,9 +70,21 @@ Risks ordered by likelihood × impact, with owners and mitigation.
 
 Data fields: `name,likelihood,impact,exposure,owner,mitigation,status`.
 
+<Tabs syncKey="extended-planning-riskregister">
+  <Tab title="Preview">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-planning.html#riskregister`} title="RiskRegister" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="Code">
+
 ````mdx
 <RiskRegister data='[{"id":"R1","risk":"Migration delay","likelihood":3,"impact":4,"owner":"Platform","mitigation":"Staged rollout","status":"open"}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 14. Scope
 
@@ -56,9 +92,21 @@ Included, excluded and deferred scope with rationale.
 
 Data fields: `item,scope,reason,phase`.
 
+<Tabs syncKey="extended-planning-scope">
+  <Tab title="Preview">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-planning.html#scope`} title="Scope" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="Code">
+
 ````mdx
 <Scope data='[{"item":"Item","scope":"Renderer","reason":"Required for release","phase":"Phase"}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 15. ActionItems
 
@@ -66,9 +114,21 @@ Actions with owner, deadline, acceptance criteria and completion evidence.
 
 Data fields: `action,owner,due,acceptance,evidence,status`.
 
+<Tabs syncKey="extended-planning-actionitems">
+  <Tab title="Preview">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-planning.html#actionitems`} title="ActionItems" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="Code">
+
 ````mdx
 <ActionItems data='[{"action":"Run the verification suite","owner":"Platform","due":"Due","acceptance":"Acceptance","evidence":"tests/release.test.ts","status":"open"}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 16. Estimate
 
@@ -76,9 +136,21 @@ Three-point PERT estimates and standard deviations.
 
 Data fields: `name,optimistic,likely,pessimistic,expected,deviation,unit`.
 
+<Tabs syncKey="extended-planning-estimate">
+  <Tab title="Preview">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-planning.html#estimate`} title="Estimate" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="Code">
+
 ````mdx
 <Estimate data='[{"name":"Parser","optimistic":2,"likely":4,"pessimistic":8,"unit":"days"}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 17. DependencyPlan
 
@@ -86,9 +158,21 @@ Task dependencies, earliest schedule, slack and critical path; rejects cycles.
 
 Data fields: `id,depends,duration,start,end,slack,critical`.
 
+<Tabs syncKey="extended-planning-dependencyplan">
+  <Tab title="Preview">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-planning.html#dependencyplan`} title="DependencyPlan" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="Code">
+
 ````mdx
 <DependencyPlan data='[{"id":"design","duration":2},{"id":"build","duration":5,"depends":["design"]},{"id":"docs","duration":2,"depends":["design"]},{"id":"release","duration":1,"depends":["build","docs"]}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 18. RACI
 
@@ -96,9 +180,21 @@ Responsibility assignment: responsible, accountable, consulted, informed.
 
 Data fields: `task,responsible,accountable,consulted,informed`.
 
+<Tabs syncKey="extended-planning-raci">
+  <Tab title="Preview">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-planning.html#raci`} title="RACI" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="Code">
+
 ````mdx
 <RACI data='[{"task":"Task","responsible":"Responsible","accountable":"Accountable","consulted":"Consulted","informed":"Informed"}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 19. Objectives
 
@@ -108,11 +204,23 @@ Supporting components: `KeyResults`.
 
 Data fields: `objective,keyResults,owner,due,status`.
 
+<Tabs syncKey="extended-planning-objectives">
+  <Tab title="Preview">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-planning.html#objectives`} title="Objectives" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="Code">
+
 ````mdx
 <Objectives data='[{"objective":"Objective","keyResults":"Keyresults","owner":"Platform","due":"Due","status":"open"}]' />
 
 <KeyResults data='[{"name":"Pass rate","baseline":80,"current":92,"target":99}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 20. CapacityPlan
 
@@ -120,6 +228,18 @@ Capacity, allocation, remaining effort and overload by person or team.
 
 Data fields: `owner,period,capacity,allocated,remaining,utilization,status`.
 
+<Tabs syncKey="extended-planning-capacityplan">
+  <Tab title="Preview">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-planning.html#capacityplan`} title="CapacityPlan" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="Code">
+
 ````mdx
 <CapacityPlan data='[{"name":"Platform","capacity":40,"allocated":32},{"name":"Design","capacity":20,"allocated":24}]' />
 ````
+
+  </Tab>
+</Tabs>
+

@@ -22,15 +22,31 @@ sidebar:
 
 ## 91. DataTable
 
+<Tabs syncKey="extended-interactive-datatable">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-interactive.html#datatable`} title="DataTable" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <DataTable data='[{"id":"alpha","name":"Alpha","value":20,"status":"ready"},{"id":"beta","name":"Beta","value":10,"status":"pending"},{"id":"gamma","name":"Gamma","value":30,"status":"ready"}]' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 92. FilterPanel
 
+<Tabs syncKey="extended-interactive-filterpanel">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-interactive.html#filterpanel`} title="FilterPanel" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <FilterPanel fields='status'>
@@ -42,43 +58,93 @@ sidebar:
 </FilterPanel>
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 93. Checklist
 
+<Tabs syncKey="extended-interactive-checklist">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-interactive.html#checklist`} title="Checklist" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <Checklist data='[{"id":"tests","label":"Run tests","checked":true,"owner":"Platform"},{"id":"review","label":"Review changes","checked":false}]' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 94. Ranking
 
+<Tabs syncKey="extended-interactive-ranking">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-interactive.html#ranking`} title="Ranking" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <Ranking data='[{"id":"speed","label":"Performance"},{"id":"clarity","label":"Clarity"},{"id":"cost","label":"Cost"}]' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 95. Calculator
 
+<Tabs syncKey="extended-interactive-calculator">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-interactive.html#calculator`} title="Calculator" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <Calculator data='[{"name":"users","label":"Users","value":100,"min":0},{"name":"price","label":"Price","value":12,"min":0}]' operation='product' unit='USD' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 96. Wizard
 
+<Tabs syncKey="extended-interactive-wizard">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-interactive.html#wizard`} title="Wizard" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <Wizard data='[{"name":"target","label":"Target","options":["Web","CLI"],"required":true},{"name":"url","label":"Site URL","when":{"target":"Web"},"required":true},{"name":"notes","label":"Notes","type":"textarea"}]' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 97. SyncedTabs
 
-
-
 補助要素: `TabItem`.
+
+<Tabs syncKey="extended-interactive-syncedtabs">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-interactive.html#syncedtabs`} title="SyncedTabs" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <SyncedTabs syncKey='platform'>
@@ -114,9 +180,19 @@ macOS instructions 2
 </SyncedTabs>
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 98. DocumentSearch
 
+<Tabs syncKey="extended-interactive-documentsearch">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-interactive.html#documentsearch`} title="DocumentSearch" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <DocumentSearch />
@@ -126,9 +202,19 @@ macOS instructions 2
 The search finds rendering instructions in this document.
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 99. AnswerSheet
 
+<Tabs syncKey="extended-interactive-answersheet">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-interactive.html#answersheet`} title="AnswerSheet" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <AnswerSheet>
@@ -141,10 +227,24 @@ The search finds rendering instructions in this document.
 </AnswerSheet>
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 100. DownloadData
 
+<Tabs syncKey="extended-interactive-downloaddata">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-interactive.html#downloaddata`} title="DownloadData" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <DownloadData data='[{"id":"alpha","name":"Alpha","value":20,"status":"ready"},{"id":"beta","name":"Beta","value":10,"status":"pending"},{"id":"gamma","name":"Gamma","value":30,"status":"ready"}]' filename='example' />
 ````
+
+  </Tab>
+</Tabs>
+

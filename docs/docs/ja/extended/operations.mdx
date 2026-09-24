@@ -26,9 +26,21 @@ Operational steps with prerequisites, commands, expected results, stop and recov
 
 データ列: `step,prerequisite,command,expected,stop,recovery`.
 
+<Tabs syncKey="extended-operations-runbook">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations.html#runbook`} title="Runbook" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
 ````mdx
 <Runbook data='[{"step":"Step","prerequisite":"Prerequisite","command":"Command","expected":"Ready","stop":"Stop","recovery":"Recovery"}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 52. Rollout
 
@@ -36,15 +48,33 @@ Rollout stages, exposure, metrics, promotion gates and rollback conditions.
 
 データ列: `stage,target,percent,metric,gate,rollback,status`.
 
+<Tabs syncKey="extended-operations-rollout">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations.html#rollout`} title="Rollout" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
 ````mdx
 <Rollout data='[{"stage":"Stage","target":"Target","percent":"Percent","metric":"Metric","gate":"Gate","rollback":"Rollback","status":"open"}]' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 53. SLO
 
-
-
 補助要素: `ErrorBudget`.
+
+<Tabs syncKey="extended-operations-slo">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations.html#slo`} title="SLO" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <SLO data='[{"name":"API availability","target":99.9,"total":100000,"bad":40}]' />
@@ -52,15 +82,31 @@ Rollout stages, exposure, metrics, promotion gates and rollback conditions.
 <ErrorBudget data='[{"name":"API availability","target":99.9,"total":100000,"bad":40}]' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 54. AlertRules
 
 Alert thresholds, evaluation duration, owner and linked response procedure.
 
 データ列: `name,metric,condition,duration,owner,runbook`.
 
+<Tabs syncKey="extended-operations-alertrules">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations.html#alertrules`} title="AlertRules" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
 ````mdx
 <AlertRules data='[{"name":"Example","metric":"Metric","condition":"Condition","duration":"Duration","owner":"Platform","runbook":"Runbook"}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 55. FeatureFlags
 
@@ -68,9 +114,21 @@ Feature flag state, targeting, ownership and retirement across environments.
 
 データ列: `flag,environment,enabled,condition,owner,retire`.
 
+<Tabs syncKey="extended-operations-featureflags">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations.html#featureflags`} title="FeatureFlags" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
 ````mdx
 <FeatureFlags data='[{"flag":"Flag","environment":"staging","enabled":"Enabled","condition":"Condition","owner":"Platform","retire":"Retire"}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 56. RecoveryPlan
 
@@ -78,9 +136,21 @@ Recovery order, dependencies, RPO/RTO, backups and verification.
 
 データ列: `step,depends,service,rpo,rto,backup,action,verification`.
 
+<Tabs syncKey="extended-operations-recoveryplan">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations.html#recoveryplan`} title="RecoveryPlan" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
 ````mdx
 <RecoveryPlan data='[{"step":"Step","depends":"Depends","service":"Service","rpo":"Rpo","rto":"Rto","backup":"Backup","action":"Run the verification suite","verification":"Verification"}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 57. PermissionMatrix
 
@@ -88,9 +158,21 @@ Role/resource/action permissions and conditions.
 
 データ列: `role,resource,action,allowed,condition`.
 
+<Tabs syncKey="extended-operations-permissionmatrix">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations.html#permissionmatrix`} title="PermissionMatrix" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
 ````mdx
 <PermissionMatrix data='[{"role":"Role","resource":"Resource","action":"Run the verification suite","allowed":"Allowed","condition":"Condition"}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 58. ThreatModel
 
@@ -98,9 +180,21 @@ Assets, threats, attack paths, controls and residual risks.
 
 データ列: `asset,threat,path,control,residual,owner`.
 
+<Tabs syncKey="extended-operations-threatmodel">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations.html#threatmodel`} title="ThreatModel" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
 ````mdx
 <ThreatModel data='[{"asset":"Asset","threat":"Threat","path":"Path","control":"Control","residual":"Residual","owner":"Platform"}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 59. Remediation
 
@@ -108,9 +202,21 @@ Vulnerability remediation with owner, due date, fix and verification evidence.
 
 データ列: `vulnerability,severity,owner,due,fix,verification,status`.
 
+<Tabs syncKey="extended-operations-remediation">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations.html#remediation`} title="Remediation" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
 ````mdx
 <Remediation data='[{"vulnerability":"Vulnerability","severity":"Severity","owner":"Platform","due":"Due","fix":"Fix","verification":"Verification","status":"open"}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 60. MaintenanceWindow
 
@@ -118,6 +224,18 @@ Maintenance windows with affected services, explicit time zones and duration.
 
 データ列: `service,start,end,durationMinutes,impact,recovery`.
 
+<Tabs syncKey="extended-operations-maintenancewindow">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations.html#maintenancewindow`} title="MaintenanceWindow" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
 ````mdx
 <MaintenanceWindow data='[{"name":"Database upgrade","start":"2026-09-01T02:00:00Z","end":"2026-09-01T02:30:00Z","owner":"Platform","status":"planned"}]' />
 ````
+
+  </Tab>
+</Tabs>
+

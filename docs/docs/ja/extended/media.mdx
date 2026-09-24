@@ -22,57 +22,123 @@ sidebar:
 
 ## 101. ImageGallery
 
+<Tabs syncKey="extended-media-imagegallery">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-media.html#imagegallery`} title="ImageGallery" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <ImageGallery data='[{"src":"assets/before.svg","alt":"Before layout","caption":"Before"},{"src":"assets/after.svg","alt":"After layout","caption":"After"}]' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 102. AnnotatedImage
 
+<Tabs syncKey="extended-media-annotatedimage">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-media.html#annotatedimage`} title="AnnotatedImage" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <AnnotatedImage data='[{"x":15,"y":25,"width":30,"height":35,"label":"Navigation","note":"Persistent navigation area."}]' src='assets/after.svg' alt='Example navigation layout' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 103. ImageCompare
 
+<Tabs syncKey="extended-media-imagecompare">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-media.html#imagecompare`} title="ImageCompare" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <ImageCompare before='assets/before.svg' after='assets/after.svg' beforeAlt='Before layout' afterAlt='After layout' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 104. Video
 
+<Tabs syncKey="extended-media-video">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-media.html#video`} title="Video" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <Video src='assets/example.webm' captions='assets/captions.vtt' poster='assets/before.svg' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 105. AudioTranscript
 
+<Tabs syncKey="extended-media-audiotranscript">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-media.html#audiotranscript`} title="AudioTranscript" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <AudioTranscript data='[{"time":0,"text":"An example tone starts here."},{"time":0.5,"text":"The example ends."}]' src='assets/tone.wav' captions='assets/captions.vtt' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 106. PdfPreview
 
+<Tabs syncKey="extended-media-pdfpreview">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-media.html#pdfpreview`} title="PdfPreview" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <PdfPreview src='assets/example.pdf' title='Example report' page='1' height='300' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 107. PrintLayout
 
-
-
 補助要素: `PageBreak`.
+
+<Tabs syncKey="extended-media-printlayout">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-media.html#printlayout`} title="PrintLayout" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <PrintLayout columns='2'>
@@ -86,9 +152,19 @@ Second page.
 </PrintLayout>
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 108. TableOfFigures
 
+<Tabs syncKey="extended-media-tableoffigures">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-media.html#tableoffigures`} title="TableOfFigures" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <TableOfFigures />
@@ -100,9 +176,19 @@ Figure content.
 </Figure>
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 109. NumberedEquation
 
+<Tabs syncKey="extended-media-numberedequation">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-media.html#numberedequation`} title="NumberedEquation" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <NumberedEquation id='velocity'>
@@ -116,11 +202,21 @@ $$
 See <CrossRef target="velocity" />.
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 110. Theorem
 
-
-
 補助要素: `Proof`.
+
+<Tabs syncKey="extended-media-theorem">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-media.html#theorem`} title="Theorem" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <Theorem id='even-sum' title='Even sums'>
@@ -135,3 +231,7 @@ Write the integers as $2a$ and $2b$. Their sum is $2(a+b)$.
 
 </Proof>
 ````
+
+  </Tab>
+</Tabs>
+

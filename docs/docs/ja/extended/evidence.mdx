@@ -22,9 +22,15 @@ sidebar:
 
 ## 1. Sources
 
-
-
 補助要素: `Source`, `Cite`.
+
+<Tabs syncKey="extended-evidence-sources">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evidence.html#sources`} title="Sources" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 A documented claim <Cite source="manual" />.
@@ -36,9 +42,19 @@ A documented claim <Cite source="manual" />.
 </Sources>
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 2. CrossRef
 
+<Tabs syncKey="extended-evidence-crossref">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evidence.html#crossref`} title="CrossRef" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 See <CrossRef target="reference-figure" />.
@@ -50,15 +66,31 @@ An example figure.
 </Figure>
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 3. Evidence
 
 Evidence with source, revision, capture time and environment.
 
 データ列: `claim,source,captured,commit,environment,result`.
 
+<Tabs syncKey="extended-evidence-evidence-1">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evidence.html#evidence-1`} title="Evidence" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
 ````mdx
 <Evidence data='[{"claim":"Claim","source":"Source","captured":"Captured","commit":"Commit","environment":"staging","result":"pass"}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 4. Provenance
 
@@ -66,9 +98,21 @@ Reproducible report inputs, tools, versions and settings.
 
 データ列: `input,tool,version,config,hash,generated`.
 
+<Tabs syncKey="extended-evidence-provenance">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evidence.html#provenance`} title="Provenance" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
 ````mdx
 <Provenance data='[{"input":"Input","tool":"Tool","version":"1.2.0","config":"Config","hash":"Hash","generated":"Generated"}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 5. Assumptions
 
@@ -76,9 +120,21 @@ Assumptions with verification state, owner and review trigger.
 
 データ列: `assumption,status,owner,evidence,revisit`.
 
+<Tabs syncKey="extended-evidence-assumptions">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evidence.html#assumptions`} title="Assumptions" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
 ````mdx
 <Assumptions data='[{"assumption":"Assumption","status":"open","owner":"Platform","evidence":"tests/release.test.ts","revisit":"Revisit"}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 6. Limitations
 
@@ -86,13 +142,31 @@ Scope and measurement limitations with their consequences.
 
 データ列: `limitation,scope,consequence,followup`.
 
+<Tabs syncKey="extended-evidence-limitations">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evidence.html#limitations`} title="Limitations" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
 ````mdx
 <Limitations data='[{"limitation":"Limitation","scope":"Renderer","consequence":"Consequence","followup":"Followup"}]' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 7. Sidenote
 
+<Tabs syncKey="extended-evidence-sidenote">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evidence.html#sidenote`} title="Sidenote" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <Sidenote title='Context'>
@@ -102,9 +176,19 @@ This note stays close to the discussion.
 </Sidenote>
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 8. TermRef
 
+<Tabs syncKey="extended-evidence-termref">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evidence.html#termref`} title="TermRef" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <Glossary>
@@ -114,13 +198,27 @@ This note stays close to the discussion.
 Use a <TermRef term="cache" />.
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 9. Include
 
+<Tabs syncKey="extended-evidence-include">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evidence.html#include`} title="Include" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <Include path='../../tests/fixtures/extended-include.mdx' section='shared-context' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 10. DocumentHistory
 
@@ -128,6 +226,18 @@ Document revisions, authors, reasons and superseding versions.
 
 データ列: `version,date,author,reason,supersededBy`.
 
+<Tabs syncKey="extended-evidence-documenthistory">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evidence.html#documenthistory`} title="DocumentHistory" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
 ````mdx
 <DocumentHistory data='[{"version":"1.2.0","date":"2026-09-01","author":"Author","reason":"Required for release","supersededBy":"Supersededby"}]' />
 ````
+
+  </Tab>
+</Tabs>
+

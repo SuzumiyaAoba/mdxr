@@ -22,79 +22,175 @@ See [Extended components](/mdxr/extended-components) for shared data contracts a
 
 ## 71. ViolinPlot
 
+<Tabs syncKey="extended-charts-violinplot">
+  <Tab title="Preview">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-charts.html#violinplot`} title="ViolinPlot" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="Code">
 
 ````mdx
 <ViolinPlot data='[{"name":"A","values":[1,2,2,3,4,5,6]},{"name":"B","values":[3,4,4,5,6,8]}]' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 72. RidgelinePlot
 
+<Tabs syncKey="extended-charts-ridgelineplot">
+  <Tab title="Preview">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-charts.html#ridgelineplot`} title="RidgelinePlot" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="Code">
 
 ````mdx
 <RidgelinePlot data='[{"name":"A","values":[1,2,2,3,4,5,6]},{"name":"B","values":[3,4,4,5,6,8]}]' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 73. DotPlot
 
+<Tabs syncKey="extended-charts-dotplot">
+  <Tab title="Preview">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-charts.html#dotplot`} title="DotPlot" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="Code">
 
 ````mdx
 <DotPlot data='[{"name":"A","value":12},{"name":"B","value":8}]' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 74. SlopeChart
 
+<Tabs syncKey="extended-charts-slopechart">
+  <Tab title="Preview">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-charts.html#slopechart`} title="SlopeChart" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="Code">
 
 ````mdx
 <SlopeChart data='[{"name":"A","before":5,"after":9},{"name":"B","before":8,"after":6}]' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 75. BumpChart
 
+<Tabs syncKey="extended-charts-bumpchart">
+  <Tab title="Preview">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-charts.html#bumpchart`} title="BumpChart" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="Code">
 
 ````mdx
 <BumpChart data='[{"name":"A","values":[1,2,1]},{"name":"B","values":[2,1,2]}]' options='{"labels":["Q1","Q2","Q3"]}' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 76. DumbbellChart
 
+<Tabs syncKey="extended-charts-dumbbellchart">
+  <Tab title="Preview">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-charts.html#dumbbellchart`} title="DumbbellChart" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="Code">
 
 ````mdx
 <DumbbellChart data='[{"name":"A","before":5,"after":9},{"name":"B","before":8,"after":6}]' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 77. Sunburst
 
+<Tabs syncKey="extended-charts-sunburst">
+  <Tab title="Preview">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-charts.html#sunburst`} title="Sunburst" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="Code">
 
 ````mdx
 <Sunburst data='[{"id":"app","name":"App"},{"id":"ui","parent":"app","name":"UI","value":60},{"id":"core","parent":"app","name":"Core","value":40}]' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 78. ChordDiagram
 
+<Tabs syncKey="extended-charts-chorddiagram">
+  <Tab title="Preview">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-charts.html#chorddiagram`} title="ChordDiagram" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="Code">
 
 ````mdx
 <ChordDiagram data='[{"from":"API","to":"DB","value":30},{"from":"Worker","to":"DB","value":20},{"from":"API","to":"Worker","value":10}]' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 79. UpSetPlot
 
+<Tabs syncKey="extended-charts-upsetplot">
+  <Tab title="Preview">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-charts.html#upsetplot`} title="UpSetPlot" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="Code">
 
 ````mdx
 <UpSetPlot data='[{"sets":["A"],"value":10},{"sets":["B"],"value":7},{"sets":["A","B"],"value":4}]' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 80. SmallMultiples
 
+<Tabs syncKey="extended-charts-smallmultiples">
+  <Tab title="Preview">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-charts.html#smallmultiples`} title="SmallMultiples" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="Code">
 
 ````mdx
 <SmallMultiples>
@@ -105,3 +201,7 @@ See [Extended components](/mdxr/extended-components) for shared data contracts a
 
 </SmallMultiples>
 ````
+
+  </Tab>
+</Tabs>
+

@@ -22,7 +22,13 @@ sidebar:
 
 ## 31. CodeGroup
 
+<Tabs syncKey="extended-reference-codegroup">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-reference.html#codegroup`} title="CodeGroup" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <CodeGroup syncKey='language'>
@@ -38,19 +44,39 @@ value = 1
 </CodeGroup>
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 32. PackageInstall
 
+<Tabs syncKey="extended-reference-packageinstall">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-reference.html#packageinstall`} title="PackageInstall" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <PackageInstall packages='@suzumiyaaoba/mdxr' dev='true' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 33. ApiExample
 
-
-
 補助要素: `Request`, `Response`.
+
+<Tabs syncKey="extended-reference-apiexample">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-reference.html#apiexample`} title="ApiExample" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <ApiExample>
@@ -62,23 +88,49 @@ value = 1
 </ApiExample>
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 34. ApiParams
 
 Request parameters by location, type, required flag, constraints and example.
 
 データ列: `name,in,type,required,default,constraints,example,description`.
 
+<Tabs syncKey="extended-reference-apiparams">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-reference.html#apiparams`} title="ApiParams" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
 ````mdx
 <ApiParams data='[{"name":"Example","in":"In","type":"Type","required":"Required","default":"Default","constraints":"Constraints","example":"Example","description":"Review the result before release."}]' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 35. ObjectSchema
 
+<Tabs syncKey="extended-reference-objectschema">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-reference.html#objectschema`} title="ObjectSchema" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <ObjectSchema schema='{"type":"object","required":["id"],"properties":{"id":{"type":"string","description":"Stable identifier"},"tags":{"type":"array","items":{"type":"string"}},"details":{"oneOf":[{"type":"string"},{"type":"number"}]}}}' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 36. CliReference
 
@@ -86,9 +138,21 @@ Commands, positional arguments, flags, defaults and usage examples.
 
 データ列: `command,argument,flag,type,default,conflicts,example,description`.
 
+<Tabs syncKey="extended-reference-clireference">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-reference.html#clireference`} title="CliReference" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
 ````mdx
 <CliReference data='[{"command":"Command","argument":"Argument","flag":"Flag","type":"Type","default":"Default","conflicts":"Conflicts","example":"Example","description":"Review the result before release."}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 37. ConfigReference
 
@@ -96,9 +160,21 @@ Configuration keys, environment and CLI overrides, precedence and defaults.
 
 データ列: `key,type,default,env,flag,precedence,description`.
 
+<Tabs syncKey="extended-reference-configreference">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-reference.html#configreference`} title="ConfigReference" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
 ````mdx
 <ConfigReference data='[{"key":"Key","type":"Type","default":"Default","env":"Env","flag":"Flag","precedence":"Precedence","description":"Review the result before release."}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 38. ErrorCatalog
 
@@ -106,9 +182,21 @@ Error codes, causes, recovery actions and retry guidance.
 
 データ列: `code,message,cause,action,retry,href`.
 
+<Tabs syncKey="extended-reference-errorcatalog">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-reference.html#errorcatalog`} title="ErrorCatalog" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
 ````mdx
 <ErrorCatalog data='[{"code":"Code","message":"Message","cause":"Cause","action":"Run the verification suite","retry":"Retry","href":"Href"}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 39. CompatibilityMatrix
 
@@ -116,9 +204,21 @@ Platform/runtime/version compatibility with supporting evidence.
 
 データ列: `platform,runtime,version,status,notes`.
 
+<Tabs syncKey="extended-reference-compatibilitymatrix">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-reference.html#compatibilitymatrix`} title="CompatibilityMatrix" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
 ````mdx
 <CompatibilityMatrix data='[{"platform":"Platform","runtime":"Runtime","version":"1.2.0","status":"open","notes":"Reviewed with the team."}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 40. DeprecationTimeline
 
@@ -126,6 +226,18 @@ Deprecation and removal milestones linked to replacement and migration.
 
 データ列: `feature,deprecated,removal,replacement,migration`.
 
+<Tabs syncKey="extended-reference-deprecationtimeline">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-reference.html#deprecationtimeline`} title="DeprecationTimeline" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
 ````mdx
 <DeprecationTimeline data='[{"feature":"Feature","deprecated":"Deprecated","removal":"Removal","replacement":"Replacement","migration":"Migration"}]' />
 ````
+
+  </Tab>
+</Tabs>
+

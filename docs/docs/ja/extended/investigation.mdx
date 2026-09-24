@@ -26,9 +26,21 @@ Bug reproduction: environment, prerequisite, action, expected and actual results
 
 データ列: `step,environment,prerequisite,action,expected,actual`.
 
+<Tabs syncKey="extended-investigation-reproduction">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-investigation.html#reproduction`} title="Reproduction" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
 ````mdx
 <Reproduction data='[{"step":"Step","environment":"staging","prerequisite":"Prerequisite","action":"Run the verification suite","expected":"Ready","actual":"Ready"}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 22. Logs
 
@@ -36,57 +48,129 @@ Searchable timestamped log entries by level and source.
 
 データ列: `time,level,source,message`.
 
+<Tabs syncKey="extended-investigation-logs">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-investigation.html#logs`} title="Logs" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
 ````mdx
 <Logs data='[{"time":"2026-09-01T09:00:00Z","level":"Level","source":"Source","message":"Message"}]' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 23. JsonDiff
 
+<Tabs syncKey="extended-investigation-jsondiff">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-investigation.html#jsondiff`} title="JsonDiff" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <JsonDiff before='{"type":"string","description":"Identifier"}' after='{"type":"number","description":"Identifier"}' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 24. ConfigDiff
 
+<Tabs syncKey="extended-investigation-configdiff">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-investigation.html#configdiff`} title="ConfigDiff" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <ConfigDiff before='[{"name":"defaults","values":{"retries":2}}]' after='[{"name":"defaults","values":{"retries":2}},{"name":"production","values":{"retries":4}}]' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 25. ApiDiff
 
+<Tabs syncKey="extended-investigation-apidiff">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-investigation.html#apidiff`} title="ApiDiff" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <ApiDiff before='{"type":"string","description":"Identifier"}' after='{"type":"number","description":"Identifier"}' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 26. SchemaDiff
 
+<Tabs syncKey="extended-investigation-schemadiff">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-investigation.html#schemadiff`} title="SchemaDiff" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <SchemaDiff before='{"type":"string","description":"Identifier"}' after='{"type":"number","description":"Identifier"}' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 27. ImpactMap
 
+<Tabs syncKey="extended-investigation-impactmap">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-investigation.html#impactmap`} title="ImpactMap" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <ImpactMap nodes='[{"id":"client","label":"Client","lane":"Application"},{"id":"api","label":"API","lane":"Server"},{"id":"db","label":"Database","lane":"Server"}]' edges='[{"from":"client","to":"api","label":"Request"},{"from":"api","to":"db","label":"Query"}]' options='{"changed":["api"]}' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 28. DataLineage
 
+<Tabs syncKey="extended-investigation-datalineage">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-investigation.html#datalineage`} title="DataLineage" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <DataLineage nodes='[{"id":"client","label":"Client","lane":"Application"},{"id":"api","label":"API","lane":"Server"},{"id":"db","label":"Database","lane":"Server"}]' edges='[{"from":"client","to":"api","label":"Request"},{"from":"api","to":"db","label":"Query"}]' />
 ````
+
+  </Tab>
+</Tabs>
+
 
 ## 29. SymbolOutline
 
@@ -94,14 +178,36 @@ Symbol paths, kinds, signatures, parents and source locations.
 
 データ列: `name,kind,parent,signature,file,lines`.
 
+<Tabs syncKey="extended-investigation-symboloutline">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-investigation.html#symboloutline`} title="SymbolOutline" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
 ````mdx
 <SymbolOutline data='[{"name":"Example","kind":"Kind","parent":"Parent","signature":"Signature","file":"File","lines":"Lines"}]' />
 ````
 
+  </Tab>
+</Tabs>
+
+
 ## 30. CodeWalkthrough
 
+<Tabs syncKey="extended-investigation-codewalkthrough">
+  <Tab title="プレビュー">
 
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-investigation.html#codewalkthrough`} title="CodeWalkthrough" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
 
 ````mdx
 <CodeWalkthrough data='[{"title":"Parse","code":"const value = 2;\nreturn value * 3;","lines":"1","explanation":"Read the input."},{"title":"Compute","code":"const value = 2;\nreturn value * 3;","lines":"2","explanation":"Return three times the input."}]' />
 ````
+
+  </Tab>
+</Tabs>
+

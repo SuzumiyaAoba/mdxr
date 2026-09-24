@@ -7,19 +7,6 @@ sidebar:
 
 See [Extended components](/mdxr/extended-components) for shared data contracts and calculation semantics.
 
-<Tabs syncKey="components-extended-evaluation">
-  <Tab title="Preview">
-
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.html`} title="Evaluation" loading="lazy" style="width:100%;height:720px;border:1px solid #8884;border-radius:12px" />
-
-  </Tab>
-  <Tab title="Code">
-
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.src.html`} title="extended-evaluation.mdx source" loading="lazy" style="width:100%;height:720px;border:1px solid #8884;border-radius:12px" />
-
-  </Tab>
-</Tabs>
-
 ## 111. EvalReport
 
 Evaluation cases with inputs, expected/actual output, rubric and verdict.
@@ -31,7 +18,7 @@ Data fields: `name,input,expected,actual,rubric,score,status`.
 <Tabs syncKey="extended-evaluation-evalreport">
   <Tab title="Preview">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.html#evalreport`} title="EvalReport" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation--evalreport.html`} title="EvalReport" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="Code">
@@ -55,7 +42,7 @@ Data fields: `model,task,quality,latency,cost,failures,notes`.
 <Tabs syncKey="extended-evaluation-modelcomparison">
   <Tab title="Preview">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.html#modelcomparison`} title="ModelComparison" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation--modelcomparison.html`} title="ModelComparison" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="Code">
@@ -73,7 +60,7 @@ Data fields: `model,task,quality,latency,cost,failures,notes`.
 <Tabs syncKey="extended-evaluation-conversation">
   <Tab title="Preview">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.html#conversation`} title="Conversation" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation--conversation.html`} title="Conversation" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="Code">
@@ -95,7 +82,7 @@ Data fields: `tool,arguments,result,duration,status`.
 <Tabs syncKey="extended-evaluation-toolcall">
   <Tab title="Preview">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.html#toolcall`} title="ToolCall" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation--toolcall.html`} title="ToolCall" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="Code">
@@ -113,7 +100,7 @@ Data fields: `tool,arguments,result,duration,status`.
 <Tabs syncKey="extended-evaluation-tokenusage">
   <Tab title="Preview">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.html#tokenusage`} title="TokenUsage" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation--tokenusage.html`} title="TokenUsage" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="Code">
@@ -131,7 +118,7 @@ Data fields: `tool,arguments,result,duration,status`.
 <Tabs syncKey="extended-evaluation-prompttemplate">
   <Tab title="Preview">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.html#prompttemplate`} title="PromptTemplate" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation--prompttemplate.html`} title="PromptTemplate" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="Code">
@@ -153,7 +140,7 @@ Data fields: `column,rows,missing,missingRate,unique,types,min,max,mean`.
 <Tabs syncKey="extended-evaluation-datasetprofile">
   <Tab title="Preview">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.html#datasetprofile`} title="DatasetProfile" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation--datasetprofile.html`} title="DatasetProfile" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="Code">
@@ -175,7 +162,7 @@ Data fields: `field,rule,violations,rows,status`.
 <Tabs syncKey="extended-evaluation-datavalidation">
   <Tab title="Preview">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.html#datavalidation`} title="DataValidation" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation--datavalidation.html`} title="DataValidation" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="Code">
@@ -197,7 +184,7 @@ Data fields: `variant,count,successes,rate,lower95,upper95,condition`.
 <Tabs syncKey="extended-evaluation-experiment">
   <Tab title="Preview">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.html#experiment`} title="Experiment" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation--experiment.html`} title="Experiment" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="Code">
@@ -215,7 +202,7 @@ Data fields: `variant,count,successes,rate,lower95,upper95,condition`.
 <Tabs syncKey="extended-evaluation-datasetdiff">
   <Tab title="Preview">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.html#datasetdiff`} title="DatasetDiff" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation--datasetdiff.html`} title="DatasetDiff" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="Code">

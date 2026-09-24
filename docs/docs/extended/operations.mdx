@@ -7,19 +7,6 @@ sidebar:
 
 See [Extended components](/mdxr/extended-components) for shared data contracts and calculation semantics.
 
-<Tabs syncKey="components-extended-operations">
-  <Tab title="Preview">
-
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations.html`} title="Operations" loading="lazy" style="width:100%;height:720px;border:1px solid #8884;border-radius:12px" />
-
-  </Tab>
-  <Tab title="Code">
-
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations.src.html`} title="extended-operations.mdx source" loading="lazy" style="width:100%;height:720px;border:1px solid #8884;border-radius:12px" />
-
-  </Tab>
-</Tabs>
-
 ## 51. Runbook
 
 Operational steps with prerequisites, commands, expected results, stop and recovery conditions.
@@ -29,7 +16,7 @@ Data fields: `step,prerequisite,command,expected,stop,recovery`.
 <Tabs syncKey="extended-operations-runbook">
   <Tab title="Preview">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations.html#runbook`} title="Runbook" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations--runbook.html`} title="Runbook" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="Code">
@@ -51,7 +38,7 @@ Data fields: `stage,target,percent,metric,gate,rollback,status`.
 <Tabs syncKey="extended-operations-rollout">
   <Tab title="Preview">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations.html#rollout`} title="Rollout" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations--rollout.html`} title="Rollout" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="Code">
@@ -71,7 +58,7 @@ Supporting components: `ErrorBudget`.
 <Tabs syncKey="extended-operations-slo">
   <Tab title="Preview">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations.html#slo`} title="SLO" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations--slo.html`} title="SLO" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="Code">
@@ -95,7 +82,7 @@ Data fields: `name,metric,condition,duration,owner,runbook`.
 <Tabs syncKey="extended-operations-alertrules">
   <Tab title="Preview">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations.html#alertrules`} title="AlertRules" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations--alertrules.html`} title="AlertRules" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="Code">
@@ -117,7 +104,7 @@ Data fields: `flag,environment,enabled,condition,owner,retire`.
 <Tabs syncKey="extended-operations-featureflags">
   <Tab title="Preview">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations.html#featureflags`} title="FeatureFlags" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations--featureflags.html`} title="FeatureFlags" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="Code">
@@ -139,7 +126,7 @@ Data fields: `step,depends,service,rpo,rto,backup,action,verification`.
 <Tabs syncKey="extended-operations-recoveryplan">
   <Tab title="Preview">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations.html#recoveryplan`} title="RecoveryPlan" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations--recoveryplan.html`} title="RecoveryPlan" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="Code">
@@ -161,7 +148,7 @@ Data fields: `role,resource,action,allowed,condition`.
 <Tabs syncKey="extended-operations-permissionmatrix">
   <Tab title="Preview">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations.html#permissionmatrix`} title="PermissionMatrix" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations--permissionmatrix.html`} title="PermissionMatrix" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="Code">
@@ -183,7 +170,7 @@ Data fields: `asset,threat,path,control,residual,owner`.
 <Tabs syncKey="extended-operations-threatmodel">
   <Tab title="Preview">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations.html#threatmodel`} title="ThreatModel" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations--threatmodel.html`} title="ThreatModel" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="Code">
@@ -205,7 +192,7 @@ Data fields: `vulnerability,severity,owner,due,fix,verification,status`.
 <Tabs syncKey="extended-operations-remediation">
   <Tab title="Preview">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations.html#remediation`} title="Remediation" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations--remediation.html`} title="Remediation" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="Code">
@@ -227,7 +214,7 @@ Data fields: `service,start,end,durationMinutes,impact,recovery`.
 <Tabs syncKey="extended-operations-maintenancewindow">
   <Tab title="Preview">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations.html#maintenancewindow`} title="MaintenanceWindow" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-operations--maintenancewindow.html`} title="MaintenanceWindow" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="Code">

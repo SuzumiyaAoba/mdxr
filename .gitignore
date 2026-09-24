@@ -5,3 +5,5 @@ dist/
 examples/**/*.html
 storybook-static/
 *.log
+docs/public/components/
+docs/public/examples/

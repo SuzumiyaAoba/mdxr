@@ -7,19 +7,6 @@ sidebar:
 
 共通の入力形式と計算仕様は[拡張コンポーネント](/mdxr/ja/extended-components)を参照してください。
 
-<Tabs syncKey="components-extended-evaluation">
-  <Tab title="プレビュー">
-
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.html`} title="評価・データ" loading="lazy" style="width:100%;height:720px;border:1px solid #8884;border-radius:12px" />
-
-  </Tab>
-  <Tab title="コード">
-
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.src.html`} title="extended-evaluation.mdx のソース" loading="lazy" style="width:100%;height:720px;border:1px solid #8884;border-radius:12px" />
-
-  </Tab>
-</Tabs>
-
 ## 111. EvalReport
 
 Evaluation cases with inputs, expected/actual output, rubric and verdict.
@@ -31,7 +18,7 @@ Evaluation cases with inputs, expected/actual output, rubric and verdict.
 <Tabs syncKey="extended-evaluation-evalreport">
   <Tab title="プレビュー">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.html#evalreport`} title="EvalReport" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation--evalreport.html`} title="EvalReport" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="コード">
@@ -55,7 +42,7 @@ Model results under a shared task, with quality, latency, cost and failures.
 <Tabs syncKey="extended-evaluation-modelcomparison">
   <Tab title="プレビュー">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.html#modelcomparison`} title="ModelComparison" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation--modelcomparison.html`} title="ModelComparison" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="コード">
@@ -73,7 +60,7 @@ Model results under a shared task, with quality, latency, cost and failures.
 <Tabs syncKey="extended-evaluation-conversation">
   <Tab title="プレビュー">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.html#conversation`} title="Conversation" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation--conversation.html`} title="Conversation" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="コード">
@@ -95,7 +82,7 @@ Tool calls including arguments, result, elapsed time and outcome.
 <Tabs syncKey="extended-evaluation-toolcall">
   <Tab title="プレビュー">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.html#toolcall`} title="ToolCall" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation--toolcall.html`} title="ToolCall" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="コード">
@@ -113,7 +100,7 @@ Tool calls including arguments, result, elapsed time and outcome.
 <Tabs syncKey="extended-evaluation-tokenusage">
   <Tab title="プレビュー">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.html#tokenusage`} title="TokenUsage" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation--tokenusage.html`} title="TokenUsage" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="コード">
@@ -131,7 +118,7 @@ Tool calls including arguments, result, elapsed time and outcome.
 <Tabs syncKey="extended-evaluation-prompttemplate">
   <Tab title="プレビュー">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.html#prompttemplate`} title="PromptTemplate" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation--prompttemplate.html`} title="PromptTemplate" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="コード">
@@ -153,7 +140,7 @@ Per-column types, missingness, uniqueness and numeric summaries.
 <Tabs syncKey="extended-evaluation-datasetprofile">
   <Tab title="プレビュー">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.html#datasetprofile`} title="DatasetProfile" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation--datasetprofile.html`} title="DatasetProfile" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="コード">
@@ -175,7 +162,7 @@ Data validation by field rules (required/type/min/max/enum) in options.rules.
 <Tabs syncKey="extended-evaluation-datavalidation">
   <Tab title="プレビュー">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.html#datavalidation`} title="DataValidation" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation--datavalidation.html`} title="DataValidation" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="コード">
@@ -197,7 +184,7 @@ Binomial experiment results with Wilson 95% intervals; does not infer a winner.
 <Tabs syncKey="extended-evaluation-experiment">
   <Tab title="プレビュー">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.html#experiment`} title="Experiment" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation--experiment.html`} title="Experiment" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="コード">
@@ -215,7 +202,7 @@ Binomial experiment results with Wilson 95% intervals; does not infer a winner.
 <Tabs syncKey="extended-evaluation-datasetdiff">
   <Tab title="プレビュー">
 
-<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation.html#datasetdiff`} title="DatasetDiff" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
+<iframe src={`${import.meta.env.BASE_URL}/components/extended-evaluation--datasetdiff.html`} title="DatasetDiff" loading="lazy" style="width:100%;height:480px;border:1px solid #8884;border-radius:12px" />
 
   </Tab>
   <Tab title="コード">

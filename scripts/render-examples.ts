@@ -3,8 +3,19 @@
 // Usage: render-examples.ts [srcDir] [outDir] — defaults: examples → examples.
 // The docs workflow renders examples/ → docs/public/examples/ and
 // examples/catalog/ → docs/public/components/.
+//
+// Every document also gets a "<name>.src.html" sibling: the .mdx source inside
+// a fenced block, rendered through the CLI itself so docs pages can switch
+// between the rendered output and its code with mdxr's own code block styling
+// (filename bar + copy button).
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, readdirSync } from "node:fs";
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+} from "node:fs";
 import path from "node:path";
 
 const root = path.resolve(import.meta.dirname, "..");
@@ -26,22 +37,56 @@ if (docs.length === 0) {
   process.exit(0);
 }
 
+/**
+ * Standalone document holding `source` in one fenced code block. The fence is
+ * longer than any backtick run in the source so embedded fences can't close
+ * it early; `langForPath` maps .mdx to the markdown grammar, so `markdown`
+ * matches what `<CodeFile>` would pick for the same file.
+ */
+const sourceDoc = (rel: string, name: string, source: string): string => {
+  let longest = 0;
+  for (const run of source.matchAll(/`+/gu)) {
+    longest = Math.max(longest, run[0].length);
+  }
+  const fence = "`".repeat(Math.max(4, longest + 1));
+  return `---\ntitle: ${rel}\n---\n\n${fence}markdown title="${name}"\n${source}\n${fence}\n`;
+};
+
+const render = (args: string[], input?: string): boolean => {
+  try {
+    execFileSync(process.execPath, [cli, "render", ...args], {
+      input,
+      stdio: ["pipe", "inherit", "inherit"],
+    });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 let failures = 0;
 for (const doc of docs) {
-  const out = path.join(outDir, doc.replace(/\.(?:mdx|md)$/u, ".html"));
-  try {
-    execFileSync(
-      process.execPath,
-      [cli, "render", path.join(srcDir, doc), "-o", out],
-      { stdio: "inherit" }
-    );
-  } catch {
+  const srcPath = path.join(srcDir, doc);
+  const base = doc.replace(/\.(?:mdx|md)$/u, "");
+  if (!render([srcPath, "-o", path.join(outDir, `${base}.html`)])) {
+    failures += 1;
+  }
+  const rel = path.relative(root, srcPath).split(path.sep).join("/");
+  const wrapper = sourceDoc(rel, doc, readFileSync(srcPath, "utf-8"));
+  // Stdin render: the wrapper needs no config or file resolution — the fence
+  // is the whole document, so project components never come into play.
+  if (
+    !render(
+      ["-o", path.join(outDir, `${base}.src.html`), "--no-hydrate"],
+      wrapper
+    )
+  ) {
     failures += 1;
   }
 }
 
 if (failures > 0) {
-  console.error(`mdxr: ${failures}/${docs.length} documents failed`);
+  console.error(`mdxr: ${failures} render(s) failed`);
   process.exit(1);
 }
-console.log(`mdxr: rendered ${docs.length} documents → ${outDir}`);
+console.log(`mdxr: rendered ${docs.length} documents (+ sources) → ${outDir}`);

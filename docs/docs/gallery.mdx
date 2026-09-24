@@ -5,13 +5,24 @@ sidebar:
   order: 4
 ---
 
-Every example below is a real `.mdx` document from the [`examples/`](https://github.com/SuzumiyaAoba/mdxr/tree/master/examples) directory, rendered by `mdxr render` during the docs build. The embedded frames show the actual output — hydration included, so interactive components work inside the frame.
+Every example below is a real `.mdx` document from the [`examples/`](https://github.com/SuzumiyaAoba/mdxr/tree/master/examples) directory, rendered by `mdxr render` during the docs build. The Preview tab shows the actual output — hydration included, so interactive components work inside the frame; the Code tab shows the source that produced it.
 
 ## Implementation plan — `plan.mdx`
 
 `<Plan>` header, phases, status steps, gantt schedule, decisions, risks, approvals.
 
+<Tabs syncKey="examples-plan">
+  <Tab title="Preview">
+
 <iframe src={`${import.meta.env.BASE_URL}/examples/plan.html`} title="plan.mdx rendered to HTML" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+  <Tab title="Code">
+
+<iframe src={`${import.meta.env.BASE_URL}/examples/plan.src.html`} title="plan.mdx source" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+</Tabs>
 
 <a href={`${import.meta.env.BASE_URL}/examples/plan.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/plan.mdx)
 
@@ -19,7 +30,18 @@ Every example below is a real `.mdx` document from the [`examples/`](https://git
 
 `<Stats>` metrics, `<Checks>` CI status, `<Gauges>` coverage, benchmarks, verdict.
 
+<Tabs syncKey="examples-report">
+  <Tab title="Preview">
+
 <iframe src={`${import.meta.env.BASE_URL}/examples/report.html`} title="report.mdx rendered to HTML" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+  <Tab title="Code">
+
+<iframe src={`${import.meta.env.BASE_URL}/examples/report.src.html`} title="report.mdx source" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+</Tabs>
 
 <a href={`${import.meta.env.BASE_URL}/examples/report.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/report.mdx)
 
@@ -27,7 +49,18 @@ Every example below is a real `.mdx` document from the [`examples/`](https://git
 
 `<Findings>`, `<Hypotheses>`, terminal transcripts, stack traces, search logs.
 
+<Tabs syncKey="examples-investigation">
+  <Tab title="Preview">
+
 <iframe src={`${import.meta.env.BASE_URL}/examples/investigation.html`} title="investigation.mdx rendered to HTML" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+  <Tab title="Code">
+
+<iframe src={`${import.meta.env.BASE_URL}/examples/investigation.src.html`} title="investigation.mdx source" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+</Tabs>
 
 <a href={`${import.meta.env.BASE_URL}/examples/investigation.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/investigation.mdx)
 
@@ -35,7 +68,18 @@ Every example below is a real `.mdx` document from the [`examples/`](https://git
 
 `<FileRef>` chips, `<Flow>` call chains, annotated code blocks.
 
+<Tabs syncKey="examples-code">
+  <Tab title="Preview">
+
 <iframe src={`${import.meta.env.BASE_URL}/examples/code.html`} title="code.mdx rendered to HTML" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+  <Tab title="Code">
+
+<iframe src={`${import.meta.env.BASE_URL}/examples/code.src.html`} title="code.mdx source" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+</Tabs>
 
 <a href={`${import.meta.env.BASE_URL}/examples/code.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/code.mdx)
 
@@ -43,7 +87,18 @@ Every example below is a real `.mdx` document from the [`examples/`](https://git
 
 Diff cards, `<Graph>` diagrams, `<Tests>` reports, endpoints, JSON trees.
 
+<Tabs syncKey="examples-artifacts">
+  <Tab title="Preview">
+
 <iframe src={`${import.meta.env.BASE_URL}/examples/artifacts.html`} title="artifacts.mdx rendered to HTML" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+  <Tab title="Code">
+
+<iframe src={`${import.meta.env.BASE_URL}/examples/artifacts.src.html`} title="artifacts.mdx source" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+</Tabs>
 
 <a href={`${import.meta.env.BASE_URL}/examples/artifacts.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/artifacts.mdx)
 
@@ -51,7 +106,18 @@ Diff cards, `<Graph>` diagrams, `<Tests>` reports, endpoints, JSON trees.
 
 The interactive primitives — tabs, accordion, switch, slider — hydrated and operable in the output.
 
+<Tabs syncKey="examples-ui">
+  <Tab title="Preview">
+
 <iframe src={`${import.meta.env.BASE_URL}/examples/ui.html`} title="ui.mdx rendered to HTML" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+  <Tab title="Code">
+
+<iframe src={`${import.meta.env.BASE_URL}/examples/ui.src.html`} title="ui.mdx source" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+</Tabs>
 
 <a href={`${import.meta.env.BASE_URL}/examples/ui.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/ui.mdx)
 
@@ -59,6 +125,17 @@ The interactive primitives — tabs, accordion, switch, slider — hydrated and 
 
 Project-defined TSX components registered via `mdxr.config.ts`.
 
+<Tabs syncKey="examples-custom">
+  <Tab title="Preview">
+
 <iframe src={`${import.meta.env.BASE_URL}/examples/custom.html`} title="custom.mdx rendered to HTML" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+  <Tab title="Code">
+
+<iframe src={`${import.meta.env.BASE_URL}/examples/custom.src.html`} title="custom.mdx source" loading="lazy" style="width:100%;height:560px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+</Tabs>
 
 <a href={`${import.meta.env.BASE_URL}/examples/custom.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/custom.mdx)

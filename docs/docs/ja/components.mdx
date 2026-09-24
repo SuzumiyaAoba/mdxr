@@ -7,7 +7,7 @@ sidebar:
 
 カタログはドキュメントの種類ごとにグループ化されています。`mdxr catalog` でプロジェクトで利用可能な全コンポーネント — ビルトインと[プロジェクト定義](/ja/configuration#プロジェクト定義コンポーネント)のもの — を一覧でき、`mdxr catalog --json` が名前と属性の機械可読な信頼ソースです。実際のレンダリング結果は[ギャラリー](/ja/gallery)でも確認できます。
 
-各セクションの末尾にはライブレンダリングを埋め込んでいます — [`examples/catalog/`](https://github.com/SuzumiyaAoba/mdxr/tree/master/examples/catalog) の実 `.mdx` ドキュメントをドキュメントビルド時に `mdxr render` で出力したものです。ハイドレーション込みなので、フレーム内でインタラクティブコンポーネントが操作できます。
+各セクションの末尾にはプレビュー／コードのタブを埋め込んでいます — [`examples/catalog/`](https://github.com/SuzumiyaAoba/mdxr/tree/master/examples/catalog) の実 `.mdx` ドキュメントをドキュメントビルド時に `mdxr render` で出力したものと、そのソースです。ハイドレーション込みなので、フレーム内でインタラクティブコンポーネントが操作できます。
 
 ## ドキュメントのスキャフォールディング
 
@@ -27,7 +27,18 @@ sidebar:
 | `<Icon>` | インライン Iconify SVG — `lucide` と `vscode-icons` をバンドル、実行時フェッチなし |
 | フェンスコード / 数式 | ファイル名バーと行マーカー付きハイライトコードブロック。` ```mermaid ` ダイアグラム。KaTeX `$…$` |
 
+<Tabs syncKey="components-scaffolding">
+  <Tab title="プレビュー">
+
 <iframe src={`${import.meta.env.BASE_URL}/components/scaffolding.html`} title="ドキュメントスキャフォールディングのレンダリング結果" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+  <Tab title="コード">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/scaffolding.src.html`} title="scaffolding.mdx のソース" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+</Tabs>
 
 <a href={`${import.meta.env.BASE_URL}/components/scaffolding.html`}>フルページで開く</a> · [ソース](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/catalog/scaffolding.mdx)
 
@@ -53,7 +64,18 @@ sidebar:
 | `<Summary>` | プログレスバー |
 | `<StatusBadge>` | 単体のステータスピル |
 
+<Tabs syncKey="components-planning">
+  <Tab title="プレビュー">
+
 <iframe src={`${import.meta.env.BASE_URL}/components/planning.html`} title="計画とステータスコンポーネントのレンダリング結果" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+  <Tab title="コード">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/planning.src.html`} title="planning.mdx のソース" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+</Tabs>
 
 <a href={`${import.meta.env.BASE_URL}/components/planning.html`}>フルページで開く</a> · [ソース](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/catalog/planning.mdx)
 
@@ -77,7 +99,18 @@ sidebar:
 | `<CodeFile>` | ディスク上の実ファイルをコードブロックとして埋め込み |
 | `<Props>` / `<Prop>` | コンポーネントや関数の API/props テーブル |
 
+<Tabs syncKey="components-investigation">
+  <Tab title="プレビュー">
+
 <iframe src={`${import.meta.env.BASE_URL}/components/investigation.html`} title="コード調査コンポーネントのレンダリング結果" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+  <Tab title="コード">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/investigation.src.html`} title="investigation.mdx のソース" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+</Tabs>
 
 <a href={`${import.meta.env.BASE_URL}/components/investigation.html`}>フルページで開く</a> · [ソース](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/catalog/investigation.mdx)
 
@@ -96,7 +129,18 @@ sidebar:
 | `<Waterfall>` / `<Span>` | タイミングウォーターフォール（OTel トレース風バー）— `:::waterfall` |
 | `<Ins>` / `<Del>` | インラインの単語レベル編集 — セマンティックな `<ins>`/`<del>` |
 
+<Tabs syncKey="components-artifacts">
+  <Tab title="プレビュー">
+
 <iframe src={`${import.meta.env.BASE_URL}/components/artifacts.html`} title="出力アーティファクトコンポーネントのレンダリング結果" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+  <Tab title="コード">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/artifacts.src.html`} title="artifacts.mdx のソース" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+</Tabs>
 
 <a href={`${import.meta.env.BASE_URL}/components/artifacts.html`}>フルページで開く</a> · [ソース](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/catalog/artifacts.mdx)
 
@@ -126,7 +170,18 @@ sidebar:
 | `<Pathway>` / `<Stop>` | マイグレーション/ロールアウトのステッパー — バージョンパス、環境プロモーション — `:::pathway` |
 | `<Incident>` | インシデント/ポストモーテムヘッダー — severity + status ピル、タイムラインメタ — `:::incident` |
 
+<Tabs syncKey="components-reports">
+  <Tab title="プレビュー">
+
 <iframe src={`${import.meta.env.BASE_URL}/components/reports.html`} title="レポートコンポーネントのレンダリング結果" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+  <Tab title="コード">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/reports.src.html`} title="reports.mdx のソース" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+</Tabs>
 
 <a href={`${import.meta.env.BASE_URL}/components/reports.html`}>フルページで開く</a> · [ソース](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/catalog/reports.mdx)
 
@@ -148,7 +203,18 @@ sidebar:
 | `<Sankey>` / `<Link>` / `<Node>` | ステージ列をまたぐフローの分岐/合流 — `:::sankey` |
 | `<Venn>` / `<Set>` / `<Overlap>` | 2–3 集合のオーバーラップ図 — `:::venn` |
 
+<Tabs syncKey="components-charts">
+  <Tab title="プレビュー">
+
 <iframe src={`${import.meta.env.BASE_URL}/components/charts.html`} title="チャートコンポーネントのレンダリング結果" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+  <Tab title="コード">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/charts.src.html`} title="charts.mdx のソース" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+</Tabs>
 
 <a href={`${import.meta.env.BASE_URL}/components/charts.html`}>フルページで開く</a> · [ソース](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/catalog/charts.mdx)
 
@@ -162,7 +228,18 @@ sidebar:
 | `<Stack>` | `gap` 付き垂直スタック |
 | `<Before>` / `<After>` | 赤/緑の比較パネル |
 
+<Tabs syncKey="components-layout">
+  <Tab title="プレビュー">
+
 <iframe src={`${import.meta.env.BASE_URL}/components/layout.html`} title="レイアウトコンポーネントのレンダリング結果" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+  <Tab title="コード">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/layout.src.html`} title="layout.mdx のソース" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+</Tabs>
 
 <a href={`${import.meta.env.BASE_URL}/components/layout.html`}>フルページで開く</a> · [ソース](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/catalog/layout.mdx)
 
@@ -172,7 +249,18 @@ sidebar:
 | --- | --- |
 | `<Ask>` / `<Question>` / `<Choice>` | ネイティブフォームの質問ブロック。回答はコピー可能な Markdown としてライブ表示 |
 
+<Tabs syncKey="components-forms">
+  <Tab title="プレビュー">
+
 <iframe src={`${import.meta.env.BASE_URL}/components/forms.html`} title="読者入力コンポーネントのレンダリング結果" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+  <Tab title="コード">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/forms.src.html`} title="forms.mdx のソース" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+</Tabs>
 
 <a href={`${import.meta.env.BASE_URL}/components/forms.html`}>フルページで開く</a> · [ソース](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/catalog/forms.mdx)
 
@@ -180,7 +268,18 @@ sidebar:
 
 shadcn/ui（Base UI）の全セットが登録されています — `Button`、`Card`、`Table`、`Tabs`、`Accordion`、`Dialog` など。レンダリング済みドキュメントにはハイドレーションバンドルが含まれるため、ステートフルなプリミティブはブラウザ上でインタラクティブに動作します。完全に静的な出力には `--no-hydrate` を渡してください。
 
+<Tabs syncKey="components-shadcn">
+  <Tab title="プレビュー">
+
 <iframe src={`${import.meta.env.BASE_URL}/components/shadcn.html`} title="shadcn/ui コンポーネントのレンダリング結果" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+  <Tab title="コード">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/shadcn.src.html`} title="shadcn.mdx のソース" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+</Tabs>
 
 <a href={`${import.meta.env.BASE_URL}/components/shadcn.html`}>フルページで開く</a> · [ソース](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/catalog/shadcn.mdx)
 
@@ -188,7 +287,18 @@ shadcn/ui（Base UI）の全セットが登録されています — `Button`、
 
 プロジェクトは `mdxr.config.ts` + `defineComponent` で独自コンポーネントを登録できます。同名のコンポーネントはビルトインを上書きします。[設定](/ja/configuration) を参照してください。
 
+<Tabs syncKey="components-custom">
+  <Tab title="プレビュー">
+
 <iframe src={`${import.meta.env.BASE_URL}/components/custom.html`} title="プロジェクト定義コンポーネントのレンダリング結果" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+  <Tab title="コード">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/custom.src.html`} title="custom.mdx のソース" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+</Tabs>
 
 <a href={`${import.meta.env.BASE_URL}/components/custom.html`}>フルページで開く</a> · [ソース](https://github.com/SuzumiyaAoba/mdxr/tree/master/examples/catalog)
 

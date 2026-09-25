@@ -91,6 +91,8 @@ Review results, verification status, security/dependency scans, metrics, config 
 | `<Score>` | 0–100 ring gauge — health/quality scores |
 | `<Spark>` | Inline sparkline for prose trends |
 | `<Benchmarks>` / `<Bench>` | Before/after measurement table — auto % delta, `better="lower"` flips colors — `:::benchmarks` |
+| `<ResearchClaim>` | Classified research statement with source validation, checked date and bibliography backlinks |
+| `<PerformanceTarget>` | Goal vs observation, measurement conditions and explicit unmeasured state |
 | `<DiffStat>` | Inline `+N −M across F files` chip with proportional bar |
 | `<Schema>` / `<DbTable>` / `<DbField>` | Database schema docs — PK/FK/unique/null chips — `:::schema` |
 | `<EnvVars>` / `<EnvVar>` | Env-var reference — required/secret chips, masked values, name-copy button — `:::envvars` |

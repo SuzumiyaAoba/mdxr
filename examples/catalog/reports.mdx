@@ -117,3 +117,35 @@ Trend in prose <Spark values="120,110,96,88,92" tone="emerald" /> and a diff sum
 <Incident title="Docs deploy 404s" severity="high" status="resolved" started="09:12" resolved="09:46" duration="34m" impact="GitHub Pages returned 404 for all assets">
 Proxy mounted the site at the wrong base path.
 </Incident>
+
+## Research claims
+
+<ResearchClaim kind="documented" title="Execution ownership" source="runtime-doc" checked="2026-09-25">
+The runtime owns tool execution. This label means documented, not independently verified.
+</ResearchClaim>
+
+<ResearchClaim kind="inference" source="runtime-doc">
+The interface can be implemented independently of the execution loop.
+</ResearchClaim>
+
+<ResearchClaim kind="proposal">
+Start with a single-agent core and measure it before adding parallel execution.
+</ResearchClaim>
+
+<ResearchClaim kind="unknown">
+Recovery after an external side effect still needs an experiment.
+</ResearchClaim>
+
+<Sources>
+  <Source id="runtime-doc" href="https://example.com/runtime" title="Illustrative runtime specification" accessed="2026-09-25" />
+</Sources>
+
+## Performance targets
+
+These are illustrative targets and observations, not benchmark results for mdxr.
+
+<PerformanceTarget name="Input latency" target="50" unit="ms" statistic="p95" conditions="Stub provider; 100,000 events; Japanese IME" />
+
+<PerformanceTarget name="Input latency — measured example" target="50" actual="42" unit="ms" statistic="p95" status="measured" measuredAt="2026-09-25" conditions="Stub provider; 100,000 events; Japanese IME" />
+
+<PerformanceTarget name="Throughput — missed example" target="100" actual="85" unit="items/s" better="higher" status="measured" conditions="Single worker; fixed input corpus" />

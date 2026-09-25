@@ -48,6 +48,7 @@ import { layoutRenderers } from "./layout.js";
 import { outputRenderers } from "./output.js";
 import { planningRenderers } from "./planning.js";
 import { reportRenderers } from "./reports.js";
+import { researchRenderers } from "./research.js";
 import { shadcnRenderers } from "./shadcn.js";
 
 export const asciiRenderers: AsciiRegistry = {
@@ -57,6 +58,7 @@ export const asciiRenderers: AsciiRegistry = {
   ...investigationRenderers,
   ...outputRenderers,
   ...reportRenderers,
+  ...researchRenderers,
   ...chartRenderers,
   ...layoutRenderers,
   ...formRenderers,

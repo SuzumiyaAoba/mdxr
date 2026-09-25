@@ -6,6 +6,20 @@ export const BASE_CSS = `
 .task-list-item { list-style: none; }
 ul.contains-task-list { padding-left: 1.25rem; }
 .task-list-item input[type='checkbox'] { margin-right: 0.4em; }
+/* Graph fitting is native SVG sizing: readable minimum scale on screen,
+ * full-width containment in print, and a keyboard-operable actual-size toggle. */
+.mdxr-graph-view:has(.mdxr-graph-actual:checked) .mdxr-graph-image {
+  max-width: none !important;
+}
+.mdxr-graph-tools:focus-within { outline: 2px solid rgb(14 165 233); outline-offset: -2px; }
+@media print {
+  .mdxr-graph-tools { display: none; }
+  .mdxr-graph-scroll { overflow: visible; }
+  .mdxr-graph-view:has(.mdxr-graph-actual:checked) .mdxr-graph-image,
+  .mdxr-graph-view .mdxr-graph-image {
+    max-width: 100% !important; min-width: 0 !important; height: auto !important;
+  }
+}
 /* --- Interaction feedback -------------------------------------------
  * Every [data-copy] button carries an idle and a done icon
  * (.mdxr-copy-idle/.mdxr-copy-done); the delegated event handler

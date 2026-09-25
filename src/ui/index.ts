@@ -123,6 +123,7 @@ import { Option } from "./option.js";
 import { Owner } from "./owner.js";
 import { Package, Packages } from "./packages.js";
 import { Pathway, Stop } from "./pathway.js";
+import { PerformanceTarget } from "./performance-target.js";
 import { Phase } from "./phase.js";
 import { PieChart, Slice } from "./pie-chart.js";
 import { Plan } from "./plan.js";
@@ -183,6 +184,7 @@ import {
 } from "./reference-reports.js";
 import { Entry, Release } from "./release.js";
 import { Req, Reqs } from "./req.js";
+import { ResearchClaim } from "./research-claim.js";
 import { Comment, Review } from "./review.js";
 import { Risk } from "./risk.js";
 import { Link, Sankey } from "./sankey.js";
@@ -252,6 +254,8 @@ export { Comments } from "./comments.js";
 export { Board, BoardCard, Lane } from "./board.js";
 export { After, Before } from "./compare.js";
 export { Decision, DECISION_STATUSES } from "./decision.js";
+export { PerformanceTarget } from "./performance-target.js";
+export { ResearchClaim } from "./research-claim.js";
 export { Dep, DEP_KINDS, Deps } from "./deps.js";
 export { Details } from "./details.js";
 export { DiffView, parseDiff } from "./diff.js";
@@ -512,6 +516,7 @@ export const builtinComponents: ComponentMap = {
   ParetoChart,
   Pathway,
   PdfPreview,
+  PerformanceTarget,
   PermissionMatrix,
   Phase,
   PieChart,
@@ -540,6 +545,7 @@ export const builtinComponents: ComponentMap = {
   Req,
   Reqs,
   Request,
+  ResearchClaim,
   Response,
   Review,
   RidgelinePlot,

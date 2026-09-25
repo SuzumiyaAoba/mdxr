@@ -88,3 +88,19 @@ consider a comment on the intent
 ## Inline edits
 
 The compiler <Del>concatenates strings</Del> <Ins>streams tokens</Ins> and <Del>always</Del> <Ins>optionally</Ins> minifies the output.
+
+## Graph fitting
+
+This deliberately wide diagram fits the available width down to 65% of its original
+size. Use Actual size to inspect labels. A narrow viewport keeps horizontal scrolling
+within the panel; print output fits the page.
+
+<Graph title="Execution pipeline" direction="right" minScale="0.65">
+  <Node id="ui" label="Application interface" />
+  <Node id="session" label="Session service" />
+  <Node id="core" label="Independent execution core" />
+  <Node id="executor" label="Tool execution boundary" />
+  <Edge from="ui" to="session" />
+  <Edge from="session" to="core" />
+  <Edge from="core" to="executor" />
+</Graph>

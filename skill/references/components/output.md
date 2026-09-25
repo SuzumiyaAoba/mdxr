@@ -64,11 +64,13 @@ The replacement keeps semantics.
 
 Use `<Review>` for a summarized verdict report (severity tally + verdict pill); use `<Comments>` when the threads belong _on_ the code.
 
-### `<Graph title direction>` / `<Node>` / `<Edge>` / `:::graph`
+### `<Graph title direction fit minScale>` / `<Node>` / `<Edge>` / `:::graph`
 
 A static node/edge diagram — the "React Flow" shape without client JS: dagre computes the layout at render time and the output is absolute-positioned node cards over an SVG edge layer (printable, deterministic). Children are `<Node>` and `<Edge>` elements; anything else renders under the diagram.
 
 `direction` is `down` (default) / `right` / `up` / `left` — dagre `TB`/`LR`/`BT`/`RL`.
+
+`fit="auto"` (default) scales the drawing to the available width, down to `minScale="0.85"`. Below that readable minimum, the drawing scrolls horizontally inside its panel. `minScale` must be a finite decimal between `0.1` and `1`. The native **Actual size** checkbox restores the original size; it is keyboard operable and works without JavaScript or hydration. `fit="scroll"` keeps the original size and omits the control. Printing always fits the entire diagram to the page, including when Actual size is selected. Node links and text remain interactive.
 
 `<Node>` props: `id` (required), `label` (display text, defaults to `id`), `note` (muted second line), `icon` (Iconify name), `path` + optional `lines`/`href` (file icon + editor link — something mermaid can't do), `status` (todo|doing|done|blocked → status icon), `external="true"` (dashed "outside the repo" styling).
 

@@ -250,3 +250,63 @@ Incident/postmortem header block. `title` is required; `severity` (shared scale)
   An unscoped API token used by the nightly cleanup job had delete permissions.
 </Incident>
 ```
+
+### `<ResearchClaim kind title source checked>`
+
+A research statement classified as `documented`, `inference`, `proposal`, or `unknown`. `kind` is required. Documented statements and inferences require `source`, the ID of a `<Source>` in the same document. Documented statements also require `checked`, a valid `YYYY-MM-DD` date. Proposals and unknowns can omit a source; any supplied source must resolve. Documented means reported by the source, not independently verified.
+
+Citations share `<Cite>` numbering and bibliography backlinks. `title` and `id` are optional. Both HTML and text output preserve classification, source and date and reject invalid inputs. `:::researchclaim` is the directive spelling.
+
+```mdx
+<ResearchClaim
+  kind="documented"
+  source="manual"
+  checked="2026-09-25"
+  title="Execution boundary"
+>
+  The runtime owns execution.
+</ResearchClaim>
+
+<Sources>
+  <Source
+    id="manual"
+    href="https://example.com/manual"
+    title="Runtime manual"
+  />
+</Sources>
+```
+
+### `<PerformanceTarget name target unit conditions status actual better statistic measuredAt>`
+
+A performance goal with a separate observation. `name`, `target`, `unit`, and `conditions` are required. Numbers must be finite decimal values without a unit suffix; write `target="50" unit="ms"`, not `target="50ms"`.
+
+- `status="unmeasured"` is the default: no observation and no pass/fail classification.
+- `status="measured"` requires `actual`. An observed `actual="0"` is valid.
+- Supplying `actual` or `measuredAt` with `unmeasured` is an error.
+- `better="lower"` (default) means actual ≤ target; `higher` means actual ≥ target.
+- `statistic` labels the observation (e.g. `p95`, `mean`); it does not compute it.
+- `measuredAt`, when provided, must be a valid `YYYY-MM-DD` date.
+- `conditions` describes the environment and method; optional children add discussion.
+
+HTML and text share validation and comparison semantics. `:::performancetarget` is also supported. Use `BenchmarkSuite` for sample statistics and `Benchmarks` for before/after comparisons.
+
+```mdx
+<PerformanceTarget
+  name="Input latency"
+  target="50"
+  unit="ms"
+  statistic="p95"
+  conditions="Stub provider; 100,000 events; Japanese IME"
+/>
+
+<PerformanceTarget
+  name="Input latency"
+  target="50"
+  actual="42"
+  status="measured"
+  unit="ms"
+  statistic="p95"
+  measuredAt="2026-09-25"
+  conditions="Stub provider; 100,000 events; Japanese IME"
+/>
+```

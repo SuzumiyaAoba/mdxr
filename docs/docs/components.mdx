@@ -967,6 +967,36 @@ The compiler <Del>concatenates strings</Del> <Ins>streams tokens</Ins> and <Del>
   </Tab>
 </Tabs>
 
+
+### Graph fitting
+
+<Tabs syncKey="components-artifacts-graph-fitting">
+  <Tab title="Preview">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/artifacts--graph-fitting.html`} title="Graph fitting" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+  <Tab title="Code">
+
+````mdx
+This deliberately wide diagram fits the available width down to 65% of its original
+size. Use Actual size to inspect labels. A narrow viewport keeps horizontal scrolling
+within the panel; print output fits the page.
+
+<Graph title="Execution pipeline" direction="right" minScale="0.65">
+  <Node id="ui" label="Application interface" />
+  <Node id="session" label="Session service" />
+  <Node id="core" label="Independent execution core" />
+  <Node id="executor" label="Tool execution boundary" />
+  <Edge from="ui" to="session" />
+  <Edge from="session" to="core" />
+  <Edge from="core" to="executor" />
+</Graph>
+````
+
+  </Tab>
+</Tabs>
+
 {/* /demo:artifacts */}
 
 <a href={`${import.meta.env.BASE_URL}/components/artifacts.html`}>Open full page</a> · [Source](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/catalog/artifacts.mdx)
@@ -988,6 +1018,8 @@ Review results, verification status, security and dependency scans, metrics, and
 | `<Score>` | 0–100 ring gauge — health/quality scores |
 | `<Spark>` | Inline sparkline for prose trends |
 | `<Benchmarks>` / `<Bench>` | Before/after measurement table — auto % delta — `:::benchmarks` |
+| `<ResearchClaim>` | Classified research statement with source validation, checked date and bibliography backlinks |
+| `<PerformanceTarget>` | Goal vs observation, measurement conditions and explicit unmeasured state |
 | `<DiffStat>` | Inline `+N −M across F files` chip with proportional bar |
 | `<Schema>` / `<DbTable>` / `<DbField>` | Database schema docs — PK/FK/unique/null chips — `:::schema` |
 | `<EnvVars>` / `<EnvVar>` | Env-var reference — required/secret chips, masked values — `:::envvars` |
@@ -1191,6 +1223,66 @@ Trend in prose <Spark values="120,110,96,88,92" tone="emerald" /> and a diff sum
 <Incident title="Docs deploy 404s" severity="high" status="resolved" started="09:12" resolved="09:46" duration="34m" impact="GitHub Pages returned 404 for all assets">
 Proxy mounted the site at the wrong base path.
 </Incident>
+````
+
+  </Tab>
+</Tabs>
+
+
+### Research claims
+
+<Tabs syncKey="components-reports-research-claims">
+  <Tab title="Preview">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/reports--research-claims.html`} title="Research claims" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+  <Tab title="Code">
+
+````mdx
+<ResearchClaim kind="documented" title="Execution ownership" source="runtime-doc" checked="2026-09-25">
+The runtime owns tool execution. This label means documented, not independently verified.
+</ResearchClaim>
+
+<ResearchClaim kind="inference" source="runtime-doc">
+The interface can be implemented independently of the execution loop.
+</ResearchClaim>
+
+<ResearchClaim kind="proposal">
+Start with a single-agent core and measure it before adding parallel execution.
+</ResearchClaim>
+
+<ResearchClaim kind="unknown">
+Recovery after an external side effect still needs an experiment.
+</ResearchClaim>
+
+<Sources>
+  <Source id="runtime-doc" href="https://example.com/runtime" title="Illustrative runtime specification" accessed="2026-09-25" />
+</Sources>
+````
+
+  </Tab>
+</Tabs>
+
+
+### Performance targets
+
+<Tabs syncKey="components-reports-performance-targets">
+  <Tab title="Preview">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/reports--performance-targets.html`} title="Performance targets" loading="lazy" style="width:100%;height:480px;border:1px solid #d4d4d8;border-radius:8px;background:#fff" />
+
+  </Tab>
+  <Tab title="Code">
+
+````mdx
+These are illustrative targets and observations, not benchmark results for mdxr.
+
+<PerformanceTarget name="Input latency" target="50" unit="ms" statistic="p95" conditions="Stub provider; 100,000 events; Japanese IME" />
+
+<PerformanceTarget name="Input latency — measured example" target="50" actual="42" unit="ms" statistic="p95" status="measured" measuredAt="2026-09-25" conditions="Stub provider; 100,000 events; Japanese IME" />
+
+<PerformanceTarget name="Throughput — missed example" target="100" actual="85" unit="items/s" better="higher" status="measured" conditions="Single worker; fixed input corpus" />
 ````
 
   </Tab>

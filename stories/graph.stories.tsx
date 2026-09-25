@@ -35,3 +35,17 @@ export const Horizontal: Story = {
     </Graph>
   ),
 };
+
+export const Fitting: Story = {
+  render: () => (
+    <div style={{ maxWidth: "100%", width: 480 }}>
+      <Graph title="Responsive pipeline" direction="right" minScale="0.65">
+        <Node id="ui" label="Application interface" />
+        <Node id="session" label="Session service" />
+        <Node id="core" label="Independent execution core" />
+        <Edge from="ui" to="session" />
+        <Edge from="session" to="core" />
+      </Graph>
+    </div>
+  ),
+};

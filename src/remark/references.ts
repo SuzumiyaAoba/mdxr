@@ -49,6 +49,7 @@ const INLINE_REFERENCES = new Set(["Cite", "CrossRef", "TermRef"]);
 const REFERENCE_FEATURES = new Set([
   ...INLINE_REFERENCES,
   "Source",
+  "ResearchClaim",
   "TableOfFigures",
   "NumberedEquation",
   "Theorem",
@@ -131,6 +132,25 @@ const resolveCitation = (node: MdxTarget, state: ReferenceState): void => {
   state.backlinks.set(target, ids);
 };
 
+/** Claims reuse the bibliography's numbering and backlink contract. */
+const resolveClaimCitation = (node: MdxTarget, state: ReferenceState): void => {
+  const source = jsxAttr(node, "source");
+  if (source === undefined) {
+    return;
+  }
+  const citation: MdxTarget = {
+    attributes: [{ name: "source", type: "mdxJsxAttribute", value: source }],
+    children: [],
+    name: "Cite",
+    position: node.position,
+    type: "mdxJsxTextElement",
+  };
+  resolveCitation(citation, state);
+  set(node, "citationId", jsxAttr(citation, "id") ?? "");
+  set(node, "sourceHref", jsxAttr(citation, "href") ?? "");
+  set(node, "sourceLabel", jsxAttr(citation, "label") ?? "");
+};
+
 const resolveCrossReference = (
   node: MdxTarget,
   state: ReferenceState
@@ -204,6 +224,22 @@ const addLegacyAnchor = (node: MdxTarget): void => {
   } as Node);
 };
 
+const resolveReference = (node: MdxTarget, state: ReferenceState): void => {
+  if (node.name === "ResearchClaim") {
+    resolveClaimCitation(node, state);
+  }
+  if (node.name === "Cite") {
+    resolveCitation(node, state);
+  }
+  if (node.name === "CrossRef" || node.name === "TermRef") {
+    resolveCrossReference(node, state);
+  }
+  if (node.name === "TableOfFigures") {
+    listFigures(node, state.references);
+  }
+  addLegacyAnchor(node);
+};
+
 /** Two passes support forward references without changing older documents. */
 export const remarkReferences = () => (tree: Node, file: VFile) => {
   const elements: MdxTarget[] = [];
@@ -227,16 +263,7 @@ export const remarkReferences = () => (tree: Node, file: VFile) => {
     registerReference(node, state);
   }
   for (const node of elements) {
-    if (node.name === "Cite") {
-      resolveCitation(node, state);
-    }
-    if (node.name === "CrossRef" || node.name === "TermRef") {
-      resolveCrossReference(node, state);
-    }
-    if (node.name === "TableOfFigures") {
-      listFigures(node, state.references);
-    }
-    addLegacyAnchor(node);
+    resolveReference(node, state);
   }
   for (const [source, ids] of state.backlinks) {
     const reference = state.sources.get(source);

@@ -4,6 +4,7 @@ import * as v from "valibot";
 
 import { defineComponent } from "../define.js";
 import { nonEmpty } from "../guards.js";
+import { FINITE_NUMBER } from "../research.js";
 import { attrTrue } from "./attrs.js";
 import { CaptionBar, MaybeLink, Panel, Section } from "./bits.js";
 import type { DepKind } from "./deps.js";
@@ -20,6 +21,7 @@ import {
 } from "./graph-layout.js";
 import type { EdgeSpec, NodeSpec } from "./graph-specs.js";
 import { collectSpecs } from "./graph-specs.js";
+import { GraphViewport } from "./graph-viewport.js";
 import { hasIcon, Icon } from "./icon.js";
 import { STATUS_ICON_CLS, STATUS_ICONS } from "./status-badge.js";
 import {
@@ -202,16 +204,21 @@ const PlacedNode = ({
 export const Graph = defineComponent(
   {
     description:
-      "ノード/エッジのグラフ図 (dagre で静的レイアウト、JS 不要)。子に <Node id> と <Edge from to>。direction は down|right|up|left。path 付きノードはエディタリンクになる",
+      "ノード/エッジのグラフ図 (dagre で静的レイアウト、JS 不要)。子に <Node id> と <Edge from to>。direction は down|right|up|left。path 付きノードはエディタリンクになる。fit=auto (既定) で幅に合わせて縮小、minScale=0.85 が下限。fit=scroll は原寸",
     schema: v.looseObject({
       direction: v.optional(
         v.picklist(["down", "right", "up", "left"]),
         "down"
       ),
+      fit: v.optional(v.picklist(["auto", "scroll"]), "auto"),
+      minScale: v.optional(
+        v.pipe(FINITE_NUMBER, v.minValue(0.1), v.maxValue(1)),
+        0.85
+      ),
       title: v.optional(v.string()),
     }),
   },
-  ({ title, direction, children }) => {
+  ({ title, direction, fit, minScale, children }) => {
     const { edges, nodes, rest } = collectSpecs(children);
 
     // Duplicate ids would stack at the same dagre position (and repeat a
@@ -243,34 +250,34 @@ export const Graph = defineComponent(
             {title}
           </CaptionBar>
         ) : null}
-        <div className={`overflow-x-auto p-3 ${SUNKEN_CLS}`}>
-          <div className="relative" style={{ height, minWidth: "100%", width }}>
-            <svg
-              aria-hidden
-              className="absolute inset-0"
-              height={height}
-              width={width}
-            >
-              {liveEdges.map((e, i) => (
-                <EdgePath
-                  e={e}
-                  edge={g.edge(e.from, e.to, edgeKey(i))}
-                  key={i}
-                />
-              ))}
-            </svg>
+        <GraphViewport
+          width={width}
+          height={height}
+          fit={fit}
+          minScale={minScale}
+          title={title}
+        >
+          <svg
+            aria-hidden
+            className="absolute inset-0"
+            height={height}
+            width={width}
+          >
             {liveEdges.map((e, i) => (
-              <EdgeLabelChip
-                e={e}
-                edge={g.edge(e.from, e.to, edgeKey(i))}
-                key={`label-${i}`}
-              />
+              <EdgePath e={e} edge={g.edge(e.from, e.to, edgeKey(i))} key={i} />
             ))}
-            {uniqueNodes.map((n) => (
-              <PlacedNode g={g} key={n.id} n={n} />
-            ))}
-          </div>
-        </div>
+          </svg>
+          {liveEdges.map((e, i) => (
+            <EdgeLabelChip
+              e={e}
+              edge={g.edge(e.from, e.to, edgeKey(i))}
+              key={`label-${i}`}
+            />
+          ))}
+          {uniqueNodes.map((n) => (
+            <PlacedNode g={g} key={n.id} n={n} />
+          ))}
+        </GraphViewport>
         {rest.length > 0 ? <div className="px-4 py-2">{rest}</div> : null}
       </Panel>
     );

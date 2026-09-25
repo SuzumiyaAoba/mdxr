@@ -296,7 +296,7 @@ details[open] > summary .mdxr-chev { transform: rotate(90deg); }
 .dark .mdxr-toc-body > ul > li > a { color: rgb(212 212 212); }
 .mdxr-toc-body > ul > li > p > a::before,
 .mdxr-toc-body > ul > li > a::before {
-  content: counter(mdxr-toc); min-width: 1em;
+  content: counter(mdxr-toc); min-width: 1em; flex-shrink: 0; white-space: nowrap;
   font-size: 0.72rem; font-weight: 400; font-variant-numeric: tabular-nums;
   color: rgb(163 163 163);
 }
@@ -308,6 +308,27 @@ details[open] > summary .mdxr-chev { transform: rotate(90deg); }
 }
 .dark .mdxr-toc-body ul ul { border-color: rgb(64 64 64); }
 .mdxr-toc-body ul ul a { font-size: 0.8125rem; padding: 0.2rem 0.45rem; }
+/* A 64rem viewport fits the usual 45rem article, a 14rem ToC, a 2rem
+ * gap, and 1.5rem outer gutters. Only the first document-level ToC docks;
+ * additional or nested tables stay in the document flow. Print stays inline. */
+@media screen and (min-width: 64rem) {
+  #mdxr-root:has(> .mdxr-toc, > article:only-of-type > .mdxr-toc) {
+    max-width: 64rem;
+    padding-right: 17.5rem;
+  }
+  #mdxr-root > .mdxr-toc:nth-child(1 of .mdxr-toc),
+  #mdxr-root:not(:has(> .mdxr-toc)) > article:only-of-type > .mdxr-toc:nth-child(1 of .mdxr-toc) {
+    position: fixed;
+    top: 4rem;
+    right: max(1.5rem, calc((100vw - 64rem) / 2 + 1.5rem));
+    width: 14rem;
+    max-height: calc(100dvh - 5.5rem);
+    margin: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    overflow-wrap: anywhere;
+  }
+}
 /* Ask: native form controls stay interactive without hydration. The real
  * inputs are visually hidden; state is styled through :checked/~ siblings. */
 .mdxr-choice {

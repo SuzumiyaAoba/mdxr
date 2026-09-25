@@ -1,5 +1,7 @@
 import { icons as lucide } from "@iconify-json/lucide";
 
+import { ANNOTATION_HIGHLIGHT_CSS, annotationHtml } from "./annotation-html.js";
+import type { AnnotationDocument } from "./annotations.js";
 import {
   KATEX_CDN_URL,
   LIVE_RELOAD_JS,
@@ -53,6 +55,7 @@ const iconSvg = (name: string): string => {
 const THEME_TOGGLE_HTML = `<button type="button" class="mdxr-theme" data-mdxr-theme data-mode="auto" title="Theme: auto" aria-label="Switch theme (current: auto)"><span class="mdxr-theme-i mdxr-theme-i-auto">${iconSvg("sun-moon")}</span><span class="mdxr-theme-i mdxr-theme-i-light">${iconSvg("sun")}</span><span class="mdxr-theme-i mdxr-theme-i-dark">${iconSvg("moon")}</span></button>`;
 
 export interface DocumentOptions {
+  annotations?: AnnotationDocument;
   title: string;
   body: string;
   css: string;
@@ -77,11 +80,12 @@ export const htmlDocument = (o: DocumentOptions): string => `<!doctype html>
 <title>${escapeHtml(o.title)}</title>
 <script>${inlineScript(THEME_JS)}</script>
 ${o.needsKatex === true ? `<link rel="stylesheet" href="${KATEX_CDN_URL}">` : ""}
-<style>${inlineStyle(o.css)}</style>
+<style>${inlineStyle(o.css)}${o.annotations === undefined ? "" : ANNOTATION_HIGHLIGHT_CSS}</style>
 </head>
 <body class="bg-white text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100">
 ${THEME_TOGGLE_HTML}
 <main id="mdxr-root" class="prose prose-neutral dark:prose-invert mx-auto max-w-3xl px-6 py-10">${o.body}</main>
+${o.annotations === undefined ? "" : `${annotationHtml(iconSvg)}<script type="application/json" id="mdxr-annotation-document">${JSON.stringify(o.annotations).replaceAll("<", "\\u003c")}</script>`}
 <script>${inlineScript(o.clientJs)}</script>
 ${o.needsMermaid ? `<script type="module">${inlineScript(MERMAID_JS)}</script>` : ""}
 ${o.liveReload === true ? `<script>${inlineScript(LIVE_RELOAD_JS)}</script>` : ""}

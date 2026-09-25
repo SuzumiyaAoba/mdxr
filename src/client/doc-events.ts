@@ -48,7 +48,7 @@ const flash = (
   }, 1600);
 };
 
-const writeClipboard = (
+export const writeClipboard = (
   text: string,
   done: () => void,
   fail: () => void

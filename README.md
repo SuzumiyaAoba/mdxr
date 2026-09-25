@@ -37,6 +37,12 @@ mdxr render plan.mdx --format json   # machine-readable errors
 
 Preview a document in the browser with live reload (`-p, --port`, default `3737`; `--open` to launch the browser once serving).
 
+### Review the rendered document
+
+Select text and click **Add comment**, or open **Annotate → Select figure** to comment on an image, diagram, or chart. Edit or delete comments in the panel, then **Copy Markdown** to send the quoted targets, source locations, and feedback to a coding agent.
+
+Saved annotations remain in your browser for that document; they do not modify the source file or travel with the HTML. If the document changes, targets that cannot be identified keep their original quotes and are marked unavailable. [Review annotations](https://suzumiyaaoba.com/mdxr/annotations) describes keyboard shortcuts, storage, and clipboard fallbacks.
+
 ### `mdxr text [file]`
 
 Render an `.mdx` document to plain Markdown — every component becomes an ASCII/text stand-in (status checkbox lists, block-bar charts, GFM tables, `<details>` disclosures) so the document stays readable in any Markdown viewer or terminal. Interactive-only widgets (dialogs, menus, shadcn chrome) degrade to their text content; unknown components warn to stderr and keep their children.

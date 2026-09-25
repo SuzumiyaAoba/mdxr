@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
@@ -217,6 +218,7 @@ export const render = async (
   };
 
   const {
+    annotationSources,
     body,
     code,
     fileLinks,
@@ -311,6 +313,12 @@ export const render = async (
   ]);
 
   return htmlDocument({
+    annotations: {
+      file: filePath,
+      revision: createHash("sha256").update(code).digest("hex"),
+      sources: annotationSources,
+      title,
+    },
     body: docBody,
     clientJs: js,
     css,

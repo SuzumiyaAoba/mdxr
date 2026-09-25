@@ -1,0 +1,55 @@
+---
+title: Review annotations
+description: Comment on rendered text and figures, then copy Markdown feedback for a coding agent.
+sidebar:
+  order: 9
+---
+
+Every HTML document produced by `mdxr render` or `mdxr serve` includes an **Annotate** button. Review the rendered document and hand your comments back to a coding agent without editing the MDX first.
+
+## Comment on text
+
+1. Select a passage in the document, including text that crosses bold text, links, or other inline formatting.
+2. Click **Add comment**, write your feedback, and select **Save comment**.
+3. Use the annotation panel to **Edit**, **Delete**, or **Show target**. Saved passages are highlighted in the document.
+
+You can also press **Ctrl+Shift+M** (Windows/Linux) or **Cmd+Shift+M** (macOS) after selecting text. **Ctrl+Enter** / **Cmd+Enter** saves the comment. **Escape** closes the panel and keeps the current draft available when you reopen it; only saved comments survive a reload.
+
+## Comment on a figure
+
+Open **Annotate → Select figure**. Click an image, diagram, or chart in the document, or choose it from the **Figure** list and click **Comment on figure**. Captions and image alt text identify the selected target. This also works for Mermaid diagrams after they render.
+
+Custom components can expose a `<figure>` or an element with `data-mdxr-figure` to make their rendered output selectable as a figure.
+
+## Send feedback to a coding agent
+
+Click **Copy Markdown** to copy all saved comments. The output includes the document path, section, quoted text or figure caption, image path when available, and your comment. MDX source block line numbers are included when the target identifies an unambiguous source block; included documents keep their own file paths and line numbers.
+
+```markdown
+# Feedback: Implementation plan
+
+Document: ` /project/plan.mdx `
+
+Please address the following review comments in the source document.
+
+## 1. Text comment
+
+Source block: ` /project/plan.mdx:12-14 `
+Section: Error handling
+
+> Retry failed requests automatically.
+
+**Comment**
+
+Specify the retry limit and explain which errors are retryable.
+```
+
+Paste the Markdown into your coding agent. If clipboard access is blocked, the panel displays a selected Markdown field for manual copying.
+
+## Saved reviews and document changes
+
+Saved annotations stay in browser local storage, separated by document path within the same browser origin. They are not written into the MDX or HTML file, and sending someone the HTML does not share your annotations. Copy Markdown to move a review between browsers or share it.
+
+After a rebuild, annotations reattach only when the target can still be identified. If a target changed, disappeared, or became ambiguous, the panel preserves the original quotation and marks the target as unavailable. These comments remain editable and exportable, with an explicit note that their location refers to the original selection.
+
+If local storage is unavailable, you can still annotate and copy feedback for the current session. The panel reports the storage failure. Review controls are hidden when printing. Annotations also work with `--no-hydrate`, because they use the document's lightweight script rather than React hydration.

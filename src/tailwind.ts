@@ -83,6 +83,7 @@ export const buildCss = async (
     // globals.css holds the shadcn/Base UI theme tokens (@theme, :root/.dark
     // vars, custom variants) shared with Storybook; it imports tailwind itself.
     '@import "./src/styles/globals.css";',
+    '@import "./src/assets/annotations.css";',
     '@plugin "@tailwindcss/typography";',
     // Iconify icons as CSS classes: `icon-[lucide--check]` (dynamic, any
     // installed @iconify-json/* set works).

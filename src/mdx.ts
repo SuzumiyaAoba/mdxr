@@ -13,6 +13,7 @@ import remarkMath from "remark-math";
 import { VFile } from "vfile";
 import { matter } from "vfile-matter";
 
+import type { AnnotationSource } from "./annotations.js";
 import type { ComponentMap } from "./define.js";
 import type { DocContextValue } from "./doc-context.js";
 import { DocContext } from "./doc-context.js";
@@ -22,6 +23,7 @@ import { isComponent, isRecord } from "./guards.js";
 import { importBundledCode } from "./load-user-module.js";
 import { rehypeShiki } from "./rehype/shiki.js";
 import { remarkMdxrAlerts } from "./remark/alerts.js";
+import { remarkAnnotationSources } from "./remark/annotation-sources.js";
 import { remarkCodeFile } from "./remark/code-file.js";
 import { remarkCodeMeta } from "./remark/code-meta.js";
 import { remarkMdxrDirectives } from "./remark/directives.js";
@@ -33,6 +35,7 @@ import { remarkReferences } from "./remark/references.js";
 import { takeUsedIcons } from "./ui/icon.js";
 
 export interface MdxResult {
+  annotationSources: AnnotationSource[];
   body: string;
   frontmatter: Record<string, unknown>;
   /**
@@ -175,6 +178,7 @@ export const mdxToHtml = async (
       remarkCodeMeta,
       remarkFilePaths,
       remarkReferences,
+      remarkAnnotationSources,
     ],
   });
   // Non-fatal plugin diagnostics (unknown directives, …) reach the user here.
@@ -227,6 +231,7 @@ export const mdxToHtml = async (
     throw enhanceRenderError(error, Object.keys(components));
   }
   return {
+    annotationSources: compiled.data.annotationSources ?? [],
     body,
     code,
     context,

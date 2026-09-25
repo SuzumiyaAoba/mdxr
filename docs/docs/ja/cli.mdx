@@ -33,6 +33,8 @@ mdxr render plan.mdx --format json    # 機械可読なエラー出力
 
 エラーは `file:line:col` 付きで報告されるため、エージェント（あるいは人間）がソースを修正して再実行できます。`--format json` は同じメッセージを機械可読な出力に包みます。
 
+生成された HTML では[レビュー注釈](/ja/annotations)を利用できます。文章や図にコメントし、Coding Agent に渡す Markdown をコピーできます。`--no-hydrate` でも利用できます。
+
 ## mdxr serve
 
 ドキュメントをライブリロード付きでブラウザプレビューします。`render` と同様に stdin も受け付けます。

@@ -17,6 +17,12 @@ import type { MdxTarget } from "./ast.js";
 import { remarkMdxrDirectives } from "./directives.js";
 import { remarkNoJs } from "./no-js.js";
 
+declare module "unist" {
+  interface Data {
+    mdxrSourceFile?: string;
+  }
+}
+
 const parser = unified()
   .use(remarkParse)
   .use(remarkMdx)
@@ -134,6 +140,7 @@ export const remarkInclude = () => (tree: Node, file: VFile) => {
       file.fail("Include: nesting exceeds 32 files");
     }
     for (const child of parent.children) {
+      child.data = { ...child.data, mdxrSourceFile: origin };
       if (isInclude(child)) {
         const included = includedDocument(child, origin, chain, file);
         expand(included.tree, included.abs, [...chain, included.abs]);

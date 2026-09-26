@@ -1,5 +1,5 @@
 import { chromium } from "playwright";
-import type { Browser, Page } from "playwright";
+import type { Browser, Frame, Page } from "playwright";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { render } from "../src/render.js";
@@ -17,7 +17,10 @@ Render **rich text** and diagrams. 日本語の注釈も使えます。
 <details><summary>More details</summary>Keep this interactive.</details>
 `;
 
-const selectText = async (page: Page, quote = "rich text"): Promise<void> => {
+const selectText = async (
+  page: Frame | Page,
+  quote = "rich text"
+): Promise<void> => {
   await page.evaluate((text) => {
     const root = document.querySelector("#mdxr-root");
     if (root === null) {
@@ -55,7 +58,7 @@ const addTextComment = async (
   await page.getByRole("button", { exact: true, name: "Save comment" }).click();
 };
 
-const clipboardStub = async (page: Page): Promise<void> => {
+const clipboardStub = async (page: Frame | Page): Promise<void> => {
   await page.evaluate(() => {
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
@@ -207,6 +210,114 @@ describe("document annotation interactions", () => {
       await page.close();
     }
   });
+
+  it.each([
+    ["allow-scripts allow-same-origin", "click"],
+    ["allow-scripts allow-same-origin", "Control+Enter"],
+    ["allow-scripts allow-same-origin", "Meta+Enter"],
+    ["allow-scripts", "click"],
+    ["allow-scripts", "Control+Enter"],
+    ["allow-scripts", "Meta+Enter"],
+  ])(
+    "saves and edits comments in a sandbox without form permissions (%s, %s)",
+    async (sandbox, action) => {
+      const page = await browser.newPage({
+        viewport: { height: 900, width: 1400 },
+      });
+      const errors: string[] = [];
+      page.on("pageerror", (error) => {
+        errors.push(error.message);
+      });
+      page.on("console", (message) => {
+        if (message.type() === "error") {
+          errors.push(message.text());
+        }
+      });
+      try {
+        await page.route("http://mdxr.test/**", async (route) => {
+          await route.fulfill({
+            body: route.request().url().endsWith("/preview")
+              ? `<iframe name="preview" sandbox="${sandbox}" src="/review" width="1280" height="850"></iframe>`
+              : html,
+            contentType: "text/html",
+          });
+        });
+        await page.goto("http://mdxr.test/preview");
+        const frame = page.frame("preview");
+        if (frame === null) {
+          throw new Error("Preview frame missing");
+        }
+        await clipboardStub(frame);
+        await frame.locator("#mdxr-root").click({ position: { x: 5, y: 5 } });
+        await selectText(frame);
+        await frame
+          .getByRole("button", { exact: true, name: "Add comment" })
+          .click();
+        const input = frame.getByRole("textbox", {
+          exact: true,
+          name: "Comment",
+        });
+        const save = frame.getByRole("button", {
+          exact: true,
+          name: "Save comment",
+        });
+        await input.fill("   ");
+        await save.click();
+        expect({
+          count: await frame.locator(".mdxr-annotation-card").count(),
+          draftVisible: await input.isVisible(),
+        }).toStrictEqual({ count: 0, draftVisible: true });
+        await input.fill("埋め込みプレビューのコメント");
+        await (action === "click" ? save.click() : input.press(action));
+        expect({
+          count: await frame.locator(".mdxr-annotation-card").count(),
+          draftVisible: await input.isVisible(),
+          status: await frame.getByRole("status").textContent(),
+        }).toStrictEqual({
+          count: 1,
+          draftVisible: false,
+          status: sandbox.includes("allow-same-origin")
+            ? "Saved in this browser"
+            : "Browser storage is unavailable. Copy Markdown before closing this page to keep your comments.",
+        });
+        await frame.getByRole("button", { exact: true, name: "Edit" }).click();
+        await input.fill("更新したコメント");
+        await (action === "click"
+          ? frame
+              .getByRole("button", { exact: true, name: "Save changes" })
+              .click()
+          : input.press(action));
+        expect({
+          comment: await frame
+            .locator(".mdxr-annotation-comment-body")
+            .textContent(),
+          count: await frame.locator(".mdxr-annotation-card").count(),
+        }).toStrictEqual({ comment: "更新したコメント", count: 1 });
+        await frame
+          .getByRole("button", { exact: true, name: "Copy Markdown" })
+          .click();
+        await expect(
+          frame.evaluate(() => document.documentElement.dataset.feedback)
+        ).resolves.toContain("更新したコメント");
+        await page.reload();
+        const restored = page.frameLocator('iframe[name="preview"]');
+        await restored.getByRole("button", { name: "Annotate" }).click();
+        expect({
+          comments: await restored
+            .locator(".mdxr-annotation-comment-body")
+            .allTextContents(),
+          errors,
+        }).toStrictEqual({
+          comments: sandbox.includes("allow-same-origin")
+            ? ["更新したコメント"]
+            : [],
+          errors: [],
+        });
+      } finally {
+        await page.close();
+      }
+    }
+  );
 
   it("clicks a figure in pick mode without activating its link", async () => {
     const linked = SOURCE.replace(

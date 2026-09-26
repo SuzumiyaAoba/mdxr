@@ -260,10 +260,11 @@ class AnnotationController {
     this.refresh();
   }
 
-  private save(event: SubmitEvent): void {
+  private save(event: Event): void {
     event.preventDefault();
     const comment = this.view.comment.value.trim();
     if (this.draft === undefined || comment === "") {
+      this.view.form.reportValidity();
       this.view.comment.focus();
       return;
     }
@@ -473,9 +474,13 @@ class AnnotationController {
     view.form.addEventListener("submit", (event) => {
       this.save(event);
     });
+    // Local saves must also work in previews that sandbox native form submission.
+    view.save.addEventListener("click", (event) => {
+      this.save(event);
+    });
     view.comment.addEventListener("keydown", (event) => {
       if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
-        view.form.requestSubmit();
+        this.save(event);
       }
     });
     view.pick.addEventListener("click", () => {

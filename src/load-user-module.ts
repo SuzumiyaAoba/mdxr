@@ -13,10 +13,12 @@ import { cacheDir } from "./paths.js";
 /**
  * Packages that must resolve to *this* package's dependencies — a second React
  * copy would break hooks/context, and `valibot` instances mix across schemas.
+ * Chart primitives authored in project modules must share Recharts contexts
+ * with the built-in ChartContainer/Tooltip/Legend (including wireframe-ui).
  * Shared with hydrate.ts's pinShared plugin (which adds no `@suzumiyaaoba/mdxr`
  * since the runtimeModule plugin maps that specifier onto the catalog).
  */
-export const SHARED_PACKAGES = ["react", "react-dom", "valibot"];
+export const SHARED_PACKAGES = ["react", "react-dom", "recharts", "valibot"];
 
 // `@suzumiyaaoba/mdxr`(/components) reach this same package via Node's
 // self-reference (the cache file lives inside the package root).

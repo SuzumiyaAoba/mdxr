@@ -1,0 +1,272 @@
+[
+  {
+    "family": "accordion",
+    "kind": "ui",
+    "source": "<Wireframe title=\"accordion\">\n\n<WireframeAccordion type=\"single\" defaultValue=\"first\" collapsible=\"true\"><WireframeAccordionItem value=\"first\"><WireframeAccordionTrigger>Details</WireframeAccordionTrigger><WireframeAccordionContent><WireframeParagraph /></WireframeAccordionContent></WireframeAccordionItem></WireframeAccordion>\n\n</Wireframe>"
+  },
+  {
+    "family": "alert",
+    "kind": "ui",
+    "source": "<Wireframe title=\"alert\">\n\n<WireframeAlertWireframe />\n\n</Wireframe>"
+  },
+  {
+    "family": "avatar",
+    "kind": "ui",
+    "source": "<Wireframe title=\"avatar\">\n\n<WireframeAvatar label=\"Profile\"><WireframeAvatarImage src=\"assets/before.svg\" alt=\"Profile image\" /><WireframeAvatarFallback>AB</WireframeAvatarFallback></WireframeAvatar>\n\n</Wireframe>"
+  },
+  {
+    "family": "badge",
+    "kind": "ui",
+    "source": "<Wireframe title=\"badge\">\n\n<WireframeBadgeWireframe />\n\n</Wireframe>"
+  },
+  {
+    "family": "breadcrumb",
+    "kind": "ui",
+    "source": "<Wireframe title=\"breadcrumb\">\n\n<WireframeBreadcrumb><WireframeBreadcrumbList><WireframeBreadcrumbItem><WireframeBreadcrumbLink href=\"#home\">Home</WireframeBreadcrumbLink></WireframeBreadcrumbItem><WireframeBreadcrumbSeparator /><WireframeBreadcrumbItem><WireframeBreadcrumbPage>Current page</WireframeBreadcrumbPage></WireframeBreadcrumbItem></WireframeBreadcrumbList></WireframeBreadcrumb>\n\n</Wireframe>"
+  },
+  {
+    "family": "button",
+    "kind": "ui",
+    "source": "<Wireframe title=\"button\">\n\n<WireframeButton variant=\"destructive\" disabled=\"false\">Delete draft</WireframeButton>\n\n</Wireframe>"
+  },
+  {
+    "family": "card",
+    "kind": "ui",
+    "source": "<Wireframe title=\"card\">\n\n<WireframeCard wireframe=\"compact\"><WireframeCardHeader><WireframeCardTitle>Project</WireframeCardTitle><WireframeCardDescription>Draft screen</WireframeCardDescription><WireframeCardAction><WireframeBadge>New</WireframeBadge></WireframeCardAction></WireframeCardHeader><WireframeCardContent><WireframeParagraph /></WireframeCardContent><WireframeCardFooter><WireframeButton>Continue</WireframeButton></WireframeCardFooter></WireframeCard>\n\n</Wireframe>"
+  },
+  {
+    "family": "checkbox",
+    "kind": "ui",
+    "source": "<Wireframe title=\"checkbox\">\n\n<WireframeStack direction=\"horizontal\" align=\"center\"><WireframeCheckbox id=\"consent\" defaultChecked=\"true\" /><WireframeLabel htmlFor=\"consent\">Consent</WireframeLabel></WireframeStack>\n\n</Wireframe>"
+  },
+  {
+    "family": "collapsible",
+    "kind": "ui",
+    "source": "<Wireframe title=\"collapsible\">\n\n<WireframeCollapsibleWireframeExample />\n\n</Wireframe>"
+  },
+  {
+    "family": "dialog",
+    "kind": "ui",
+    "source": "<Wireframe title=\"dialog\">\n\n<WireframeDialog><WireframeDialogTrigger asChild=\"true\"><WireframeButton>Open dialog</WireframeButton></WireframeDialogTrigger><WireframeDialogContent><WireframeDialogHeader><WireframeDialogTitle>Dialog title</WireframeDialogTitle><WireframeDialogDescription>Dialog description</WireframeDialogDescription></WireframeDialogHeader><WireframeDialogFooter><WireframeDialogClose asChild=\"true\"><WireframeButton>Done</WireframeButton></WireframeDialogClose></WireframeDialogFooter></WireframeDialogContent></WireframeDialog>\n\n</Wireframe>"
+  },
+  {
+    "family": "drawer",
+    "kind": "ui",
+    "source": "<Wireframe title=\"drawer\">\n\n<WireframeDrawer><WireframeDrawerTrigger asChild=\"true\"><WireframeButton>Open drawer</WireframeButton></WireframeDrawerTrigger><WireframeDrawerContent><WireframeDrawerHeader><WireframeDrawerTitle>Drawer title</WireframeDrawerTitle><WireframeDrawerDescription>Drawer description</WireframeDrawerDescription></WireframeDrawerHeader><WireframeDrawerFooter><WireframeDrawerClose asChild=\"true\"><WireframeButton>Done</WireframeButton></WireframeDrawerClose></WireframeDrawerFooter></WireframeDrawerContent></WireframeDrawer>\n\n</Wireframe>"
+  },
+  {
+    "family": "hover-card",
+    "kind": "ui",
+    "source": "<Wireframe title=\"hover-card\">\n\n<WireframeHoverCardWireframeExample />\n\n</Wireframe>"
+  },
+  {
+    "family": "input",
+    "kind": "ui",
+    "source": "<Wireframe title=\"input\">\n\n<WireframeInput label=\"Email\" type=\"email\" skeletonMaxLength=\"80\" />\n\n</Wireframe>"
+  },
+  {
+    "family": "media",
+    "kind": "ui",
+    "source": "<Wireframe title=\"media\">\n\n<WireframeStack><WireframeMedia src=\"assets/before.svg\" alt=\"Layout preview\" aspectRatio=\"video\" /><WireframeMedia type=\"audio\" label=\"Audio placeholder\" aspectRatio=\"auto\" /></WireframeStack>\n\n</Wireframe>"
+  },
+  {
+    "family": "kbd",
+    "kind": "ui",
+    "source": "<Wireframe title=\"kbd\">\n\n<WireframeKbdGroup><WireframeKbd>Ctrl</WireframeKbd><WireframeKbd>K</WireframeKbd></WireframeKbdGroup>\n\n</Wireframe>"
+  },
+  {
+    "family": "label",
+    "kind": "ui",
+    "source": "<Wireframe title=\"label\">\n\n<WireframeLabel htmlFor=\"display-name\">Display name</WireframeLabel><WireframeInput id=\"display-name\" variant=\"default\" />\n\n</Wireframe>"
+  },
+  {
+    "family": "menubar",
+    "kind": "ui",
+    "source": "<Wireframe title=\"menubar\">\n\n<WireframeMenubarWireframeExample />\n\n</Wireframe>"
+  },
+  {
+    "family": "pagination",
+    "kind": "ui",
+    "source": "<Wireframe title=\"pagination\">\n\n<WireframePagination><WireframePaginationContent><WireframePaginationItem><WireframePaginationPrevious href=\"#previous\" /></WireframePaginationItem><WireframePaginationItem><WireframePaginationLink href=\"#page-1\" isActive=\"true\">1</WireframePaginationLink></WireframePaginationItem><WireframePaginationEllipsis /><WireframePaginationItem><WireframePaginationNext href=\"#next\" /></WireframePaginationItem></WireframePaginationContent></WireframePagination>\n\n</Wireframe>"
+  },
+  {
+    "family": "select",
+    "kind": "ui",
+    "source": "<Wireframe title=\"select\">\n\n<WireframeSelect defaultValue=\"first\"><WireframeSelectTrigger aria-label=\"Plan\"><WireframeSelectValue placeholder=\"Choose a plan\" /></WireframeSelectTrigger><WireframeSelectContent><WireframeSelectGroup><WireframeSelectLabel>Plans</WireframeSelectLabel><WireframeSelectItem value=\"first\">Starter</WireframeSelectItem><WireframeSelectItem value=\"second\">Team</WireframeSelectItem></WireframeSelectGroup></WireframeSelectContent></WireframeSelect>\n\n</Wireframe>"
+  },
+  {
+    "family": "separator",
+    "kind": "ui",
+    "source": "<Wireframe title=\"separator\">\n\n<WireframeStack><WireframeText /><WireframeSeparator decorative=\"false\" /><WireframeText /></WireframeStack>\n\n</Wireframe>"
+  },
+  {
+    "family": "slider",
+    "kind": "ui",
+    "source": "<Wireframe title=\"slider\">\n\n<WireframeSlider aria-label=\"Volume\" defaultValue=\"[30]\" min=\"0\" max=\"100\" step=\"5\" />\n\n</Wireframe>"
+  },
+  {
+    "family": "text",
+    "kind": "ui",
+    "source": "<Wireframe title=\"text\">\n\n<WireframeStack><WireframeTextHeading label=\"Heading placeholder\" /><WireframeTextParagraph /><WireframeTextCaption /><WireframeTextLabel /><WireframeText label=\"Responsive text\" responsive='{\"base\":{\"width\":\"sm\"},\"md\":{\"width\":\"lg\",\"size\":\"xl\"}}' hideOn='[\"sm\"]' /></WireframeStack>\n\n</Wireframe>"
+  },
+  {
+    "family": "sonner",
+    "kind": "ui",
+    "source": "<Wireframe title=\"sonner\">\n\n<WireframeToaster /><WireframeSonnerWireframeExample />\n\n</Wireframe>"
+  },
+  {
+    "family": "switch",
+    "kind": "ui",
+    "source": "<Wireframe title=\"switch\">\n\n<WireframeStack direction=\"horizontal\" align=\"center\"><WireframeSwitch id=\"notifications\" defaultChecked=\"true\" /><WireframeLabel htmlFor=\"notifications\">Notifications</WireframeLabel></WireframeStack>\n\n</Wireframe>"
+  },
+  {
+    "family": "tabs",
+    "kind": "ui",
+    "source": "<Wireframe title=\"tabs\">\n\n<WireframeTabs defaultValue=\"preview\"><WireframeTabsList><WireframeTabsTrigger value=\"preview\">Preview</WireframeTabsTrigger><WireframeTabsTrigger value=\"notes\">Notes</WireframeTabsTrigger></WireframeTabsList><WireframeTabsContent value=\"preview\"><WireframeParagraph /></WireframeTabsContent><WireframeTabsContent value=\"notes\">Review notes</WireframeTabsContent></WireframeTabs>\n\n</Wireframe>"
+  },
+  {
+    "family": "textarea",
+    "kind": "ui",
+    "source": "<Wireframe title=\"textarea\">\n\n<WireframeTextarea label=\"Message\" rows=\"4\" skeletonLines=\"3\" skeletonMaxLength=\"200\" />\n\n</Wireframe>"
+  },
+  {
+    "family": "toggle",
+    "kind": "ui",
+    "source": "<Wireframe title=\"toggle\">\n\n<WireframeToggle aria-label=\"Favorite\" defaultPressed=\"true\">Favorite</WireframeToggle>\n\n</Wireframe>"
+  },
+  {
+    "family": "tooltip",
+    "kind": "ui",
+    "source": "<Wireframe title=\"tooltip\">\n\n<WireframeTooltipWireframeExample />\n\n</Wireframe>"
+  },
+  {
+    "family": "paragraph",
+    "kind": "ui",
+    "source": "<Wireframe title=\"paragraph\">\n\n<WireframeParagraph lines=\"4\" spacing=\"relaxed\" />\n\n</Wireframe>"
+  },
+  {
+    "family": "heading",
+    "kind": "ui",
+    "source": "<Wireframe title=\"heading\">\n\n<WireframeHeading level=\"2\">Screen title</WireframeHeading>\n\n</Wireframe>"
+  },
+  {
+    "family": "list-group",
+    "kind": "ui",
+    "source": "<Wireframe title=\"list-group\">\n\n<WireframeListGroup items=\"4\" variant=\"number\" />\n\n</Wireframe>"
+  },
+  {
+    "family": "stack",
+    "kind": "ui",
+    "source": "<Wireframe title=\"stack\">\n\n<WireframeStack direction=\"horizontal\" spacing=\"lg\"><WireframeText /><WireframeButton>Continue</WireframeButton></WireframeStack>\n\n</Wireframe>"
+  },
+  {
+    "family": "section",
+    "kind": "ui",
+    "source": "<Wireframe title=\"section\">\n\n<WireframeSection variant=\"content-two-column\" />\n\n</Wireframe>"
+  },
+  {
+    "family": "table",
+    "kind": "ui",
+    "source": "<Wireframe title=\"table\">\n\n<WireframeTable><WireframeTableCaption>Projects</WireframeTableCaption><WireframeTableHeader><WireframeTableRow><WireframeTableHead>Name</WireframeTableHead><WireframeTableHeadWireframe /></WireframeTableRow></WireframeTableHeader><WireframeTableBody><WireframeTableRow><WireframeTableCell>Alpha</WireframeTableCell><WireframeTableCellWireframe /></WireframeTableRow></WireframeTableBody></WireframeTable>\n\n</Wireframe>"
+  },
+  {
+    "family": "item",
+    "kind": "ui",
+    "source": "<Wireframe title=\"item\">\n\n<WireframeItem><WireframeItemMediaWireframe /><WireframeItemContent><WireframeItemTitleWireframe /><WireframeItemDescriptionWireframe /></WireframeItemContent><WireframeItemActions><WireframeButton size=\"sm\">Open</WireframeButton></WireframeItemActions></WireframeItem>\n\n</Wireframe>"
+  },
+  {
+    "family": "context-menu",
+    "kind": "ui",
+    "source": "<Wireframe title=\"context-menu\">\n\n<WireframeContextMenu><WireframeContextMenuTrigger className=\"flex h-24 items-center justify-center rounded border\">Right-click this area</WireframeContextMenuTrigger><WireframeContextMenuContent><WireframeContextMenuLabelWireframe /><WireframeContextMenuItem>Edit</WireframeContextMenuItem><WireframeContextMenuItemWireframe /><WireframeContextMenuSeparator /><WireframeContextMenuCheckboxItem checked=\"false\">Pinned</WireframeContextMenuCheckboxItem></WireframeContextMenuContent></WireframeContextMenu>\n\n</Wireframe>"
+  },
+  {
+    "family": "file",
+    "kind": "ui",
+    "source": "<Wireframe title=\"file\">\n\n<WireframeFieldSet><WireframeFieldLegend>Contact</WireframeFieldLegend><WireframeFieldGroup><WireframeField><WireframeFieldLabel htmlFor=\"contact-field\">Email</WireframeFieldLabel><WireframeInput id=\"contact-field\" variant=\"default\" /><WireframeFieldDescription>We will contact you here.</WireframeFieldDescription><WireframeFieldError errors='[ {\"message\":\"Example validation message\"} ]' /></WireframeField></WireframeFieldGroup></WireframeFieldSet>\n\n</Wireframe>"
+  },
+  {
+    "family": "carousel",
+    "kind": "ui",
+    "source": "<Wireframe title=\"carousel\">\n\n<WireframeCarousel className=\"mx-10 w-4/5\"><WireframeCarouselContent><WireframeCarouselItem><WireframeCarouselItemWireframe /></WireframeCarouselItem><WireframeCarouselItem><WireframeMedia label=\"Second slide\" /></WireframeCarouselItem></WireframeCarouselContent><WireframeCarouselPrevious /><WireframeCarouselNext /></WireframeCarousel>\n\n</Wireframe>"
+  },
+  {
+    "family": "button-group",
+    "kind": "ui",
+    "source": "<Wireframe title=\"button-group\">\n\n<WireframeButtonGroup><WireframeButton>Back</WireframeButton><WireframeButtonGroupSeparator /><WireframeButtonGroupTextWireframe /><WireframeButton>Next</WireframeButton></WireframeButtonGroup>\n\n</Wireframe>"
+  },
+  {
+    "family": "input-group",
+    "kind": "ui",
+    "source": "<Wireframe title=\"input-group\">\n\n<WireframeInputGroup><WireframeInputGroupAddon><WireframeInputGroupText>Search</WireframeInputGroupText></WireframeInputGroupAddon><WireframeInputGroupInput aria-label=\"Search projects\" /><WireframeInputGroupAddon align=\"inline-end\"><WireframeInputGroupButton>Go</WireframeInputGroupButton></WireframeInputGroupAddon></WireframeInputGroup>\n\n</Wireframe>"
+  },
+  {
+    "family": "form",
+    "kind": "ui",
+    "source": "<Wireframe title=\"form\">\n\n<WireframeForm defaultValues='{\"email\":\"draft@example.com\"}'><WireframeFormField name=\"email\"><WireframeFormItem><WireframeFormLabel>Form email</WireframeFormLabel><WireframeFormControl><WireframeInput variant=\"default\" /></WireframeFormControl><WireframeFormDescription>Only stored in this page.</WireframeFormDescription><WireframeFormMessage /></WireframeFormItem></WireframeFormField></WireframeForm>\n\n</Wireframe>"
+  },
+  {
+    "family": "sheet",
+    "kind": "ui",
+    "source": "<Wireframe title=\"sheet\">\n\n<WireframeSheet><WireframeSheetTrigger asChild=\"true\"><WireframeButton>Open sheet</WireframeButton></WireframeSheetTrigger><WireframeSheetContent><WireframeSheetHeader><WireframeSheetTitle>Sheet title</WireframeSheetTitle><WireframeSheetDescription>Sheet description</WireframeSheetDescription></WireframeSheetHeader><WireframeSheetFooter><WireframeSheetClose asChild=\"true\"><WireframeButton>Done</WireframeButton></WireframeSheetClose></WireframeSheetFooter></WireframeSheetContent></WireframeSheet>\n\n</Wireframe>"
+  },
+  {
+    "family": "sidebar",
+    "kind": "ui",
+    "source": "<Wireframe title=\"sidebar\">\n\n<WireframeSidebarProvider className=\"min-h-80\"><WireframeSidebar collapsible=\"none\" className=\"w-48\"><WireframeSidebarHeader>Workspace</WireframeSidebarHeader><WireframeSidebarContent><WireframeSidebarGroup><WireframeSidebarGroupLabelWireframe /><WireframeSidebarGroupContent><WireframeSidebarMenu><WireframeSidebarMenuItem><WireframeSidebarMenuButtonWireframe /></WireframeSidebarMenuItem><WireframeSidebarMenuItem><WireframeSidebarMenuSkeleton showIcon=\"true\" /></WireframeSidebarMenuItem></WireframeSidebarMenu></WireframeSidebarGroupContent></WireframeSidebarGroup></WireframeSidebarContent><WireframeSidebarFooter>Account</WireframeSidebarFooter></WireframeSidebar></WireframeSidebarProvider>\n\n</Wireframe>"
+  },
+  {
+    "family": "chart",
+    "kind": "ui",
+    "source": "<Wireframe title=\"chart\">\n\n<WireframeStack><WireframeChart variant=\"bar\" /><WireframeChartWireframe variant=\"line\" /><WireframeChartWireframe variant=\"pie\" /><WireframeChartWireframe variant=\"area\" /></WireframeStack>\n\n</Wireframe>"
+  },
+  {
+    "family": "empty",
+    "kind": "ui",
+    "source": "<Wireframe title=\"empty\">\n\n<WireframeEmpty><WireframeEmptyHeader><WireframeEmptyMediaWireframe /><WireframeEmptyTitleWireframe /><WireframeEmptyDescriptionWireframe /></WireframeEmptyHeader><WireframeEmptyContent><WireframeButton>Create project</WireframeButton></WireframeEmptyContent></WireframeEmpty>\n\n</Wireframe>"
+  },
+  {
+    "family": "hero-section",
+    "kind": "block",
+    "source": "<Wireframe title=\"hero-section\">\n\n<WireframeHeroSection />\n\n</Wireframe>"
+  },
+  {
+    "family": "login-form",
+    "kind": "block",
+    "source": "<Wireframe title=\"login-form\">\n\n<WireframeLoginForm />\n\n</Wireframe>"
+  },
+  {
+    "family": "register-form",
+    "kind": "block",
+    "source": "<Wireframe title=\"register-form\">\n\n<WireframeRegisterForm />\n\n</Wireframe>"
+  },
+  {
+    "family": "contact-form",
+    "kind": "block",
+    "source": "<Wireframe title=\"contact-form\">\n\n<WireframeContactForm />\n\n</Wireframe>"
+  },
+  {
+    "family": "dashboard",
+    "kind": "block",
+    "source": "<Wireframe title=\"dashboard\">\n\n<WireframeDashboard />\n\n</Wireframe>"
+  },
+  {
+    "family": "pricing",
+    "kind": "block",
+    "source": "<Wireframe title=\"pricing\">\n\n<WireframePricing />\n\n</Wireframe>"
+  },
+  {
+    "family": "product-grid",
+    "kind": "block",
+    "source": "<Wireframe title=\"product-grid\">\n\n<WireframeProductGrid />\n\n</Wireframe>"
+  },
+  {
+    "family": "profile-page",
+    "kind": "block",
+    "source": "<Wireframe title=\"profile-page\">\n\n<WireframeProfilePage />\n\n</Wireframe>"
+  },
+  {
+    "family": "settings-page",
+    "kind": "block",
+    "source": "<Wireframe title=\"settings-page\">\n\n<WireframeSettingsPage />\n\n</Wireframe>"
+  }
+]

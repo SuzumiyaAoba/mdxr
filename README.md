@@ -70,6 +70,23 @@ mdxr init --global         # into your home directory instead
 
 Local installs also add `.mdxr/` to the project's `.gitignore` — the untracked scratch dir agents write documents to.
 
+## Wireframes
+
+Build screen mockups with the built-in `Wireframe*` components, adapted from [wireframe-ui](https://wireframe-ui.vercel.app/components). All 45 upstream UI families and nine blocks are included, with their compound parts and wireframe helpers. No imports or extra installation are needed in MDX:
+
+```mdx
+<Wireframe title="Sign in" device="mobile">
+  <WireframeStack>
+    <WireframeHeading>Welcome back</WireframeHeading>
+    <WireframeInput label="Email" type="email" />
+    <WireframeInput label="Password" type="password" />
+    <WireframeButton>Sign in</WireframeButton>
+  </WireframeStack>
+</Wireframe>
+```
+
+Render with `mdxr render wireframe.mdx`. Text/media placeholders, cards, avatars, lists, section presets, and editable fields support light/dark themes and Markdown output. See the [guide](docs/docs/wireframe.mdx) and [examples](examples/catalog/wireframe.mdx). Adapted source retains the [upstream MIT license](src/wireframe-ui.LICENSE.md).
+
 ## Agent skill
 
 The `mdxr` skill teaches coding agents the component catalog and the render workflow. Install it into your project (or globally) with the [`skills` CLI](https://github.com/vercel-labs/skills):

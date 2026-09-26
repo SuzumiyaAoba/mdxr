@@ -1,0 +1,95 @@
+---
+title: Wireframes
+description: Build screen mockups in MDX with wireframe-ui components.
+sidebar:
+  order: 10
+---
+
+Compose screen mockups with the built-in `Wireframe*` components, adapted from [wireframe-ui](https://wireframe-ui.vercel.app/components). No imports, registry installation, or extra configuration are needed in an mdxr document. React project components can import the same names from `@suzumiyaaoba/mdxr/components`.
+
+All **45 UI families and nine blocks** are supported, including **259 upstream component exports**. The mdxr frame and the `WireframeList`/`WireframeChart` aliases bring the total to 262.
+
+- [All UI previews and source](/mdxr/wireframe-components)
+- [All block previews and source](/mdxr/wireframe-blocks)
+
+## Create a screen
+
+Save this as `wireframe.mdx`, then run `mdxr render wireframe.mdx` or `mdxr serve wireframe.mdx`:
+
+```mdx
+<Wireframe title="Account / Sign in" device="mobile">
+  <WireframeCard wireframe="compact">
+    <WireframeCardHeader>
+      <WireframeCardTitle>Welcome back</WireframeCardTitle>
+      <WireframeCardDescription>Sign in to your workspace.</WireframeCardDescription>
+    </WireframeCardHeader>
+    <WireframeCardContent>
+      <WireframeStack>
+        <WireframeInput label="Email address" type="email" />
+        <WireframeInput label="Password" type="password" />
+        <WireframeButton>Sign in</WireframeButton>
+      </WireframeStack>
+    </WireframeCardContent>
+  </WireframeCard>
+</Wireframe>
+```
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe--login-form.html`} title="Login form wireframe" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+This is a mockup: the button has no sign-in action. `WireframeInput` and `WireframeTextarea` are native editable fields. Their empty-state skeleton disappears on focus or when a value is entered. `href="#section"` on `WireframeButton` creates a link; without `href`, it is a `type="button"` control. These behaviors also work with `--no-hydrate`. Compose with existing `Tabs`, `Dialog`, or `Select` for interactions that require hydration.
+
+## Component reference
+
+All components accept `className` and `id`. MDX uses string attributes such as `lines="3"` and `disabled="false"`. `mdxr catalog --json` lists every component and its accepted props.
+
+| Component | Main props |
+| --- | --- |
+| `Wireframe` | `title`; `device="desktop\|tablet\|mobile"` (default `desktop`). Tablet and mobile widths are capped at 768px and 390px; all frames shrink to fit. |
+| `WireframeStack` | `direction="vertical\|horizontal"`, `spacing="xs\|sm\|md\|lg\|xl"`, `align="start\|center\|end\|stretch"`, `justify="start\|center\|end\|between\|around"`. Horizontal stacks wrap. |
+| `WireframeSection` | `variant="custom\|hero\|content-two-column\|feature-grid"`, `spacing="tight\|normal\|relaxed"`. Presets supply placeholders; children replace that content. Columns respond to the containing `Wireframe` width. |
+| `WireframeText` | `size="xs\|sm\|base\|lg\|xl"`, `width="xs\|sm\|md\|lg\|xl\|full"`, `color="default\|muted\|subtle\|primary\|secondary\|accent"`, `emphasis="primary\|secondary\|tertiary\|subtle"`, `animate="none\|pulse\|shimmer\|typing"`, `label`. Emphasis takes priority over color. |
+| `WireframeHeading` | `level="1"` through `"6"` (default `2`), `label`; children replace the placeholder with real heading text. |
+| `WireframeParagraph` | `lines="1"` through `"50"` (default `3`), `lastLineWidth` (default `lg`), `size`, `color`, `emphasis`, `spacing`, `label`. |
+| `WireframeList` | `items="1"` through `"50"` (default `3`), `variant="bullet\|number\|none"`, `itemWidth`, `size`, `spacing`, `label`. Based on upstream `ListGroup`. |
+| `WireframeMedia` | `type="image\|video\|audio"`, `aspectRatio="square\|video\|portrait\|auto"`, `label`. Supports actual media with `src`, `alt`, `loading`, and `captions`; omit `src` for a placeholder. |
+| `WireframeAvatar` | `size="sm\|md\|lg"`, `label`; optional initials as children. |
+| `WireframeBadge` | Text as children, or a placeholder with `label`. |
+| `WireframeButton` | `variant="default\|outline\|secondary\|ghost"`, `size="default\|sm\|lg\|icon"`, `href`, `disabled`, `label`; children supply button text. |
+| `WireframeInput` | `label`, `name`, `type="text\|email\|password\|search\|tel\|url\|number"`, `autoComplete`, `defaultValue`, `placeholder`, `variant="wireframe\|default"`, `disabled`, `readOnly`, `required`. |
+| `WireframeTextarea` | Same field props except `type` and `autoComplete`; `rows="1"` through `"30"` (default `3`). |
+| `WireframeCard` | `wireframe="none\|compact\|detailed"` controls spacing, including the child panels. |
+| `WireframeCardHeader`, `WireframeCardTitle`, `WireframeCardDescription`, `WireframeCardAction`, `WireframeCardContent`, `WireframeCardFooter` | Compose card content through children. |
+
+Styles follow mdxr's light/dark theme. Animations default to `none` and respect reduced-motion preferences. Use meaningful `label` values for placeholders and form fields; choose heading levels that fit the surrounding document. `mdxr text wireframe.mdx` retains screen names, placeholder markers, labels, values, and links in Markdown.
+
+## Compound components and JSON attributes
+
+Prefix upstream export names with `Wireframe`: `DialogContent` becomes `WireframeDialogContent`, and `TableCellWireframe` becomes `WireframeTableCellWireframe`. `WireframeList` aliases `WireframeListGroup`; `WireframeChart` aliases `WireframeChartWireframe`.
+
+```mdx
+<WireframeDialog>
+  <WireframeDialogTrigger asChild="true">
+    <WireframeButton>Open</WireframeButton>
+  </WireframeDialogTrigger>
+  <WireframeDialogContent>
+    <WireframeDialogTitle>Review</WireframeDialogTitle>
+    <WireframeDialogDescription>A wireframe dialog.</WireframeDialogDescription>
+  </WireframeDialogContent>
+</WireframeDialog>
+
+<WireframeSlider defaultValue='[20,80]' min="0" max="100" step="5" />
+<WireframeText responsive='{"base":{"width":"sm"},"md":{"width":"lg","size":"xl"}}' />
+<WireframeMedia src="assets/preview.svg" alt="Screen preview" />
+```
+
+Use literal JSON strings for `responsive`, `hideOn`, slider values, `config`, `payload`, `opts`, `snapPoints`, `errors`, and form `defaultValues`/`rules`. Dialogs, menus, selection, and other stateful interactions require hydration. `--no-hydrate` retains the initial markup and native editable fields.
+
+`WireframeForm`/`WireframeFormField` can declaratively register native inputs as children in MDX. React project components can also pass normal `control`, `render`, and event callbacks. `useWireframeForm`, `useWireframeFormField`, `useWireframeSidebar`, `wireframeToast`, and the `wireframe*Variants` helpers are exported from `@suzumiyaaoba/mdxr/components`. The existing ban on JavaScript expressions in documents still applies; use a project TSX component when passing functions.
+
+Support is pinned to [commit 30ba352](https://github.com/aguiarsc/wireframe-ui/tree/30ba352497760d13e26993928bd90a60ac34640e). `src/wireframe/registry.json` records the complete registry and upstream export names.
+
+## More examples
+
+The [component catalog](/mdxr/components#wireframes) includes content placeholders, a dashboard, and landing-page presets with their MDX source. See [the complete example](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/catalog/wireframe.mdx).
+
+The adapted source and styles retain wireframe-ui's [MIT license](https://github.com/aguiarsc/wireframe-ui/blob/master/LICENSE.md), distributed in `src/wireframe-ui.LICENSE.md`.

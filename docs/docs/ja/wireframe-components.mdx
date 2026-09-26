@@ -1,0 +1,1047 @@
+---
+title: Wireframe コンポーネント
+description: 上流の全コンポーネントのプレビューとコード。
+sidebar:
+  order: 11
+---
+
+使い方と属性の記法は[ワイヤーフレーム](/mdxr/ja/wireframe)を参照してください。
+
+[wireframe-ui 30ba352](https://github.com/aguiarsc/wireframe-ui/tree/30ba352497760d13e26993928bd90a60ac34640e) の公開レジストリ全体を収録しています。
+
+## accordion
+
+`WireframeAccordion`, `WireframeAccordionItem`, `WireframeAccordionTrigger`, `WireframeAccordionContent`
+
+<Tabs syncKey="wireframe-components-accordion">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--accordion.html`} title="accordion" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="accordion">
+
+<WireframeAccordion type="single" defaultValue="first" collapsible="true"><WireframeAccordionItem value="first"><WireframeAccordionTrigger>Details</WireframeAccordionTrigger><WireframeAccordionContent><WireframeParagraph /></WireframeAccordionContent></WireframeAccordionItem></WireframeAccordion>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## alert
+
+`WireframeAlert`, `WireframeAlertTitle`, `WireframeAlertDescription`, `WireframeAlertWireframe`
+
+<Tabs syncKey="wireframe-components-alert">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--alert.html`} title="alert" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="alert">
+
+<WireframeAlertWireframe />
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## avatar
+
+`WireframeAvatar`, `WireframeAvatarImage`, `WireframeAvatarFallback`
+
+<Tabs syncKey="wireframe-components-avatar">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--avatar.html`} title="avatar" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="avatar">
+
+<WireframeAvatar label="Profile"><WireframeAvatarImage src="assets/before.svg" alt="Profile image" /><WireframeAvatarFallback>AB</WireframeAvatarFallback></WireframeAvatar>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## badge
+
+`WireframeBadge`, `WireframeBadgeWireframe`
+
+<Tabs syncKey="wireframe-components-badge">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--badge.html`} title="badge" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="badge">
+
+<WireframeBadgeWireframe />
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## breadcrumb
+
+`WireframeBreadcrumb`, `WireframeBreadcrumbList`, `WireframeBreadcrumbItem`, `WireframeBreadcrumbLink`, `WireframeBreadcrumbPage`, `WireframeBreadcrumbSeparator`, `WireframeBreadcrumbEllipsis`
+
+<Tabs syncKey="wireframe-components-breadcrumb">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--breadcrumb.html`} title="breadcrumb" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="breadcrumb">
+
+<WireframeBreadcrumb><WireframeBreadcrumbList><WireframeBreadcrumbItem><WireframeBreadcrumbLink href="#home">Home</WireframeBreadcrumbLink></WireframeBreadcrumbItem><WireframeBreadcrumbSeparator /><WireframeBreadcrumbItem><WireframeBreadcrumbPage>Current page</WireframeBreadcrumbPage></WireframeBreadcrumbItem></WireframeBreadcrumbList></WireframeBreadcrumb>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## button
+
+`WireframeButton`
+
+<Tabs syncKey="wireframe-components-button">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--button.html`} title="button" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="button">
+
+<WireframeButton variant="destructive" disabled="false">Delete draft</WireframeButton>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## card
+
+`WireframeCard`, `WireframeCardHeader`, `WireframeCardFooter`, `WireframeCardTitle`, `WireframeCardAction`, `WireframeCardDescription`, `WireframeCardContent`
+
+<Tabs syncKey="wireframe-components-card">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--card.html`} title="card" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="card">
+
+<WireframeCard wireframe="compact"><WireframeCardHeader><WireframeCardTitle>Project</WireframeCardTitle><WireframeCardDescription>Draft screen</WireframeCardDescription><WireframeCardAction><WireframeBadge>New</WireframeBadge></WireframeCardAction></WireframeCardHeader><WireframeCardContent><WireframeParagraph /></WireframeCardContent><WireframeCardFooter><WireframeButton>Continue</WireframeButton></WireframeCardFooter></WireframeCard>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## checkbox
+
+`WireframeCheckbox`
+
+<Tabs syncKey="wireframe-components-checkbox">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--checkbox.html`} title="checkbox" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="checkbox">
+
+<WireframeStack direction="horizontal" align="center"><WireframeCheckbox id="consent" defaultChecked="true" /><WireframeLabel htmlFor="consent">Consent</WireframeLabel></WireframeStack>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## collapsible
+
+`WireframeCollapsible`, `WireframeCollapsibleTrigger`, `WireframeCollapsibleContent`, `WireframeCollapsibleWireframeExample`
+
+<Tabs syncKey="wireframe-components-collapsible">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--collapsible.html`} title="collapsible" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="collapsible">
+
+<WireframeCollapsibleWireframeExample />
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## dialog
+
+`WireframeDialog`, `WireframeDialogClose`, `WireframeDialogContent`, `WireframeDialogDescription`, `WireframeDialogFooter`, `WireframeDialogHeader`, `WireframeDialogOverlay`, `WireframeDialogPortal`, `WireframeDialogTitle`, `WireframeDialogTrigger`, `WireframeDialogWireframeExample`
+
+<Tabs syncKey="wireframe-components-dialog">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--dialog.html`} title="dialog" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="dialog">
+
+<WireframeDialog><WireframeDialogTrigger asChild="true"><WireframeButton>Open dialog</WireframeButton></WireframeDialogTrigger><WireframeDialogContent><WireframeDialogHeader><WireframeDialogTitle>Dialog title</WireframeDialogTitle><WireframeDialogDescription>Dialog description</WireframeDialogDescription></WireframeDialogHeader><WireframeDialogFooter><WireframeDialogClose asChild="true"><WireframeButton>Done</WireframeButton></WireframeDialogClose></WireframeDialogFooter></WireframeDialogContent></WireframeDialog>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## drawer
+
+`WireframeDrawer`, `WireframeDrawerPortal`, `WireframeDrawerOverlay`, `WireframeDrawerTrigger`, `WireframeDrawerClose`, `WireframeDrawerContent`, `WireframeDrawerHeader`, `WireframeDrawerFooter`, `WireframeDrawerTitle`, `WireframeDrawerDescription`, `WireframeDrawerWireframeExample`
+
+<Tabs syncKey="wireframe-components-drawer">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--drawer.html`} title="drawer" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="drawer">
+
+<WireframeDrawer><WireframeDrawerTrigger asChild="true"><WireframeButton>Open drawer</WireframeButton></WireframeDrawerTrigger><WireframeDrawerContent><WireframeDrawerHeader><WireframeDrawerTitle>Drawer title</WireframeDrawerTitle><WireframeDrawerDescription>Drawer description</WireframeDrawerDescription></WireframeDrawerHeader><WireframeDrawerFooter><WireframeDrawerClose asChild="true"><WireframeButton>Done</WireframeButton></WireframeDrawerClose></WireframeDrawerFooter></WireframeDrawerContent></WireframeDrawer>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## hover-card
+
+`WireframeHoverCard`, `WireframeHoverCardTrigger`, `WireframeHoverCardContent`, `WireframeHoverCardWireframeExample`
+
+<Tabs syncKey="wireframe-components-hover-card">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--hover-card.html`} title="hover-card" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="hover-card">
+
+<WireframeHoverCardWireframeExample />
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## input
+
+`WireframeInput`
+
+<Tabs syncKey="wireframe-components-input">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--input.html`} title="input" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="input">
+
+<WireframeInput label="Email" type="email" skeletonMaxLength="80" />
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## media
+
+`WireframeMedia`
+
+<Tabs syncKey="wireframe-components-media">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--media.html`} title="media" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="media">
+
+<WireframeStack><WireframeMedia src="assets/before.svg" alt="Layout preview" aspectRatio="video" /><WireframeMedia type="audio" label="Audio placeholder" aspectRatio="auto" /></WireframeStack>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## kbd
+
+`WireframeKbd`, `WireframeKbdGroup`
+
+<Tabs syncKey="wireframe-components-kbd">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--kbd.html`} title="kbd" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="kbd">
+
+<WireframeKbdGroup><WireframeKbd>Ctrl</WireframeKbd><WireframeKbd>K</WireframeKbd></WireframeKbdGroup>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## label
+
+`WireframeLabel`
+
+<Tabs syncKey="wireframe-components-label">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--label.html`} title="label" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="label">
+
+<WireframeLabel htmlFor="display-name">Display name</WireframeLabel><WireframeInput id="display-name" variant="default" />
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## menubar
+
+`WireframeMenubar`, `WireframeMenubarPortal`, `WireframeMenubarMenu`, `WireframeMenubarTrigger`, `WireframeMenubarContent`, `WireframeMenubarGroup`, `WireframeMenubarSeparator`, `WireframeMenubarLabel`, `WireframeMenubarItem`, `WireframeMenubarShortcut`, `WireframeMenubarCheckboxItem`, `WireframeMenubarRadioGroup`, `WireframeMenubarRadioItem`, `WireframeMenubarSub`, `WireframeMenubarSubTrigger`, `WireframeMenubarSubContent`, `WireframeMenubarWireframeExample`
+
+<Tabs syncKey="wireframe-components-menubar">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--menubar.html`} title="menubar" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="menubar">
+
+<WireframeMenubarWireframeExample />
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## pagination
+
+`WireframePagination`, `WireframePaginationContent`, `WireframePaginationLink`, `WireframePaginationItem`, `WireframePaginationPrevious`, `WireframePaginationNext`, `WireframePaginationEllipsis`
+
+<Tabs syncKey="wireframe-components-pagination">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--pagination.html`} title="pagination" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="pagination">
+
+<WireframePagination><WireframePaginationContent><WireframePaginationItem><WireframePaginationPrevious href="#previous" /></WireframePaginationItem><WireframePaginationItem><WireframePaginationLink href="#page-1" isActive="true">1</WireframePaginationLink></WireframePaginationItem><WireframePaginationEllipsis /><WireframePaginationItem><WireframePaginationNext href="#next" /></WireframePaginationItem></WireframePaginationContent></WireframePagination>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## select
+
+`WireframeSelect`, `WireframeSelectContent`, `WireframeSelectGroup`, `WireframeSelectItem`, `WireframeSelectLabel`, `WireframeSelectScrollDownButton`, `WireframeSelectScrollUpButton`, `WireframeSelectSeparator`, `WireframeSelectTrigger`, `WireframeSelectValue`
+
+<Tabs syncKey="wireframe-components-select">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--select.html`} title="select" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="select">
+
+<WireframeSelect defaultValue="first"><WireframeSelectTrigger aria-label="Plan"><WireframeSelectValue placeholder="Choose a plan" /></WireframeSelectTrigger><WireframeSelectContent><WireframeSelectGroup><WireframeSelectLabel>Plans</WireframeSelectLabel><WireframeSelectItem value="first">Starter</WireframeSelectItem><WireframeSelectItem value="second">Team</WireframeSelectItem></WireframeSelectGroup></WireframeSelectContent></WireframeSelect>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## separator
+
+`WireframeSeparator`
+
+<Tabs syncKey="wireframe-components-separator">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--separator.html`} title="separator" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="separator">
+
+<WireframeStack><WireframeText /><WireframeSeparator decorative="false" /><WireframeText /></WireframeStack>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## slider
+
+`WireframeSlider`
+
+<Tabs syncKey="wireframe-components-slider">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--slider.html`} title="slider" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="slider">
+
+<WireframeSlider aria-label="Volume" defaultValue="[30]" min="0" max="100" step="5" />
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## text
+
+`WireframeText`, `WireframeTextHeading`, `WireframeTextParagraph`, `WireframeTextCaption`, `WireframeTextLabel`
+
+<Tabs syncKey="wireframe-components-text">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--text.html`} title="text" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="text">
+
+<WireframeStack><WireframeTextHeading label="Heading placeholder" /><WireframeTextParagraph /><WireframeTextCaption /><WireframeTextLabel /><WireframeText label="Responsive text" responsive='{"base":{"width":"sm"},"md":{"width":"lg","size":"xl"}}' hideOn='["sm"]' /></WireframeStack>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## sonner
+
+`WireframeToaster`, `WireframeSonnerWireframeExample`
+
+<Tabs syncKey="wireframe-components-sonner">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--sonner.html`} title="sonner" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="sonner">
+
+<WireframeToaster /><WireframeSonnerWireframeExample />
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## switch
+
+`WireframeSwitch`
+
+<Tabs syncKey="wireframe-components-switch">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--switch.html`} title="switch" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="switch">
+
+<WireframeStack direction="horizontal" align="center"><WireframeSwitch id="notifications" defaultChecked="true" /><WireframeLabel htmlFor="notifications">Notifications</WireframeLabel></WireframeStack>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## tabs
+
+`WireframeTabs`, `WireframeTabsList`, `WireframeTabsTrigger`, `WireframeTabsContent`
+
+<Tabs syncKey="wireframe-components-tabs">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--tabs.html`} title="tabs" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="tabs">
+
+<WireframeTabs defaultValue="preview"><WireframeTabsList><WireframeTabsTrigger value="preview">Preview</WireframeTabsTrigger><WireframeTabsTrigger value="notes">Notes</WireframeTabsTrigger></WireframeTabsList><WireframeTabsContent value="preview"><WireframeParagraph /></WireframeTabsContent><WireframeTabsContent value="notes">Review notes</WireframeTabsContent></WireframeTabs>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## textarea
+
+`WireframeTextarea`
+
+<Tabs syncKey="wireframe-components-textarea">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--textarea.html`} title="textarea" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="textarea">
+
+<WireframeTextarea label="Message" rows="4" skeletonLines="3" skeletonMaxLength="200" />
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## toggle
+
+`WireframeToggle`
+
+<Tabs syncKey="wireframe-components-toggle">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--toggle.html`} title="toggle" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="toggle">
+
+<WireframeToggle aria-label="Favorite" defaultPressed="true">Favorite</WireframeToggle>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## tooltip
+
+`WireframeTooltip`, `WireframeTooltipTrigger`, `WireframeTooltipContent`, `WireframeTooltipProvider`, `WireframeTooltipWireframeExample`
+
+<Tabs syncKey="wireframe-components-tooltip">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--tooltip.html`} title="tooltip" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="tooltip">
+
+<WireframeTooltipWireframeExample />
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## paragraph
+
+`WireframeParagraph`
+
+<Tabs syncKey="wireframe-components-paragraph">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--paragraph.html`} title="paragraph" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="paragraph">
+
+<WireframeParagraph lines="4" spacing="relaxed" />
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## heading
+
+`WireframeHeading`
+
+<Tabs syncKey="wireframe-components-heading">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--heading.html`} title="heading" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="heading">
+
+<WireframeHeading level="2">Screen title</WireframeHeading>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## list-group
+
+`WireframeListGroup`
+
+<Tabs syncKey="wireframe-components-list-group">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--list-group.html`} title="list-group" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="list-group">
+
+<WireframeListGroup items="4" variant="number" />
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## stack
+
+`WireframeStack`
+
+<Tabs syncKey="wireframe-components-stack">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--stack.html`} title="stack" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="stack">
+
+<WireframeStack direction="horizontal" spacing="lg"><WireframeText /><WireframeButton>Continue</WireframeButton></WireframeStack>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## section
+
+`WireframeSection`
+
+<Tabs syncKey="wireframe-components-section">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--section.html`} title="section" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="section">
+
+<WireframeSection variant="content-two-column" />
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## table
+
+`WireframeTable`, `WireframeTableHeader`, `WireframeTableBody`, `WireframeTableFooter`, `WireframeTableHead`, `WireframeTableRow`, `WireframeTableCell`, `WireframeTableCaption`, `WireframeTableCellWireframe`, `WireframeTableHeadWireframe`
+
+<Tabs syncKey="wireframe-components-table">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--table.html`} title="table" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="table">
+
+<WireframeTable><WireframeTableCaption>Projects</WireframeTableCaption><WireframeTableHeader><WireframeTableRow><WireframeTableHead>Name</WireframeTableHead><WireframeTableHeadWireframe /></WireframeTableRow></WireframeTableHeader><WireframeTableBody><WireframeTableRow><WireframeTableCell>Alpha</WireframeTableCell><WireframeTableCellWireframe /></WireframeTableRow></WireframeTableBody></WireframeTable>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## item
+
+`WireframeItem`, `WireframeItemMedia`, `WireframeItemContent`, `WireframeItemActions`, `WireframeItemGroup`, `WireframeItemSeparator`, `WireframeItemTitle`, `WireframeItemDescription`, `WireframeItemHeader`, `WireframeItemFooter`, `WireframeItemTitleWireframe`, `WireframeItemDescriptionWireframe`, `WireframeItemMediaWireframe`
+
+<Tabs syncKey="wireframe-components-item">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--item.html`} title="item" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="item">
+
+<WireframeItem><WireframeItemMediaWireframe /><WireframeItemContent><WireframeItemTitleWireframe /><WireframeItemDescriptionWireframe /></WireframeItemContent><WireframeItemActions><WireframeButton size="sm">Open</WireframeButton></WireframeItemActions></WireframeItem>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## context-menu
+
+`WireframeContextMenu`, `WireframeContextMenuTrigger`, `WireframeContextMenuContent`, `WireframeContextMenuItem`, `WireframeContextMenuCheckboxItem`, `WireframeContextMenuRadioItem`, `WireframeContextMenuLabel`, `WireframeContextMenuSeparator`, `WireframeContextMenuShortcut`, `WireframeContextMenuGroup`, `WireframeContextMenuPortal`, `WireframeContextMenuSub`, `WireframeContextMenuSubContent`, `WireframeContextMenuSubTrigger`, `WireframeContextMenuRadioGroup`, `WireframeContextMenuItemWireframe`, `WireframeContextMenuLabelWireframe`
+
+<Tabs syncKey="wireframe-components-context-menu">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--context-menu.html`} title="context-menu" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="context-menu">
+
+<WireframeContextMenu><WireframeContextMenuTrigger className="flex h-24 items-center justify-center rounded border">Right-click this area</WireframeContextMenuTrigger><WireframeContextMenuContent><WireframeContextMenuLabelWireframe /><WireframeContextMenuItem>Edit</WireframeContextMenuItem><WireframeContextMenuItemWireframe /><WireframeContextMenuSeparator /><WireframeContextMenuCheckboxItem checked="false">Pinned</WireframeContextMenuCheckboxItem></WireframeContextMenuContent></WireframeContextMenu>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## file
+
+`WireframeField`, `WireframeFieldLabel`, `WireframeFieldDescription`, `WireframeFieldError`, `WireframeFieldGroup`, `WireframeFieldLegend`, `WireframeFieldSeparator`, `WireframeFieldSet`, `WireframeFieldContent`, `WireframeFieldTitle`, `WireframeFieldLabelWireframe`, `WireframeFieldDescriptionWireframe`
+
+上流のレジストリ名は `file` ですが、内容はフォームの Field 部品です。
+
+<Tabs syncKey="wireframe-components-file">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--file.html`} title="file" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="file">
+
+<WireframeFieldSet><WireframeFieldLegend>Contact</WireframeFieldLegend><WireframeFieldGroup><WireframeField><WireframeFieldLabel htmlFor="contact-field">Email</WireframeFieldLabel><WireframeInput id="contact-field" variant="default" /><WireframeFieldDescription>We will contact you here.</WireframeFieldDescription><WireframeFieldError errors='[ {"message":"Example validation message"} ]' /></WireframeField></WireframeFieldGroup></WireframeFieldSet>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## carousel
+
+`WireframeCarousel`, `WireframeCarouselContent`, `WireframeCarouselItem`, `WireframeCarouselPrevious`, `WireframeCarouselNext`, `WireframeCarouselItemWireframe`
+
+<Tabs syncKey="wireframe-components-carousel">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--carousel.html`} title="carousel" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="carousel">
+
+<WireframeCarousel className="mx-10 w-4/5"><WireframeCarouselContent><WireframeCarouselItem><WireframeCarouselItemWireframe /></WireframeCarouselItem><WireframeCarouselItem><WireframeMedia label="Second slide" /></WireframeCarouselItem></WireframeCarouselContent><WireframeCarouselPrevious /><WireframeCarouselNext /></WireframeCarousel>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## button-group
+
+`WireframeButtonGroup`, `WireframeButtonGroupSeparator`, `WireframeButtonGroupText`, `WireframeButtonGroupTextWireframe`
+
+<Tabs syncKey="wireframe-components-button-group">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--button-group.html`} title="button-group" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="button-group">
+
+<WireframeButtonGroup><WireframeButton>Back</WireframeButton><WireframeButtonGroupSeparator /><WireframeButtonGroupTextWireframe /><WireframeButton>Next</WireframeButton></WireframeButtonGroup>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## input-group
+
+`WireframeInputGroup`, `WireframeInputGroupAddon`, `WireframeInputGroupButton`, `WireframeInputGroupText`, `WireframeInputGroupInput`, `WireframeInputGroupTextarea`
+
+<Tabs syncKey="wireframe-components-input-group">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--input-group.html`} title="input-group" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="input-group">
+
+<WireframeInputGroup><WireframeInputGroupAddon><WireframeInputGroupText>Search</WireframeInputGroupText></WireframeInputGroupAddon><WireframeInputGroupInput aria-label="Search projects" /><WireframeInputGroupAddon align="inline-end"><WireframeInputGroupButton>Go</WireframeInputGroupButton></WireframeInputGroupAddon></WireframeInputGroup>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## form
+
+`WireframeForm`, `WireframeFormItem`, `WireframeFormLabel`, `WireframeFormControl`, `WireframeFormDescription`, `WireframeFormMessage`, `WireframeFormField`
+
+<Tabs syncKey="wireframe-components-form">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--form.html`} title="form" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="form">
+
+<WireframeForm defaultValues='{"email":"draft@example.com"}'><WireframeFormField name="email"><WireframeFormItem><WireframeFormLabel>Form email</WireframeFormLabel><WireframeFormControl><WireframeInput variant="default" /></WireframeFormControl><WireframeFormDescription>Only stored in this page.</WireframeFormDescription><WireframeFormMessage /></WireframeFormItem></WireframeFormField></WireframeForm>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## sheet
+
+`WireframeSheet`, `WireframeSheetTrigger`, `WireframeSheetClose`, `WireframeSheetContent`, `WireframeSheetHeader`, `WireframeSheetFooter`, `WireframeSheetTitle`, `WireframeSheetDescription`, `WireframeSheetTitleWireframe`, `WireframeSheetDescriptionWireframe`
+
+<Tabs syncKey="wireframe-components-sheet">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--sheet.html`} title="sheet" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="sheet">
+
+<WireframeSheet><WireframeSheetTrigger asChild="true"><WireframeButton>Open sheet</WireframeButton></WireframeSheetTrigger><WireframeSheetContent><WireframeSheetHeader><WireframeSheetTitle>Sheet title</WireframeSheetTitle><WireframeSheetDescription>Sheet description</WireframeSheetDescription></WireframeSheetHeader><WireframeSheetFooter><WireframeSheetClose asChild="true"><WireframeButton>Done</WireframeButton></WireframeSheetClose></WireframeSheetFooter></WireframeSheetContent></WireframeSheet>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## sidebar
+
+`WireframeSidebar`, `WireframeSidebarContent`, `WireframeSidebarFooter`, `WireframeSidebarGroup`, `WireframeSidebarGroupAction`, `WireframeSidebarGroupContent`, `WireframeSidebarGroupLabel`, `WireframeSidebarHeader`, `WireframeSidebarInput`, `WireframeSidebarInset`, `WireframeSidebarMenu`, `WireframeSidebarMenuAction`, `WireframeSidebarMenuBadge`, `WireframeSidebarMenuButton`, `WireframeSidebarMenuItem`, `WireframeSidebarMenuSkeleton`, `WireframeSidebarMenuSub`, `WireframeSidebarMenuSubButton`, `WireframeSidebarMenuSubItem`, `WireframeSidebarProvider`, `WireframeSidebarRail`, `WireframeSidebarSeparator`, `WireframeSidebarTrigger`, `WireframeSidebarGroupLabelWireframe`, `WireframeSidebarMenuButtonWireframe`
+
+<Tabs syncKey="wireframe-components-sidebar">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--sidebar.html`} title="sidebar" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="sidebar">
+
+<WireframeSidebarProvider className="min-h-80"><WireframeSidebar collapsible="none" className="w-48"><WireframeSidebarHeader>Workspace</WireframeSidebarHeader><WireframeSidebarContent><WireframeSidebarGroup><WireframeSidebarGroupLabelWireframe /><WireframeSidebarGroupContent><WireframeSidebarMenu><WireframeSidebarMenuItem><WireframeSidebarMenuButtonWireframe /></WireframeSidebarMenuItem><WireframeSidebarMenuItem><WireframeSidebarMenuSkeleton showIcon="true" /></WireframeSidebarMenuItem></WireframeSidebarMenu></WireframeSidebarGroupContent></WireframeSidebarGroup></WireframeSidebarContent><WireframeSidebarFooter>Account</WireframeSidebarFooter></WireframeSidebar></WireframeSidebarProvider>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## chart
+
+`WireframeChartContainer`, `WireframeChartTooltip`, `WireframeChartTooltipContent`, `WireframeChartLegend`, `WireframeChartLegendContent`, `WireframeChartStyle`, `WireframeChartWireframe`
+
+<Tabs syncKey="wireframe-components-chart">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--chart.html`} title="chart" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="chart">
+
+<WireframeStack><WireframeChart variant="bar" /><WireframeChartWireframe variant="line" /><WireframeChartWireframe variant="pie" /><WireframeChartWireframe variant="area" /></WireframeStack>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>
+
+## empty
+
+`WireframeEmpty`, `WireframeEmptyHeader`, `WireframeEmptyTitle`, `WireframeEmptyDescription`, `WireframeEmptyContent`, `WireframeEmptyMedia`, `WireframeEmptyTitleWireframe`, `WireframeEmptyDescriptionWireframe`, `WireframeEmptyMediaWireframe`
+
+<Tabs syncKey="wireframe-components-empty">
+  <Tab title="プレビュー">
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe-components--empty.html`} title="empty" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+  </Tab>
+  <Tab title="コード">
+
+```mdx
+<Wireframe title="empty">
+
+<WireframeEmpty><WireframeEmptyHeader><WireframeEmptyMediaWireframe /><WireframeEmptyTitleWireframe /><WireframeEmptyDescriptionWireframe /></WireframeEmptyHeader><WireframeEmptyContent><WireframeButton>Create project</WireframeButton></WireframeEmptyContent></WireframeEmpty>
+
+</Wireframe>
+```
+
+  </Tab>
+</Tabs>

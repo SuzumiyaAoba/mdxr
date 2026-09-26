@@ -237,6 +237,8 @@ import { Tile, Treemap } from "./treemap.js";
 import { Overlap, Set, Venn } from "./venn.js";
 import { Verdict } from "./verdict.js";
 import { Span, Waterfall } from "./waterfall.js";
+import { Wireframe } from "./wireframe-layout.js";
+import { wireframeComponents } from "./wireframe-library-catalog.js";
 
 export { Approval, Approvals } from "./approvals.js";
 export { Ask, Choice, Question, QUESTION_TYPES } from "./ask.js";
@@ -627,6 +629,8 @@ export const builtinComponents: ComponentMap = {
   Wizard,
   pre: Pre,
   ...shadcnComponents,
+  Wireframe,
+  ...wireframeComponents,
 };
 
 export { DataTable, FilterPanel, DownloadData } from "./data-table.js";
@@ -780,3 +784,342 @@ export {
   SchemaDiff,
   DatasetDiff,
 } from "./structured-diff.js";
+
+export { Wireframe } from "./wireframe-layout.js";
+
+export {
+  useWireframeForm,
+  useWireframeFormField,
+  useWireframeSidebar,
+  wireframeToast,
+  wireframeBadgeVariants,
+  wireframeButtonGroupVariants,
+  wireframeButtonVariants,
+  wireframeTextVariants,
+  wireframeToggleVariants,
+} from "./wireframe-utilities.js";
+export type {
+  WireframeChartConfig,
+  WireframeCarouselApi,
+} from "./wireframe-utilities.js";
+
+export {
+  WireframeAccordion,
+  WireframeAccordionItem,
+  WireframeAccordionTrigger,
+  WireframeAccordionContent,
+} from "./wireframe-library-accordion.js";
+export {
+  WireframeAlert,
+  WireframeAlertTitle,
+  WireframeAlertDescription,
+  WireframeAlertWireframe,
+} from "./wireframe-library-alert.js";
+export {
+  WireframeAvatar,
+  WireframeAvatarImage,
+  WireframeAvatarFallback,
+} from "./wireframe-library-avatar.js";
+export {
+  WireframeBadge,
+  WireframeBadgeWireframe,
+} from "./wireframe-library-badge.js";
+export {
+  WireframeBreadcrumb,
+  WireframeBreadcrumbList,
+  WireframeBreadcrumbItem,
+  WireframeBreadcrumbLink,
+  WireframeBreadcrumbPage,
+  WireframeBreadcrumbSeparator,
+  WireframeBreadcrumbEllipsis,
+} from "./wireframe-library-breadcrumb.js";
+export { WireframeButton } from "./wireframe-library-button.js";
+export {
+  WireframeCard,
+  WireframeCardHeader,
+  WireframeCardFooter,
+  WireframeCardTitle,
+  WireframeCardAction,
+  WireframeCardDescription,
+  WireframeCardContent,
+} from "./wireframe-library-card.js";
+export { WireframeCheckbox } from "./wireframe-library-checkbox.js";
+export {
+  WireframeCollapsible,
+  WireframeCollapsibleTrigger,
+  WireframeCollapsibleContent,
+  WireframeCollapsibleWireframeExample,
+} from "./wireframe-library-collapsible.js";
+export {
+  WireframeDialog,
+  WireframeDialogClose,
+  WireframeDialogContent,
+  WireframeDialogDescription,
+  WireframeDialogFooter,
+  WireframeDialogHeader,
+  WireframeDialogOverlay,
+  WireframeDialogPortal,
+  WireframeDialogTitle,
+  WireframeDialogTrigger,
+  WireframeDialogWireframeExample,
+} from "./wireframe-library-dialog.js";
+export {
+  WireframeDrawer,
+  WireframeDrawerPortal,
+  WireframeDrawerOverlay,
+  WireframeDrawerTrigger,
+  WireframeDrawerClose,
+  WireframeDrawerContent,
+  WireframeDrawerHeader,
+  WireframeDrawerFooter,
+  WireframeDrawerTitle,
+  WireframeDrawerDescription,
+  WireframeDrawerWireframeExample,
+} from "./wireframe-library-drawer.js";
+export {
+  WireframeHoverCard,
+  WireframeHoverCardTrigger,
+  WireframeHoverCardContent,
+  WireframeHoverCardWireframeExample,
+} from "./wireframe-library-hover-card.js";
+export { WireframeInput } from "./wireframe-library-input.js";
+export { WireframeMedia } from "./wireframe-library-media.js";
+export { WireframeKbd, WireframeKbdGroup } from "./wireframe-library-kbd.js";
+export { WireframeLabel } from "./wireframe-library-label.js";
+export {
+  WireframeMenubar,
+  WireframeMenubarPortal,
+  WireframeMenubarMenu,
+  WireframeMenubarTrigger,
+  WireframeMenubarContent,
+  WireframeMenubarGroup,
+  WireframeMenubarSeparator,
+  WireframeMenubarLabel,
+  WireframeMenubarItem,
+  WireframeMenubarShortcut,
+  WireframeMenubarCheckboxItem,
+  WireframeMenubarRadioGroup,
+  WireframeMenubarRadioItem,
+  WireframeMenubarSub,
+  WireframeMenubarSubTrigger,
+  WireframeMenubarSubContent,
+  WireframeMenubarWireframeExample,
+} from "./wireframe-library-menubar.js";
+export {
+  WireframePagination,
+  WireframePaginationContent,
+  WireframePaginationLink,
+  WireframePaginationItem,
+  WireframePaginationPrevious,
+  WireframePaginationNext,
+  WireframePaginationEllipsis,
+} from "./wireframe-library-pagination.js";
+export {
+  WireframeSelect,
+  WireframeSelectContent,
+  WireframeSelectGroup,
+  WireframeSelectItem,
+  WireframeSelectLabel,
+  WireframeSelectScrollDownButton,
+  WireframeSelectScrollUpButton,
+  WireframeSelectSeparator,
+  WireframeSelectTrigger,
+  WireframeSelectValue,
+} from "./wireframe-library-select.js";
+export { WireframeSeparator } from "./wireframe-library-separator.js";
+export { WireframeSlider } from "./wireframe-library-slider.js";
+export {
+  WireframeText,
+  WireframeTextHeading,
+  WireframeTextParagraph,
+  WireframeTextCaption,
+  WireframeTextLabel,
+} from "./wireframe-library-text.js";
+export {
+  WireframeToaster,
+  WireframeSonnerWireframeExample,
+} from "./wireframe-library-sonner.js";
+export { WireframeSwitch } from "./wireframe-library-switch.js";
+export {
+  WireframeTabs,
+  WireframeTabsList,
+  WireframeTabsTrigger,
+  WireframeTabsContent,
+} from "./wireframe-library-tabs.js";
+export { WireframeTextarea } from "./wireframe-library-textarea.js";
+export { WireframeToggle } from "./wireframe-library-toggle.js";
+export {
+  WireframeTooltip,
+  WireframeTooltipTrigger,
+  WireframeTooltipContent,
+  WireframeTooltipProvider,
+  WireframeTooltipWireframeExample,
+} from "./wireframe-library-tooltip.js";
+export { WireframeParagraph } from "./wireframe-library-paragraph.js";
+export { WireframeHeading } from "./wireframe-library-heading.js";
+export {
+  WireframeListGroup,
+  WireframeList,
+} from "./wireframe-library-list-group.js";
+export { WireframeStack } from "./wireframe-library-stack.js";
+export { WireframeSection } from "./wireframe-library-section.js";
+export {
+  WireframeTable,
+  WireframeTableHeader,
+  WireframeTableBody,
+  WireframeTableFooter,
+  WireframeTableHead,
+  WireframeTableRow,
+  WireframeTableCell,
+  WireframeTableCaption,
+  WireframeTableCellWireframe,
+  WireframeTableHeadWireframe,
+} from "./wireframe-library-table.js";
+export {
+  WireframeItem,
+  WireframeItemMedia,
+  WireframeItemContent,
+  WireframeItemActions,
+  WireframeItemGroup,
+  WireframeItemSeparator,
+  WireframeItemTitle,
+  WireframeItemDescription,
+  WireframeItemHeader,
+  WireframeItemFooter,
+  WireframeItemTitleWireframe,
+  WireframeItemDescriptionWireframe,
+  WireframeItemMediaWireframe,
+} from "./wireframe-library-item.js";
+export {
+  WireframeContextMenu,
+  WireframeContextMenuTrigger,
+  WireframeContextMenuContent,
+  WireframeContextMenuItem,
+  WireframeContextMenuCheckboxItem,
+  WireframeContextMenuRadioItem,
+  WireframeContextMenuLabel,
+  WireframeContextMenuSeparator,
+  WireframeContextMenuShortcut,
+  WireframeContextMenuGroup,
+  WireframeContextMenuPortal,
+  WireframeContextMenuSub,
+  WireframeContextMenuSubContent,
+  WireframeContextMenuSubTrigger,
+  WireframeContextMenuRadioGroup,
+  WireframeContextMenuItemWireframe,
+  WireframeContextMenuLabelWireframe,
+} from "./wireframe-library-context-menu.js";
+export {
+  WireframeField,
+  WireframeFieldLabel,
+  WireframeFieldDescription,
+  WireframeFieldError,
+  WireframeFieldGroup,
+  WireframeFieldLegend,
+  WireframeFieldSeparator,
+  WireframeFieldSet,
+  WireframeFieldContent,
+  WireframeFieldTitle,
+  WireframeFieldLabelWireframe,
+  WireframeFieldDescriptionWireframe,
+} from "./wireframe-library-file.js";
+export {
+  WireframeCarousel,
+  WireframeCarouselContent,
+  WireframeCarouselItem,
+  WireframeCarouselPrevious,
+  WireframeCarouselNext,
+  WireframeCarouselItemWireframe,
+} from "./wireframe-library-carousel.js";
+export {
+  WireframeButtonGroup,
+  WireframeButtonGroupSeparator,
+  WireframeButtonGroupText,
+  WireframeButtonGroupTextWireframe,
+} from "./wireframe-library-button-group.js";
+export {
+  WireframeInputGroup,
+  WireframeInputGroupAddon,
+  WireframeInputGroupButton,
+  WireframeInputGroupText,
+  WireframeInputGroupInput,
+  WireframeInputGroupTextarea,
+} from "./wireframe-library-input-group.js";
+export {
+  WireframeForm,
+  WireframeFormItem,
+  WireframeFormLabel,
+  WireframeFormControl,
+  WireframeFormDescription,
+  WireframeFormMessage,
+  WireframeFormField,
+} from "./wireframe-library-form.js";
+export {
+  WireframeSheet,
+  WireframeSheetTrigger,
+  WireframeSheetClose,
+  WireframeSheetContent,
+  WireframeSheetHeader,
+  WireframeSheetFooter,
+  WireframeSheetTitle,
+  WireframeSheetDescription,
+  WireframeSheetTitleWireframe,
+  WireframeSheetDescriptionWireframe,
+} from "./wireframe-library-sheet.js";
+export {
+  WireframeSidebar,
+  WireframeSidebarContent,
+  WireframeSidebarFooter,
+  WireframeSidebarGroup,
+  WireframeSidebarGroupAction,
+  WireframeSidebarGroupContent,
+  WireframeSidebarGroupLabel,
+  WireframeSidebarHeader,
+  WireframeSidebarInput,
+  WireframeSidebarInset,
+  WireframeSidebarMenu,
+  WireframeSidebarMenuAction,
+  WireframeSidebarMenuBadge,
+  WireframeSidebarMenuButton,
+  WireframeSidebarMenuItem,
+  WireframeSidebarMenuSkeleton,
+  WireframeSidebarMenuSub,
+  WireframeSidebarMenuSubButton,
+  WireframeSidebarMenuSubItem,
+  WireframeSidebarProvider,
+  WireframeSidebarRail,
+  WireframeSidebarSeparator,
+  WireframeSidebarTrigger,
+  WireframeSidebarGroupLabelWireframe,
+  WireframeSidebarMenuButtonWireframe,
+} from "./wireframe-library-sidebar.js";
+export {
+  WireframeChartContainer,
+  WireframeChartTooltip,
+  WireframeChartTooltipContent,
+  WireframeChartLegend,
+  WireframeChartLegendContent,
+  WireframeChartStyle,
+  WireframeChartWireframe,
+  WireframeChart,
+} from "./wireframe-library-chart.js";
+export {
+  WireframeEmpty,
+  WireframeEmptyHeader,
+  WireframeEmptyTitle,
+  WireframeEmptyDescription,
+  WireframeEmptyContent,
+  WireframeEmptyMedia,
+  WireframeEmptyTitleWireframe,
+  WireframeEmptyDescriptionWireframe,
+  WireframeEmptyMediaWireframe,
+} from "./wireframe-library-empty.js";
+export { WireframeHeroSection } from "./wireframe-library-hero-section.js";
+export { WireframeLoginForm } from "./wireframe-library-login-form.js";
+export { WireframeRegisterForm } from "./wireframe-library-register-form.js";
+export { WireframeContactForm } from "./wireframe-library-contact-form.js";
+export { WireframeDashboard } from "./wireframe-library-dashboard.js";
+export { WireframePricing } from "./wireframe-library-pricing.js";
+export { WireframeProductGrid } from "./wireframe-library-product-grid.js";
+export { WireframeProfilePage } from "./wireframe-library-profile-page.js";
+export { WireframeSettingsPage } from "./wireframe-library-settings-page.js";

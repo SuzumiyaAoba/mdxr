@@ -140,6 +140,10 @@ All charts are static SVG/HTML at render time (no client JS); `tone` pins a colo
 
 The full shadcn/ui (Base UI) set is registered (`Button`, `Card`, `Table`, `Tabs`, …). Rendered documents carry a hydration bundle, so stateful primitives (`Tabs`, `Accordion`, `Switch`, …) are interactive in the browser — pass `--no-hydrate` for purely static output.
 
+## Wireframes — details: [components/wireframe.md](components/wireframe.md)
+
+Use `Wireframe` for a desktop/tablet/mobile screen frame and compose `WireframeStack`, `WireframeSection`, `WireframeText`, `WireframeHeading`, `WireframeParagraph`, `WireframeList`, `WireframeMedia`, `WireframeAvatar`, `WireframeBadge`, `WireframeButton`, `WireframeInput`, `WireframeTextarea`, and the `WireframeCard` family. Adapted from wireframe-ui; registered by default without imports or extra installation.
+
 ## Project-defined components — details: [extending.md](extending.md)
 
 Projects can register their own components via `mdxr.config.ts` + `defineComponent`; a same-name component overrides the built-in.

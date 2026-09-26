@@ -1,0 +1,95 @@
+// Adapted from wireframe-ui, commit 30ba352497760d13e26993928bd90a60ac34640e. MIT: src/wireframe-ui.LICENSE.md.
+"use client";
+
+import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import * as AccordionPrimitive from "@radix-ui/react-accordion";
+import { cn } from "cn";
+import * as React from "react";
+
+/**
+ * Props for the Accordion component.
+ * A vertically stacked set of interactive headings that each reveal a section of content.
+ */
+export type AccordionProps = React.ComponentPropsWithoutRef<
+  typeof AccordionPrimitive.Root
+>;
+
+function Accordion(props: AccordionProps) {
+  return <AccordionPrimitive.Root data-slot="wireframe-accordion" {...props} />;
+}
+
+/**
+ * Props for the AccordionItem component.
+ * Individual collapsible section within an Accordion.
+ */
+export interface AccordionItemProps extends React.ComponentProps<
+  typeof AccordionPrimitive.Item
+> {}
+
+function AccordionItem({ className, ...props }: AccordionItemProps) {
+  return (
+    <AccordionPrimitive.Item
+      data-slot="wireframe-accordion-item"
+      className={cn("bg-card mb-2 rounded-lg border", className)}
+      {...props}
+    />
+  );
+}
+
+/**
+ * Props for the AccordionTrigger component.
+ * Button that toggles the accordion item's expanded state.
+ */
+export interface AccordionTriggerProps extends React.ComponentProps<
+  typeof AccordionPrimitive.Trigger
+> {}
+
+function AccordionTrigger({
+  className,
+  children,
+  ...props
+}: AccordionTriggerProps) {
+  return (
+    <AccordionPrimitive.Header className="flex">
+      <AccordionPrimitive.Trigger
+        data-slot="wireframe-accordion-trigger"
+        className={cn(
+          "flex flex-1 items-center gap-3 px-4 py-4 text-left text-sm font-medium transition-all outline-none disabled:pointer-events-none disabled:opacity-50 [&[data-state=open]>div>div]:rotate-180",
+          className
+        )}
+        {...props}
+      >
+        <div className="flex size-4 shrink-0 items-center justify-center">
+          <ChevronDownIcon className="text-muted-foreground transition-transform duration-200" />
+        </div>
+        {children}
+      </AccordionPrimitive.Trigger>
+    </AccordionPrimitive.Header>
+  );
+}
+
+/**
+ * Props for the AccordionContent component.
+ * Collapsible content area of an accordion item.
+ */
+export interface AccordionContentProps extends React.ComponentProps<
+  typeof AccordionPrimitive.Content
+> {}
+
+function AccordionContent({
+  className,
+  children,
+  ...props
+}: AccordionContentProps) {
+  return (
+    <AccordionPrimitive.Content
+      data-slot="wireframe-accordion-content"
+      className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden text-sm"
+      {...props}
+    >
+      <div className={cn("px-4 pt-0 pb-4 pl-12", className)}>{children}</div>
+    </AccordionPrimitive.Content>
+  );
+}
+
+export { Accordion, AccordionItem, AccordionTrigger, AccordionContent };

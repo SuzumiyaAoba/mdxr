@@ -50,6 +50,7 @@ import { planningRenderers } from "./planning.js";
 import { reportRenderers } from "./reports.js";
 import { researchRenderers } from "./research.js";
 import { shadcnRenderers } from "./shadcn.js";
+import { wireframeRenderers } from "./wireframe.js";
 
 export const asciiRenderers: AsciiRegistry = {
   ...extendedRenderers,
@@ -63,6 +64,7 @@ export const asciiRenderers: AsciiRegistry = {
   ...layoutRenderers,
   ...formRenderers,
   ...shadcnRenderers,
+  ...wireframeRenderers,
 };
 
 /** Built-in names a renderer-less element may still be (e.g. shadcn chrome). */

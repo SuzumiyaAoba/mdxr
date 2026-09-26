@@ -1,0 +1,95 @@
+---
+title: ワイヤーフレーム
+description: wireframe-ui のコンポーネントを使って MDX で画面の構成を作成します。
+sidebar:
+  order: 10
+---
+
+[wireframe-ui](https://wireframe-ui.vercel.app/components) を基にした組み込みの `Wireframe*` コンポーネントで、画面のワイヤーフレームを作成できます。mdxr の文書内では import やレジストリのインストール、追加設定は不要です。プロジェクトの React コンポーネントからは、同じ名前を `@suzumiyaaoba/mdxr/components` から import できます。
+
+上流の **45 系統の UI と 9 種類のブロック**、子部品・ヘルパーを含む **259 個のコンポーネント**に対応しています。mdxr 独自の `Wireframe` と別名の `WireframeList`、`WireframeChart` を合わせると 262 個です。
+
+- [全 UI のプレビューとコード](/mdxr/ja/wireframe-components)
+- [全ブロックのプレビューとコード](/mdxr/ja/wireframe-blocks)
+
+## 画面を作成する
+
+次の内容を `wireframe.mdx` に保存し、`mdxr render wireframe.mdx` または `mdxr serve wireframe.mdx` を実行します。
+
+```mdx
+<Wireframe title="アカウント / ログイン" device="mobile">
+  <WireframeCard wireframe="compact">
+    <WireframeCardHeader>
+      <WireframeCardTitle>ログイン</WireframeCardTitle>
+      <WireframeCardDescription>ワークスペースにログインします。</WireframeCardDescription>
+    </WireframeCardHeader>
+    <WireframeCardContent>
+      <WireframeStack>
+        <WireframeInput label="メールアドレス" type="email" />
+        <WireframeInput label="パスワード" type="password" />
+        <WireframeButton>ログイン</WireframeButton>
+      </WireframeStack>
+    </WireframeCardContent>
+  </WireframeCard>
+</Wireframe>
+```
+
+<iframe src={`${import.meta.env.BASE_URL}/components/wireframe--login-form.html`} title="ログイン画面のワイヤーフレーム（英語のサンプル）" loading="lazy" style="width:100%;height:560px;border:1px solid #8884;border-radius:12px" />
+
+これは画面のモックです。ボタンに認証処理はありません。`WireframeInput` と `WireframeTextarea` は編集できるネイティブの入力欄で、フォーカス時や値の入力時にはスケルトン表示が消えます。`WireframeButton` に `href="#section"` を指定するとリンクになり、省略すると `type="button"` のボタンになります。これらの動作は `--no-hydrate` でも利用できます。タブ切り替えなどが必要な場合は、既存の `Tabs`、`Dialog`、`Select` を組み合わせて hydration を有効にします。
+
+## コンポーネント一覧
+
+全コンポーネントで `className` と `id` を指定できます。MDX では `lines="3"`、`disabled="false"` のように文字列で属性を書きます。`mdxr catalog --json` で全コンポーネントの属性を確認できます。
+
+| コンポーネント | 主な属性 |
+| --- | --- |
+| `Wireframe` | `title`、`device="desktop\|tablet\|mobile"`（既定値は `desktop`）。タブレットは最大 768px、モバイルは最大 390px。親の幅が狭い場合は縮小します。 |
+| `WireframeStack` | `direction="vertical\|horizontal"`、`spacing="xs\|sm\|md\|lg\|xl"`、`align="start\|center\|end\|stretch"`、`justify="start\|center\|end\|between\|around"`。横並びは折り返します。 |
+| `WireframeSection` | `variant="custom\|hero\|content-two-column\|feature-grid"`、`spacing="tight\|normal\|relaxed"`。プリセットは内容を自動配置し、子要素を指定するとその内容に置き換わります。列数は親の `Wireframe` の幅に応じて変化します。 |
+| `WireframeText` | `size="xs\|sm\|base\|lg\|xl"`、`width="xs\|sm\|md\|lg\|xl\|full"`、`color="default\|muted\|subtle\|primary\|secondary\|accent"`、`emphasis="primary\|secondary\|tertiary\|subtle"`、`animate="none\|pulse\|shimmer\|typing"`、`label`。`emphasis` は `color` より優先されます。 |
+| `WireframeHeading` | `level="1"`〜`"6"`（既定値は `2`）、`label`。子要素に実際の見出しテキストを書けます。 |
+| `WireframeParagraph` | `lines="1"`〜`"50"`（既定値は `3`）、`lastLineWidth`（既定値は `lg`）、`size`、`color`、`emphasis`、`spacing`、`label`。 |
+| `WireframeList` | `items="1"`〜`"50"`（既定値は `3`）、`variant="bullet\|number\|none"`、`itemWidth`、`size`、`spacing`、`label`。上流の `ListGroup` に対応します。 |
+| `WireframeMedia` | `type="image\|video\|audio"`、`aspectRatio="square\|video\|portrait\|auto"`、`label`。`src`、`alt`、`loading`、`captions` で実際のメディアにも対応します。URL を省略するとプレースホルダーになります。 |
+| `WireframeAvatar` | `size="sm\|md\|lg"`、`label`。子要素にイニシャルを書けます。 |
+| `WireframeBadge` | 子要素にテキストを指定します。省略するとプレースホルダーになり、`label` で説明できます。 |
+| `WireframeButton` | `variant="default\|outline\|secondary\|ghost"`、`size="default\|sm\|lg\|icon"`、`href`、`disabled`、`label`。子要素がボタンのテキストになります。 |
+| `WireframeInput` | `label`、`name`、`type="text\|email\|password\|search\|tel\|url\|number"`、`autoComplete`、`defaultValue`、`placeholder`、`variant="wireframe\|default"`、`disabled`、`readOnly`、`required`。 |
+| `WireframeTextarea` | `type` と `autoComplete` を除く入力欄の属性、`rows="1"`〜`"30"`（既定値は `3`）。 |
+| `WireframeCard` | `wireframe="none\|compact\|detailed"` で、子パネルも含めた余白を指定します。 |
+| `WireframeCardHeader`、`WireframeCardTitle`、`WireframeCardDescription`、`WireframeCardAction`、`WireframeCardContent`、`WireframeCardFooter` | 子要素でカードの各領域を構成します。 |
+
+スタイルは mdxr のライト・ダークテーマに追従します。アニメーションの既定値は `none` で、OS の動きを減らす設定にも対応しています。プレースホルダーや入力欄には用途が伝わる `label` を付け、見出しレベルを文書に合わせて指定してください。`mdxr text wireframe.mdx` では画面名、プレースホルダー、ラベル、値、リンクが Markdown として残ります。
+
+## 複合部品と JSON 属性
+
+上流のコンポーネント名に `Wireframe` を付けて使います。例えば `DialogContent` は `WireframeDialogContent`、`TableCellWireframe` は `WireframeTableCellWireframe` です。既存の `WireframeList` は `WireframeListGroup`、`WireframeChart` は `WireframeChartWireframe` の別名です。
+
+```mdx
+<WireframeDialog>
+  <WireframeDialogTrigger asChild="true">
+    <WireframeButton>開く</WireframeButton>
+  </WireframeDialogTrigger>
+  <WireframeDialogContent>
+    <WireframeDialogTitle>確認</WireframeDialogTitle>
+    <WireframeDialogDescription>ワイヤーフレームのダイアログです。</WireframeDialogDescription>
+  </WireframeDialogContent>
+</WireframeDialog>
+
+<WireframeSlider defaultValue='[20,80]' min="0" max="100" step="5" />
+<WireframeText responsive='{"base":{"width":"sm"},"md":{"width":"lg","size":"xl"}}' />
+<WireframeMedia src="assets/preview.svg" alt="画面プレビュー" />
+```
+
+`responsive`、`hideOn`、スライダーの値、`config`、`payload`、`opts`、`snapPoints`、`errors`、フォームの `defaultValues` と `rules` は JSON 文字列で指定できます。ダイアログ、メニュー、選択操作などには hydration が必要です。`--no-hydrate` でも初期表示とネイティブ入力欄は利用できます。
+
+`WireframeForm` と `WireframeFormField` は、MDX では子要素のネイティブ入力欄を宣言的に登録できます。React のプロジェクトコンポーネントでは、通常の `control`・`render`・イベントコールバックを渡せます。`useWireframeForm`、`useWireframeFormField`、`useWireframeSidebar`、`wireframeToast`、各 `wireframe*Variants` も `@suzumiyaaoba/mdxr/components` から公開しています。文書内での JavaScript 式禁止は従来どおりで、関数を渡すカスタマイズにはプロジェクトの TSX コンポーネントを使います。
+
+対応する上流は [commit 30ba352](https://github.com/aguiarsc/wireframe-ui/tree/30ba352497760d13e26993928bd90a60ac34640e) です。レジストリ全体と公開名の対応は `src/wireframe/registry.json` に記録しています。
+
+## その他の例
+
+[コンポーネントカタログ](/mdxr/ja/components#wireframes) に、プレースホルダー、ダッシュボード、ランディングページのプレビューと MDX コードがあります。[サンプル全体のソース](https://github.com/SuzumiyaAoba/mdxr/blob/master/examples/catalog/wireframe.mdx)も参照できます。
+
+取り込んだ実装とスタイルには wireframe-ui の [MIT ライセンス](https://github.com/aguiarsc/wireframe-ui/blob/master/LICENSE.md)を適用し、`src/wireframe-ui.LICENSE.md` に同梱しています。

@@ -36,6 +36,7 @@ Write documents as **Markdown + a small set of JSX components** (MDX). Do NOT wr
 | Layout | columns, grid, row, stack, before/after panels | `references/components/layout.md` |
 | Reader input | `<Ask>` question forms with copyable Markdown answers | `references/components/forms.md` |
 | shadcn/ui | `Button`, `Card`, `Table`, `Tabs`, … — interactive via hydration | `references/components/shadcn.md` |
+| Wireframes | `Wireframe`, `WireframeText`, `WireframeMedia`, `WireframeCard`, inputs and screen layouts from wireframe-ui | `references/components/wireframe.md` |
 
 ## Common syntax
 

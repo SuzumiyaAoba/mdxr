@@ -200,6 +200,36 @@ const config: StorybookConfig = {
   stories: ["../stories/**/*.stories.@(ts|tsx)"],
   viteFinal: (viteConfig) =>
     mergeConfig(viteConfig, {
+      // All wireframe families may be loaded by a story after the initial scan.
+      // Prebundle their dependencies so Vite never reloads an active test.
+      optimizeDeps: {
+        include: [
+          "@heroicons/react/24/outline",
+          "@radix-ui/react-accordion",
+          "@radix-ui/react-avatar",
+          "@radix-ui/react-checkbox",
+          "@radix-ui/react-collapsible",
+          "@radix-ui/react-context-menu",
+          "@radix-ui/react-dialog",
+          "@radix-ui/react-hover-card",
+          "@radix-ui/react-label",
+          "@radix-ui/react-menubar",
+          "@radix-ui/react-select",
+          "@radix-ui/react-separator",
+          "@radix-ui/react-slider",
+          "@radix-ui/react-slot",
+          "@radix-ui/react-switch",
+          "@radix-ui/react-tabs",
+          "@radix-ui/react-toggle",
+          "@radix-ui/react-tooltip",
+          "embla-carousel-react",
+          "next-themes",
+          "react-hook-form",
+          "recharts",
+          "sonner",
+          "vaul",
+        ],
+      },
       plugins: [
         tailwindcss(),
         mdxrDocuments(),

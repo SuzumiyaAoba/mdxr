@@ -1,0 +1,50 @@
+/* Adapted from wireframe-ui (MIT). See src/wireframe-ui.LICENSE.md. */
+@import "./wireframe-upstream.css";
+@layer components {
+  .mdxr-wireframe-shimmer {
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      rgb(255 255 255 / 30%),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: mdxr-wireframe-shimmer 2s linear infinite;
+  }
+
+  .mdxr-wireframe-typing {
+    animation: mdxr-wireframe-typing 3s ease-in-out infinite;
+  }
+
+  @keyframes mdxr-wireframe-shimmer {
+    from {
+      background-position: -200% 0;
+    }
+    to {
+      background-position: 200% 0;
+    }
+  }
+
+  @keyframes mdxr-wireframe-typing {
+    0%,
+    100% {
+      clip-path: inset(0 100% 0 0);
+    }
+    50% {
+      clip-path: inset(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mdxr-wireframe-shimmer,
+    .mdxr-wireframe-typing {
+      animation: none;
+    }
+  }
+
+  @media print {
+    [data-slot="wireframe-text"] {
+      animation: none;
+    }
+  }
+}

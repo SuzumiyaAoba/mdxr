@@ -1,0 +1,192 @@
+// Adapted from wireframe-ui, commit 30ba352497760d13e26993928bd90a60ac34640e. MIT: src/wireframe-ui.LICENSE.md.
+"use client";
+
+import {
+  CalendarDaysIcon,
+  LinkIcon,
+  MapPinIcon,
+  ChatBubbleLeftIcon,
+  UserPlusIcon,
+} from "@heroicons/react/24/outline";
+
+import { Avatar, AvatarFallback } from "../ui/avatar.js";
+import { Badge } from "../ui/badge.js";
+import { Button } from "../ui/button.js";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card.js";
+import {
+  Item,
+  ItemContent,
+  ItemDescriptionWireframe,
+  ItemGroup,
+  ItemMedia,
+  ItemTitleWireframe,
+} from "../ui/item.js";
+import { Media } from "../ui/media.js";
+import { Separator } from "../ui/separator.js";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs.js";
+import { Text } from "../ui/text.js";
+
+export function ProfilePage() {
+  return (
+    <div className="container mx-auto max-w-5xl space-y-4 p-4 lg:space-y-6 lg:p-6">
+      <Card className="overflow-hidden">
+        <CardContent className="p-4 lg:p-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:gap-6">
+            <Avatar className="h-20 w-20 shrink-0 lg:h-24 lg:w-24">
+              <AvatarFallback />
+            </Avatar>
+            <div className="min-w-0 flex-1 space-y-4">
+              <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                <div className="min-w-0 space-y-2">
+                  <Text width="lg" emphasis="primary" size="lg" />
+                  <Text width="md" color="muted" size="sm" />
+                </div>
+                <div className="flex shrink-0 gap-2">
+                  <Button variant="outline" size="sm">
+                    <ChatBubbleLeftIcon className="text-muted-foreground size-5" />
+                    <Text width="xs" />
+                  </Button>
+                  <Button size="sm">
+                    <UserPlusIcon className="text-muted-foreground size-5" />
+                    <Text width="xs" />
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Text width="full" />
+                <Text width="xl" color="muted" />
+              </div>
+              <div className="flex flex-wrap gap-3 lg:gap-4">
+                <div className="flex items-center gap-1.5">
+                  <MapPinIcon className="text-muted-foreground size-5 shrink-0" />
+                  <Text width="sm" size="sm" />
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <LinkIcon className="text-muted-foreground size-5 shrink-0" />
+                  <Text width="md" size="sm" />
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <CalendarDaysIcon className="text-muted-foreground size-5 shrink-0" />
+                  <Text width="sm" size="sm" />
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-3 lg:gap-4">
+                <div className="flex items-center gap-1">
+                  <Text width="xs" emphasis="primary" size="sm" />
+                  <Text width="sm" color="muted" size="sm" />
+                </div>
+                <div className="flex items-center gap-1">
+                  <Text width="xs" emphasis="primary" size="sm" />
+                  <Text width="sm" color="muted" size="sm" />
+                </div>
+                <div className="flex items-center gap-1">
+                  <Text width="xs" emphasis="primary" size="sm" />
+                  <Text width="sm" color="muted" size="sm" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Tabs defaultValue="posts" className="w-full">
+        <TabsList>
+          <TabsTrigger value="posts">
+            <Text width="xs" />
+          </TabsTrigger>
+          <TabsTrigger value="media">
+            <Text width="xs" />
+          </TabsTrigger>
+          <TabsTrigger value="activity">
+            <Text width="xs" />
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="posts" className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="overflow-hidden">
+              <CardHeader>
+                <div className="flex items-start gap-3 lg:gap-4">
+                  <Avatar className="shrink-0">
+                    <AvatarFallback />
+                  </Avatar>
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Text width="md" emphasis="primary" size="sm" />
+                      <Badge variant="secondary">
+                        <Text width="xs" />
+                      </Badge>
+                    </div>
+                    <Text width="sm" color="muted" size="xs" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Text width="full" />
+                  <Text width="xl" />
+                  <Text width="lg" color="muted" />
+                </div>
+                {i % 2 === 0 && (
+                  <Media
+                    type="image"
+                    className="aspect-video w-full rounded-lg"
+                  />
+                )}
+                <Separator />
+                <div className="flex flex-wrap items-center gap-2 lg:gap-4">
+                  <Button variant="ghost" size="sm">
+                    <Text width="xs" />
+                  </Button>
+                  <Button variant="ghost" size="sm">
+                    <Text width="xs" />
+                  </Button>
+                  <Button variant="ghost" size="sm">
+                    <Text width="xs" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </TabsContent>
+
+        <TabsContent value="media" className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i} className="overflow-hidden">
+                <Media type="image" className="aspect-square w-full" />
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="activity" className="space-y-4">
+          <Card className="overflow-hidden">
+            <CardHeader>
+              <CardTitle>
+                <Text width="md" />
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="overflow-x-auto">
+              <ItemGroup>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Item key={i} className="min-w-[280px]">
+                    <ItemMedia variant="icon">
+                      <Avatar className="shrink-0">
+                        <AvatarFallback />
+                      </Avatar>
+                    </ItemMedia>
+                    <ItemContent className="min-w-0">
+                      <ItemTitleWireframe width="lg" />
+                      <ItemDescriptionWireframe width="sm" />
+                    </ItemContent>
+                  </Item>
+                ))}
+              </ItemGroup>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}

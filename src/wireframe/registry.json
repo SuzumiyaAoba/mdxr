@@ -1,0 +1,877 @@
+{
+  "repository": "https://github.com/aguiarsc/wireframe-ui",
+  "revision": "30ba352497760d13e26993928bd90a60ac34640e",
+  "families": [
+    {
+      "name": "accordion",
+      "kind": "ui",
+      "description": "A vertically stacked set of interactive headings that each reveal a section of content.",
+      "exports": [
+        "Accordion",
+        "AccordionItem",
+        "AccordionTrigger",
+        "AccordionContent"
+      ],
+      "components": [
+        "Accordion",
+        "AccordionItem",
+        "AccordionTrigger",
+        "AccordionContent"
+      ]
+    },
+    {
+      "name": "alert",
+      "kind": "ui",
+      "description": "Displays a callout for user attention with optional icon and variant styles.",
+      "exports": ["Alert", "AlertTitle", "AlertDescription", "AlertWireframe"],
+      "components": [
+        "Alert",
+        "AlertTitle",
+        "AlertDescription",
+        "AlertWireframe"
+      ]
+    },
+    {
+      "name": "avatar",
+      "kind": "ui",
+      "description": "An image element with a fallback for representing the user.",
+      "exports": ["Avatar", "AvatarImage", "AvatarFallback"],
+      "components": ["Avatar", "AvatarImage", "AvatarFallback"]
+    },
+    {
+      "name": "badge",
+      "kind": "ui",
+      "description": "Displays a badge or a component that looks like a badge with multiple variants.",
+      "exports": ["Badge", "badgeVariants", "BadgeWireframe"],
+      "components": ["Badge", "BadgeWireframe"]
+    },
+    {
+      "name": "breadcrumb",
+      "kind": "ui",
+      "description": "Displays the path to the current resource using a hierarchy of links.",
+      "exports": [
+        "Breadcrumb",
+        "BreadcrumbList",
+        "BreadcrumbItem",
+        "BreadcrumbLink",
+        "BreadcrumbPage",
+        "BreadcrumbSeparator",
+        "BreadcrumbEllipsis"
+      ],
+      "components": [
+        "Breadcrumb",
+        "BreadcrumbList",
+        "BreadcrumbItem",
+        "BreadcrumbLink",
+        "BreadcrumbPage",
+        "BreadcrumbSeparator",
+        "BreadcrumbEllipsis"
+      ]
+    },
+    {
+      "name": "button",
+      "kind": "ui",
+      "description": "Displays a button or a component that looks like a button with multiple variants and sizes.",
+      "exports": ["Button", "buttonVariants"],
+      "components": ["Button"]
+    },
+    {
+      "name": "card",
+      "kind": "ui",
+      "description": "A container for displaying content with header, footer, and action sections.",
+      "exports": [
+        "Card",
+        "CardHeader",
+        "CardFooter",
+        "CardTitle",
+        "CardAction",
+        "CardDescription",
+        "CardContent"
+      ],
+      "components": [
+        "Card",
+        "CardHeader",
+        "CardFooter",
+        "CardTitle",
+        "CardAction",
+        "CardDescription",
+        "CardContent"
+      ]
+    },
+    {
+      "name": "checkbox",
+      "kind": "ui",
+      "description": "A control that allows the user to toggle between checked and not checked.",
+      "exports": ["Checkbox"],
+      "components": ["Checkbox"]
+    },
+    {
+      "name": "collapsible",
+      "kind": "ui",
+      "description": "An interactive component which expands/collapses a panel.",
+      "exports": [
+        "Collapsible",
+        "CollapsibleTrigger",
+        "CollapsibleContent",
+        "CollapsibleWireframeExample"
+      ],
+      "components": [
+        "Collapsible",
+        "CollapsibleTrigger",
+        "CollapsibleContent",
+        "CollapsibleWireframeExample"
+      ]
+    },
+    {
+      "name": "dialog",
+      "kind": "ui",
+      "description": "A modal dialog that interrupts the user with important content and expects a response.",
+      "exports": [
+        "Dialog",
+        "DialogClose",
+        "DialogContent",
+        "DialogDescription",
+        "DialogFooter",
+        "DialogHeader",
+        "DialogOverlay",
+        "DialogPortal",
+        "DialogTitle",
+        "DialogTrigger",
+        "DialogWireframeExample"
+      ],
+      "components": [
+        "Dialog",
+        "DialogClose",
+        "DialogContent",
+        "DialogDescription",
+        "DialogFooter",
+        "DialogHeader",
+        "DialogOverlay",
+        "DialogPortal",
+        "DialogTitle",
+        "DialogTrigger",
+        "DialogWireframeExample"
+      ]
+    },
+    {
+      "name": "drawer",
+      "kind": "ui",
+      "description": "A panel that slides out from the edge of the screen with support for multiple directions.",
+      "exports": [
+        "Drawer",
+        "DrawerPortal",
+        "DrawerOverlay",
+        "DrawerTrigger",
+        "DrawerClose",
+        "DrawerContent",
+        "DrawerHeader",
+        "DrawerFooter",
+        "DrawerTitle",
+        "DrawerDescription",
+        "DrawerWireframeExample"
+      ],
+      "components": [
+        "Drawer",
+        "DrawerPortal",
+        "DrawerOverlay",
+        "DrawerTrigger",
+        "DrawerClose",
+        "DrawerContent",
+        "DrawerHeader",
+        "DrawerFooter",
+        "DrawerTitle",
+        "DrawerDescription",
+        "DrawerWireframeExample"
+      ]
+    },
+    {
+      "name": "hover-card",
+      "kind": "ui",
+      "description": "For sighted users to preview content available behind a link.",
+      "exports": [
+        "HoverCard",
+        "HoverCardTrigger",
+        "HoverCardContent",
+        "HoverCardWireframeExample"
+      ],
+      "components": [
+        "HoverCard",
+        "HoverCardTrigger",
+        "HoverCardContent",
+        "HoverCardWireframeExample"
+      ]
+    },
+    {
+      "name": "input",
+      "kind": "ui",
+      "description": "A text input field with support for various types and validation states.",
+      "exports": ["Input"],
+      "components": ["Input"]
+    },
+    {
+      "name": "media",
+      "kind": "ui",
+      "description": "A container for displaying images and videos with loading states and fallback placeholders.",
+      "exports": ["Media"],
+      "components": ["Media"]
+    },
+    {
+      "name": "kbd",
+      "kind": "ui",
+      "description": "Displays keyboard shortcuts or keys with proper styling.",
+      "exports": ["Kbd", "KbdGroup"],
+      "components": ["Kbd", "KbdGroup"]
+    },
+    {
+      "name": "label",
+      "kind": "ui",
+      "description": "Renders an accessible label associated with form controls.",
+      "exports": ["Label"],
+      "components": ["Label"]
+    },
+    {
+      "name": "menubar",
+      "kind": "ui",
+      "description": "A visually persistent menu common in desktop applications with nested menus and items.",
+      "exports": [
+        "Menubar",
+        "MenubarPortal",
+        "MenubarMenu",
+        "MenubarTrigger",
+        "MenubarContent",
+        "MenubarGroup",
+        "MenubarSeparator",
+        "MenubarLabel",
+        "MenubarItem",
+        "MenubarShortcut",
+        "MenubarCheckboxItem",
+        "MenubarRadioGroup",
+        "MenubarRadioItem",
+        "MenubarSub",
+        "MenubarSubTrigger",
+        "MenubarSubContent",
+        "MenubarWireframeExample"
+      ],
+      "components": [
+        "Menubar",
+        "MenubarPortal",
+        "MenubarMenu",
+        "MenubarTrigger",
+        "MenubarContent",
+        "MenubarGroup",
+        "MenubarSeparator",
+        "MenubarLabel",
+        "MenubarItem",
+        "MenubarShortcut",
+        "MenubarCheckboxItem",
+        "MenubarRadioGroup",
+        "MenubarRadioItem",
+        "MenubarSub",
+        "MenubarSubTrigger",
+        "MenubarSubContent",
+        "MenubarWireframeExample"
+      ]
+    },
+    {
+      "name": "pagination",
+      "kind": "ui",
+      "description": "Pagination with page navigation, next and previous links.",
+      "exports": [
+        "Pagination",
+        "PaginationContent",
+        "PaginationLink",
+        "PaginationItem",
+        "PaginationPrevious",
+        "PaginationNext",
+        "PaginationEllipsis"
+      ],
+      "components": [
+        "Pagination",
+        "PaginationContent",
+        "PaginationLink",
+        "PaginationItem",
+        "PaginationPrevious",
+        "PaginationNext",
+        "PaginationEllipsis"
+      ]
+    },
+    {
+      "name": "select",
+      "kind": "ui",
+      "description": "Displays a list of options for the user to pick from with keyboard navigation support.",
+      "exports": [
+        "Select",
+        "SelectContent",
+        "SelectGroup",
+        "SelectItem",
+        "SelectLabel",
+        "SelectScrollDownButton",
+        "SelectScrollUpButton",
+        "SelectSeparator",
+        "SelectTrigger",
+        "SelectValue"
+      ],
+      "components": [
+        "Select",
+        "SelectContent",
+        "SelectGroup",
+        "SelectItem",
+        "SelectLabel",
+        "SelectScrollDownButton",
+        "SelectScrollUpButton",
+        "SelectSeparator",
+        "SelectTrigger",
+        "SelectValue"
+      ]
+    },
+    {
+      "name": "separator",
+      "kind": "ui",
+      "description": "Visually or semantically separates content with horizontal or vertical orientation.",
+      "exports": ["Separator"],
+      "components": ["Separator"]
+    },
+    {
+      "name": "slider",
+      "kind": "ui",
+      "description": "An input where the user selects a value from within a given range.",
+      "exports": ["Slider"],
+      "components": ["Slider"]
+    },
+    {
+      "name": "text",
+      "kind": "ui",
+      "description": "A skeleton text placeholder component that renders thin animated lines for text content.",
+      "exports": [
+        "Text",
+        "TextHeading",
+        "TextParagraph",
+        "TextCaption",
+        "TextLabel",
+        "textVariants"
+      ],
+      "components": [
+        "Text",
+        "TextHeading",
+        "TextParagraph",
+        "TextCaption",
+        "TextLabel"
+      ]
+    },
+    {
+      "name": "sonner",
+      "kind": "ui",
+      "description": "An opinionated toast component for React with beautiful animations and icons.",
+      "exports": ["Toaster", "SonnerWireframeExample"],
+      "components": ["Toaster", "SonnerWireframeExample"]
+    },
+    {
+      "name": "switch",
+      "kind": "ui",
+      "description": "A control that allows the user to toggle between checked and unchecked states.",
+      "exports": ["Switch"],
+      "components": ["Switch"]
+    },
+    {
+      "name": "tabs",
+      "kind": "ui",
+      "description": "A set of layered sections of content with tab triggers for switching between them.",
+      "exports": ["Tabs", "TabsList", "TabsTrigger", "TabsContent"],
+      "components": ["Tabs", "TabsList", "TabsTrigger", "TabsContent"]
+    },
+    {
+      "name": "textarea",
+      "kind": "ui",
+      "description": "A multi-line text input field with auto-resizing support.",
+      "exports": ["Textarea"],
+      "components": ["Textarea"]
+    },
+    {
+      "name": "toggle",
+      "kind": "ui",
+      "description": "A two-state button that can be either on or off with multiple variants.",
+      "exports": ["Toggle", "toggleVariants"],
+      "components": ["Toggle"]
+    },
+    {
+      "name": "tooltip",
+      "kind": "ui",
+      "description": "A popup that displays information related to an element when focused or hovered.",
+      "exports": [
+        "Tooltip",
+        "TooltipTrigger",
+        "TooltipContent",
+        "TooltipProvider",
+        "TooltipWireframeExample"
+      ],
+      "components": [
+        "Tooltip",
+        "TooltipTrigger",
+        "TooltipContent",
+        "TooltipProvider",
+        "TooltipWireframeExample"
+      ]
+    },
+    {
+      "name": "paragraph",
+      "kind": "ui",
+      "description": "A composition component that renders multiple Text lines to simulate paragraph content.",
+      "exports": ["Paragraph"],
+      "components": ["Paragraph"]
+    },
+    {
+      "name": "heading",
+      "kind": "ui",
+      "description": "A composition component that renders appropriately sized Text based on heading level (1-6).",
+      "exports": ["Heading"],
+      "components": ["Heading"]
+    },
+    {
+      "name": "list-group",
+      "kind": "ui",
+      "description": "A composition component that renders list items with Text placeholders for wireframe prototyping.",
+      "exports": ["ListGroup"],
+      "components": ["ListGroup"]
+    },
+    {
+      "name": "stack",
+      "kind": "ui",
+      "description": "A layout primitive for arranging wireframe elements with configurable spacing and direction.",
+      "exports": ["Stack"],
+      "components": ["Stack"]
+    },
+    {
+      "name": "section",
+      "kind": "ui",
+      "description": "A composition component with preset variants for common layout patterns (hero, content-two-column, feature-grid).",
+      "exports": ["Section"],
+      "components": ["Section"]
+    },
+    {
+      "name": "table",
+      "kind": "ui",
+      "description": "A data table component with wireframe helpers for headers and cells.",
+      "exports": [
+        "Table",
+        "TableHeader",
+        "TableBody",
+        "TableFooter",
+        "TableHead",
+        "TableRow",
+        "TableCell",
+        "TableCaption",
+        "TableCellWireframe",
+        "TableHeadWireframe"
+      ],
+      "components": [
+        "Table",
+        "TableHeader",
+        "TableBody",
+        "TableFooter",
+        "TableHead",
+        "TableRow",
+        "TableCell",
+        "TableCaption",
+        "TableCellWireframe",
+        "TableHeadWireframe"
+      ]
+    },
+    {
+      "name": "item",
+      "kind": "ui",
+      "description": "A flexible item component for lists with wireframe helpers for titles, descriptions, and media.",
+      "exports": [
+        "Item",
+        "ItemMedia",
+        "ItemContent",
+        "ItemActions",
+        "ItemGroup",
+        "ItemSeparator",
+        "ItemTitle",
+        "ItemDescription",
+        "ItemHeader",
+        "ItemFooter",
+        "ItemTitleWireframe",
+        "ItemDescriptionWireframe",
+        "ItemMediaWireframe"
+      ],
+      "components": [
+        "Item",
+        "ItemMedia",
+        "ItemContent",
+        "ItemActions",
+        "ItemGroup",
+        "ItemSeparator",
+        "ItemTitle",
+        "ItemDescription",
+        "ItemHeader",
+        "ItemFooter",
+        "ItemTitleWireframe",
+        "ItemDescriptionWireframe",
+        "ItemMediaWireframe"
+      ]
+    },
+    {
+      "name": "context-menu",
+      "kind": "ui",
+      "description": "A context menu component with wireframe helpers for menu items and labels.",
+      "exports": [
+        "ContextMenu",
+        "ContextMenuTrigger",
+        "ContextMenuContent",
+        "ContextMenuItem",
+        "ContextMenuCheckboxItem",
+        "ContextMenuRadioItem",
+        "ContextMenuLabel",
+        "ContextMenuSeparator",
+        "ContextMenuShortcut",
+        "ContextMenuGroup",
+        "ContextMenuPortal",
+        "ContextMenuSub",
+        "ContextMenuSubContent",
+        "ContextMenuSubTrigger",
+        "ContextMenuRadioGroup",
+        "ContextMenuItemWireframe",
+        "ContextMenuLabelWireframe"
+      ],
+      "components": [
+        "ContextMenu",
+        "ContextMenuTrigger",
+        "ContextMenuContent",
+        "ContextMenuItem",
+        "ContextMenuCheckboxItem",
+        "ContextMenuRadioItem",
+        "ContextMenuLabel",
+        "ContextMenuSeparator",
+        "ContextMenuShortcut",
+        "ContextMenuGroup",
+        "ContextMenuPortal",
+        "ContextMenuSub",
+        "ContextMenuSubContent",
+        "ContextMenuSubTrigger",
+        "ContextMenuRadioGroup",
+        "ContextMenuItemWireframe",
+        "ContextMenuLabelWireframe"
+      ]
+    },
+    {
+      "name": "file",
+      "kind": "ui",
+      "description": "Form field components with wireframe helpers for labels and descriptions.",
+      "exports": [
+        "Field",
+        "FieldLabel",
+        "FieldDescription",
+        "FieldError",
+        "FieldGroup",
+        "FieldLegend",
+        "FieldSeparator",
+        "FieldSet",
+        "FieldContent",
+        "FieldTitle",
+        "FieldLabelWireframe",
+        "FieldDescriptionWireframe"
+      ],
+      "components": [
+        "Field",
+        "FieldLabel",
+        "FieldDescription",
+        "FieldError",
+        "FieldGroup",
+        "FieldLegend",
+        "FieldSeparator",
+        "FieldSet",
+        "FieldContent",
+        "FieldTitle",
+        "FieldLabelWireframe",
+        "FieldDescriptionWireframe"
+      ]
+    },
+    {
+      "name": "carousel",
+      "kind": "ui",
+      "description": "A carousel component with wireframe helper for slide content.",
+      "exports": [
+        "Carousel",
+        "CarouselContent",
+        "CarouselItem",
+        "CarouselPrevious",
+        "CarouselNext",
+        "CarouselItemWireframe"
+      ],
+      "components": [
+        "Carousel",
+        "CarouselContent",
+        "CarouselItem",
+        "CarouselPrevious",
+        "CarouselNext",
+        "CarouselItemWireframe"
+      ]
+    },
+    {
+      "name": "button-group",
+      "kind": "ui",
+      "description": "A button group component with wireframe helper for text labels.",
+      "exports": [
+        "ButtonGroup",
+        "ButtonGroupSeparator",
+        "ButtonGroupText",
+        "ButtonGroupTextWireframe",
+        "buttonGroupVariants"
+      ],
+      "components": [
+        "ButtonGroup",
+        "ButtonGroupSeparator",
+        "ButtonGroupText",
+        "ButtonGroupTextWireframe"
+      ]
+    },
+    {
+      "name": "input-group",
+      "kind": "ui",
+      "description": "An input group component for combining inputs with addons and buttons.",
+      "exports": [
+        "InputGroup",
+        "InputGroupAddon",
+        "InputGroupButton",
+        "InputGroupText",
+        "InputGroupInput",
+        "InputGroupTextarea"
+      ],
+      "components": [
+        "InputGroup",
+        "InputGroupAddon",
+        "InputGroupButton",
+        "InputGroupText",
+        "InputGroupInput",
+        "InputGroupTextarea"
+      ]
+    },
+    {
+      "name": "form",
+      "kind": "ui",
+      "description": "Form components built on top of react-hook-form for managing form state.",
+      "exports": [
+        "useFormField",
+        "Form",
+        "FormItem",
+        "FormLabel",
+        "FormControl",
+        "FormDescription",
+        "FormMessage",
+        "FormField"
+      ],
+      "components": [
+        "Form",
+        "FormItem",
+        "FormLabel",
+        "FormControl",
+        "FormDescription",
+        "FormMessage",
+        "FormField"
+      ]
+    },
+    {
+      "name": "sheet",
+      "kind": "ui",
+      "description": "A slide-out panel component with wireframe helpers for titles and descriptions.",
+      "exports": [
+        "Sheet",
+        "SheetTrigger",
+        "SheetClose",
+        "SheetContent",
+        "SheetHeader",
+        "SheetFooter",
+        "SheetTitle",
+        "SheetDescription",
+        "SheetTitleWireframe",
+        "SheetDescriptionWireframe"
+      ],
+      "components": [
+        "Sheet",
+        "SheetTrigger",
+        "SheetClose",
+        "SheetContent",
+        "SheetHeader",
+        "SheetFooter",
+        "SheetTitle",
+        "SheetDescription",
+        "SheetTitleWireframe",
+        "SheetDescriptionWireframe"
+      ]
+    },
+    {
+      "name": "sidebar",
+      "kind": "ui",
+      "description": "A collapsible sidebar component with wireframe helpers for menu items and labels.",
+      "exports": [
+        "Sidebar",
+        "SidebarContent",
+        "SidebarFooter",
+        "SidebarGroup",
+        "SidebarGroupAction",
+        "SidebarGroupContent",
+        "SidebarGroupLabel",
+        "SidebarHeader",
+        "SidebarInput",
+        "SidebarInset",
+        "SidebarMenu",
+        "SidebarMenuAction",
+        "SidebarMenuBadge",
+        "SidebarMenuButton",
+        "SidebarMenuItem",
+        "SidebarMenuSkeleton",
+        "SidebarMenuSub",
+        "SidebarMenuSubButton",
+        "SidebarMenuSubItem",
+        "SidebarProvider",
+        "SidebarRail",
+        "SidebarSeparator",
+        "SidebarTrigger",
+        "useSidebar",
+        "SidebarGroupLabelWireframe",
+        "SidebarMenuButtonWireframe"
+      ],
+      "components": [
+        "Sidebar",
+        "SidebarContent",
+        "SidebarFooter",
+        "SidebarGroup",
+        "SidebarGroupAction",
+        "SidebarGroupContent",
+        "SidebarGroupLabel",
+        "SidebarHeader",
+        "SidebarInput",
+        "SidebarInset",
+        "SidebarMenu",
+        "SidebarMenuAction",
+        "SidebarMenuBadge",
+        "SidebarMenuButton",
+        "SidebarMenuItem",
+        "SidebarMenuSkeleton",
+        "SidebarMenuSub",
+        "SidebarMenuSubButton",
+        "SidebarMenuSubItem",
+        "SidebarProvider",
+        "SidebarRail",
+        "SidebarSeparator",
+        "SidebarTrigger",
+        "SidebarGroupLabelWireframe",
+        "SidebarMenuButtonWireframe"
+      ]
+    },
+    {
+      "name": "chart",
+      "kind": "ui",
+      "description": "Chart components built on recharts with wireframe placeholder helper.",
+      "exports": [
+        "ChartContainer",
+        "ChartTooltip",
+        "ChartTooltipContent",
+        "ChartLegend",
+        "ChartLegendContent",
+        "ChartStyle",
+        "ChartWireframe"
+      ],
+      "components": [
+        "ChartContainer",
+        "ChartTooltip",
+        "ChartTooltipContent",
+        "ChartLegend",
+        "ChartLegendContent",
+        "ChartStyle",
+        "ChartWireframe"
+      ]
+    },
+    {
+      "name": "empty",
+      "kind": "ui",
+      "description": "An empty state component with wireframe helpers for titles, descriptions, and media.",
+      "exports": [
+        "Empty",
+        "EmptyHeader",
+        "EmptyTitle",
+        "EmptyDescription",
+        "EmptyContent",
+        "EmptyMedia",
+        "EmptyTitleWireframe",
+        "EmptyDescriptionWireframe",
+        "EmptyMediaWireframe"
+      ],
+      "components": [
+        "Empty",
+        "EmptyHeader",
+        "EmptyTitle",
+        "EmptyDescription",
+        "EmptyContent",
+        "EmptyMedia",
+        "EmptyTitleWireframe",
+        "EmptyDescriptionWireframe",
+        "EmptyMediaWireframe"
+      ]
+    },
+    {
+      "name": "hero-section",
+      "kind": "block",
+      "description": "Landing page hero with badge, heading, CTA buttons, and feature list",
+      "exports": ["HeroSection"],
+      "components": ["HeroSection"]
+    },
+    {
+      "name": "login-form",
+      "kind": "block",
+      "description": "Authentication form with email/password inputs and social login options",
+      "exports": ["LoginForm"],
+      "components": ["LoginForm"]
+    },
+    {
+      "name": "register-form",
+      "kind": "block",
+      "description": "Multi-step registration with tabs for personal and account information",
+      "exports": ["RegisterForm"],
+      "components": ["RegisterForm"]
+    },
+    {
+      "name": "contact-form",
+      "kind": "block",
+      "description": "Professional contact form with name, email, subject, and message fields",
+      "exports": ["ContactForm"],
+      "components": ["ContactForm"]
+    },
+    {
+      "name": "dashboard",
+      "kind": "block",
+      "description": "Admin dashboard with stat cards, charts, recent activity, and data table",
+      "exports": ["Dashboard"],
+      "components": ["Dashboard"]
+    },
+    {
+      "name": "pricing",
+      "kind": "block",
+      "description": "Three-tier pricing cards with features and highlighted popular plan",
+      "exports": ["Pricing"],
+      "components": ["Pricing"]
+    },
+    {
+      "name": "product-grid",
+      "kind": "block",
+      "description": "E-commerce product listing with search, filters, and product cards",
+      "exports": ["ProductGrid"],
+      "components": ["ProductGrid"]
+    },
+    {
+      "name": "profile-page",
+      "kind": "block",
+      "description": "User profile with avatar, bio, stats, and tabbed content",
+      "exports": ["ProfilePage"],
+      "components": ["ProfilePage"]
+    },
+    {
+      "name": "settings-page",
+      "kind": "block",
+      "description": "Multi-tab settings interface for profile, account, and notifications",
+      "exports": ["SettingsPage"],
+      "components": ["SettingsPage"]
+    }
+  ]
+}

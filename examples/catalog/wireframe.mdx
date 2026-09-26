@@ -1,0 +1,81 @@
+---
+title: Wireframes
+description: Screen mockups composed with wireframe-ui components
+---
+
+## Placeholders
+
+<Wireframe title="Content inventory">
+  <WireframeStack spacing="lg">
+    <WireframeStack direction="horizontal" align="center" justify="between">
+      <WireframeStack direction="horizontal" align="center">
+        <WireframeAvatar label="Profile avatar" />
+        <WireframeText label="Account name" width="md" />
+      </WireframeStack>
+      <WireframeBadge>Draft</WireframeBadge>
+    </WireframeStack>
+    <WireframeHeading label="Article title" />
+    <WireframeParagraph lines="3" lastLineWidth="md" />
+    <WireframeMedia label="Cover image" />
+    <WireframeList items="3" variant="bullet" />
+  </WireframeStack>
+</Wireframe>
+
+## Login form
+
+<Wireframe title="Account / Sign in" device="mobile">
+  <WireframeCard wireframe="compact">
+    <WireframeCardHeader>
+      <WireframeCardTitle>Welcome back</WireframeCardTitle>
+      <WireframeCardDescription>Sign in to your workspace.</WireframeCardDescription>
+    </WireframeCardHeader>
+    <WireframeCardContent>
+      <WireframeStack>
+        <WireframeInput label="Email address" name="email" type="email" autoComplete="email" />
+        <WireframeInput label="Password" name="password" type="password" autoComplete="current-password" />
+        <WireframeButton className="w-full">Sign in</WireframeButton>
+      </WireframeStack>
+    </WireframeCardContent>
+    <WireframeCardFooter>
+      <WireframeButton variant="ghost" size="sm" href="#create-account">Create an account</WireframeButton>
+    </WireframeCardFooter>
+  </WireframeCard>
+</Wireframe>
+
+## Dashboard
+
+<Wireframe title="Workspace / Overview">
+  <WireframeStack spacing="lg">
+    <WireframeStack direction="horizontal" align="center" justify="between">
+      <WireframeHeading>Workspace</WireframeHeading>
+      <WireframeStack direction="horizontal" align="center" spacing="sm">
+        <WireframeButton size="sm">New project</WireframeButton>
+        <WireframeAvatar label="Current user">AB</WireframeAvatar>
+      </WireframeStack>
+    </WireframeStack>
+    <WireframeSection variant="content-two-column">
+      <WireframeCard wireframe="compact">
+        <WireframeCardHeader>
+          <WireframeCardTitle>Projects</WireframeCardTitle>
+          <WireframeCardAction><WireframeBadge>3</WireframeBadge></WireframeCardAction>
+        </WireframeCardHeader>
+        <WireframeCardContent><WireframeList items="3" /></WireframeCardContent>
+      </WireframeCard>
+      <WireframeCard wireframe="compact">
+        <WireframeCardHeader><WireframeCardTitle>Activity</WireframeCardTitle></WireframeCardHeader>
+        <WireframeCardContent><WireframeMedia type="video" label="Product walkthrough" /></WireframeCardContent>
+      </WireframeCard>
+    </WireframeSection>
+    <WireframeTextarea label="Team notes" rows="3" />
+  </WireframeStack>
+</Wireframe>
+
+## Section presets
+
+<Wireframe title="Landing page">
+  <WireframeStack spacing="xl">
+    <WireframeSection variant="hero" />
+    <WireframeSection variant="content-two-column" />
+    <WireframeSection variant="feature-grid" />
+  </WireframeStack>
+</Wireframe>

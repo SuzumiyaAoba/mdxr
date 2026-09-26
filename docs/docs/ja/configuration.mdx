@@ -71,6 +71,10 @@ import { Card } from "@suzumiyaaoba/mdxr/components";
 
 ## テーマの上書き
 
+mdxr は [Smooth Shadow Plugin](https://shadow.floriankiem.com/) を組み込んでいます。標準の Tailwind ユーティリティ `shadow-xs` から `shadow-2xl` は、Storybook を含めて多層の滑らかな影になります。影の色、不透明度の修飾子、バリアントもそのまま使えます。
+
+細い輪郭線と影を一体化するには、`smooth-shadow-ring-md`（サイズは `xs` から `2xl`）を使い、別途 `border` や `ring` を重ねないでください。輪郭線はライト／ダークモードに自動追従し、`smooth-ring-{color}` で色を上書きできます。
+
 `theme` は Tailwind v4 ソースとして評価される CSS ファイルを指します。`@theme` でデザイントークンを上書きしたりユーティリティを追加できます。テーマ内の相対 `@import` はテーマ自身のディレクトリから解決され、レンダリングが取り込んだすべてのファイルが `mdxr serve` のウォッチ対象になります。
 
 ```css mdxr.css

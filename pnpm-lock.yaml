@@ -125,6 +125,9 @@ importers:
       remark-parse:
         specifier: 11.0.0
         version: 11.0.0(supports-color@7.2.0)
+      shadow-plugin:
+        specifier: ^2.1.1
+        version: 2.1.1
       shiki:
         specifier: ^4.4.3
         version: 4.4.3
@@ -4668,6 +4671,9 @@ packages:
     resolution: {integrity: sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA==}
     engines: {node: '>=10'}
     hasBin: true
+
+  shadow-plugin@2.1.1:
+    resolution: {integrity: sha512-V4MwWPNzna/Zq6lIjT7vWAHf5uSCVDPkFG5m1cXs9WTtLGeLA3/NAtjJxxY3lYwBiA9O8+g/yLfC+c+P4qk4yw==}
 
   shebang-command@2.0.0:
     resolution: {integrity: sha512-kHxr2zZpYtdmrN1qDjrrX/Z1rR1kG8Dx+gkpK1G4eXmvXswmcE1hTWBWYUzlraYw1/yZp6YuDY77YtvbN0dmDA==}
@@ -9455,6 +9461,8 @@ snapshots:
   semver@6.3.1: {}
 
   semver@7.8.5: {}
+
+  shadow-plugin@2.1.1: {}
 
   shebang-command@2.0.0:
     dependencies:

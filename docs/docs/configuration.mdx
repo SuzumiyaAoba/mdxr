@@ -71,6 +71,10 @@ import { Card } from "@suzumiyaaoba/mdxr/components";
 
 ## Theme overrides
 
+mdxr includes [Smooth Shadow Plugin](https://shadow.floriankiem.com/). The standard Tailwind `shadow-xs` through `shadow-2xl` utilities use its layered shadows, including in Storybook. Shadow colors, opacity modifiers, and variants work as usual.
+
+For a surface with an integrated hairline edge, use `smooth-shadow-ring-md` (sizes `xs` through `2xl`) without adding a separate `border` or `ring`. The edge follows light/dark mode automatically; `smooth-ring-{color}` overrides its color.
+
 `theme` points at a CSS file evaluated as a Tailwind v4 source. Use `@theme` to override design tokens or add utilities; relative `@import`s inside the theme resolve against the theme's own directory, and every file the render pulls in becomes a watch dependency for `mdxr serve`.
 
 ```css mdxr.css

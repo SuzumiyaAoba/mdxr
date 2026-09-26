@@ -317,6 +317,7 @@ class AnnotationController {
   }
 
   private showTarget(target: ResolvedAnnotation): void {
+    target.element.dispatchEvent(new Event("mdxr:reveal", { bubbles: true }));
     for (
       let parent: Element | null = target.element;
       parent !== null && parent !== this.root;
@@ -561,6 +562,9 @@ class AnnotationController {
       { capture: true, passive: true }
     );
     window.addEventListener("resize", () => {
+      this.schedule();
+    });
+    document.addEventListener("mdxr:pagechange", () => {
       this.schedule();
     });
     window.addEventListener("storage", (event) => {

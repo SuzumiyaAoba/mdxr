@@ -8,6 +8,7 @@ import {
   MERMAID_JS,
   THEME_JS,
 } from "./assets/scripts.js";
+import { sectionReviewHtml } from "./section-review-html.js";
 
 /**
  * JS destined for an inline `<script>` element: neutralize the two byte
@@ -84,8 +85,20 @@ ${o.needsKatex === true ? `<link rel="stylesheet" href="${KATEX_CDN_URL}">` : ""
 </head>
 <body class="bg-white text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100">
 ${THEME_TOGGLE_HTML}
+<div class="mdxr-view-controls" role="group" aria-label="Document view" hidden>
+<button type="button" data-mdxr-view="document" aria-pressed="true">${iconSvg("file-text")}<span>Document</span></button>
+<button type="button" data-mdxr-view="pages" aria-pressed="false">${iconSvg("panel-left")}<span>Pages</span></button>
+</div>
+<aside class="mdxr-pages" aria-label="Document pages" hidden>
+<p class="mdxr-pages-title">${escapeHtml(o.title)}</p>
+<p data-section-review-summary role="status" hidden></p>
+<div data-mdxr-page-tabs role="tablist" aria-label="Sections" aria-orientation="vertical"></div>
+</aside>
+<div id="mdxr-content">
 <main id="mdxr-root" class="prose prose-neutral dark:prose-invert mx-auto max-w-3xl px-6 py-10">${o.body}</main>
+</div>
 ${o.annotations === undefined ? "" : `${annotationHtml(iconSvg)}<script type="application/json" id="mdxr-annotation-document">${JSON.stringify(o.annotations).replaceAll("<", "\\u003c")}</script>`}
+${o.annotations === undefined ? "" : sectionReviewHtml(iconSvg)}
 <script>${inlineScript(o.clientJs)}</script>
 ${o.needsMermaid ? `<script type="module">${inlineScript(MERMAID_JS)}</script>` : ""}
 ${o.liveReload === true ? `<script>${inlineScript(LIVE_RELOAD_JS)}</script>` : ""}

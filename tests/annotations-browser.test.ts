@@ -272,7 +272,7 @@ describe("document annotation interactions", () => {
         expect({
           count: await frame.locator(".mdxr-annotation-card").count(),
           draftVisible: await input.isVisible(),
-          status: await frame.getByRole("status").textContent(),
+          status: await frame.locator("[data-annotation-status]").textContent(),
         }).toStrictEqual({
           count: 1,
           draftVisible: false,
@@ -436,9 +436,9 @@ describe("document annotation interactions", () => {
       });
       await page.reload();
       await page.getByRole("button", { name: "Annotate" }).click();
-      await expect(page.getByRole("status").textContent()).resolves.toContain(
-        "could not be loaded"
-      );
+      await expect(
+        page.locator("[data-annotation-status]").textContent()
+      ).resolves.toContain("could not be loaded");
       await expect(
         page.evaluate(() =>
           localStorage.getItem("mdxr:annotations:v1:/project/review.mdx")
@@ -472,9 +472,9 @@ describe("document annotation interactions", () => {
       });
       const comment = '<img src="x" onerror="alert(1)">';
       await addTextComment(page, comment);
-      await expect(page.getByRole("status").textContent()).resolves.toContain(
-        "storage is unavailable"
-      );
+      await expect(
+        page.locator("[data-annotation-status]").textContent()
+      ).resolves.toContain("storage is unavailable");
       await expect(
         page.locator(".mdxr-annotation-card img").count()
       ).resolves.toBe(0);
@@ -487,9 +487,9 @@ describe("document annotation interactions", () => {
       await expect(
         page.getByRole("textbox", { name: "Markdown feedback" }).inputValue()
       ).resolves.toContain(comment);
-      await expect(page.getByRole("status").textContent()).resolves.toContain(
-        "Clipboard access failed"
-      );
+      await expect(
+        page.locator("[data-annotation-status]").textContent()
+      ).resolves.toContain("Clipboard access failed");
     } finally {
       await page.close();
     }

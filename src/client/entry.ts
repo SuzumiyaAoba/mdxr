@@ -1,5 +1,7 @@
 import { initAnnotations } from "./annotations.js";
 import { handleDocEvent, syncBoards } from "./doc-events.js";
+import { initPages } from "./pages.js";
+import { initSectionReviews } from "./section-reviews.js";
 
 /**
  * Document entry point — bundled to an IIFE by `client-js.ts` and inlined
@@ -26,4 +28,6 @@ for (const b of document.querySelectorAll("[data-ask]")) {
 // Move-button `disabled` state depends on each card's lane position —
 // client-side knowledge. Seed it once (and again after every move).
 syncBoards(document);
+initPages();
+initSectionReviews();
 initAnnotations();

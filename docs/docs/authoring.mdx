@@ -54,6 +54,22 @@ The author writes Markdown; the renderer turns shorthands into catalog component
 
 The `:::` directive syntax wraps most container components — `:::findings`, `:::gantt`, `:::barchart`, `:::board`, `:::tests`, … — see the [catalog](/components) for the full mapping, or `mdxr catalog --json` for the machine-readable version.
 
+## Reading by section
+
+Rendered HTML and live previews offer **Document / Pages** controls when the document has `##` headings. **Document** is the default continuous view. **Pages** shows one section at a time, with its heading in a vertical tab list on the left. Content before the first `##` appears in an **Overview** tab; `###` and deeper headings stay on their parent page.
+
+Page boundaries follow document-level Markdown headings, including those directly inside a `<Plan>` root. Headings inside other components or blockquotes do not create pages. No extra configuration or separate output files are needed.
+
+Use ↑ / ↓, Home, and End to navigate the section tabs. Heading links open the corresponding page, and browser Back/Forward follows page navigation. Switching views preserves component and form state. The browser remembers the view preference when local storage is available. On narrow screens, the vertical tabs appear above the page. Printing always includes the full document, and JavaScript-disabled browsers show the continuous document.
+
+## Section review status
+
+Each document-level `##` section has a **Not reviewed / Reviewed** toggle aligned to the right of its heading. On narrow screens, the toggle wraps below the heading when needed. Mark it **Reviewed** after checking its content; activate it again to return to **Not reviewed**. The control works in both Document and Pages views, including `--no-hydrate` output. In Pages view, the sidebar shows each section's status and the total reviewed count. Use Tab to focus a review button, then Space or Enter to toggle it.
+
+Reviews cover the section through the next document-level `##`, including its `###` subsections. The overview before the first `##`, headings in blockquotes, and headings nested in components do not get separate statuses; headings directly inside a `<Plan>` root do.
+
+Statuses are saved in browser local storage per document path and synchronized between tabs on the same origin. They survive reloads, but are not written into the MDX or shared with exported HTML. An edited section requires review again; unchanged sections retain their status even when preceding text or line numbers change. If storage is unavailable, the controls still work for the current page. **Not saved** appears beside a control only after a change cannot be saved. Review controls are hidden when printing.
+
 ## Editor links
 
 Components that carry `path` — `<FileRef>`, `<SymbolRef>`, `<File>`, `<TraceFrame>`, `<FlowStep>`, `<Change>` — and code-block filename headers become `vscode://file/…` links when the file exists on disk (resolved relative to the document). Inline code works too: `` `src/mdx.ts:40-52` `` auto-converts to a `<FileRef>` when it resolves to a real file, while a bare `mdx.ts` without a `/` stays plain code.

@@ -183,5 +183,5 @@ export const COUNT_CHIP_CLS = `${MINI_CHIP_CLS} bg-neutral-200/70 font-mono ${TE
 /** Bordered mono tag — search tool names, graph edge labels. */
 export const MONO_TAG_CLS = `inline-flex shrink-0 items-center rounded border ${CHIP_BORDER_CLS} bg-white px-1.5 py-0.5 font-mono ${TEXT_SUB} ${TEXT.muted} dark:bg-neutral-900`;
 
-/** Left-accent panel shell shared by Callout and Risk. */
-export const EDGE_PANEL_CLS = "my-6 rounded-r-lg border-l-4 px-4 py-3 text-sm";
+/** Left-accent panels (Callout, Risk, Verdict) use square corners. */
+export const EDGE_PANEL_CLS = "my-6 border-l-4 px-4 py-3 text-sm";

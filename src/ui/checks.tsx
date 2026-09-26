@@ -100,7 +100,7 @@ export const Check = defineComponent(
           )}
         </div>
         <TrimBody
-          className={`mt-1.5 rounded-md border-l-2 px-3 py-2 text-xs ${TEXT.body} ${
+          className={`mt-1.5 border-l-2 px-3 py-2 text-xs ${TEXT.body} ${
             status === "fail"
               ? "border-red-400/60 bg-red-500/5"
               : `${CHIP_BORDER_CLS} ${SUNKEN_CLS}`

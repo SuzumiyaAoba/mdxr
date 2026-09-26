@@ -84,6 +84,8 @@ export const buildCss = async (
     // vars, custom variants) shared with Storybook; it imports tailwind itself.
     '@import "./src/styles/globals.css";',
     '@import "./src/assets/annotations.css";',
+    '@import "./src/assets/pages.css";',
+    '@import "./src/assets/section-reviews.css";',
     '@plugin "@tailwindcss/typography";',
     // Iconify icons as CSS classes: `icon-[lucide--check]` (dynamic, any
     // installed @iconify-json/* set works).

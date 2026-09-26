@@ -43,6 +43,8 @@ Select text and click **Add comment**, or open **Annotate → Select figure** to
 
 Saved annotations remain in your browser for that document; they do not modify the source file or travel with the HTML. If the document changes, targets that cannot be identified keep their original quotes and are marked unavailable. [Review annotations](https://suzumiyaaoba.com/mdxr/annotations) describes keyboard shortcuts, storage, and clipboard fallbacks.
 
+Each document-level `##` section also has a **Not reviewed / Reviewed** toggle. Review status is saved locally per document and restored after reload; sections with changed content require review again. In **Pages** view, the sidebar shows section statuses and review progress. See [Section review status](https://suzumiyaaoba.com/mdxr/authoring#section-review-status).
+
 ### `mdxr text [file]`
 
 Render an `.mdx` document to plain Markdown — every component becomes an ASCII/text stand-in (status checkbox lists, block-bar charts, GFM tables, `<details>` disclosures) so the document stays readable in any Markdown viewer or terminal. Interactive-only widgets (dialogs, menus, shadcn chrome) degrade to their text content; unknown components warn to stderr and keep their children.

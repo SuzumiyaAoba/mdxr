@@ -1,4 +1,4 @@
-import { Bot, X } from "lucide-react";
+import { ArrowUp, X } from "lucide-react";
 import { createElement, Fragment, useMemo } from "react";
 import type { ReactElement } from "react";
 
@@ -59,7 +59,10 @@ const ALLOWED_MARKDOWN_TAGS = new Set([
   "pre",
   "strong",
   "table",
+  "tbody",
   "td",
+  "th",
+  "thead",
   "tr",
   "ul",
 ]);
@@ -136,6 +139,7 @@ export const WorkspaceChat = ({
   const messageKeys = useMemo(() => getMessageKeys(messages), [messages]);
   const providerLabel = provider === "codex" ? "Codex" : "Claude Code";
   const chatError = error || conversation?.error;
+  const isBusy = sending || conversation?.busy === true;
 
   return (
     <aside
@@ -146,17 +150,8 @@ export const WorkspaceChat = ({
     >
       <div className="mdxr-workspace-chat-header">
         <div className="mdxr-workspace-chat-title">
-          <span className="mdxr-workspace-chat-avatar">
-            <Bot aria-hidden="true" size={17} />
-          </span>
-          <span>
-            <strong>{providerLabel}</strong>
-            <small>
-              {conversation?.busy === true
-                ? "Editing document…"
-                : "Document assistant"}
-            </small>
-          </span>
+          <h2>Agent</h2>
+          <span className="mdxr-workspace-chat-provider">{providerLabel}</span>
         </div>
         <button
           aria-label="Close chat"
@@ -164,7 +159,7 @@ export const WorkspaceChat = ({
           title="Close chat"
           type="button"
         >
-          <X aria-hidden="true" size={16} />
+          <X aria-hidden="true" size={16} strokeWidth={1.75} />
         </button>
       </div>
       <Conversation
@@ -174,44 +169,47 @@ export const WorkspaceChat = ({
         className="mdxr-workspace-chat-body"
       >
         <ConversationContent className="mdxr-workspace-conversation-content">
-          {conversation?.messages.length === 0 ? (
+          {conversation === undefined &&
+            (chatError === undefined || chatError === "") && (
+              <output className="mdxr-workspace-loading">
+                Loading conversation…
+              </output>
+            )}
+          {conversation?.messages.length === 0 && (
             <div className="mdxr-workspace-empty">
               <strong>What would you like to change?</strong>
-              <p>Describe an edit or select text to leave feedback.</p>
+              <p>Ask for an edit, or send feedback from Annotate.</p>
             </div>
-          ) : (
-            messages.map((message, index) => (
-              <div
-                className="mdxr-workspace-message"
-                data-role={message.role}
-                key={messageKeys[index]}
-              >
-                <p className="mdxr-workspace-message-label">
-                  {message.role === "user" ? "You" : providerLabel}
-                </p>
-                <Message from={message.role}>
-                  <MessageContent className="mdxr-workspace-message-content">
-                    {message.role === "assistant" &&
-                    message.html !== undefined ? (
-                      <MarkdownContent html={message.html} />
-                    ) : (
-                      <span className="whitespace-pre-wrap">
-                        {message.content}
-                      </span>
-                    )}
-                  </MessageContent>
-                </Message>
-              </div>
-            ))
           )}
-          {conversation?.busy === true && (
-            <output
-              className="mdxr-workspace-pending"
-
-              aria-live="polite"
+          {messages.map((message, index) => (
+            <div
+              className="mdxr-workspace-message"
+              data-role={message.role}
+              key={messageKeys[index]}
             >
-              <span className="mdxr-workspace-pulse" /> Waiting for{" "}
-              {providerLabel}…
+              <span className="sr-only">
+                {message.role === "user" ? "You" : providerLabel}:
+              </span>
+              <Message
+                from={message.role}
+                className="mdxr-workspace-message-frame"
+              >
+                <MessageContent className="mdxr-workspace-message-content">
+                  {message.html === undefined ? (
+                    <span className="whitespace-pre-wrap">
+                      {message.content}
+                    </span>
+                  ) : (
+                    <MarkdownContent html={message.html} />
+                  )}
+                </MessageContent>
+              </Message>
+            </div>
+          ))}
+          {isBusy && (
+            <output className="mdxr-workspace-pending" aria-live="polite">
+              <span aria-hidden="true" className="mdxr-workspace-pulse" />
+              {sending ? "Sending…" : `Waiting for ${providerLabel}…`}
             </output>
           )}
         </ConversationContent>
@@ -223,20 +221,33 @@ export const WorkspaceChat = ({
           </p>
         )}
         <PromptInput
-          disabled={sending || conversation?.busy === true}
+          aria-label="Message composer"
+          className="mdxr-workspace-composer"
+          disabled={isBusy}
           onSubmit={onSend}
         >
           <PromptInputTextarea
+            aria-describedby="mdxr-workspace-chat-hint"
             aria-label="Message to agent"
-            placeholder="Ask for a change to this document…"
+            className="mdxr-workspace-composer-input"
+            placeholder="Describe a change…"
           />
-          <PromptInputFooter>
-            <span className="mdxr-workspace-hint">
-              <kbd>Enter</kbd> to send
+          <PromptInputFooter className="mdxr-workspace-composer-footer">
+            <span className="mdxr-workspace-hint" id="mdxr-workspace-chat-hint">
+              <span>
+                <kbd>Enter</kbd> to send
+              </span>
+              <span>
+                <kbd>Shift + Enter</kbd> for a new line
+              </span>
             </span>
             <PromptInputSubmit
-              disabled={sending || conversation?.busy === true}
-            />
+              className="mdxr-workspace-send"
+              disabled={isBusy}
+              title="Send message"
+            >
+              <ArrowUp aria-hidden="true" size={16} strokeWidth={1.75} />
+            </PromptInputSubmit>
           </PromptInputFooter>
         </PromptInput>
       </div>

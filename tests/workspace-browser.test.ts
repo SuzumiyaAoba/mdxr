@@ -105,11 +105,20 @@ const TOOL_SELECTORS = [
 
 const responseJson = (body: unknown): string => JSON.stringify(body);
 
+interface AgentPostResponse {
+  body: unknown;
+  status?: number;
+}
+
 const openWorkspacePage = async (
   browser: Browser,
   content: string,
   workspaceScript: string,
-  width = 1280
+  width = 1280,
+  agentPostResponse?: (
+    message: string,
+    page: Page
+  ) => AgentPostResponse | Promise<AgentPostResponse>
 ): Promise<Page> => {
   const page = await browser.newPage({ viewport: { height: 900, width } });
   await page.route("http://mdxr.test/**", async (route) => {
@@ -145,6 +154,15 @@ const openWorkspacePage = async (
           const { message: postMessage } = body;
           message = postMessage;
         }
+      }
+      if (request.method() === "POST" && agentPostResponse !== undefined) {
+        const response = await agentPostResponse(message, page);
+        await route.fulfill({
+          body: responseJson(response.body),
+          contentType: "application/json",
+          status: response.status ?? 200,
+        });
+        return;
       }
       const messages =
         request.method() === "POST"
@@ -795,6 +813,247 @@ describe("agent workspace browser UI", () => {
           themeMode: "light",
         },
         sourceState: { annotationsHidden: true, hasSource: true },
+      });
+    } finally {
+      await page.close();
+    }
+  });
+
+  it("sends multiline chat messages and contains long responses on desktop and mobile", async () => {
+    const firstParagraph =
+      "Please update the guide with a clear explanation. ".repeat(6);
+    const secondParagraph = "Keep the existing headings and examples intact.";
+    const submittedMessage = `${firstParagraph}\n${secondParagraph}`;
+    const assistantHtml = [
+      "<h2>Suggested update</h2>",
+      "<p>Here is a longer response with the complete set of notes.</p>",
+      "<pre><code>export const reviewReady = true;</code></pre>",
+      `<ul>${Array.from(
+        { length: 14 },
+        (_, index) => `<li>Review detail ${index + 1}</li>`
+      ).join("")}</ul>`,
+      "<table><thead><tr><th>Section</th><th>Change</th></tr></thead><tbody><tr><td>Overview</td><td>Clarified</td></tr><tr><td>Examples</td><td>Preserved</td></tr></tbody></table>",
+    ].join("");
+    let sentMessage = "";
+    const page = await openWorkspacePage(
+      browser,
+      html,
+      workspaceScript,
+      1280,
+      async (message, postPage) => {
+        sentMessage = message;
+        await postPage.waitForTimeout(1200);
+        return {
+          body: {
+            busy: false,
+            messages: [
+              {
+                content: message,
+                html: `<p><strong>Request</strong></p><p>${message.replaceAll("\n", "<br>")}</p><p><em>Keep the existing headings.</em></p>`,
+                role: "user",
+              },
+              {
+                content: "The guide is ready.",
+                html: assistantHtml,
+                role: "assistant",
+              },
+            ],
+            provider: "codex",
+            sessionId: "workspace-session",
+          },
+        };
+      }
+    );
+    try {
+      const theme = page.locator(".mdxr-theme");
+      await theme.click();
+      await page.waitForFunction(
+        () =>
+          document.querySelector<HTMLElement>(".mdxr-theme")?.dataset.mode ===
+          "light"
+      );
+      const agentToggle = page.locator(".mdxr-workspace-agent");
+      await agentToggle.click();
+      const chat = page.locator(".mdxr-workspace-chat");
+      await chat.waitFor({ state: "visible" });
+      const composer = page.getByRole("textbox", { name: "Message to agent" });
+      const sendButton = page.getByRole("button", { name: "Send message" });
+      const emptyState = {
+        inputDisabled: await composer.isDisabled(),
+        sendDisabled: await sendButton.isDisabled(),
+      };
+      await composer.fill(firstParagraph);
+      await composer.press("Shift+Enter");
+      await composer.pressSequentially(secondParagraph);
+      const readyState = {
+        inputEnabled: !(await composer.isDisabled()),
+        inputValue: await composer.inputValue(),
+        sendEnabled: await sendButton.isEnabled(),
+      };
+      const postRequest = page.waitForRequest(
+        (request) =>
+          request.url().includes("/__mdxr_agent") && request.method() === "POST"
+      );
+      await sendButton.click();
+      await postRequest;
+      await page.waitForFunction(() => {
+        const textarea = document.querySelector<HTMLTextAreaElement>(
+          '[aria-label="Message to agent"]'
+        );
+        const button = document.querySelector<HTMLButtonElement>(
+          '[aria-label="Send message"]'
+        );
+        return textarea?.disabled === true && button?.disabled === true;
+      });
+      const busyState = {
+        inputDisabled: await composer.isDisabled(),
+        sendDisabled: await sendButton.isDisabled(),
+      };
+      await page
+        .locator('.mdxr-workspace-message[data-role="assistant"] table')
+        .waitFor({ state: "visible" });
+      await page.waitForFunction(
+        () =>
+          document.querySelector<HTMLTextAreaElement>(
+            '[aria-label="Message to agent"]'
+          )?.value === ""
+      );
+      const renderedResponse = await page.evaluate(() => {
+        const userMessage = document.querySelector<HTMLElement>(
+          '.mdxr-workspace-message[data-role="user"]'
+        );
+        const assistantMessage = document.querySelector<HTMLElement>(
+          '.mdxr-workspace-message[data-role="assistant"]'
+        );
+        const body = document.querySelector<HTMLElement>(
+          ".mdxr-workspace-chat-body"
+        );
+        return {
+          assistantCode: Boolean(assistantMessage?.querySelector("pre code")),
+          assistantListItems:
+            assistantMessage?.querySelectorAll("ul li").length ?? 0,
+          assistantTableHeaders:
+            assistantMessage?.querySelectorAll("thead th").length ?? 0,
+          bodyCanScroll:
+            body !== null &&
+            body !== undefined &&
+            body.scrollHeight > body.clientHeight,
+          userMarkdown: Boolean(
+            userMessage?.querySelector("strong") &&
+            userMessage.querySelector("em") &&
+            userMessage.textContent?.includes("Keep the existing headings.")
+          ),
+        };
+      });
+      const desktopLayout = await page.evaluate(() => {
+        const panel = document.querySelector<HTMLElement>(
+          ".mdxr-workspace-chat"
+        );
+        if (panel === null) {
+          throw new Error("Missing agent chat panel");
+        }
+        const rect = panel.getBoundingClientRect();
+        return {
+          inBounds:
+            rect.left >= 0 &&
+            rect.top >= 0 &&
+            rect.right <= window.innerWidth &&
+            rect.bottom <= window.innerHeight,
+          pageFits: document.documentElement.scrollWidth <= window.innerWidth,
+          width: window.innerWidth,
+        };
+      });
+      await theme.click();
+      await page.waitForFunction(
+        () =>
+          document.querySelector<HTMLElement>(".mdxr-theme")?.dataset.mode ===
+          "dark"
+      );
+      await page.setViewportSize({ height: 844, width: 390 });
+      const mobileLayout = await page.evaluate(() => {
+        const panel = document.querySelector<HTMLElement>(
+          ".mdxr-workspace-chat"
+        );
+        if (panel === null) {
+          throw new Error("Missing agent chat panel");
+        }
+        const rect = panel.getBoundingClientRect();
+        return {
+          inBounds:
+            rect.left >= 0 &&
+            rect.top >= 0 &&
+            rect.right <= window.innerWidth &&
+            rect.bottom <= window.innerHeight,
+          pageFits: document.documentElement.scrollWidth <= window.innerWidth,
+          theme:
+            document.querySelector<HTMLElement>(".mdxr-theme")?.dataset.mode,
+          width: window.innerWidth,
+        };
+      });
+      expect({
+        busyState,
+        desktopLayout,
+        emptyState,
+        mobileLayout,
+        readyState,
+        renderedResponse,
+        sentMessage,
+      }).toStrictEqual({
+        busyState: { inputDisabled: true, sendDisabled: true },
+        desktopLayout: { inBounds: true, pageFits: true, width: 1280 },
+        emptyState: { inputDisabled: false, sendDisabled: true },
+        mobileLayout: {
+          inBounds: true,
+          pageFits: true,
+          theme: "dark",
+          width: 390,
+        },
+        readyState: {
+          inputEnabled: true,
+          inputValue: submittedMessage,
+          sendEnabled: true,
+        },
+        renderedResponse: {
+          assistantCode: true,
+          assistantListItems: 14,
+          assistantTableHeaders: 2,
+          bodyCanScroll: true,
+          userMarkdown: true,
+        },
+        sentMessage: submittedMessage,
+      });
+    } finally {
+      await page.close();
+    }
+  });
+
+  it("shows a chat error and retains the unsent draft", async () => {
+    const page = await openWorkspacePage(
+      browser,
+      html,
+      workspaceScript,
+      1280,
+      () => ({
+        body: { error: "Agent service is unavailable." },
+        status: 503,
+      })
+    );
+    try {
+      await page.locator(".mdxr-workspace-agent").click();
+      const composer = page.getByRole("textbox", { name: "Message to agent" });
+      const sendButton = page.getByRole("button", { name: "Send message" });
+      await composer.fill("Keep this draft if sending fails.");
+      await sendButton.click();
+      await page.getByRole("alert").waitFor({ state: "visible" });
+      const errorState = {
+        draft: await composer.inputValue(),
+        error: await page.getByRole("alert").textContent(),
+        sendEnabled: await sendButton.isEnabled(),
+      };
+      expect(errorState).toStrictEqual({
+        draft: "Keep this draft if sending fails.",
+        error: "Agent service is unavailable.",
+        sendEnabled: true,
       });
     } finally {
       await page.close();

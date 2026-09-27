@@ -8,11 +8,10 @@ type AgentSession = ReturnType<typeof createAgentSession>;
 
 const view = (conversation: Awaited<ReturnType<AgentSession["current"]>>) => ({
   ...conversation,
-  messages: conversation.messages.map((message) =>
-    message.role === "assistant"
-      ? { ...message, html: renderAgentMarkdown(message.content) }
-      : message
-  ),
+  messages: conversation.messages.map((message) => ({
+    ...message,
+    html: renderAgentMarkdown(message.content),
+  })),
   sessionId: conversation.sessionId ?? null,
 });
 

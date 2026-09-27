@@ -188,8 +188,9 @@ describe("preview agent API", () => {
 
   it("returns the agent answer and updated conversation on POST", async () => {
     const baseUrl = await startServer("codex");
+    const message = "# What changed?\n\n**A bold note.**";
     const response = await fetch(`${baseUrl}/__mdxr_agent`, {
-      body: JSON.stringify({ message: "What changed?" }),
+      body: JSON.stringify({ message }),
       headers: { "content-type": "application/json" },
       method: "POST",
     });
@@ -198,13 +199,17 @@ describe("preview agent API", () => {
     await expect(response.json()).resolves.toMatchObject({
       busy: false,
       messages: [
-        { content: "What changed?", role: "user" },
+        {
+          content: message,
+          html: "<h1>What changed?</h1><p><strong>A bold note.</strong></p>",
+          role: "user",
+        },
         { content: "agent answer", role: "assistant" },
       ],
       provider: "codex",
       sessionId: "session-123",
     });
-    expect(sendAgentMessage).toHaveBeenCalledWith("What changed?");
+    expect(sendAgentMessage).toHaveBeenCalledWith(message);
   });
 
   it("does not expose the agent API unless a provider is selected", async () => {

@@ -67,14 +67,14 @@ sidebar:
 npx @suzumiyaaoba/mdxr text plan.mdx      # → plan.txt.md
 ```
 
-## Teach your agent the catalog
+## Set up your agent
 
 ```sh
-npx @suzumiyaaoba/mdxr init               # → .agents/skills/mdxr/
-npx @suzumiyaaoba/mdxr init --tool all    # every supported agent tool
+npx @suzumiyaaoba/mdxr init               # Codex + Claude, in your home directory
+npx @suzumiyaaoba/mdxr init --local       # add instructions to this project
 ```
 
-Then ask your agent for a deliverable — "write an implementation plan for the auth feature and render it to HTML" — and it will use the catalog correctly. See [Agent skill](/agent-skill).
+Then ask your agent to write an implementation plan or report and render it with mdxr. See [Agent setup](/agent-skill) for tool-specific options and the bundled Agent Skill.
 
 ## What's next
 

@@ -10,7 +10,7 @@ Run directly with `npx` — no install required:
 npx @suzumiyaaoba/mdxr render plan.mdx     # writes plan.html
 npx @suzumiyaaoba/mdxr serve plan.mdx      # live preview at http://localhost:3737
 npx @suzumiyaaoba/mdxr catalog             # list available components
-npx @suzumiyaaoba/mdxr init                # install the mdxr agent skill into the project
+npx @suzumiyaaoba/mdxr init                # install mdxr instructions for Codex and Claude
 ```
 
 Or install it:
@@ -63,16 +63,18 @@ List built-in and project-defined components (`--json` for machine-readable outp
 
 ### `mdxr init`
 
-Install the mdxr agent skill so coding agents know the component catalog.
+Install mdxr's authoring instructions for Codex and Claude. By default, the instructions go into your home directory and are referenced from the global agent config files.
 
 ```sh
-mdxr init                  # → .agents/skills/mdxr/
-mdxr init --tool claude    # → .claude/skills/mdxr/
-mdxr init --tool all       # all supported tools
-mdxr init --global         # into your home directory instead
+mdxr init                              # Codex + Claude, in your home directory
+mdxr init --tool codex                 # Codex only
+mdxr init --tool claude --local        # Claude only, in this project
+mdxr init --global                     # explicitly install into your home directory
+mdxr init --force                      # refresh generated instructions and references
+mdxr init --skill                      # install the Agent Skill instead
 ```
 
-Local installs also add `.mdxr/` to the project's `.gitignore` — the untracked scratch dir agents write documents to.
+The global install creates `$CODEX_HOME/MDXR.md` (or `~/.codex/MDXR.md` when `CODEX_HOME` is unset) and its `mdxr/references/`, plus matching files under `~/.claude/`. It adds a read instruction to `$CODEX_HOME/AGENTS.md`; Claude's `~/.claude/CLAUDE.md` imports `@./MDXR.md`. Use `--local` to create `.codex/MDXR.md` and `.claude/MDXR.md` in the project, with references from the root `AGENTS.md` and `CLAUDE.md`. A local install also adds `.mdxr/` to `.gitignore` for agent-authored documents and rendered HTML. `--force` refreshes generated instruction files and references while preserving the rest of your config files.
 
 ## Wireframes
 
@@ -91,24 +93,21 @@ Build screen mockups with the built-in `Wireframe*` components, adapted from [wi
 
 Render with `mdxr render wireframe.mdx`. Text/media placeholders, cards, avatars, lists, section presets, and editable fields support light/dark themes and Markdown output. See the [guide](docs/docs/wireframe.mdx) and [examples](examples/catalog/wireframe.mdx). Adapted source retains the [upstream MIT license](src/wireframe-ui.LICENSE.md).
 
-## Agent skill
+## Agent Skill
 
-The `mdxr` skill teaches coding agents the component catalog and the render workflow. Install it into your project (or globally) with the [`skills` CLI](https://github.com/vercel-labs/skills):
+If you prefer the Agent Skills format, `mdxr init --skill` installs the bundled skill. You can also install it from the repo with the [`skills` CLI](https://github.com/vercel-labs/skills):
 
 ```sh
+mdxr init --skill
 npx skills add Suzumiyaaoba/mdxr --skill mdxr
 # add -g for a global install, or -a claude-code to target a specific agent
 ```
 
-Then ask your agent, for example:
+Once the instructions or skill are installed, ask your agent, for example:
 
-> Use the mdxr skill to write an implementation plan for the auth feature and render it to HTML.
+> Write an implementation plan for the auth feature and render it to HTML with mdxr.
 
-Not just plans — any deliverable works (reports, reviews, investigation summaries, …). To make this automatic, add a standing instruction to your agent config (e.g. `AGENTS.md` / `CLAUDE.md`):
-
-```md
-- Whenever the user explicitly asks for a deliverable with mdxr, use the mdxr skill to write and render it.
-```
+Plans, reports, reviews, investigation summaries, release notes, and postmortems all work. Documents go in `.mdxr/` unless you specify another location.
 
 ## License
 

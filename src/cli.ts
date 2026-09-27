@@ -10,6 +10,7 @@ import { catalogEntries, formatCatalog, CONVENTIONS } from "./catalog.js";
 import { loadConfig } from "./config.js";
 import { formatError, parseErrorFormat } from "./format-error.js";
 import { ensureDocsDirIgnored, installSkill } from "./init.js";
+import { installInstructions } from "./instructions.js";
 import { openInBrowser } from "./open.js";
 import { loadUserComponents, render, renderFile } from "./render.js";
 import { serve, serveSource } from "./serve.js";
@@ -276,33 +277,68 @@ cli
   });
 
 cli
-  .command("init", "Install the mdxr agent skill into this project")
-  .option("--tool <tool>", "agents | claude | devin | all", {
-    default: "agents",
-  })
-  .option("--global", "Install into your home directory instead of the project")
-  .option("--force", "Overwrite an existing skill")
-  .action(async (opts: { tool: string; global?: boolean; force?: boolean }) => {
-    try {
-      const paths = await installSkill(opts);
-      for (const p of paths) {
-        console.log(`mdxr: installed skill → ${p}`);
+  .command("init", "Install mdxr instructions for Codex and Claude")
+  .option(
+    "--tool <tool>",
+    "codex | claude | all (with --skill: agents | claude | devin | all)"
+  )
+  .option(
+    "--global",
+    "Install into your home directory (default for instructions)"
+  )
+  .option("--local", "Install into the current project")
+  .option("--skill", "Install the agent skill instead (local by default)")
+  .option(
+    "--force",
+    "Replace existing mdxr files; preserve agent config contents"
+  )
+  .action(
+    async (opts: {
+      tool?: string;
+      global?: boolean;
+      local?: boolean;
+      skill?: boolean;
+      force?: boolean;
+    }) => {
+      try {
+        if (opts.global === true && opts.local === true) {
+          throw new Error("--global and --local cannot be used together");
+        }
+        const global =
+          opts.global === true || (opts.local !== true && opts.skill !== true);
+        const options = { ...opts, global };
+        if (opts.skill === true) {
+          const paths = await installSkill(options);
+          for (const p of paths) {
+            console.log(`mdxr: installed skill → ${p}`);
+          }
+        } else {
+          const installed = await installInstructions(options);
+          for (const result of installed) {
+            console.log(
+              `mdxr: installed instructions → ${result.instructions}`
+            );
+            console.log(
+              `mdxr: ${result.status === "added" ? "added reference to" : "reference already present in"} ${result.config}`
+            );
+          }
+        }
+        if (!global) {
+          // Agents write mdxr documents to .mdxr/ — keep that scratch space
+          // out of git. A --global install is about the home dir, so the
+          // project's .gitignore is left alone.
+          const status = await ensureDocsDirIgnored(process.cwd());
+          console.log(
+            status === "added"
+              ? "mdxr: added .mdxr/ to .gitignore"
+              : "mdxr: .gitignore already covers .mdxr/"
+          );
+        }
+      } catch (error) {
+        fail(error, false);
       }
-      if (opts.global !== true) {
-        // Agents write mdxr documents to .mdxr/ — keep that scratch space
-        // out of git. A --global install is about the home dir, so the
-        // project's .gitignore is left alone.
-        const status = await ensureDocsDirIgnored(process.cwd());
-        console.log(
-          status === "added"
-            ? "mdxr: added .mdxr/ to .gitignore"
-            : "mdxr: .gitignore already covers .mdxr/"
-        );
-      }
-    } catch (error) {
-      fail(error, false);
     }
-  });
+  );
 
 cli.help();
 cli.parse();

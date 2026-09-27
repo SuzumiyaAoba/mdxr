@@ -119,21 +119,24 @@ mdxr catalog --dir ./my-project       # 別プロジェクトの設定を読む
 
 ## mdxr init
 
-mdxr のエージェントスキルをインストールし、コーディングエージェントがコンポーネントカタログとレンダリングワークフローを使えるようにします。[エージェントスキル](/ja/agent-skill) も参照してください。
+Codex と Claude 向けの mdxr オーサリング指示をインストールし、それぞれの指示ファイルから参照できるようにします。デフォルトのインストール先はホームディレクトリです。[エージェントのセットアップ](/ja/agent-skill) も参照してください。
 
 ```sh
-mdxr init                             # → .agents/skills/mdxr/
-mdxr init --tool claude               # → .claude/skills/mdxr/
-mdxr init --tool devin                # → .devin/skills/mdxr/
-mdxr init --tool all                  # 対応する全ツール
-mdxr init --global                    # プロジェクトではなくホームディレクトリへ
-mdxr init --force                     # 既存のインストールを上書き
+mdxr init                              # ホームディレクトリの Codex + Claude
+mdxr init --tool codex                 # Codex のみ
+mdxr init --tool claude --local        # このプロジェクトの Claude のみ
+mdxr init --tool all --local           # このプロジェクトの Codex + Claude
+mdxr init --global                     # ホームディレクトリへの導入を明示
+mdxr init --force                      # 生成した指示と参照を更新
+mdxr init --skill                      # 同梱の Agent Skill をインストール
 ```
 
 | フラグ | 説明 |
 | --- | --- |
-| `--tool <tool>` | `agents`（デフォルト）、`claude`、`devin`、または `all` |
-| `--global` | プロジェクトではなくホームディレクトリにインストール |
-| `--force` | 既存のスキルディレクトリを上書き |
+| `--tool <tool>` | 指示のインストール時は `codex`、`claude`、`all`（デフォルト）。スキルでは `agents`（デフォルト）、`claude`、`devin`、`all` |
+| `--local` | ホームディレクトリではなく現在のプロジェクトに指示をインストール |
+| `--global` | ホームディレクトリにインストール（デフォルトの範囲） |
+| `--force` | mdxr の指示と参照を更新。`--skill` と併用するとスキルディレクトリを置き換え |
+| `--skill` | 指示ファイルの代わりに同梱の Agent Skill をインストール。スキルのデフォルト先はプロジェクト |
 
-ローカルインストールでは、プロジェクトの `.gitignore` に `.mdxr/` も追加します — エージェントがドキュメント（`*.mdx` とレンダリング済み `*.html`）を書き込む、Git 管理外のスクラッチ用ディレクトリです。`--global` インストールはプロジェクトを変更しません。
+グローバルインストールでは、`$CODEX_HOME/MDXR.md`（`CODEX_HOME` 未設定時は `~/.codex/MDXR.md`）と `$CODEX_HOME/mdxr/references/`、および `~/.claude/` 以下の同等ファイルを作成します。`$CODEX_HOME/AGENTS.md` に Codex 用ファイルを読む指示を追加し、Claude の `~/.claude/CLAUDE.md` から `@./MDXR.md` を読み込みます。ローカルインストールでは、プロジェクトに `.codex/MDXR.md` と `.claude/MDXR.md` を作成し、ルートの `AGENTS.md` と `CLAUDE.md` から参照します。Claude の `CLAUDE.md` では `@./.claude/MDXR.md` を読み込みます。また、`.mdxr/` をプロジェクトの `.gitignore` に追加します。`--force` は生成した指示と参照を更新し、エージェント設定の他の内容を保持します。

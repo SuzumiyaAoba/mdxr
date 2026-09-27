@@ -119,21 +119,24 @@ mdxr catalog --dir ./my-project       # read another project's config
 
 ## mdxr init
 
-Install the mdxr agent skill so coding agents know the component catalog and the render workflow. See [Agent skill](/agent-skill).
+Install mdxr authoring instructions for Codex and Claude, with references from each agent's instruction file. The default installs globally. See [Agent setup](/agent-skill).
 
 ```sh
-mdxr init                             # → .agents/skills/mdxr/
-mdxr init --tool claude               # → .claude/skills/mdxr/
-mdxr init --tool devin                # → .devin/skills/mdxr/
-mdxr init --tool all                  # all supported tools
-mdxr init --global                    # into your home directory instead
-mdxr init --force                     # overwrite an existing install
+mdxr init                              # Codex + Claude, in your home directory
+mdxr init --tool codex                 # Codex only
+mdxr init --tool claude --local        # Claude only, in the current project
+mdxr init --tool all --local           # Codex + Claude, in the current project
+mdxr init --global                     # explicitly install into your home directory
+mdxr init --force                      # refresh generated instructions and references
+mdxr init --skill                      # install the bundled Agent Skill
 ```
 
 | Flag | Description |
 | --- | --- |
-| `--tool <tool>` | `agents` (default), `claude`, `devin`, or `all` |
-| `--global` | Install into your home directory instead of the project |
-| `--force` | Overwrite an existing skill directory |
+| `--tool <tool>` | Instruction install: `codex`, `claude`, or `all` (default). Skill install: `agents` (default), `claude`, `devin`, or `all` |
+| `--local` | Install instructions into the current project instead of your home directory |
+| `--global` | Install into your home directory (the default scope) |
+| `--force` | Refresh generated MDXR instructions and references, or replace the skill directory with `--skill` |
+| `--skill` | Install the bundled Agent Skill instead of the instruction files; skill installs default to the project directory |
 
-A local install also adds `.mdxr/` to the project's `.gitignore` — the untracked scratch directory agents write documents (`*.mdx` and rendered `*.html`) to. `--global` installs leave the project untouched.
+The global install creates `$CODEX_HOME/MDXR.md` (or `~/.codex/MDXR.md` if `CODEX_HOME` is unset) and `$CODEX_HOME/mdxr/references/`, plus matching files under `~/.claude/`. It adds an instruction to read the Codex file in `$CODEX_HOME/AGENTS.md`; Claude's `~/.claude/CLAUDE.md` imports `@./MDXR.md`. A local install creates `.codex/MDXR.md` and `.claude/MDXR.md` in the project and references them from the root `AGENTS.md` and `CLAUDE.md`; Claude's `CLAUDE.md` imports `@./.claude/MDXR.md`. It also adds `.mdxr/` to the project's `.gitignore`. `--force` updates the generated instructions and references while preserving the rest of your agent config files.

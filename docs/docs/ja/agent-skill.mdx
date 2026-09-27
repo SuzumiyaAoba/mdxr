@@ -1,26 +1,39 @@
 ---
-title: エージェントスキル
-description: mdxr スキルをインストールして、コーディングエージェントにコンポーネントカタログとレンダリングワークフローを覚えさせます。
+title: エージェントのセットアップ
+description: Codex と Claude に mdxr の指示を導入するか、同梱の Agent Skill を使います。
 sidebar:
   order: 7
 ---
 
-mdxr には[エージェントスキル](https://github.com/vercel-labs/skills) — `SKILL.md` とリファレンスドキュメント — が同梱されており、コーディングエージェントにコンポーネントカタログ、オーサリングルール、レンダリングワークフローを教えます。インストール後、エージェントは計画書・レポート・レビューなど、スタイル付き HTML として読ませる構造化ドキュメントを書くたびにスキルを使います。
+mdxr には、エージェント向けのオーサリング指示とコンポーネントリファレンスカタログが含まれています。`mdxr init` はこれらを Codex と Claude 用にインストールし、それぞれのグローバル指示ファイルから参照します。[Agent Skills 形式](https://github.com/vercel-labs/skills)を使う場合は、同梱スキルを `mdxr init --skill` でインストールできます。
 
-## インストール
+## 指示ファイルをインストール
 
-最も手軽なのは `mdxr init` で、バンドル済みのスキルをプロジェクトにコピーします:
+`mdxr init` はデフォルトで Codex と Claude 用の指示をホームディレクトリにインストールします:
 
 ```sh
-mdxr init                  # → .agents/skills/mdxr/
-mdxr init --tool claude    # → .claude/skills/mdxr/
-mdxr init --tool devin     # → .devin/skills/mdxr/
-mdxr init --tool all       # 対応する全ツール
-mdxr init --global         # プロジェクトではなくホームディレクトリへ
-mdxr init --force          # 既存のインストールを上書き
+mdxr init                         # ホームディレクトリの Codex + Claude
+mdxr init --tool codex            # Codex のみ
+mdxr init --tool claude --local   # このプロジェクトの Claude のみ
+mdxr init --global                # ホームディレクトリへの導入を明示
+mdxr init --force                 # 生成した指示と参照を更新
 ```
 
-ローカルインストールでは、プロジェクトの `.gitignore` に `.mdxr/` も追加します — エージェントがドキュメントとレンダリング済み HTML を書き込む、Git 管理外のスクラッチ用ディレクトリです。
+グローバルインストールでは、`$CODEX_HOME/MDXR.md`（`CODEX_HOME` 未設定時は `~/.codex/MDXR.md`）と `$CODEX_HOME/mdxr/references/`、および `~/.claude/` 以下の同等ファイルを作成します。`$CODEX_HOME/AGENTS.md` には Codex 用ファイルを読む指示を追加し、`~/.claude/CLAUDE.md` からは `@./MDXR.md` を読み込みます。`--local` を指定すると、プロジェクト内に `.codex/MDXR.md` と `.claude/MDXR.md` を作成し、ルートの `AGENTS.md` と `CLAUDE.md` から参照します。ローカルインストールでは、ドキュメントとレンダリング済み HTML の保存先 `.mdxr/` も `.gitignore` に追加します。`--force` は生成した指示ファイルと参照を更新し、他の設定内容は保持します。
+
+同じディレクトリに `AGENTS.override.md` がある場合は、生成された Codex の読み込み指示もそちらに追加してください。同じディレクトリの `AGENTS.md` より `AGENTS.override.md` が優先されます。
+
+## Agent Skill をインストール
+
+`--skill` を指定すると、同梱スキルを対応するスキルディレクトリにインストールします:
+
+```sh
+mdxr init --skill                         # → .agents/skills/mdxr/
+mdxr init --skill --tool claude           # → .claude/skills/mdxr/
+mdxr init --skill --tool all --global     # ホームディレクトリに対応スキルをすべて導入
+```
+
+スキルのインストール先はデフォルトでプロジェクトです。`--tool` には `agents`（デフォルト）、`claude`、`devin`、`all` を指定できます。ホームディレクトリに入れる場合は `--global` を指定します。`--force` はスキルディレクトリを置き換えます。
 
 リポジトリから [`skills` CLI](https://github.com/vercel-labs/skills) でインストールすることもできます:
 
@@ -31,17 +44,13 @@ npx skills add Suzumiyaaoba/mdxr --skill mdxr
 
 ## 使い方
 
-インストール後は成果物を頼むだけです:
+どちらかの方式で導入したら、成果物を頼むだけです:
 
-> mdxr スキルを使って auth 機能の実装計画を書いて、HTML にレンダリングして。
+> auth 機能の実装計画を書いて、mdxr で HTML にレンダリングして。
 
 場所を指定しない限り、ドキュメントはリポジトリルートの `.mdxr/` に作成されます — `.mdxr/auth-plan.mdx` は `.mdxr/auth-plan.html` にレンダリングされます。
 
-計画書だけでなく、レポート、レビュー、調査サマリー、リリースノート、ポストモーテムにも使えます。自動化するには、エージェント設定（`AGENTS.md`、`CLAUDE.md` など）に常設の指示を追加します:
-
-```md
-- Whenever the user explicitly asks for a deliverable with mdxr, use the mdxr skill to write and render it.
-```
+計画書だけでなく、レポート、レビュー、調査サマリー、リリースノート、ポストモーテムにも使えます。
 
 ## スキルの内容
 

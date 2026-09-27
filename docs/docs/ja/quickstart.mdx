@@ -67,14 +67,14 @@ sidebar:
 npx @suzumiyaaoba/mdxr text plan.mdx      # → plan.txt.md
 ```
 
-## エージェントにカタログを教える
+## エージェントをセットアップする
 
 ```sh
-npx @suzumiyaaoba/mdxr init               # → .agents/skills/mdxr/
-npx @suzumiyaaoba/mdxr init --tool all    # 対応する全エージェントツール
+npx @suzumiyaaoba/mdxr init               # ホームディレクトリの Codex + Claude
+npx @suzumiyaaoba/mdxr init --local       # このプロジェクトに指示を追加
 ```
 
-あとはエージェントに成果物を頼むだけです — 「mdxr スキルを使って auth 機能の実装計画を書いて HTML にレンダリングして」と言えば、カタログを正しく使ってくれます。詳しくは [エージェントスキル](/ja/agent-skill) を参照してください。
+あとはエージェントに実装計画やレポートの作成と mdxr でのレンダリングを頼むだけです。ツール別のオプションと Agent Skill については[エージェントのセットアップ](/ja/agent-skill)を参照してください。
 
 ## 次のステップ
 

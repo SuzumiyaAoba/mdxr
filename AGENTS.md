@@ -171,4 +171,4 @@ The docs site in `docs/` is a [Blume](https://useblume.dev) project — a nested
 
 ## Working notes
 
-Write plan documents and other agent scratch files to `.mdxr/` in the repo root. The directory is gitignored — don't commit its contents, and don't confuse it with `.mdxr-cache/` (the tool's build cache). This convention is built into mdxr itself: the bundled agent skill writes documents there, and `mdxr init` adds `.mdxr/` to the consuming project's `.gitignore`.
+Write plan documents and other agent scratch files to `.mdxr/` in the repo root. The directory is gitignored — don't commit its contents, and don't confuse it with `.mdxr-cache/` (the tool's build cache). This convention is built into mdxr itself: the bundled agent skill writes documents there, and `mdxr init --local` adds `.mdxr/` to the consuming project's `.gitignore`.

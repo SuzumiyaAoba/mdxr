@@ -161,6 +161,43 @@ const createWatchSet = () => {
   };
 };
 
+const watchTarget = (
+  watch: ReturnType<typeof createWatchSet>,
+  target: PreviewTarget,
+  notify: (event?: string, filename?: string | null) => void
+): boolean => {
+  let recursiveWatch = false;
+  // fs.watch recursive mode exists only on darwin/win32; elsewhere `arm`
+  // installs the per-directory fallback.
+  try {
+    watch.track(fs.watch(target.watchDir, { recursive: true }, notify));
+    recursiveWatch = true;
+  } catch {
+    watch.arm(target.watchDir, notify);
+  }
+  if (watch.size === 0 && target.watchFile !== undefined) {
+    try {
+      watch.track(fs.watch(target.watchFile, notify));
+    } catch {
+      // Live reload just won't fire; the server still serves the document.
+    }
+  }
+  return recursiveWatch;
+};
+
+const broadcast = (
+  clients: Set<http.ServerResponse>,
+  event: "agent" | "reload"
+): void => {
+  for (const client of clients) {
+    try {
+      client.write(`event: ${event}\ndata: {}\n\n`);
+    } catch {
+      clients.delete(client);
+    }
+  }
+};
+
 const servePreview = async (
   target: PreviewTarget,
   port: number
@@ -170,13 +207,7 @@ const servePreview = async (
   let capturedInitialVersion = false;
   const clients = new Set<http.ServerResponse>();
   const notifyAgent = (): void => {
-    for (const client of clients) {
-      try {
-        client.write("event: agent\ndata: {}\n\n");
-      } catch {
-        clients.delete(client);
-      }
-    }
+    broadcast(clients, "agent");
   };
   target.agent?.setOnUpdate(notifyAgent);
   const server = http.createServer((req, res) => {
@@ -289,13 +320,7 @@ const servePreview = async (
       }
       try {
         await rebuild(onEvent);
-        for (const c of clients) {
-          try {
-            c.write("event: reload\ndata: {}\n\n");
-          } catch {
-            clients.delete(c);
-          }
-        }
+        broadcast(clients, "reload");
       } catch {
         // Notified clients are best-effort; rebuild failures are already
         // rendered into the error page by rebuild() itself.
@@ -327,21 +352,7 @@ const servePreview = async (
     }, 80);
   };
 
-  // fs.watch recursive mode exists only on darwin/win32; elsewhere `arm`
-  // installs the per-directory fallback.
-  try {
-    watch.track(fs.watch(target.watchDir, { recursive: true }, notify));
-    recursiveWatch = true;
-  } catch {
-    watch.arm(target.watchDir, notify);
-  }
-  if (watch.size === 0 && target.watchFile !== undefined) {
-    try {
-      watch.track(fs.watch(target.watchFile, notify));
-    } catch {
-      // Live reload just won't fire; the server still serves the document.
-    }
-  }
+  recursiveWatch = watchTarget(watch, target, notify);
   const closeAgent = async (): Promise<void> => {
     try {
       await target.agent?.close();

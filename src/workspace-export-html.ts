@@ -25,9 +25,10 @@ ${anchor.image === "" ? "" : `<p>Image: ${escapeExportHtml(anchor.image)}</p>`}<
 };
 
 const commentsHtml = (state: WorkspaceBrowserState): string => {
+  const detachedAnnotationIds = new Set(state.detachedAnnotationIds);
   const active = state.annotations.annotations
     .map((comment) =>
-      commentHtml(comment, state.detachedAnnotationIds.includes(comment.id))
+      commentHtml(comment, detachedAnnotationIds.has(comment.id))
     )
     .join("");
   const history = state.annotations.history

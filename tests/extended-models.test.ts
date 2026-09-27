@@ -327,6 +327,11 @@ describe("statistical and graph geometry", () => {
         (row) => row.affected
       )
     ).toStrictEqual([false, true, true]);
+    expect(
+      diagramModel("ImpactMap", nodes, edges.toReversed(), {
+        changed: ["a"],
+      }).rows.map((row) => row.affected)
+    ).toStrictEqual([true, true, true]);
     expect(() =>
       diagramModel("Architecture", nodes, [{ from: "a", to: "missing" }])
     ).toThrow("unknown");

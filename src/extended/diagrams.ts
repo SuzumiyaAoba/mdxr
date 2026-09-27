@@ -124,6 +124,7 @@ const lanes = (nodes: DataRecord[], edges: DataRecord[]): DiagramModel => {
   const groups = [
     ...new Set(nodes.map((node) => display(node.lane) || "Process")),
   ];
+  const groupIndexes = new Map(groups.map((group, index) => [group, index]));
   const width = Math.max(720, nodes.length * 170 + 130);
   const height = groups.length * 130 + 40;
   const marks: PlotMark[] = [];
@@ -144,7 +145,7 @@ const lanes = (nodes: DataRecord[], edges: DataRecord[]): DiagramModel => {
   for (const [i, node] of nodes.entries()) {
     positions.set(display(node.id), {
       x: 210 + i * 165,
-      y: 75 + groups.indexOf(display(node.lane) || "Process") * 130,
+      y: 75 + (groupIndexes.get(display(node.lane) || "Process") ?? 0) * 130,
     });
   }
   for (const edge of edges) {
@@ -367,22 +368,23 @@ const affectedNodes = (
   edges: DataRecord[],
   options: DataRecord
 ): Set<string> => {
-  const affected = new Set(words(options.changed));
   if (name !== "ImpactMap") {
     return new Set();
   }
-  {
-    let changed = true;
-    while (changed) {
-      changed = false;
-      for (const edge of edges) {
-        if (
-          affected.has(display(edge.from)) &&
-          !affected.has(display(edge.to))
-        ) {
-          affected.add(display(edge.to));
-          changed = true;
-        }
+  const affected = new Set(words(options.changed));
+  const outgoing = new Map<string, string[]>();
+  for (const edge of edges) {
+    const from = display(edge.from);
+    const destinations = outgoing.get(from) ?? [];
+    destinations.push(display(edge.to));
+    outgoing.set(from, destinations);
+  }
+  const pending = [...affected];
+  for (const source of pending) {
+    for (const destination of outgoing.get(source) ?? []) {
+      if (!affected.has(destination)) {
+        affected.add(destination);
+        pending.push(destination);
       }
     }
   }

@@ -4,6 +4,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 
+import { isRecord } from "./guards.js";
+
 export type DocumentVersionKind = "initial" | "before-instruction" | "change";
 
 export interface DocumentVersion {
@@ -131,6 +133,37 @@ const writeImmutable = async (
 const parseVersionKind = (value: unknown): value is DocumentVersionKind =>
   value === "initial" || value === "before-instruction" || value === "change";
 
+const isStoredVersion = (
+  value: unknown,
+  expectedId: string
+): value is StoredVersion => {
+  if (!isRecord(value)) {
+    return false;
+  }
+  const validHash =
+    typeof value.contentHash === "string" &&
+    HASH_PATTERN.test(value.contentHash);
+  const validDate =
+    typeof value.createdAt === "string" &&
+    !Number.isNaN(Date.parse(value.createdAt));
+  const validSize =
+    typeof value.size === "number" &&
+    Number.isSafeInteger(value.size) &&
+    value.size >= 0;
+  const validSequence =
+    typeof value.sequence === "number" &&
+    Number.isSafeInteger(value.sequence) &&
+    value.sequence >= 1;
+  return (
+    value.id === expectedId &&
+    validHash &&
+    parseVersionKind(value.kind) &&
+    validDate &&
+    validSize &&
+    validSequence
+  );
+};
+
 const readVersionEvent = async (
   eventPath: string,
   expectedId: string
@@ -147,28 +180,7 @@ const readVersionEvent = async (
       `Could not read document history event: ${expectedId}: ${String(error)}`
     );
   }
-  if (
-    typeof raw !== "object" ||
-    raw === null ||
-    !("id" in raw) ||
-    raw.id !== expectedId ||
-    !("contentHash" in raw) ||
-    typeof raw.contentHash !== "string" ||
-    !HASH_PATTERN.test(raw.contentHash) ||
-    !("kind" in raw) ||
-    !parseVersionKind(raw.kind) ||
-    !("createdAt" in raw) ||
-    typeof raw.createdAt !== "string" ||
-    Number.isNaN(Date.parse(raw.createdAt)) ||
-    !("size" in raw) ||
-    typeof raw.size !== "number" ||
-    !Number.isSafeInteger(raw.size) ||
-    raw.size < 0 ||
-    !("sequence" in raw) ||
-    typeof raw.sequence !== "number" ||
-    !Number.isSafeInteger(raw.sequence) ||
-    raw.sequence < 1
-  ) {
+  if (!isStoredVersion(raw, expectedId)) {
     throw new DocumentHistoryError(
       "corrupt-version",
       `Invalid document history event: ${expectedId}`
@@ -182,6 +194,22 @@ const readVersionEvent = async (
     sequence: raw.sequence,
     size: raw.size,
   };
+};
+
+const removeStaleLock = async (lockPath: string): Promise<boolean> => {
+  try {
+    const stat = await fs.stat(lockPath);
+    if (Date.now() - stat.mtimeMs <= LOCK_STALE_AFTER_MS) {
+      return false;
+    }
+    await fs.rm(lockPath, { force: true });
+    return true;
+  } catch (error) {
+    if (isNodeError(error) && error.code === "ENOENT") {
+      return false;
+    }
+    throw error;
+  }
 };
 
 const acquireLock = async (lockPath: string): Promise<() => Promise<void>> => {
@@ -201,18 +229,9 @@ const acquireLock = async (lockPath: string): Promise<() => Promise<void>> => {
       if (!isNodeError(error) || error.code !== "EEXIST") {
         throw error;
       }
-      try {
-        // oxlint-disable-next-line no-await-in-loop
-        const stat = await fs.stat(lockPath);
-        if (Date.now() - stat.mtimeMs > LOCK_STALE_AFTER_MS) {
-          // oxlint-disable-next-line no-await-in-loop
-          await fs.rm(lockPath, { force: true });
-          continue;
-        }
-      } catch (statError) {
-        if (!isNodeError(statError) || statError.code !== "ENOENT") {
-          throw statError;
-        }
+      // oxlint-disable-next-line no-await-in-loop
+      if (await removeStaleLock(lockPath)) {
+        continue;
       }
       // oxlint-disable-next-line no-await-in-loop
       await delay(LOCK_RETRY_MS);
@@ -221,45 +240,107 @@ const acquireLock = async (lockPath: string): Promise<() => Promise<void>> => {
   throw new Error("Timed out waiting for the MDX history lock");
 };
 
+const versionBlobPath = (
+  versionsPath: string,
+  version: StoredVersion
+): string => path.join(versionsPath, `${version.contentHash}.mdx`);
+
+const verifyVersionContent = (
+  content: Buffer,
+  version: StoredVersion,
+  id: string
+): Buffer => {
+  if (sha256(content) !== version.contentHash) {
+    throw new DocumentHistoryError(
+      "corrupt-version",
+      `Corrupt document history version: ${id}`
+    );
+  }
+  return content;
+};
+
+const readVersionContent = async (
+  versionsPath: string,
+  version: StoredVersion,
+  id: string
+): Promise<Buffer> => {
+  const content = await fs.readFile(versionBlobPath(versionsPath, version));
+  return verifyVersionContent(content, version, id);
+};
+
 const lines = (source: string): string[] =>
   source.replaceAll("\r\n", "\n").split("\n");
 
-/** Myers shortest edit script with O((N + M)D) time and trace backtracking. */
-const diffLines = (before: string, after: string): DocumentDiffLine[] => {
-  const left = lines(before);
-  const right = lines(after);
-  const max = left.length + right.length;
+const shouldMoveDown = (
+  diagonal: number,
+  distance: number,
+  frontier: Map<number, number>
+): boolean =>
+  diagonal === -distance ||
+  (diagonal !== distance &&
+    (frontier.get(diagonal - 1) ?? Number.NEGATIVE_INFINITY) <
+      (frontier.get(diagonal + 1) ?? Number.NEGATIVE_INFINITY));
+
+const extendMatchingLines = (
+  left: string[],
+  right: string[],
+  startX: number,
+  diagonal: number
+): number => {
+  let x = startX;
+  let y = x - diagonal;
+  while (x < left.length && y < right.length && left[x] === right[y]) {
+    x += 1;
+    y += 1;
+  }
+  return x;
+};
+
+const buildMyersTrace = (
+  left: string[],
+  right: string[]
+): Map<number, number>[] => {
+  const maxDistance = left.length + right.length;
   const trace: Map<number, number>[] = [];
   const frontier = new Map<number, number>([[1, 0]]);
-  let found = false;
-
-  for (let distance = 0; distance <= max; distance += 1) {
+  for (let distance = 0; distance <= maxDistance; distance += 1) {
     trace.push(new Map(frontier));
     for (let diagonal = -distance; diagonal <= distance; diagonal += 2) {
-      const down =
-        diagonal === -distance ||
-        (diagonal !== distance &&
-          (frontier.get(diagonal - 1) ?? Number.NEGATIVE_INFINITY) <
-            (frontier.get(diagonal + 1) ?? Number.NEGATIVE_INFINITY));
-      let x = down
+      const startX = shouldMoveDown(diagonal, distance, frontier)
         ? (frontier.get(diagonal + 1) ?? 0)
         : (frontier.get(diagonal - 1) ?? 0) + 1;
-      let y = x - diagonal;
-      while (x < left.length && y < right.length && left[x] === right[y]) {
-        x += 1;
-        y += 1;
-      }
+      const x = extendMatchingLines(left, right, startX, diagonal);
+      const y = x - diagonal;
       frontier.set(diagonal, x);
       if (x >= left.length && y >= right.length) {
-        found = true;
-        break;
+        return trace;
       }
     }
-    if (found) {
-      break;
-    }
   }
+  return trace;
+};
 
+const appendContextLines = (
+  left: string[],
+  start: { x: number; y: number },
+  previousX: number,
+  previousY: number,
+  reversed: DocumentDiffLine[]
+): { x: number; y: number } => {
+  let { x, y } = start;
+  while (x > previousX && y > previousY) {
+    reversed.push({ text: left[x - 1] ?? "", type: "context" });
+    x -= 1;
+    y -= 1;
+  }
+  return { x, y };
+};
+
+const reconstructMyersDiff = (
+  left: string[],
+  right: string[],
+  trace: Map<number, number>[]
+): DocumentDiffLine[] => {
   let x = left.length;
   let y = right.length;
   const reversed: DocumentDiffLine[] = [];
@@ -269,21 +350,18 @@ const diffLines = (before: string, after: string): DocumentDiffLine[] => {
       continue;
     }
     const diagonal = x - y;
-    const previousDiagonal =
-      diagonal === -distance ||
-      (diagonal !== distance &&
-        (previous.get(diagonal - 1) ?? Number.NEGATIVE_INFINITY) <
-          (previous.get(diagonal + 1) ?? Number.NEGATIVE_INFINITY))
-        ? diagonal + 1
-        : diagonal - 1;
+    const previousDiagonal = shouldMoveDown(diagonal, distance, previous)
+      ? diagonal + 1
+      : diagonal - 1;
     const previousX = previous.get(previousDiagonal) ?? 0;
     const previousY = previousX - previousDiagonal;
-
-    while (x > previousX && y > previousY) {
-      reversed.push({ text: left[x - 1] ?? "", type: "context" });
-      x -= 1;
-      y -= 1;
-    }
+    ({ x, y } = appendContextLines(
+      left,
+      { x, y },
+      previousX,
+      previousY,
+      reversed
+    ));
 
     if (distance === 0) {
       break;
@@ -297,6 +375,13 @@ const diffLines = (before: string, after: string): DocumentDiffLine[] => {
     }
   }
   return reversed.toReversed();
+};
+
+/** Myers shortest edit script with O((N + M)D) time and trace backtracking. */
+const diffLines = (before: string, after: string): DocumentDiffLine[] => {
+  const left = lines(before);
+  const right = lines(after);
+  return reconstructMyersDiff(left, right, buildMyersTrace(left, right));
 };
 
 const eventCompare = (left: DocumentVersion, right: DocumentVersion): number =>
@@ -415,22 +500,12 @@ export const createDocumentHistory = (
         findVersion(fromId),
         findVersion(toId),
       ]);
-      const [before, after] = await Promise.all([
-        fs.readFile(path.join(versionsPath, `${from.contentHash}.mdx`)),
-        fs.readFile(path.join(versionsPath, `${to.contentHash}.mdx`)),
+      const [beforeContent, afterContent] = await Promise.all([
+        fs.readFile(versionBlobPath(versionsPath, from)),
+        fs.readFile(versionBlobPath(versionsPath, to)),
       ]);
-      if (sha256(before) !== from.contentHash) {
-        throw new DocumentHistoryError(
-          "corrupt-version",
-          `Corrupt document history version: ${fromId}`
-        );
-      }
-      if (sha256(after) !== to.contentHash) {
-        throw new DocumentHistoryError(
-          "corrupt-version",
-          `Corrupt document history version: ${toId}`
-        );
-      }
+      const before = verifyVersionContent(beforeContent, from, fromId);
+      const after = verifyVersionContent(afterContent, to, toId);
       return {
         lines: diffLines(before.toString("utf-8"), after.toString("utf-8")),
       };
@@ -440,15 +515,7 @@ export const createDocumentHistory = (
 
     read: async (id: string): Promise<string> => {
       const version = await findVersion(id);
-      const content = await fs.readFile(
-        path.join(versionsPath, `${version.contentHash}.mdx`)
-      );
-      if (sha256(content) !== version.contentHash) {
-        throw new DocumentHistoryError(
-          "corrupt-version",
-          `Corrupt document history version: ${id}`
-        );
-      }
+      const content = await readVersionContent(versionsPath, version, id);
       return content.toString("utf-8");
     },
   };

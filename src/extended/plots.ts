@@ -181,9 +181,19 @@ const seriesOf = (rows: DataRecord[]): { name: string; values: number[] }[] =>
     return { name: display(row.name) || String(index + 1), values };
   });
 
+const indexByPosition = (values: string[]): Map<string, number> => {
+  const indexes = new Map<string, number>();
+  for (const [index, value] of values.entries()) {
+    indexes.set(value, index);
+  }
+  return indexes;
+};
+
 const heatmap = (rows: DataRecord[], options: DataRecord): PlotModel => {
   const xs = [...new Set(rows.map((row) => display(row.x)))];
   const ys = [...new Set(rows.map((row) => display(row.y)))];
+  const xIndex = indexByPosition(xs);
+  const yIndex = indexByPosition(ys);
   const values = rows.map((row) => numberValue(row.value));
   const [min, max] = bounds(values, options);
   const cw = Math.min(90, 540 / Math.max(1, xs.length));
@@ -195,8 +205,8 @@ const heatmap = (rows: DataRecord[], options: DataRecord): PlotModel => {
     ...ys.map((y, i) => text(LEFT - 8, 40 + (i + 0.5) * ch, y, "end"))
   );
   for (const row of rows) {
-    const x = LEFT + xs.indexOf(display(row.x)) * cw;
-    const y = 30 + ys.indexOf(display(row.y)) * ch;
+    const x = LEFT + (xIndex.get(display(row.x)) ?? 0) * cw;
+    const y = 30 + (yIndex.get(display(row.y)) ?? 0) * ch;
     const value = numberValue(row.value);
     const intensity = Math.max(0, Math.min(1, fraction(value, min, max)));
     marks.push(
@@ -1019,18 +1029,22 @@ const confusionMatrix = (
       y: actual,
     }))
   );
-  const total = converted.reduce((sum, row) => sum + row.value, 0);
-  const correct = converted
-    .filter((row) => row.x === row.y)
-    .reduce((sum, row) => sum + row.value, 0);
+  const predictedTotals = new Map(classes.map((label) => [label, 0]));
+  const actualTotals = new Map(classes.map((label) => [label, 0]));
+  let total = 0;
+  let correct = 0;
+  for (const row of converted) {
+    total += row.value;
+    predictedTotals.set(row.x, (predictedTotals.get(row.x) ?? 0) + row.value);
+    actualTotals.set(row.y, (actualTotals.get(row.y) ?? 0) + row.value);
+    if (row.x === row.y) {
+      correct += row.value;
+    }
+  }
   const metrics = classes.map((label) => {
     const tp = cells.get(JSON.stringify([label, label])) ?? 0;
-    const predicted = converted
-      .filter((row) => row.x === label)
-      .reduce((sum, row) => sum + row.value, 0);
-    const support = converted
-      .filter((row) => row.y === label)
-      .reduce((sum, row) => sum + row.value, 0);
+    const predicted = predictedTotals.get(label) ?? 0;
+    const support = actualTotals.get(label) ?? 0;
     return {
       class: label,
       f1: percentage(2 * tp, predicted + support),

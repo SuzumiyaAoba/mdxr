@@ -7,30 +7,32 @@ import path from "node:path";
 import { WebSocket } from "ws";
 import type { RawData } from "ws";
 
+import { CodexAppServerError } from "./codex-app-server-error.js";
+import {
+  appendAgentMessageDelta,
+  getNotificationTurnId,
+  getTurnAnswer,
+  getTurnFailureMessage,
+  makeTurnState,
+  recordCompletedAgentMessage,
+} from "./codex-app-server-turn.js";
+import type { TurnState } from "./codex-app-server-turn.js";
+import { isRecord } from "./guards.js";
+
 const DEFAULT_ENDPOINT = "ws://127.0.0.1:4500";
 const DEFAULT_DAEMON_WS_ENDPOINT = "ws://localhost/";
 const RPC_TIMEOUT_MS = 30_000;
 const MAX_BUFFERED_TURNS = 8;
 
 type RpcId = number | string;
-export type CodexAppServerErrorKind = "general" | "session-conflict";
+export { CodexAppServerError } from "./codex-app-server-error.js";
+export type { CodexAppServerErrorKind } from "./codex-app-server-error.js";
 
 interface PendingRequest {
   method: string;
   reject: (error: Error) => void;
   resolve: (value: unknown) => void;
   timeout: ReturnType<typeof setTimeout>;
-}
-
-interface AgentMessageState {
-  phase?: string;
-  text: string;
-}
-
-interface TurnState {
-  completedTurn?: Record<string, unknown>;
-  messageOrder: string[];
-  messages: Map<string, AgentMessageState>;
 }
 
 interface QueuedMessage {
@@ -72,23 +74,6 @@ export interface CodexAppServerSession {
   ) => Promise<{ sessionId: string; completion: Promise<string> }>;
   close: () => Promise<void>;
 }
-
-export class CodexAppServerError extends Error {
-  readonly kind: CodexAppServerErrorKind;
-
-  constructor(
-    message: string,
-    kind: CodexAppServerErrorKind = "general",
-    options?: ErrorOptions
-  ) {
-    super(message, options);
-    this.kind = kind;
-    this.name = "CodexAppServerError";
-  }
-}
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
 
 const isRpcId = (value: unknown): value is RpcId =>
   typeof value === "number" || typeof value === "string";
@@ -184,37 +169,6 @@ const isActiveWriterConflict = (message: string): boolean => {
   );
 };
 
-const makeTurnState = (): TurnState => ({
-  messageOrder: [],
-  messages: new Map(),
-});
-
-const getAgentMessage = (
-  state: TurnState,
-  itemId: string
-): AgentMessageState => {
-  let item = state.messages.get(itemId);
-  if (item === undefined) {
-    item = { text: "" };
-    state.messages.set(itemId, item);
-    state.messageOrder.push(itemId);
-  }
-  return item;
-};
-
-const getNotificationTurnId = (
-  params: Record<string, unknown>
-): string | undefined => {
-  const { turnId, turn } = params;
-  if (typeof turnId === "string") {
-    return turnId;
-  }
-  if (!isRecord(turn)) {
-    return undefined;
-  }
-  return typeof turn.id === "string" ? turn.id : undefined;
-};
-
 // A deferred is needed because Codex can stream notifications before the
 // matching turn/start response identifies the turn ID.
 const createDeferred = <T>(): Deferred<T> => {
@@ -260,216 +214,154 @@ const acknowledgeQueuedMessage = (queuedMessage: QueuedMessage): void => {
  * Create a long-lived JSON-RPC client for the same Codex App Server used by
  * `codex --remote`. Calls reuse one socket and one thread until `close()`.
  */
-export const createCodexAppServerSession = (
-  options: CodexAppServerSessionOptions = {}
-): CodexAppServerSession => {
-  const endpoint = resolveEndpoint(
-    options.endpoint,
-    options.initialSessionId !== undefined
-  );
-  let socket: WebSocket | undefined;
-  let connectionPromise: Promise<void> | undefined;
-  let nextRequestId = 1;
-  let threadId: string | undefined;
-  let activeTurn: ActiveTurn | undefined;
-  let isClosed = false;
-  let isClosing = false;
-  let closePromise: Promise<void> | undefined;
-  let busy = false;
-  let attachedToExistingThread = options.initialSessionId !== undefined;
-  const pendingRequests = new Map<RpcId, PendingRequest>();
-  const turns = new Map<string, TurnState>();
-  const queuedMessagesByClientId = new Map<string, QueuedMessage>();
-  const queuedMessagesByTurnId = new Map<string, QueuedMessage>();
+class CodexAppServerSessionClient implements CodexAppServerSession {
+  private readonly options: CodexAppServerSessionOptions;
+  private readonly endpoint: ResolvedEndpoint;
+  private socket: WebSocket | undefined;
+  private connectionPromise: Promise<void> | undefined;
+  private nextRequestId = 1;
+  private threadId: string | undefined;
+  private activeTurn: ActiveTurn | undefined;
+  private isClosed = false;
+  private isClosing = false;
+  private closePromise: Promise<void> | undefined;
+  private busy = false;
+  private attachedToExistingThread: boolean;
+  private readonly pendingRequests = new Map<RpcId, PendingRequest>();
+  private readonly turns = new Map<string, TurnState>();
+  private readonly queuedMessagesByClientId = new Map<string, QueuedMessage>();
+  private readonly queuedMessagesByTurnId = new Map<string, QueuedMessage>();
 
-  const makeTransportError = (reason: string, cause?: unknown): Error =>
-    new CodexAppServerError(
+  constructor(options: CodexAppServerSessionOptions) {
+    this.options = options;
+    this.endpoint = resolveEndpoint(
+      options.endpoint,
+      options.initialSessionId !== undefined
+    );
+    this.attachedToExistingThread = options.initialSessionId !== undefined;
+  }
+
+  private static makeTransportError(reason: string, cause?: unknown): Error {
+    return new CodexAppServerError(
       `Codex App Server connection ${reason}${cause instanceof Error ? `: ${cause.message}` : ""}`,
       "general",
       cause instanceof Error ? { cause } : undefined
     );
+  }
 
-  const rejectPendingRequests = (error: Error): void => {
-    for (const [id, pending] of pendingRequests) {
+  private rejectPendingRequests(error: Error): void {
+    for (const [id, pending] of this.pendingRequests) {
       clearTimeout(pending.timeout);
-      pendingRequests.delete(id);
+      this.pendingRequests.delete(id);
       pending.reject(error);
     }
-  };
+  }
 
-  const rejectQueuedMessages = (error: Error): void => {
-    for (const queuedMessage of queuedMessagesByClientId.values()) {
+  private rejectQueuedMessages(error: Error): void {
+    for (const queuedMessage of this.queuedMessagesByClientId.values()) {
       settleQueuedMessage(queuedMessage, { error, type: "reject" });
     }
-    queuedMessagesByClientId.clear();
-    queuedMessagesByTurnId.clear();
+    this.queuedMessagesByClientId.clear();
+    this.queuedMessagesByTurnId.clear();
+  }
+
+  private readonly handleSendError = (error?: Error | null): void => {
+    if (!(error instanceof Error)) {
+      return;
+    }
+    const wrapped = CodexAppServerSessionClient.makeTransportError(
+      "failed while sending a message.",
+      error
+    );
+    this.rejectPendingRequests(wrapped);
+    this.activeTurn?.reject(wrapped);
+    this.rejectQueuedMessages(wrapped);
   };
 
-  const sendFrame = (value: Record<string, unknown>): void => {
+  private sendFrame(value: Record<string, unknown>): void {
+    const { socket } = this;
     if (socket?.readyState !== WebSocket.OPEN) {
-      throw makeTransportError("is not open.");
+      throw CodexAppServerSessionClient.makeTransportError("is not open.");
     }
     // oxlint-disable-next-line promise/prefer-await-to-callbacks -- ws reports asynchronous socket write failures through this callback.
-    socket.send(JSON.stringify(value), (error) => {
-      if (error instanceof Error) {
-        const wrapped = makeTransportError(
-          "failed while sending a message.",
-          error
-        );
-        rejectPendingRequests(wrapped);
-        activeTurn?.reject(wrapped);
-        rejectQueuedMessages(wrapped);
-      }
-    });
-  };
+    socket.send(JSON.stringify(value), this.handleSendError);
+  }
 
-  const replyToServerRequest = (id: RpcId, method: string): void => {
+  private replyToServerRequest(id: RpcId, method: string): void {
     // A resumed thread can have an interactive TUI attached to the same daemon.
     // Approval requests are shared with subscribed clients, so let that UI decide.
-    if (attachedToExistingThread) {
+    if (this.attachedToExistingThread) {
       return;
     }
     if (
       method === "item/commandExecution/requestApproval" ||
       method === "item/fileChange/requestApproval"
     ) {
-      sendFrame({ id, result: { decision: "decline" } });
+      this.sendFrame({ id, result: { decision: "decline" } });
       return;
     }
     if (
       method === "item/tool/requestUserInput" ||
       method === "mcpServer/elicitation/request"
     ) {
-      sendFrame({ id, result: { action: "decline", content: null } });
+      this.sendFrame({ id, result: { action: "decline", content: null } });
       return;
     }
-    sendFrame({
+    this.sendFrame({
       error: {
         code: -32_601,
         message: `mdxr does not support the server request ${method}`,
       },
       id,
     });
-  };
+  }
 
-  const finishActiveTurnIfReady = (): void => {
-    const currentTurn = activeTurn;
+  private finishActiveTurnIfReady(): void {
+    const currentTurn = this.activeTurn;
     if (currentTurn === undefined || currentTurn.turnId === undefined) {
       return;
     }
-    const activeTurnId = currentTurn.turnId;
-    const turn = turns.get(activeTurnId);
+    const turn = this.turns.get(currentTurn.turnId);
     const completedTurn = turn?.completedTurn;
     if (turn === undefined || completedTurn === undefined) {
       return;
     }
-    const { status } = completedTurn;
-    if (status !== "completed") {
-      const { error } = completedTurn;
-      const detail = isRecord(error) ? error.message : undefined;
-      const message =
-        typeof detail === "string"
-          ? `Codex turn ${String(status)}: ${detail}`
-          : `Codex turn finished with status ${String(status)}.`;
-      currentTurn.reject(new CodexAppServerError(message));
+
+    const failureMessage = getTurnFailureMessage(completedTurn);
+    if (failureMessage !== undefined) {
+      currentTurn.reject(new CodexAppServerError(failureMessage));
       return;
     }
-
-    const messages = turn.messageOrder.flatMap((itemId) => {
-      const item = turn.messages.get(itemId);
-      return item === undefined ? [] : [item];
-    });
-    if (Array.isArray(completedTurn.items)) {
-      for (const item of completedTurn.items) {
-        if (
-          isRecord(item) &&
-          item.type === "agentMessage" &&
-          typeof item.id === "string" &&
-          typeof item.text === "string"
-        ) {
-          const message = getAgentMessage(turn, item.id);
-          message.text = item.text;
-          if (typeof item.phase === "string") {
-            message.phase = item.phase;
-          }
-        }
-      }
-    }
-    const completedMessages = turn.messageOrder.flatMap((itemId) => {
-      const item = turn.messages.get(itemId);
-      return item === undefined ? [] : [item];
-    });
-    const answer =
-      completedMessages
-        .toReversed()
-        .find((item) => item.phase === "final_answer") ??
-      completedMessages.at(-1) ??
-      messages.at(-1);
+    const answer = getTurnAnswer(turn);
     if (
-      threadId === undefined ||
+      this.threadId === undefined ||
       answer === undefined ||
       answer.text.trim() === ""
     ) {
       currentTurn.reject(new CodexAppServerError("Codex returned no answer."));
       return;
     }
-    currentTurn.resolve({ answer: answer.text, sessionId: threadId });
-  };
+    currentTurn.resolve({ answer: answer.text, sessionId: this.threadId });
+  }
 
-  const finishQueuedMessageIfReady = (
-    turnId: string,
-    turn: TurnState
-  ): void => {
-    const queuedMessage = queuedMessagesByTurnId.get(turnId);
+  private finishQueuedMessageIfReady(turnId: string, turn: TurnState): void {
+    const queuedMessage = this.queuedMessagesByTurnId.get(turnId);
     const { completedTurn } = turn;
     if (queuedMessage === undefined || completedTurn === undefined) {
       return;
     }
-    queuedMessagesByTurnId.delete(turnId);
-    queuedMessagesByClientId.delete(queuedMessage.clientUserMessageId);
-    const { status, error } = completedTurn;
-    if (status !== "completed") {
-      const detail = isRecord(error) ? error.message : undefined;
+    this.queuedMessagesByTurnId.delete(turnId);
+    this.queuedMessagesByClientId.delete(queuedMessage.clientUserMessageId);
+
+    const failureMessage = getTurnFailureMessage(completedTurn);
+    if (failureMessage !== undefined) {
       settleQueuedMessage(queuedMessage, {
-        error: new CodexAppServerError(
-          typeof detail === "string"
-            ? `Codex turn ${String(status)}: ${detail}`
-            : `Codex turn finished with status ${String(status)}.`
-        ),
+        error: new CodexAppServerError(failureMessage),
         type: "reject",
       });
       return;
     }
-    const messages = turn.messageOrder.flatMap((itemId) => {
-      const item = turn.messages.get(itemId);
-      return item === undefined ? [] : [item];
-    });
-    if (Array.isArray(completedTurn.items)) {
-      for (const item of completedTurn.items) {
-        if (
-          isRecord(item) &&
-          item.type === "agentMessage" &&
-          typeof item.id === "string" &&
-          typeof item.text === "string"
-        ) {
-          const message = getAgentMessage(turn, item.id);
-          message.text = item.text;
-          if (typeof item.phase === "string") {
-            message.phase = item.phase;
-          }
-        }
-      }
-    }
-    const completedMessages = turn.messageOrder.flatMap((itemId) => {
-      const item = turn.messages.get(itemId);
-      return item === undefined ? [] : [item];
-    });
-    const answer =
-      completedMessages
-        .toReversed()
-        .find((item) => item.phase === "final_answer") ??
-      completedMessages.at(-1) ??
-      messages.at(-1);
+    const answer = getTurnAnswer(turn);
     if (answer === undefined || answer.text.trim() === "") {
       settleQueuedMessage(queuedMessage, {
         error: new CodexAppServerError(
@@ -483,53 +375,22 @@ export const createCodexAppServerSession = (
       answer: answer.text,
       type: "resolve",
     });
-  };
+  }
 
-  const getTurnState = (turnId: string): TurnState => {
-    const existing = turns.get(turnId);
+  private getTurnState(turnId: string): TurnState {
+    const existing = this.turns.get(turnId);
     if (existing !== undefined) {
       return existing;
     }
     const created = makeTurnState();
-    turns.set(turnId, created);
+    this.turns.set(turnId, created);
     return created;
-  };
+  }
 
-  const handleAgentMessageDelta = (
-    turn: TurnState,
-    params: Record<string, unknown>
-  ): void => {
-    const { itemId, delta } = params;
-    if (typeof itemId !== "string" || typeof delta !== "string") {
-      return;
-    }
-    getAgentMessage(turn, itemId).text += delta;
-  };
-
-  const handleCompletedItem = (
-    turn: TurnState,
-    params: Record<string, unknown>
-  ): void => {
-    const { item } = params;
-    if (
-      !isRecord(item) ||
-      item.type !== "agentMessage" ||
-      typeof item.id !== "string" ||
-      typeof item.text !== "string"
-    ) {
-      return;
-    }
-    const agentMessage = getAgentMessage(turn, item.id);
-    agentMessage.text = item.text;
-    if (typeof item.phase === "string") {
-      agentMessage.phase = item.phase;
-    }
-  };
-
-  const handleStartedItem = (
+  private handleStartedItem(
     turnId: string,
     params: Record<string, unknown>
-  ): void => {
+  ): void {
     const { item } = params;
     if (!isRecord(item) || item.type !== "userMessage") {
       return;
@@ -538,30 +399,30 @@ export const createCodexAppServerSession = (
     if (typeof clientId !== "string") {
       return;
     }
-    const queuedMessage = queuedMessagesByClientId.get(clientId);
+    const queuedMessage = this.queuedMessagesByClientId.get(clientId);
     if (queuedMessage === undefined) {
       return;
     }
     queuedMessage.turnId = turnId;
-    queuedMessagesByTurnId.set(turnId, queuedMessage);
-  };
+    this.queuedMessagesByTurnId.set(turnId, queuedMessage);
+  }
 
-  const pruneTurnBuffer = (activeTurnId: string): void => {
-    if (turns.size <= MAX_BUFFERED_TURNS) {
+  private pruneTurnBuffer(activeTurnId: string): void {
+    if (this.turns.size <= MAX_BUFFERED_TURNS) {
       return;
     }
-    const oldestTurnId = turns.keys().next().value;
+    const oldestTurnId = this.turns.keys().next().value;
     if (oldestTurnId !== undefined && oldestTurnId !== activeTurnId) {
-      turns.delete(oldestTurnId);
+      this.turns.delete(oldestTurnId);
     }
-  };
+  }
 
-  const handleNotification = (message: Record<string, unknown>): void => {
+  private handleNotification(message: Record<string, unknown>): void {
     const { method, params } = message;
     if (
       typeof method !== "string" ||
       !isRecord(params) ||
-      params.threadId !== threadId
+      params.threadId !== this.threadId
     ) {
       return;
     }
@@ -569,26 +430,26 @@ export const createCodexAppServerSession = (
     if (turnId === undefined) {
       return;
     }
-    const turn = getTurnState(turnId);
+    const turn = this.getTurnState(turnId);
 
     switch (method) {
       case "item/started": {
-        handleStartedItem(turnId, params);
+        this.handleStartedItem(turnId, params);
         break;
       }
       case "item/agentMessage/delta": {
-        handleAgentMessageDelta(turn, params);
+        appendAgentMessageDelta(turn, params);
         break;
       }
       case "item/completed": {
-        handleCompletedItem(turn, params);
+        recordCompletedAgentMessage(turn, params);
         break;
       }
       case "turn/completed": {
         if (isRecord(params.turn)) {
           turn.completedTurn = params.turn;
-          finishActiveTurnIfReady();
-          finishQueuedMessageIfReady(turnId, turn);
+          this.finishActiveTurnIfReady();
+          this.finishQueuedMessageIfReady(turnId, turn);
         }
         break;
       }
@@ -596,19 +457,19 @@ export const createCodexAppServerSession = (
         break;
       }
     }
-    pruneTurnBuffer(activeTurn?.turnId ?? "");
-  };
+    this.pruneTurnBuffer(this.activeTurn?.turnId ?? "");
+  }
 
-  const handleResponse = (message: Record<string, unknown>): void => {
+  private handleResponse(message: Record<string, unknown>): void {
     const { id } = message;
     if (!isRpcId(id)) {
       return;
     }
-    const pending = pendingRequests.get(id);
+    const pending = this.pendingRequests.get(id);
     if (pending === undefined) {
       return;
     }
-    pendingRequests.delete(id);
+    this.pendingRequests.delete(id);
     clearTimeout(pending.timeout);
     const { error } = message;
     if (isRecord(error)) {
@@ -616,14 +477,15 @@ export const createCodexAppServerSession = (
         typeof error.message === "string"
           ? error.message
           : "Unknown JSON-RPC error";
-      const isResumeConflict =
+      const { initialSessionId } = this.options;
+      if (
         pending.method === "thread/resume" &&
-        options.initialSessionId !== undefined &&
-        isActiveWriterConflict(messageText);
-      if (isResumeConflict && options.initialSessionId !== undefined) {
+        initialSessionId !== undefined &&
+        isActiveWriterConflict(messageText)
+      ) {
         pending.reject(
           new CodexAppServerError(
-            `Cannot resume Codex session ${options.initialSessionId}: another active Codex App Server owns this session. Connect mdxr and the Codex TUI to the same --remote endpoint. The session ID was not changed.`,
+            `Cannot resume Codex session ${initialSessionId}: another active Codex App Server owns this session. Connect mdxr and the Codex TUI to the same --remote endpoint. The session ID was not changed.`,
             "session-conflict"
           )
         );
@@ -635,9 +497,9 @@ export const createCodexAppServerSession = (
       return;
     }
     pending.resolve(message.result);
-  };
+  }
 
-  const handleMessage = (data: RawData): void => {
+  private readonly handleMessage = (data: RawData): void => {
     let parsed: unknown;
     try {
       parsed = JSON.parse(decodeFrame(data)) as unknown;
@@ -649,29 +511,48 @@ export const createCodexAppServerSession = (
     }
     const { id, method } = parsed;
     if (isRpcId(id) && typeof method === "string") {
-      replyToServerRequest(id, method);
+      this.replyToServerRequest(id, method);
     } else if (isRpcId(id)) {
-      handleResponse(parsed);
+      this.handleResponse(parsed);
     } else {
-      handleNotification(parsed);
+      this.handleNotification(parsed);
     }
   };
 
-  const failConnection = (error: Error): void => {
-    rejectPendingRequests(error);
-    activeTurn?.reject(error);
-    rejectQueuedMessages(error);
+  private failConnection(error: Error): void {
+    this.rejectPendingRequests(error);
+    this.activeTurn?.reject(error);
+    this.rejectQueuedMessages(error);
+  }
+
+  private readonly handleSocketError = (error: Error): void => {
+    this.failConnection(
+      CodexAppServerSessionClient.makeTransportError("failed.", error)
+    );
   };
 
-  const request = async (
+  private readonly handleSocketClose = (code: number, reason: Buffer): void => {
+    if (this.isClosing) {
+      return;
+    }
+    const detail = reason.toString("utf-8");
+    const suffix = detail === "" ? "" : `: ${detail}`;
+    this.failConnection(
+      CodexAppServerSessionClient.makeTransportError(
+        `closed unexpectedly (${code}${suffix}).`
+      )
+    );
+  };
+
+  private async request(
     method: string,
     params: Record<string, unknown>
-  ): Promise<unknown> => {
-    const id = nextRequestId;
-    nextRequestId += 1;
+  ): Promise<unknown> {
+    const id = this.nextRequestId;
+    this.nextRequestId += 1;
     const response = createDeferred<unknown>();
     const timeout = setTimeout(() => {
-      pendingRequests.delete(id);
+      this.pendingRequests.delete(id);
       response.reject(
         new CodexAppServerError(
           `${method} timed out after ${RPC_TIMEOUT_MS / 1000} seconds.`
@@ -679,124 +560,117 @@ export const createCodexAppServerSession = (
       );
     }, RPC_TIMEOUT_MS);
     timeout.unref?.();
-    pendingRequests.set(id, {
+    this.pendingRequests.set(id, {
       method,
       reject: response.reject,
       resolve: response.resolve,
       timeout,
     });
     try {
-      sendFrame({ id, method, params });
+      this.sendFrame({ id, method, params });
     } catch (error) {
-      pendingRequests.delete(id);
+      this.pendingRequests.delete(id);
       clearTimeout(timeout);
       response.reject(
         error instanceof Error ? error : new Error(String(error))
       );
     }
     return await response.promise;
-  };
+  }
 
-  const notify = (method: string, params: Record<string, unknown>): void => {
-    sendFrame({ method, params });
-  };
+  private notify(method: string, params: Record<string, unknown>): void {
+    this.sendFrame({ method, params });
+  }
 
-  const connect = async (): Promise<void> => {
-    if (isClosed) {
-      throw makeTransportError("was closed by mdxr.");
+  private async initializeConnection(socket: WebSocket): Promise<void> {
+    await once(socket, "open");
+    await this.request("initialize", {
+      capabilities: { experimentalApi: true },
+      clientInfo: { name: "mdxr", title: "mdxr", version: "0.7.0" },
+    });
+    this.notify("initialized", {});
+  }
+
+  private async connect(): Promise<void> {
+    if (this.isClosed) {
+      throw CodexAppServerSessionClient.makeTransportError(
+        "was closed by mdxr."
+      );
     }
-    if (connectionPromise !== undefined) {
-      await connectionPromise;
+    if (this.connectionPromise !== undefined) {
+      await this.connectionPromise;
       return;
     }
-    const { socketPath } = endpoint;
-    const nextSocket = new WebSocket(endpoint.url, {
+    const { socketPath } = this.endpoint;
+    const nextSocket = new WebSocket(this.endpoint.url, {
       ...(socketPath === undefined
         ? {}
         : { createConnection: () => connectSocket(socketPath) }),
       perMessageDeflate: false,
     });
-    socket = nextSocket;
-    nextSocket.on("message", handleMessage);
-    nextSocket.on("error", (error) => {
-      failConnection(makeTransportError("failed.", error));
-    });
-    nextSocket.on("close", (code, reason) => {
-      if (!isClosing) {
-        const detail = reason.toString("utf-8");
-        const suffix = detail === "" ? "" : `: ${detail}`;
-        failConnection(
-          makeTransportError(`closed unexpectedly (${code}${suffix}).`)
-        );
-      }
-    });
-    connectionPromise = (async () => {
-      await once(nextSocket, "open");
-      await request("initialize", {
-        capabilities: { experimentalApi: true },
-        clientInfo: { name: "mdxr", title: "mdxr", version: "0.7.0" },
-      });
-      notify("initialized", {});
-    })();
-    await connectionPromise;
-  };
+    this.socket = nextSocket;
+    nextSocket.on("message", this.handleMessage);
+    nextSocket.on("error", this.handleSocketError);
+    nextSocket.on("close", this.handleSocketClose);
+    this.connectionPromise = this.initializeConnection(nextSocket);
+    await this.connectionPromise;
+  }
 
-  const ensureThread = async (): Promise<string> => {
-    if (threadId !== undefined) {
-      return threadId;
+  private async ensureThread(): Promise<string> {
+    if (this.threadId !== undefined) {
+      return this.threadId;
     }
-    if (options.initialSessionId !== undefined) {
-      const result = await request("thread/resume", {
+    const { initialSessionId } = this.options;
+    if (initialSessionId !== undefined) {
+      const result = await this.request("thread/resume", {
         excludeTurns: true,
-        threadId: options.initialSessionId,
+        threadId: initialSessionId,
       });
       const thread = isRecord(result) ? result.thread : undefined;
       const resumedId = isRecord(thread) ? thread.id : undefined;
       if (typeof resumedId !== "string") {
         throw new CodexAppServerError(
-          `Codex App Server did not resume session ${options.initialSessionId}.`
+          `Codex App Server did not resume session ${initialSessionId}.`
         );
       }
-      if (resumedId !== options.initialSessionId) {
+      if (resumedId !== initialSessionId) {
         throw new CodexAppServerError(
-          `Codex App Server returned thread ${resumedId} while resuming ${options.initialSessionId}; refusing to switch sessions.`
+          `Codex App Server returned thread ${resumedId} while resuming ${initialSessionId}; refusing to switch sessions.`
         );
       }
-      threadId = resumedId;
-      attachedToExistingThread = true;
-      return threadId;
+      this.threadId = resumedId;
+      this.attachedToExistingThread = true;
+      return this.threadId;
     }
 
     const params: Record<string, unknown> = {};
-    if (options.cwd !== undefined) {
-      params.cwd = options.cwd;
+    if (this.options.cwd !== undefined) {
+      params.cwd = this.options.cwd;
     }
-    const result = await request("thread/start", params);
+    const result = await this.request("thread/start", params);
     const thread = isRecord(result) ? result.thread : undefined;
     const startedId = isRecord(thread) ? thread.id : undefined;
     if (typeof startedId !== "string") {
       throw new CodexAppServerError("Codex App Server did not start a thread.");
     }
-    threadId = startedId;
-    return threadId;
-  };
+    this.threadId = startedId;
+    return this.threadId;
+  }
 
-  const send = async (
-    message: string
-  ): Promise<{ sessionId: string; answer: string }> => {
+  async send(message: string): Promise<{ sessionId: string; answer: string }> {
     if (message.trim() === "") {
       throw new CodexAppServerError("Codex message must not be empty.");
     }
-    if (busy) {
+    if (this.busy) {
       throw new CodexAppServerError(
         "Codex is already responding in this session."
       );
     }
-    busy = true;
+    this.busy = true;
     try {
-      await connect();
-      const currentThreadId = await ensureThread();
-      const result = await request("turn/start", {
+      await this.connect();
+      const currentThreadId = await this.ensureThread();
+      const result = await this.request("turn/start", {
         input: [{ text: message, type: "text" }],
         threadId: currentThreadId,
       });
@@ -816,42 +690,42 @@ export const createCodexAppServerSession = (
         resolve: completed.resolve,
         turnId: startedTurnId,
       };
-      activeTurn = waiter;
+      this.activeTurn = waiter;
 
       try {
         if (isRecord(turn) && turn.status !== "inProgress") {
-          const turnState = turns.get(startedTurnId) ?? makeTurnState();
+          const turnState = this.turns.get(startedTurnId) ?? makeTurnState();
           turnState.completedTurn = turn;
-          turns.set(startedTurnId, turnState);
+          this.turns.set(startedTurnId, turnState);
         }
-        finishActiveTurnIfReady();
+        this.finishActiveTurnIfReady();
         return await completed.promise;
       } catch (error) {
-        if (activeTurn === waiter) {
-          activeTurn = undefined;
+        if (this.activeTurn === waiter) {
+          this.activeTurn = undefined;
         }
         throw error instanceof Error ? error : new Error(String(error));
       } finally {
-        if (activeTurn === waiter) {
-          activeTurn = undefined;
+        if (this.activeTurn === waiter) {
+          this.activeTurn = undefined;
         }
         if (waiter.turnId !== undefined) {
-          turns.delete(waiter.turnId);
+          this.turns.delete(waiter.turnId);
         }
       }
     } finally {
-      busy = false;
+      this.busy = false;
     }
-  };
+  }
 
-  const enqueue = async (
+  async enqueue(
     message: string
-  ): Promise<{ sessionId: string; completion: Promise<string> }> => {
+  ): Promise<{ sessionId: string; completion: Promise<string> }> {
     if (message.trim() === "") {
       throw new CodexAppServerError("Codex message must not be empty.");
     }
-    await connect();
-    const currentThreadId = await ensureThread();
+    await this.connect();
+    const currentThreadId = await this.ensureThread();
     const clientUserMessageId = randomUUID();
     const completion = createDeferred<string>();
     const queuedMessage: QueuedMessage = {
@@ -860,9 +734,9 @@ export const createCodexAppServerSession = (
       completion,
     };
     // The queued turn can start before thread/queue/add responds. Register first.
-    queuedMessagesByClientId.set(clientUserMessageId, queuedMessage);
+    this.queuedMessagesByClientId.set(clientUserMessageId, queuedMessage);
     try {
-      const result = await request("thread/queue/add", {
+      const result = await this.request("thread/queue/add", {
         clientUserMessageId,
         input: [{ text: message, type: "text" }],
         threadId: currentThreadId,
@@ -884,43 +758,58 @@ export const createCodexAppServerSession = (
       acknowledgeQueuedMessage(queuedMessage);
       return { completion: completion.promise, sessionId: currentThreadId };
     } catch (error) {
-      queuedMessagesByClientId.delete(clientUserMessageId);
+      this.queuedMessagesByClientId.delete(clientUserMessageId);
       if (queuedMessage.turnId !== undefined) {
-        queuedMessagesByTurnId.delete(queuedMessage.turnId);
+        this.queuedMessagesByTurnId.delete(queuedMessage.turnId);
       }
       const normalizedError =
         error instanceof Error ? error : new Error(String(error));
       throw normalizedError;
     }
-  };
+  }
 
-  const close = async (): Promise<void> => {
-    if (closePromise !== undefined) {
-      await closePromise;
+  private async closeSocket(): Promise<void> {
+    const currentSocket = this.socket;
+    if (
+      currentSocket === undefined ||
+      currentSocket.readyState === WebSocket.CLOSED
+    ) {
+      this.failConnection(
+        CodexAppServerSessionClient.makeTransportError("was closed by mdxr.")
+      );
       return;
     }
-    isClosed = true;
-    isClosing = true;
-    closePromise = (async () => {
-      const currentSocket = socket;
-      if (
-        currentSocket === undefined ||
-        currentSocket.readyState === WebSocket.CLOSED
-      ) {
-        failConnection(makeTransportError("was closed by mdxr."));
-        return;
-      }
-      const closed = once(currentSocket, "close");
-      if (currentSocket.readyState === WebSocket.OPEN) {
-        currentSocket.close(1000, "mdxr session closed");
-      } else {
-        currentSocket.terminate();
-      }
-      await closed;
-      failConnection(makeTransportError("was closed by mdxr."));
-    })();
-    await closePromise;
-  };
+    const closed = once(currentSocket, "close");
+    if (currentSocket.readyState === WebSocket.OPEN) {
+      currentSocket.close(1000, "mdxr session closed");
+    } else {
+      currentSocket.terminate();
+    }
+    await closed;
+    this.failConnection(
+      CodexAppServerSessionClient.makeTransportError("was closed by mdxr.")
+    );
+  }
 
-  return { close, enqueue, send };
+  async close(): Promise<void> {
+    if (this.closePromise !== undefined) {
+      await this.closePromise;
+      return;
+    }
+    this.isClosed = true;
+    this.isClosing = true;
+    this.closePromise = this.closeSocket();
+    await this.closePromise;
+  }
+}
+
+export const createCodexAppServerSession = (
+  options: CodexAppServerSessionOptions = {}
+): CodexAppServerSession => {
+  const client = new CodexAppServerSessionClient(options);
+  return {
+    close: client.close.bind(client),
+    enqueue: client.enqueue.bind(client),
+    send: client.send.bind(client),
+  };
 };

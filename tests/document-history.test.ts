@@ -4,7 +4,45 @@ import path from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import type { DocumentDiffLine } from "../src/document-history.js";
 import { createDocumentHistory } from "../src/document-history.js";
+
+const reconstructAfter = (
+  before: string,
+  diff: DocumentDiffLine[]
+): string | undefined => {
+  const beforeLines = before.replaceAll("\r\n", "\n").split("\n");
+  const afterLines: string[] = [];
+  let cursor = 0;
+  for (const line of diff) {
+    if (line.type === "add") {
+      afterLines.push(line.text);
+      continue;
+    }
+    if (beforeLines[cursor] !== line.text) {
+      return undefined;
+    }
+    if (line.type === "context") {
+      afterLines.push(line.text);
+    }
+    cursor += 1;
+  }
+  return cursor === beforeLines.length ? afterLines.join("\n") : undefined;
+};
+
+const DIFF_CASES = [
+  { after: "first\nfirst\r\nlast\n", before: "", name: "empty input" },
+  {
+    after: "same\nmiddle\r\nsame",
+    before: "same\r\nsame\nend\n",
+    name: "repeated lines and mixed endings",
+  },
+  {
+    after: "replacement",
+    before: "before one\nbefore two",
+    name: "full replacement",
+  },
+] as const;
 
 describe("document history", () => {
   let root: string;
@@ -103,6 +141,18 @@ describe("document history", () => {
         { text: "keep", type: "context" },
       ],
     });
+  });
+
+  it.each(DIFF_CASES)("reconstructs $name diffs", async ({ before, after }) => {
+    await writeFile(sourcePath, before, "utf-8");
+    const beforeVersion = await history.capture("before-instruction");
+    await writeFile(sourcePath, after, "utf-8");
+    const afterVersion = await history.capture("change");
+    const result = await history.diff(beforeVersion.id, afterVersion.id);
+
+    expect(reconstructAfter(before, result.lines)).toBe(
+      after.replaceAll("\r\n", "\n")
+    );
   });
 
   it("serializes concurrent captures from multiple preview instances", async () => {

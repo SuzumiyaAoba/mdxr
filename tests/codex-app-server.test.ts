@@ -401,7 +401,7 @@ describe("Codex App Server client", () => {
     await session.close();
   });
 
-  it("resumes the exact existing thread and reads a completed agent message", async () => {
+  it("resumes the exact thread and selects the final answer from completed items", async () => {
     mockState.onSend = (socket, message) => {
       if (message.method === "initialize") {
         respond(socket, message.id, {});
@@ -412,19 +412,32 @@ describe("Codex App Server client", () => {
         return;
       }
       if (message.method === "turn/start") {
-        notify(socket, "item/completed", {
-          item: {
-            id: "answer-item",
-            phase: "final_answer",
-            text: "Resumed answer",
-            type: "agentMessage",
-          },
-          threadId: "existing-thread",
-          turnId: "resume-turn",
-        });
         notify(socket, "turn/completed", {
           threadId: "existing-thread",
-          turn: { id: "resume-turn", status: "completed" },
+          turn: {
+            id: "resume-turn",
+            items: [
+              {
+                id: "analysis-item",
+                phase: "analysis",
+                text: "Internal reasoning",
+                type: "agentMessage",
+              },
+              {
+                id: "answer-item",
+                phase: "final_answer",
+                text: "Resumed answer",
+                type: "agentMessage",
+              },
+              {
+                id: "later-item",
+                phase: "commentary",
+                text: "Later status update",
+                type: "agentMessage",
+              },
+            ],
+            status: "completed",
+          },
         });
         respond(socket, message.id, {
           turn: { id: "resume-turn", status: "inProgress" },

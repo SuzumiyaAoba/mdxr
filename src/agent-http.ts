@@ -18,12 +18,14 @@ const view = (conversation: Awaited<ReturnType<AgentSession["current"]>>) => ({
 const reply = (
   res: http.ServerResponse,
   status: number,
-  body: unknown
+  body: unknown,
+  headers: http.OutgoingHttpHeaders = {}
 ): void => {
   res.writeHead(status, {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
     "x-content-type-options": "nosniff",
+    ...headers,
   });
   res.end(JSON.stringify(body));
 };
@@ -40,7 +42,11 @@ const sameOrigin = (req: http.IncomingMessage): boolean => {
 };
 
 const readMessage = async (req: http.IncomingMessage): Promise<string> => {
-  if (req.headers["content-type"]?.startsWith("application/json") !== true) {
+  const contentType = req.headers["content-type"]
+    ?.split(";", 1)[0]
+    ?.trim()
+    .toLowerCase();
+  if (contentType !== "application/json") {
     throw new Error("Expected application/json");
   }
   let source = "";
@@ -67,7 +73,7 @@ const readMessage = async (req: http.IncomingMessage): Promise<string> => {
   ) {
     throw new Error("Expected a non-empty message");
   }
-  return message.trim();
+  return message;
 };
 
 const errorStatus = (detail: string): number => {
@@ -110,7 +116,7 @@ export const handleAgentRequest = async (
       return;
     }
     if (req.method !== "POST") {
-      reply(res, 405, { error: "Method not allowed" });
+      reply(res, 405, { error: "Method not allowed" }, { allow: "GET, POST" });
       return;
     }
     const message = await readMessage(req);

@@ -28,4 +28,10 @@ describe("agent response markdown", () => {
     expect(html).not.toContain(scheme);
     expect(html).not.toContain("<a ");
   });
+
+  it("preserves the starting number of ordered lists", () => {
+    expect(renderAgentMarkdown("5. fifth\n6. sixth")).toContain(
+      '<ol start="5">'
+    );
+  });
 });

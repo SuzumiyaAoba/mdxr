@@ -15,7 +15,7 @@ sidebar:
 
 ## 計算と動作の仕様
 
-- `Include path="..." section="heading-slug"` はコンパイル時にローカルMD/MDXを展開します。パスは読み込み元のファイル基準です。相対リンクを補正し、循環と実行可能なMDXを拒否します。描画時には参照ファイルが必要です。`CodeFile` と同様、信頼するローカル文書を指定してください。
+- `Include path="..." section="heading-slug"` はコンパイル時にローカルMD/MDXを展開します。独立したブロックとして記述し、文章の途中には置かないでください。パスは読み込み元のファイル基準です。相対リンクを補正し、循環と実行可能なMDXを拒否します。描画時には参照ファイルが必要です。`CodeFile` と同様、信頼するローカル文書を指定してください。
 - `Source` / `Cite` と `CrossRef` は後方に書いた参照先も解決します。IDの重複と参照先の欠落はエラーです。`TableOfFigures` の `kind` は `Figure` / `DataTable` / `NumberedEquation` / `Theorem` などを指定できます。
 - 分位点はR7補間、箱ひげは1.5×IQR、密度推定はGaussian kernelを使います。`bandwidth` は明示指定も可能です。カレンダーの日付はUTCです。`Experiment` は二項比率のWilson 95%区間を計算し、因果関係や有意差は判定しません。分母0の比率は計算不能として表示します。
 - `DecisionMatrix` は `options.weights` が必要です。`TestMatrix` は `options.axes` の未実施組み合わせを `not-run` とします。`DependencyPlan` は非負の期間と先行IDから計算し、営業日やリソース制約は推測しません。`DataValidation` の `options.rules` は `field` / `required` / `type` / `min` / `max` / `enum` を扱います。型は `string` / `number` / `integer` / `boolean` / `array` / `object` / `null` で、任意項目の欠落・null・空文字は検証対象外です。数値範囲を検証できない値も違反として集計します。`Experiment` の件数・成功数は非負の整数とし、成功数は件数以下にします。

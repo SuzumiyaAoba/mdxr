@@ -23,12 +23,14 @@ const parsePreviewTheme = (
 const replyJson = (
   response: http.ServerResponse,
   status: number,
-  body: unknown
+  body: unknown,
+  headers: http.OutgoingHttpHeaders = {}
 ): void => {
   response.writeHead(status, {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
     "x-content-type-options": "nosniff",
+    ...headers,
   });
   response.end(JSON.stringify(body));
 };
@@ -145,7 +147,7 @@ export const handleDocumentHistoryRequest = async (
     return;
   }
   if (request.method !== "GET") {
-    replyJson(response, 405, { error: "Method not allowed" });
+    replyJson(response, 405, { error: "Method not allowed" }, { allow: "GET" });
     return;
   }
   const url = new URL(request.url ?? "", "http://localhost");

@@ -17,7 +17,7 @@ const ORIGIN = "http://snapshot.test";
 const SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><view id="icon" viewBox="0 0 10 10"/><g id="pattern"><rect width="10" height="10" fill="#0f766e"/></g></svg>`;
 const NESTED_DOCUMENT = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="/frame.css"><style>.inline-icon{background-image:url('/frame.svg#pattern')}</style></head><body><p>Nested iframe body is visible.</p><img id="nested-icon" alt="Nested SVG icon" src="/sprite.svg#icon"><div class="inline-icon">Inline style</div><script>window.__snapshotScriptRan=true</script></body></html>`;
 
-const FIXTURE_HTML = `<!doctype html><html lang="en"><head><meta charset="utf-8"></head><body><main id="mdxr-root"><h1>Snapshot fixture</h1><img id="main-icon" alt="Main SVG icon" src="/sprite.svg#icon"><iframe title="Nested snapshot" sandbox="allow-scripts"></iframe><input id="upload" type="file" value=""></main></body></html>`;
+const FIXTURE_HTML = `<!doctype html><html lang="en"><head><meta charset="utf-8"></head><body><main id="mdxr-root"><h1>Snapshot fixture</h1><img id="main-icon" alt="Main SVG icon" src="/sprite.svg#icon"><iframe title="Nested snapshot" sandbox="allow-scripts"></iframe><textarea id="draft"></textarea><input id="upload" type="file" value=""></main></body></html>`;
 
 const openSnapshotPage = async (
   browser: Browser,
@@ -111,6 +111,12 @@ describe("workspace document snapshot browser behavior", () => {
     const page = await openSnapshotPage(browser, bundle);
     let archivePage: Page | undefined;
     try {
+      await page.locator("#draft").evaluate((element) => {
+        if (!(element instanceof HTMLTextAreaElement)) {
+          throw new Error("Textarea is unavailable");
+        }
+        element.value = "\nfirst line\nsecond line";
+      });
       const snapshotHtml = await captureSnapshot(page);
       archivePage = await browser.newPage();
       const blockedRequests: string[] = [];
@@ -125,8 +131,10 @@ describe("workspace document snapshot browser behavior", () => {
         const frame = document.querySelector<HTMLIFrameElement>(
           'iframe[title="Nested snapshot"]'
         );
+        const draft = document.querySelector<HTMLTextAreaElement>("#draft");
         const fileInput = document.querySelector<HTMLInputElement>("#upload");
         return {
+          draftValue: draft?.value,
           fileValue: fileInput?.value,
           hasFileValueAttribute: fileInput?.hasAttribute("value"),
           iframeSandbox: frame?.getAttribute("sandbox"),
@@ -177,6 +185,8 @@ describe("workspace document snapshot browser behavior", () => {
           nestedState.backgroundImage.includes("data:image/svg+xml;base64,") &&
           nestedState.backgroundImage.includes("#pattern"),
         noExternalRequests: blockedRequests.length === 0,
+        textareaKeepsLeadingNewline:
+          mainState.draftValue === "\nfirst line\nsecond line",
       }).toStrictEqual({
         fileInputHasNoValue: true,
         hasNoExternalAssetReferences: true,
@@ -186,6 +196,7 @@ describe("workspace document snapshot browser behavior", () => {
         nestedImageKeepsFragment: true,
         nestedResourcesAreEmbedded: true,
         noExternalRequests: true,
+        textareaKeepsLeadingNewline: true,
       });
     } finally {
       await archivePage?.close();

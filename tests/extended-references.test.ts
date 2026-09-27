@@ -79,6 +79,53 @@ describe("Include expansion", () => {
     expect(directiveText.markdown).toContain("Leaf content");
   });
 
+  it("selects duplicate sections by the collision-safe heading slug", async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), "mdxr-include-slugs-"));
+    dirs.push(dir);
+    await writeFile(
+      path.join(dir, "sections.mdx"),
+      "## Repeat\n\nFirst section.\n\n## Repeat\n\nSecond section.\n"
+    );
+    const { body } = await renderDoc(
+      '<Include path="sections.mdx" section="repeat-1" />',
+      path.join(dir, "root.mdx")
+    );
+    expect(body).toContain("Second section.");
+    expect(body).not.toContain("First section.");
+  });
+
+  it("counts nested headings when resolving a top-level section slug", async () => {
+    const dir = await mkdtemp(
+      path.join(os.tmpdir(), "mdxr-include-nested-slugs-")
+    );
+    dirs.push(dir);
+    await writeFile(
+      path.join(dir, "sections.mdx"),
+      "> ## Repeat\n>\n> Nested section.\n\n## Repeat\n\nRoot section.\n"
+    );
+
+    const { body } = await renderDoc(
+      '<Include path="sections.mdx" section="repeat-1" />',
+      path.join(dir, "document.mdx")
+    );
+
+    expect(body).toContain("Root section.");
+    expect(body).not.toContain("Nested section.");
+  });
+
+  it("rejects inline Include elements that would create invalid paragraph markup", async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), "mdxr-include-inline-"));
+    dirs.push(dir);
+    await writeFile(path.join(dir, "inline.mdx"), "Included text.\n");
+
+    await expect(
+      renderDoc(
+        'Before <Include path="inline.mdx" /> after.',
+        path.join(dir, "root.mdx")
+      )
+    ).rejects.toThrow("Include must be used as a block element");
+  });
+
   it("rejects cycles, missing sections, and executable expressions inside includes", async () => {
     const dir = await mkdtemp(path.join(os.tmpdir(), "mdxr-include-errors-"));
     dirs.push(dir);

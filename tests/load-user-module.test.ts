@@ -9,7 +9,7 @@ import {
 import os from "node:os";
 import path from "node:path";
 
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
 
 import {
   importBundledCode,
@@ -25,6 +25,58 @@ describe(importBundledCode, () => {
     );
     expect(mod.answer).toBe(42);
     expect(mod.default).toBe("ok");
+  });
+
+  it("does not retry when user module code throws ENOENT", async () => {
+    const key = "__mdxrImportAttempts";
+    vi.stubGlobal(key, 0);
+    try {
+      const code = `globalThis[${JSON.stringify(key)}] += 1; throw Object.assign(new Error("missing data file"), { code: "ENOENT" });`;
+      await expect(importBundledCode(code, "enoenttest")).rejects.toThrow(
+        "missing data file"
+      );
+      expect(Reflect.get(globalThis, key)).toBe(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("does not retry a missing dependency reported from inside user code", async () => {
+    const key = "__mdxrMissingDependencyAttempts";
+    vi.stubGlobal(key, 0);
+    try {
+      const code = `globalThis[${JSON.stringify(key)}] += 1; await import("./missing-dependency.mjs");`;
+      const importError = await importBundledCode(
+        code,
+        "missingdependencytest"
+      ).catch((error: unknown) => error);
+      expect(importError).toMatchObject({ code: "ERR_MODULE_NOT_FOUND" });
+      expect(importError).toHaveProperty(
+        "message",
+        expect.stringContaining("missing-dependency.mjs")
+      );
+      expect(importError).toHaveProperty(
+        "message",
+        expect.stringContaining("imported from")
+      );
+      expect(Reflect.get(globalThis, key)).toBe(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("does not retry an ERR_MODULE_NOT_FOUND whose URL is not the cache entry", async () => {
+    const key = "__mdxrMissingUrlAttempts";
+    vi.stubGlobal(key, 0);
+    try {
+      const code = `globalThis[${JSON.stringify(key)}] += 1; throw Object.assign(new Error("Cannot find module '/missing-dependency.mjs' imported from " + import.meta.url), { code: "ERR_MODULE_NOT_FOUND", url: "file:///missing-dependency.mjs" });`;
+      await expect(importBundledCode(code, "missingurltest")).rejects.toThrow(
+        "missing-dependency.mjs"
+      );
+      expect(Reflect.get(globalThis, key)).toBe(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it("prunes stale cache files beyond the keep count", async () => {

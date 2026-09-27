@@ -89,13 +89,13 @@ const slugify = (title: string): string =>
 const fenceTracker = (): ((line: string) => boolean) => {
   let fence: string | undefined;
   return (line: string): boolean => {
-    const run = /^(?<run>`{3,}|~{3,})/u.exec(line)?.groups?.run;
+    const run = /^ {0,3}(?<run>`{3,}|~{3,})/u.exec(line)?.groups?.run;
     if (run === undefined) {
       return fence !== undefined;
     }
     const closes =
       fence !== undefined &&
-      new RegExp(`^${run[0]}{${fence.length},}\\s*$`, "u").test(line);
+      new RegExp(`^ {0,3}${fence[0]}{${fence.length},}\\s*$`, "u").test(line);
     fence = closes ? undefined : (fence ?? run);
     return true;
   };
@@ -119,7 +119,7 @@ const directiveDelta = (line: string): number | undefined => {
 const splitSections = (
   source: string
 ): { pre: string; sections: { title: string; body: string }[] } => {
-  const lines = source.split("\n");
+  const lines = source.split(/\r?\n/u);
   let start = 0;
   if (lines[0]?.trim() === "---") {
     const end = lines.indexOf("---", 1);
@@ -157,8 +157,37 @@ const splitSections = (
 };
 
 /** `:::toc` blocks only make sense at document scope — drop them from fragments. */
-const stripToc = (source: string): string =>
-  source.replaceAll(/^:::toc[^\n]*\n(?:(?!^:::).*\n)*?:::\n?/gmu, "");
+const stripToc = (source: string): string => {
+  const insideFence = fenceTracker();
+  let insideToc = false;
+  return source
+    .split("\n")
+    .filter((line) => {
+      if (insideFence(line)) {
+        return !insideToc;
+      }
+      if (insideToc) {
+        if (/^:::\s*$/u.test(line)) {
+          insideToc = false;
+        }
+        return false;
+      }
+      if (/^:::toc(?:\s|\[|\{|$)/u.test(line)) {
+        insideToc = true;
+        return false;
+      }
+      return true;
+    })
+    .join("\n");
+};
+
+const stripOverviewTitle = (source: string): string => {
+  const insideFence = fenceTracker();
+  return source
+    .split("\n")
+    .filter((line) => insideFence(line) || !line.startsWith("# "))
+    .join("\n");
+};
 
 /**
  * Turn the raw split into renderable sections. The pre-`##` content counts as
@@ -168,27 +197,34 @@ const stripToc = (source: string): string =>
 const toSections = (source: string): Section[] => {
   const { pre, sections } = splitSections(source);
   const out: Section[] = [];
-  const used = new Map<string, number>();
+  const counts = new Map<string, number>();
+  const used = new Set<string>();
   const push = (title: string, body: string): void => {
     const base = slugify(title) || "section";
-    const seen = used.get(base) ?? 0;
-    used.set(base, seen + 1);
+    let seen = counts.get(base) ?? 0;
+    let slug = seen === 0 ? base : `${base}-${seen}`;
+    while (used.has(slug)) {
+      seen += 1;
+      slug = `${base}-${seen}`;
+    }
+    counts.set(base, seen + 1);
+    used.add(slug);
     out.push({
-      slug: seen === 0 ? base : `${base}-${seen}`,
+      slug,
       source: body.trim(),
       title,
     });
   };
-  const overview = stripToc(pre.replaceAll(/^# .*$/gmu, "")).trim();
+  const overview = stripToc(stripOverviewTitle(pre)).trim();
   const demosComponent =
     /<[A-Z]/u.test(overview) ||
     /^:::/mu.test(overview) ||
-    /^```/mu.test(overview);
+    /^ {0,3}(?:`{3,}|~{3,})/mu.test(overview);
   if (sections.length > 0 && demosComponent) {
     push("Overview", overview);
   }
   for (const { title, body } of sections) {
-    push(title, body);
+    push(title, stripToc(body));
   }
   return out;
 };

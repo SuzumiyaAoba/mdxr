@@ -15,17 +15,23 @@ const encodePath = (p: string): string =>
     .map((seg) => encodeURIComponent(seg))
     .join("/");
 
+/** Ensure drive-letter paths stay in the URI path, after the `file` host. */
+const encodeUriPath = (p: string): string => {
+  const encoded = encodePath(p);
+  return encoded.startsWith("/") ? encoded : `/${encoded}`;
+};
+
 /** `scheme://file/{abs}:{line}` — the VS Code URL convention most editors share. */
 const atLine =
   (scheme: string): EditorLink =>
   (p, l) =>
-    `${scheme}://file${encodePath(p)}${nonEmpty(l) ? `:${l}` : ""}`;
+    `${scheme}://file${encodeUriPath(p)}${nonEmpty(l) ? `:${l}` : ""}`;
 
 /** `{scheme}://open?url=file://{abs}&line={n}` — Sublime/TextMate style. */
 const queryUrl =
   (scheme: string): EditorLink =>
   (p, l) =>
-    `${scheme}://open?url=file://${encodePath(p)}${nonEmpty(l) ? `&line=${l}` : ""}`;
+    `${scheme}://open?url=file://${encodeUriPath(p)}${nonEmpty(l) ? `&line=${l}` : ""}`;
 
 /** Known editors; unknown names fall back to the `scheme://file` convention. */
 export const EDITORS: Record<string, EditorLink> = {

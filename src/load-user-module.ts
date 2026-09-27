@@ -101,14 +101,24 @@ const pruneCache = async (prefix: string): Promise<void> => {
   }
 };
 
-/** `await import` of a missing module: Node's ERR_MODULE_NOT_FOUND, possibly
- *  wrapped by a module runner that only preserves the message. */
-const isModuleNotFound = (e: unknown): boolean =>
-  isRecord(e) &&
-  (e.code === "ERR_MODULE_NOT_FOUND" ||
-    e.code === "ENOENT" ||
-    (typeof e.message === "string" &&
-      e.message.includes("Cannot find module")));
+/** Match only a missing cache entry; user module code can also throw ENOENT. */
+const isCacheEntryMissing = (error: unknown, entryPath: string): boolean => {
+  if (!isRecord(error)) {
+    return false;
+  }
+  const entryUrl = pathToFileURL(entryPath).href;
+  if (error.code === "ERR_MODULE_NOT_FOUND") {
+    if (typeof error.url === "string") {
+      return error.url === entryUrl;
+    }
+    return (
+      typeof error.message === "string" &&
+      (error.message.includes(`Cannot find module '${entryPath}'`) ||
+        error.message.includes(`Cannot find module "${entryPath}"`))
+    );
+  }
+  return error.code === "ENOENT" && error.path === entryPath;
+};
 
 /**
  * Write bundled ESM `code` into this package's cache dir (content-hashed, so
@@ -133,7 +143,7 @@ export const importBundledCode = async (
     try {
       raw = await import(pathToFileURL(out).href);
     } catch (error) {
-      if (!isModuleNotFound(error)) {
+      if (!isCacheEntryMissing(error, out)) {
         throw error;
       }
       // A concurrent process's pruneCache may have unlinked the file between

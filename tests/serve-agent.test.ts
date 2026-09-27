@@ -212,6 +212,51 @@ describe("preview agent API", () => {
     expect(sendAgentMessage).toHaveBeenCalledWith(message);
   });
 
+  it("accepts case-insensitive JSON media types and preserves message whitespace", async () => {
+    const baseUrl = await startServer("codex");
+    const message = "  Keep this indentation.\n  And these trailing spaces.  ";
+    const response = await fetch(`${baseUrl}/__mdxr_agent`, {
+      body: JSON.stringify({ message }),
+      headers: { "content-type": "Application/JSON; charset=UTF-8" },
+      method: "POST",
+    });
+
+    expect(response.status).toBe(200);
+    expect(sendAgentMessage).toHaveBeenCalledWith(message);
+  });
+
+  it("rejects a JSON-like but unsupported media type", async () => {
+    const baseUrl = await startServer("codex");
+    const response = await fetch(`${baseUrl}/__mdxr_agent`, {
+      body: JSON.stringify({ message: "Do this" }),
+      headers: { "content-type": "application/jsonp" },
+      method: "POST",
+    });
+
+    expect(response.status).toBe(400);
+    expect(sendAgentMessage).not.toHaveBeenCalled();
+  });
+
+  it("advertises allowed methods when an API route receives an unsupported method", async () => {
+    const baseUrl = await startServer("codex");
+    const [agentResponse, historyResponse] = await Promise.all([
+      fetch(`${baseUrl}/__mdxr_agent`, { method: "PUT" }),
+      fetch(`${baseUrl}/__mdxr_history`, { method: "PUT" }),
+    ]);
+
+    expect({
+      agentAllow: agentResponse.headers.get("allow"),
+      agentStatus: agentResponse.status,
+      historyAllow: historyResponse.headers.get("allow"),
+      historyStatus: historyResponse.status,
+    }).toStrictEqual({
+      agentAllow: "GET, POST",
+      agentStatus: 405,
+      historyAllow: "GET",
+      historyStatus: 405,
+    });
+  });
+
   it("does not expose the agent API unless a provider is selected", async () => {
     const baseUrl = await startServer();
     const response = await fetch(`${baseUrl}/__mdxr_agent`);

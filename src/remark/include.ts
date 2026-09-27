@@ -15,6 +15,7 @@ import { isRecord } from "../guards.js";
 import { isParent, jsxAttr, jsxAttrs, textContent } from "./ast.js";
 import type { MdxTarget } from "./ast.js";
 import { remarkMdxrDirectives } from "./directives.js";
+import { createHeadingSlugger } from "./headings.js";
 import { remarkNoJs } from "./no-js.js";
 
 declare module "unist" {
@@ -35,19 +36,31 @@ const isInclude = (node: Node): node is MdxTarget =>
   (node.type === "mdxJsxFlowElement" || node.type === "mdxJsxTextElement") &&
   "name" in node &&
   node.name === "Include";
-const slug = (s: string): string =>
-  s
-    .toLowerCase()
-    .replaceAll(/[^\p{L}\p{N}\s_-]/gu, "")
-    .trim()
-    .replaceAll(/\s+/gu, "-");
-
 const sectionNodes = (nodes: Node[], section: string): Node[] => {
-  const start = nodes.findIndex(
-    (node) =>
-      node.type === "heading" &&
-      (textContent(node) === section || slug(textContent(node)) === section)
-  );
+  const slugFor = createHeadingSlugger();
+  const slugs = new Map<Node, string>();
+  const assignSlugs = (items: Node[]): void => {
+    for (const node of items) {
+      if (node.type === "heading") {
+        slugs.set(node, slugFor(textContent(node).trim()));
+      }
+      if (isParent(node)) {
+        assignSlugs(node.children);
+      }
+    }
+  };
+  assignSlugs(nodes);
+  const headings = nodes.flatMap((node) => {
+    if (node.type !== "heading") {
+      return [];
+    }
+    const text = textContent(node).trim();
+    return [{ node, slug: slugs.get(node) ?? "", text }];
+  });
+  const heading =
+    headings.find((item) => item.slug === section) ??
+    headings.find((item) => item.text === section);
+  const start = heading === undefined ? -1 : nodes.indexOf(heading.node);
   const first = nodes[start];
   if (
     !(first !== undefined) ||
@@ -106,6 +119,13 @@ const includedDocument = (
   chain: string[],
   file: VFile
 ): { abs: string; tree: Parent } => {
+  if (target.type === "mdxJsxTextElement") {
+    file.fail(
+      "Include must be used as a block element",
+      target,
+      "mdxr:include"
+    );
+  }
   const source = jsxAttr(target, "path");
   if (source === undefined || source === "") {
     file.fail("Include requires path", target);

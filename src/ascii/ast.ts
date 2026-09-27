@@ -395,6 +395,52 @@ const blocksOf = (nodes: RootContent[]): RootContent[] => {
   return blocks;
 };
 
+const HTML_INTEGER_PREFIX = /^[\t\n\f\r ]*(?<integer>[+-]?\d+)/u;
+const MIN_HTML_LIST_START = -2_147_483_648;
+const MAX_HTML_LIST_START = 2_147_483_647;
+const MAX_MARKDOWN_LIST_START = 999_999_999;
+
+/** Match the browser's integer-prefix parsing and signed 32-bit range. */
+const htmlOrderedListStart = (node: MdxTarget): number => {
+  const value = attr(node, "start");
+  const prefix =
+    value === undefined ? undefined : HTML_INTEGER_PREFIX.exec(value);
+  const start = Number(prefix?.groups?.integer);
+  return Number.isSafeInteger(start) &&
+    start >= MIN_HTML_LIST_START &&
+    start <= MAX_HTML_LIST_START
+    ? start
+    : 1;
+};
+
+const htmlList = (node: MdxTarget, ctx: AsciiCtx): RootContent[] => {
+  const items = els(node, "li").map((li) => item(blocksOf(ctx.children(li))));
+  if (items.length === 0) {
+    return ctx.children(node);
+  }
+  const output = list(items, node.name === "ol");
+  if (output.ordered !== true) {
+    return [output];
+  }
+
+  const start = htmlOrderedListStart(node);
+  if (start < 0 || start + items.length - 1 > MAX_MARKDOWN_LIST_START) {
+    return [
+      html(`<ol start="${start}">`),
+      ...items.flatMap(({ children }) => [
+        html("<li>"),
+        ...children,
+        html("</li>"),
+      ]),
+      html("</ol>"),
+    ];
+  }
+  if (start !== 1) {
+    output.start = start;
+  }
+  return [output];
+};
+
 /**
  * Raw HTML elements written into a document are mdxJsx elements too —
  * give the meaningful ones a markdown form (`<a>` → link, `<code>` →
@@ -434,8 +480,7 @@ const htmlEl = (
     return [pre(deepText(node.children ?? []))];
   }
   if (name === "ul" || name === "ol") {
-    const items = els(node, "li").map((li) => item(blocksOf(ctx.children(li))));
-    return items.length === 0 ? blocks() : [list(items, name === "ol")];
+    return htmlList(node, ctx);
   }
   return inline ? kids() : blocks();
 };

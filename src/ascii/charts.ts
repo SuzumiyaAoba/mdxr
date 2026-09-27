@@ -271,13 +271,15 @@ const bridge = (node: MdxTarget, ctx: AsciiCtx): RootContent[] => {
     Math.max(4, ...deltas.map((d) => (attr(d, "name") ?? "").length))
   );
   let run = 0;
+  let minV = 0;
   let maxV = 0;
   const rows = deltas.map((d) => {
     const v = num(d, "value") ?? 0;
     const isTotal = flag(d, "total");
     const from = isTotal ? 0 : run;
     run = isTotal ? v : run + v;
-    maxV = Math.max(maxV, Math.abs(run), Math.abs(from));
+    minV = Math.min(minV, run, from);
+    maxV = Math.max(maxV, run, from);
     return {
       delta: `${v > 0 && !isTotal ? "+" : ""}${attr(d, "value") ?? v}`,
       from,
@@ -294,8 +296,8 @@ const bridge = (node: MdxTarget, ctx: AsciiCtx): RootContent[] => {
   }
   const spanCells = (lo: number, hi: number, fill: string): string =>
     Array.from({ length: W }, (_, i) => {
-      const x0 = (i / W) * maxV;
-      const x1 = ((i + 1) / W) * maxV;
+      const x0 = minV + (i / W) * (maxV - minV);
+      const x1 = minV + ((i + 1) / W) * (maxV - minV);
       return x1 > lo && x0 < hi ? fill : " ";
     }).join("");
   for (const r of rows) {

@@ -443,9 +443,10 @@ export const createDocumentHistory = (
         `Invalid document history version ID: ${id}`
       );
     }
-    const eventPath = path.join(eventsPath, `${id}.json`);
+    const canonicalId = id.toLowerCase();
+    const eventPath = path.join(eventsPath, `${canonicalId}.json`);
     try {
-      return await readVersionEvent(eventPath, id);
+      return await readVersionEvent(eventPath, canonicalId);
     } catch (error) {
       if (isNodeError(error) && error.code === "ENOENT") {
         throw new DocumentHistoryError(

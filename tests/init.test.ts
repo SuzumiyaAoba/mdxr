@@ -180,6 +180,32 @@ describe(ensureDocsDirIgnored, () => {
     );
   });
 
+  it("adds an active ignore rule when a later negation re-includes .mdxr", async () => {
+    const rules = [".mdxr/\n!.mdxr/\n", ".mdxr/**\n!.mdxr/keep.md\n"];
+    await Promise.all(
+      rules.map(async (original) => {
+        const dir = await makeDir();
+        await writeFile(path.join(dir, ".gitignore"), original);
+
+        await expect(ensureDocsDirIgnored(dir)).resolves.toBe("added");
+        await expect(
+          readFile(path.join(dir, ".gitignore"), "utf-8")
+        ).resolves.toBe(`${original}.mdxr/\n`);
+      })
+    );
+  });
+
+  it("honors the last .mdxr rule when its negation appears first", async () => {
+    const dir = await makeDir();
+    const original = "!.mdxr/\n.mdxr/\n";
+    await writeFile(path.join(dir, ".gitignore"), original);
+
+    await expect(ensureDocsDirIgnored(dir)).resolves.toBe("present");
+    await expect(readFile(path.join(dir, ".gitignore"), "utf-8")).resolves.toBe(
+      original
+    );
+  });
+
   it("ignores commented-out .mdxr lines", async () => {
     const dir = await makeDir();
     await writeFile(path.join(dir, ".gitignore"), "# .mdxr/\n");

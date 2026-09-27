@@ -23,6 +23,21 @@ const DOCS_IGNORE = ".mdxr/";
 
 /** Lines that already ignore the docs dir: .mdxr, .mdxr/, /.mdxr/, .mdxr/*, … */
 const DOCS_IGNORED = /^\/?\.mdxr\/?\*{0,2}$/u;
+/** Negation rules that re-include the docs dir or any path beneath it. */
+const DOCS_UNIGNORED = /^!\/?\.mdxr(?:\/.*)?$/u;
+
+const docsDirIsIgnored = (source: string): boolean => {
+  let ignored = false;
+  for (const line of source.split("\n")) {
+    const rule = line.trim();
+    if (DOCS_IGNORED.test(rule)) {
+      ignored = true;
+    } else if (DOCS_UNIGNORED.test(rule)) {
+      ignored = false;
+    }
+  }
+  return ignored;
+};
 
 /**
  * Ensures the project's .gitignore covers `.mdxr/` — created or appended
@@ -33,10 +48,7 @@ export const ensureDocsDirIgnored = async (
 ): Promise<"added" | "present"> => {
   const file = path.join(base, ".gitignore");
   const existing = await fsp.readFile(file, "utf-8").catch(() => null);
-  if (
-    existing?.split("\n").some((line) => DOCS_IGNORED.test(line.trim())) ===
-    true
-  ) {
+  if (existing !== null && docsDirIsIgnored(existing)) {
     return "present";
   }
   const needsNewline =

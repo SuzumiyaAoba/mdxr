@@ -54,6 +54,19 @@ describe(editorUrl, () => {
     );
   });
 
+  it("keeps Windows drive paths in the URI path instead of the host", () => {
+    const windowsPath = "C:\\Users\\me\\a.ts";
+    expect(editorUrl("vscode", windowsPath, "8")).toBe(
+      "vscode://file/C%3A/Users/me/a.ts:8"
+    );
+    expect(editorUrl("sublime", windowsPath, "8")).toBe(
+      "subl://open?url=file:///C%3A/Users/me/a.ts&line=8"
+    );
+    expect(editorUrl("idea", windowsPath, "8")).toBe(
+      "idea://open?file=C%3A/Users/me/a.ts&line=8"
+    );
+  });
+
   it("percent-encodes URL delimiters inside filenames (#, ?, %, &)", () => {
     expect(editorUrl("vscode", "/repo/a#b.ts")).toBe(
       "vscode://file/repo/a%23b.ts"

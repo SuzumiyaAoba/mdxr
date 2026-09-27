@@ -68,7 +68,12 @@ const copyElementState = (node: Element, clone: Element): void => {
     }
     clone.toggleAttribute("checked", node.checked);
   } else if (node instanceof HTMLTextAreaElement) {
-    clone.textContent = node.value;
+    // The HTML parser strips one LF immediately after a <textarea> start tag.
+    // Keep a second LF in the serialized snapshot so the live value survives
+    // when the exported HTML is opened again.
+    clone.textContent = node.value.startsWith("\n")
+      ? `\n${node.value}`
+      : node.value;
   } else if (node instanceof HTMLOptionElement) {
     clone.toggleAttribute("selected", node.selected);
   } else if (node instanceof HTMLImageElement) {

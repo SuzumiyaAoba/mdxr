@@ -186,4 +186,12 @@ describe("document history", () => {
       kind: "unknown-version",
     });
   });
+
+  it("resolves uppercase UUIDs to the same stored version", async () => {
+    const version = await history.capture("initial");
+
+    await expect(history.read(version.id.toUpperCase())).resolves.toBe(
+      "# Report\nold\nkeep"
+    );
+  });
 });

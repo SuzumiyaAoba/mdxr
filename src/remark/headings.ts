@@ -18,6 +18,26 @@ const slugify = (text: string): string =>
     .replaceAll(/[^\p{L}\p{N}_\s-]/gu, "")
     .replaceAll(/\s+/gu, "-");
 
+/** Create the same collision-safe heading IDs used in rendered documents. */
+export const createHeadingSlugger = (): ((text: string) => string) => {
+  const counts = new Map<string, number>();
+  const used = new Set<string>();
+  return (text: string): string => {
+    const base = slugify(text) || "section";
+    let count = counts.get(base) ?? 0;
+    let slug = count === 0 ? base : `${base}-${count}`;
+    // A suffixed slug can still collide with a literal heading ("a-1" after
+    // "a","a" generates a-1 first) — keep bumping until the id is unused.
+    while (used.has(slug)) {
+      count += 1;
+      slug = `${base}-${count}`;
+    }
+    counts.set(base, count + 1);
+    used.add(slug);
+    return slug;
+  };
+};
+
 /** Positive-int attribute or fallback — "0"/"abc" both become `fallback`. */
 const depthAttr = (
   node: Parameters<typeof jsxAttr>[0],
@@ -94,8 +114,7 @@ const toList = (items: TocItem[]): ListNode => ({
  *    (defaults: h2–h3, i.e. min=2 depth=3).
  */
 export const remarkMdxrHeadings = () => (tree: Node) => {
-  const counts = new Map<string, number>();
-  const used = new Set<string>();
+  const slugFor = createHeadingSlugger();
   const headings: TocItem[] = [];
 
   visit(tree, "heading", (node: Node) => {
@@ -103,17 +122,7 @@ export const remarkMdxrHeadings = () => (tree: Node) => {
       return;
     }
     const text = textContent(node).trim();
-    const base = slugify(text) || "section";
-    let count = counts.get(base) ?? 0;
-    let slug = count === 0 ? base : `${base}-${count}`;
-    // A suffixed slug can still collide with a literal heading ("a-1" after
-    // "a","a" generates a-1 first) — keep bumping until the id is unused.
-    while (used.has(slug)) {
-      count += 1;
-      slug = `${base}-${count}`;
-    }
-    counts.set(base, count + 1);
-    used.add(slug);
+    const slug = slugFor(text);
 
     setHProperty(node, "id", slug);
     headings.push({ children: [], depth: node.depth, slug, text });

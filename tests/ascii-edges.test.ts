@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { mdxToAscii } from "../src/ascii/index.js";
+import { render } from "../src/render.js";
 
 describe("ASCII boundary cases", () => {
   it.each(["value", "defaultValue"])(
@@ -144,4 +145,66 @@ describe("ASCII boundary cases", () => {
     expect(markdown).toContain("kept");
     expect(markdown).toContain("continues");
   });
+
+  it("draws bridge totals and deltas below zero", async () => {
+    const { markdown } = await mdxToAscii(
+      '<Bridge><Delta name="Start" value="-10" total /><Delta name="Loss" value="-5" /><Delta name="Recovery" value="20" /></Bridge>'
+    );
+    expect(markdown).toMatch(/Start\s+█+\s+-10 → -10/u);
+    expect(markdown).toMatch(/Loss\s+▓+\s+-5 → -15/u);
+    expect(markdown).toMatch(/Recovery\s+▓+\s+\+20 → 5/u);
+  });
+
+  it("preserves the starting number of an HTML ordered list", async () => {
+    const { markdown } = await mdxToAscii(
+      '<ol start="5"><li>fifth</li><li>sixth</li></ol>'
+    );
+    expect(markdown).toContain("5. fifth");
+    expect(markdown).toContain("6. sixth");
+  });
+
+  it.each([
+    { expectedStart: '<ol start="-2">', start: "-2" },
+    { expectedStart: '<ol start="1000000000">', start: "1000000000" },
+    { expectedStart: '<ol start="999999999">', start: "999999999" },
+  ])(
+    "keeps HTML ordered-list start %s and its nested content in HTML",
+    async ({ start, expectedStart }) => {
+      const { markdown } = await mdxToAscii(
+        `<ol start="${start}"><li><strong>first</strong><ul><li>child</li></ul></li><li>second</li></ol>`
+      );
+      expect(markdown).toContain(expectedStart);
+      expect(markdown).toMatch(
+        /<ol start="[^"]+">[\s\S]*<li>[\s\S]*\*\*first\*\*[\s\S]*- child[\s\S]*<\/li>[\s\S]*<\/ol>/u
+      );
+    }
+  );
+
+  it("renders an HTML list fallback with its nested and rich children", async () => {
+    const { markdown } = await mdxToAscii(
+      '<ol start="-2"><li><strong>first</strong><ul><li>child</li></ul></li><li>second</li></ol>'
+    );
+    const html = await render(markdown, { hydrate: false });
+
+    expect(html).toMatch(
+      /<ol start="-2">[\s\S]*<li>[\s\S]*<strong>first<\/strong>[\s\S]*<ul>[\s\S]*<li>[\s\S]*child[\s\S]*<\/li>[\s\S]*<\/ul>[\s\S]*<\/li>[\s\S]*<\/ol>/u
+    );
+  });
+
+  it.each([
+    { expectedFirst: "1. first", start: "1e2" },
+    { expectedFirst: "1. first", start: "2147483648" },
+    { expectedFirst: "5. first", start: "5junk" },
+  ])(
+    "matches browser integer parsing for HTML list start %s",
+    async ({ start, expectedFirst }) => {
+      const { markdown } = await mdxToAscii(
+        `<ol start="${start}"><li>first</li><li>second</li></ol>`
+      );
+      expect(markdown).toContain(expectedFirst);
+      expect(markdown).toContain(
+        expectedFirst.startsWith("5.") ? "6. second" : "2. second"
+      );
+    }
+  );
 });

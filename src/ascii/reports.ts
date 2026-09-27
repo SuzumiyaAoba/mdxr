@@ -586,14 +586,13 @@ export const reportRenderers: AsciiRegistry = {
           ? []
           : uptime.flatMap((u): RootContent[] => {
               const strip = uptimeStrip(u);
+              const pct = percentText(attr(u, "pct"));
               return [
                 para([
                   ...(nonEmpty(attr(u, "title"))
                     ? [strong([txt(attr(u, "title") ?? "")]), txt(" ")]
                     : []),
-                  ...(nonEmpty(attr(u, "pct"))
-                    ? [icode(`${attr(u, "pct")}%`)]
-                    : []),
+                  ...(nonEmpty(pct) ? [icode(pct)] : []),
                   ...suffix([
                     [attr(u, "from"), attr(u, "to")]
                       .filter(nonEmpty)
@@ -625,12 +624,13 @@ export const reportRenderers: AsciiRegistry = {
   Uptime: {
     flow: (n) => {
       const strip = uptimeStrip(n);
+      const pct = percentText(attr(n, "pct"));
       return [
         para([
           ...(nonEmpty(attr(n, "title"))
             ? [strong([txt(attr(n, "title") ?? "")]), txt(" ")]
             : []),
-          ...(nonEmpty(attr(n, "pct")) ? [icode(`${attr(n, "pct")}%`)] : []),
+          ...(nonEmpty(pct) ? [icode(pct)] : []),
           ...suffix([
             [attr(n, "from"), attr(n, "to")].filter(nonEmpty).join(" → "),
           ]),

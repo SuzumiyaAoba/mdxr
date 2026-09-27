@@ -7,6 +7,7 @@ interface MarkdownNode {
   value?: string;
   children?: MarkdownNode[];
   depth?: number;
+  start?: number | null;
   url?: string;
   ordered?: boolean | null;
 }
@@ -55,6 +56,19 @@ const renderLiteral = (node: MarkdownNode): string | undefined => {
   return undefined;
 };
 
+const renderList = (node: MarkdownNode, children: string): string => {
+  if (node.ordered !== true) {
+    return `<ul>${children}</ul>`;
+  }
+  const start =
+    typeof node.start === "number" &&
+    Number.isSafeInteger(node.start) &&
+    node.start !== 1
+      ? ` start="${node.start}"`
+      : "";
+  return `<ol${start}>${children}</ol>`;
+};
+
 const renderNode = (node: MarkdownNode): string => {
   const literal = renderLiteral(node);
   if (literal !== undefined) {
@@ -70,9 +84,7 @@ const renderNode = (node: MarkdownNode): string => {
     return `<h${depth}>${children}</h${depth}>`;
   }
   if (node.type === "list") {
-    return node.ordered === true
-      ? `<ol>${children}</ol>`
-      : `<ul>${children}</ul>`;
+    return renderList(node, children);
   }
   if (node.type === "link") {
     const url = safeUrl(node.url ?? "");

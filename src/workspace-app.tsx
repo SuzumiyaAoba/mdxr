@@ -14,8 +14,10 @@ import type { ChatMessage, ConversationData } from "./workspace-chat.js";
 import { WorkspaceCode } from "./workspace-code.js";
 import type { DiffLine } from "./workspace-diff-model.js";
 import { WorkspaceDiff } from "./workspace-diff.js";
+import { WorkspaceExportButton } from "./workspace-export.js";
 import { parseSyntaxLines } from "./workspace-syntax.js";
 import type { SyntaxLines } from "./workspace-syntax.js";
+import { useWorkspaceTheme } from "./workspace-theme.js";
 
 type ViewMode = "preview" | "source" | "diff";
 type VersionKind = "initial" | "before-instruction" | "change";
@@ -426,6 +428,7 @@ const sendInstruction = async (
 };
 
 const Workspace = ({ provider }: { provider?: "codex" | "claude" }) => {
+  const theme = useWorkspaceTheme();
   const [history, setHistory] = useState<HistoryList>();
   const [conversation, setConversation] = useState<ConversationData>();
   const [view, setView] = useState<ViewMode>(() => {
@@ -651,6 +654,7 @@ const Workspace = ({ provider }: { provider?: "codex" | "claude" }) => {
               <Icon aria-hidden="true" size={15} /> <span>{label}</span>
             </button>
           ))}
+          <WorkspaceExportButton />
         </nav>
       </header>
 
@@ -662,16 +666,23 @@ const Workspace = ({ provider }: { provider?: "codex" | "claude" }) => {
           aria-expanded={chatOpen}
           aria-controls="mdxr-workspace-chat"
           onClick={() => {
-            setChatOpen(!chatOpen);
+            setChatOpen((open) => !open);
           }}
           title={chatOpen ? "Close agent chat" : "Open agent chat"}
           type="button"
         >
-          {chatOpen ? (
-            <X aria-hidden="true" size={18} strokeWidth={1.75} />
-          ) : (
-            <MessageCircle aria-hidden="true" size={18} strokeWidth={1.75} />
-          )}
+          <span className="mdxr-workspace-agent-icons" aria-hidden="true">
+            <MessageCircle
+              className="mdxr-workspace-agent-open"
+              size={18}
+              strokeWidth={1.75}
+            />
+            <X
+              className="mdxr-workspace-agent-close"
+              size={18}
+              strokeWidth={1.75}
+            />
+          </span>
           Agent
         </button>
       )}
@@ -695,7 +706,7 @@ const Workspace = ({ provider }: { provider?: "codex" | "claude" }) => {
               className="mdxr-workspace-iframe"
               key={currentId}
               sandbox=""
-              src={`/__mdxr_history?view=preview&id=${encodeURIComponent(currentId)}`}
+              src={`/__mdxr_history?view=preview&id=${encodeURIComponent(currentId)}&theme=${theme}`}
               title={`Document version ${currentVersion === undefined ? currentId : formatVersion(currentVersion)}`}
             />
           </section>
@@ -703,6 +714,7 @@ const Workspace = ({ provider }: { provider?: "codex" | "claude" }) => {
 
       {view !== "preview" && (
         <section
+          key={view}
           className="mdxr-workspace-pane"
           aria-label={view === "source" ? "Raw MDX" : "Version differences"}
         >
@@ -758,14 +770,18 @@ const Workspace = ({ provider }: { provider?: "codex" | "claude" }) => {
         </section>
       )}
 
-      {provider !== undefined && chatOpen && (
+      {provider !== undefined && (
         <WorkspaceChat
+          open={chatOpen}
           provider={provider}
           conversation={conversation}
           error={chatError}
           sending={sending}
           onClose={() => {
             setChatOpen(false);
+            document
+              .querySelector<HTMLButtonElement>(".mdxr-workspace-agent")
+              ?.focus();
           }}
           onSend={send}
         />

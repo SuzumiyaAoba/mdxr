@@ -49,6 +49,10 @@ export const THEME_JS = `
 var q = matchMedia('(prefers-color-scheme: dark)');
 var stored = null;
 try { stored = localStorage.getItem('mdxr-theme'); } catch (e) {}
+// Clear the server-only values used by script-blocked previews before
+// applying the user's saved or system theme.
+document.documentElement.classList.remove('light');
+document.documentElement.style.removeProperty('color-scheme');
 document.documentElement.classList.toggle(
   'dark',
   stored === 'dark' || (stored !== 'light' && q.matches)

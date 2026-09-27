@@ -13,6 +13,7 @@ import { formatError } from "./format-error.js";
 import { openInBrowser } from "./open.js";
 import type { RenderSourceOptions } from "./render.js";
 import { render, renderFile } from "./render.js";
+import { handleWorkspaceExportRequest } from "./workspace-export-data.js";
 import { workspaceJs } from "./workspace-js.js";
 
 const errorPage = (err: unknown): string =>
@@ -43,6 +44,35 @@ const SKIP_DIRS = new Set([
   "node_modules",
   "storybook-static",
 ]);
+
+const handleDocumentResponse = (
+  req: http.IncomingMessage,
+  res: http.ServerResponse,
+  target: PreviewTarget,
+  html: string
+): void => {
+  if (req.url?.startsWith("/__mdxr_history") === true) {
+    void handleDocumentHistoryRequest(
+      req,
+      res,
+      target.history,
+      target.historyFile
+    );
+    return;
+  }
+  if (req.url === "/__mdxr_export") {
+    void handleWorkspaceExportRequest(
+      req,
+      res,
+      target.historyFile,
+      target.history,
+      target.agent
+    );
+    return;
+  }
+  res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+  res.end(html);
+};
 
 /**
  * The set of directories being watched. `fs.watch` recursive mode exists only
@@ -178,15 +208,6 @@ const servePreview = async (
       });
       return;
     }
-    if (req.url?.startsWith("/__mdxr_history") === true) {
-      void handleDocumentHistoryRequest(
-        req,
-        res,
-        target.history,
-        target.historyFile
-      );
-      return;
-    }
     if (req.url === "/__mdxr_events") {
       res.writeHead(200, {
         "cache-control": "no-cache",
@@ -203,8 +224,7 @@ const servePreview = async (
       });
       return;
     }
-    res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
-    res.end(html);
+    handleDocumentResponse(req, res, target, html);
   });
 
   const watch = createWatchSet();
@@ -475,6 +495,7 @@ export const serveSource = async (
             dir,
             filePath: opts.filePath,
             hydrate: opts.hydrate,
+            initialTheme: opts.initialTheme,
             liveReload: true,
             onDependencies: onDeps,
           })

@@ -212,8 +212,10 @@ const openWorkspacePage = async (
         return;
       }
       if (view === "preview") {
+        const isDark = url.searchParams.get("theme") === "dark";
+        const theme = isDark ? "dark" : "light";
         await route.fulfill({
-          body: "<!doctype html><html><body><main>Historical version</main></body></html>",
+          body: `<!doctype html><html${isDark ? ' class="dark"' : ""} style="color-scheme: ${theme}"><head><style>html.dark { background-color: rgb(12, 34, 56); } html:not(.dark) { background-color: rgb(230, 240, 250); }</style></head><body><main>Historical version ${url.searchParams.get("id")}</main><script>window.__mdxrHistoricalPreviewScriptRan = true;</script></body></html>`,
           contentType: "text/html",
         });
         return;
@@ -231,6 +233,64 @@ const openWorkspacePage = async (
   await page.locator(".mdxr-view-controls").waitFor({ state: "visible" });
   return page;
 };
+
+const observeChatStyleAttribute = async (
+  page: Page,
+  attributeName: "data-ending-style" | "data-starting-style"
+): Promise<boolean> =>
+  await page.evaluate(
+    async (observedAttribute) =>
+      // MutationObserver exposes callbacks, so bridge its result to Playwright.
+      // oxlint-disable-next-line promise/avoid-new
+      await new Promise<boolean>((resolve) => {
+        const panelSelector = "[data-mdxr-agent-panel]";
+        const observation: {
+          observer?: MutationObserver;
+          timeoutId?: number;
+        } = {};
+        const finish = (detected: boolean) => {
+          observation.observer?.disconnect();
+          window.clearTimeout(observation.timeoutId);
+          resolve(detected);
+        };
+        const includesObservedAttribute = (node: Node): boolean => {
+          if (!(node instanceof Element)) {
+            return false;
+          }
+          return (
+            node.matches(`${panelSelector}[${observedAttribute}]`) ||
+            node.querySelector(`${panelSelector}[${observedAttribute}]`) !==
+              null
+          );
+        };
+        const observer = new MutationObserver((records) => {
+          const found = records.some((record) => {
+            if (
+              record.type === "attributes" &&
+              record.attributeName === observedAttribute &&
+              record.target instanceof Element
+            ) {
+              return record.target.matches(panelSelector);
+            }
+            return [...record.addedNodes].some(includesObservedAttribute);
+          });
+          if (found) {
+            finish(true);
+          }
+        });
+        observation.observer = observer;
+        observer.observe(document.documentElement, {
+          attributeFilter: [observedAttribute],
+          attributes: true,
+          childList: true,
+          subtree: true,
+        });
+        observation.timeoutId = window.setTimeout(() => {
+          finish(false);
+        }, 1000);
+      }),
+    attributeName
+  );
 
 const readToolRects = async (page: Page) =>
   await page.evaluate(
@@ -750,6 +810,115 @@ describe("agent workspace browser UI", () => {
     }
   });
 
+  it("keeps historical previews in sync with explicit and system themes", async () => {
+    const page = await openWorkspacePage(browser, html, workspaceScript);
+    const previewSelector = ".mdxr-workspace-history-preview iframe";
+    const iframe = page.locator(previewSelector);
+    const readPreviewTheme = async () =>
+      await page
+        .frameLocator(previewSelector)
+        .locator("html")
+        .evaluate((element) => ({
+          backgroundColor: getComputedStyle(element).backgroundColor,
+          colorScheme: getComputedStyle(element).colorScheme,
+          isDark: element.classList.contains("dark"),
+          scriptRan: Reflect.has(window, "__mdxrHistoricalPreviewScriptRan"),
+          version: element.querySelector("main")?.textContent,
+        }));
+    const expectPreviewTheme = async (
+      theme: "dark" | "light",
+      version: string
+    ) => {
+      await expect
+        .poll(
+          async () =>
+            await iframe.evaluate((element) =>
+              element instanceof HTMLIFrameElement
+                ? new URL(element.src).searchParams.get("theme")
+                : null
+            )
+        )
+        .toBe(theme);
+      await expect.poll(readPreviewTheme).toStrictEqual({
+        backgroundColor:
+          theme === "dark" ? "rgb(12, 34, 56)" : "rgb(230, 240, 250)",
+        colorScheme: theme,
+        isDark: theme === "dark",
+        scriptRan: false,
+        version: `Historical version ${version}`,
+      });
+    };
+
+    try {
+      await page.emulateMedia({ colorScheme: "dark" });
+      await expect
+        .poll(
+          async () =>
+            await page.evaluate(() =>
+              document.documentElement.classList.contains("dark")
+            )
+        )
+        .toBe(true);
+
+      await page.getByRole("button", { exact: true, name: "MDX" }).click();
+      const versionSelect = page.getByRole("combobox", {
+        name: "Document version",
+      });
+      await page.locator('#mdxr-version-select option[value="v1"]').waitFor({
+        state: "attached",
+      });
+      await versionSelect.selectOption("v1");
+      await page.getByRole("button", { exact: true, name: "Preview" }).click();
+      await expectPreviewTheme("dark", "v1");
+      await expect
+        .poll(async () => await iframe.getAttribute("sandbox"))
+        .toBe("");
+
+      const themeButton = page.locator(".mdxr-theme");
+      await themeButton.click();
+      await expect
+        .poll(async () => await themeButton.getAttribute("data-mode"))
+        .toBe("light");
+      await expectPreviewTheme("light", "v1");
+
+      await themeButton.click();
+      await expect
+        .poll(async () => await themeButton.getAttribute("data-mode"))
+        .toBe("dark");
+      await themeButton.click();
+      await expect
+        .poll(async () => await themeButton.getAttribute("data-mode"))
+        .toBe("auto");
+
+      await page.emulateMedia({ colorScheme: "light" });
+      await expect
+        .poll(
+          async () =>
+            await page.evaluate(() =>
+              document.documentElement.classList.contains("dark")
+            )
+        )
+        .toBe(false);
+      await expectPreviewTheme("light", "v1");
+
+      await page.emulateMedia({ colorScheme: "dark" });
+      await expect
+        .poll(
+          async () =>
+            await page.evaluate(() =>
+              document.documentElement.classList.contains("dark")
+            )
+        )
+        .toBe(true);
+      await expectPreviewTheme("dark", "v1");
+
+      await versionSelect.selectOption("v2");
+      await expectPreviewTheme("dark", "v2");
+    } finally {
+      await page.close();
+    }
+  });
+
   it("handles an unchanged comparison, source, theme, annotations, and chat", async () => {
     const page = await openWorkspacePage(browser, html, workspaceScript);
     try {
@@ -814,6 +983,141 @@ describe("agent workspace browser UI", () => {
         },
         sourceState: { annotationsHidden: true, hasSource: true },
       });
+    } finally {
+      await page.close();
+    }
+  });
+
+  it("animates chat transitions, settles rapid toggles, and restores focus", async () => {
+    const page = await openWorkspacePage(browser, html, workspaceScript);
+    const agentToggle = page.locator(".mdxr-workspace-agent");
+    const chat = page.locator(".mdxr-workspace-chat");
+    try {
+      const openingStyleObserved = observeChatStyleAttribute(
+        page,
+        "data-starting-style"
+      );
+      await agentToggle.click();
+      await expect(openingStyleObserved).resolves.toBeTruthy();
+
+      const openingTransition = await chat.evaluate((element) => {
+        const style = getComputedStyle(element);
+        return {
+          duration: style.transitionDuration,
+          property: style.transitionProperty,
+        };
+      });
+      expect(openingTransition.property).toContain("opacity");
+      expect(
+        openingTransition.duration
+          .split(",")
+          .some(
+            (duration) => duration.trim() !== "0s" && duration.trim() !== "0ms"
+          )
+      ).toBeTruthy();
+
+      await page.getByRole("button", { exact: true, name: "MDX" }).click();
+      await expect
+        .poll(
+          async () =>
+            await page
+              .getByRole("button", { exact: true, name: "MDX" })
+              .getAttribute("aria-pressed")
+        )
+        .toBe("true");
+      await page.getByRole("button", { exact: true, name: "Preview" }).click();
+      await expect
+        .poll(
+          async () =>
+            await page
+              .getByRole("button", { exact: true, name: "Preview" })
+              .getAttribute("aria-pressed")
+        )
+        .toBe("true");
+      await expect(agentToggle.getAttribute("aria-expanded")).resolves.toBe(
+        "true"
+      );
+
+      const endingStyleObserved = observeChatStyleAttribute(
+        page,
+        "data-ending-style"
+      );
+      await page.getByRole("button", { name: "Close chat" }).click();
+      await expect(endingStyleObserved).resolves.toBeTruthy();
+      await expect
+        .poll(
+          async () =>
+            await page.evaluate(
+              () =>
+                document.activeElement?.classList.contains(
+                  "mdxr-workspace-agent"
+                ) ?? false
+            )
+        )
+        .toBe(true);
+      await expect.poll(async () => await chat.count()).toBe(0);
+
+      await page.evaluate(() => {
+        const toggle = document.querySelector<HTMLButtonElement>(
+          ".mdxr-workspace-agent"
+        );
+        if (toggle === null) {
+          throw new Error("Missing agent chat toggle");
+        }
+        for (let index = 0; index < 4; index += 1) {
+          toggle.click();
+        }
+      });
+      await expect
+        .poll(async () => await agentToggle.getAttribute("aria-expanded"))
+        .toBe("false");
+      await expect.poll(async () => await chat.count()).toBe(0);
+    } finally {
+      await page.close();
+    }
+  });
+
+  it("removes chat transitions and closes promptly with reduced motion", async () => {
+    const page = await openWorkspacePage(browser, html, workspaceScript);
+    const agentToggle = page.locator(".mdxr-workspace-agent");
+    const chat = page.locator(".mdxr-workspace-chat");
+    try {
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await expect(
+        page.evaluate(
+          () => window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        )
+      ).resolves.toBeTruthy();
+
+      await agentToggle.click();
+      await expect
+        .poll(async () => await agentToggle.getAttribute("aria-expanded"))
+        .toBe("true");
+      const transition = await chat.evaluate((element) => {
+        const style = getComputedStyle(element);
+        return {
+          duration: style.transitionDuration,
+          property: style.transitionProperty,
+        };
+      });
+      expect(transition).toStrictEqual({
+        duration: "0s",
+        property: "none",
+      });
+
+      await page.getByRole("button", { name: "Close chat" }).click();
+      await expect
+        .poll(async () => await agentToggle.getAttribute("aria-expanded"))
+        .toBe("false");
+      await expect.poll(async () => await chat.count()).toBe(0);
+      await expect(
+        page.evaluate(
+          () =>
+            document.activeElement?.classList.contains(
+              "mdxr-workspace-agent"
+            ) ?? false
+        )
+      ).resolves.toBeTruthy();
     } finally {
       await page.close();
     }

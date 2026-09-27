@@ -25,12 +25,26 @@ ul.contains-task-list { padding-left: 1.25rem; }
  * (.mdxr-copy-idle/.mdxr-copy-done); the delegated event handler
  * (src/client, also bound in the Storybook preview) toggles
  * .copied/.copy-failed for ~1.6s after each clipboard attempt. Success
- * swaps the copy icon for an emerald check with a pop; failure shakes and
- * tints red; pressing the button scales it down briefly. */
+ * crossfades the copy icon to an emerald check; failure shakes and tints
+ * red; pressing the button scales it down briefly. */
 .mdxr-copy {
-  display: inline-flex; align-items: center; justify-content: center;
+  display: inline-grid; place-items: center;
   border-radius: 0.25rem;
   transition: opacity 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+.mdxr-copy > .mdxr-copy-idle, .mdxr-copy > .mdxr-copy-done {
+  display: inline-flex; grid-area: 1 / 1;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transform: scale(0.82) rotate(-12deg);
+  transition: opacity 0.18s ease,
+    transform 0.22s cubic-bezier(0.2, 0.7, 0.3, 1),
+    visibility 0s linear 0.18s;
+}
+.mdxr-copy:not(.copied) > .mdxr-copy-idle,
+.mdxr-copy.copied > .mdxr-copy-done {
+  opacity: 1; visibility: visible; pointer-events: auto;
+  transform: scale(1) rotate(0);
+  transition-delay: 0s;
 }
 .mdxr-copy:hover { opacity: 1; }
 .mdxr-copy:active { transform: scale(0.82); }
@@ -44,7 +58,7 @@ ul.contains-task-list { padding-left: 1.25rem; }
  * auto → light → dark; [data-mode] picks which icon shows. */
 .mdxr-theme {
   position: fixed; top: 0.75rem; right: 0.75rem; z-index: 50;
-  display: inline-flex; align-items: center; justify-content: center;
+  display: inline-grid; place-items: center;
   height: 2rem; width: 2rem; margin: 0; padding: 0; border-radius: 9999px;
   border: 1px solid rgb(229 229 229); color: rgb(82 82 82);
   background: rgb(255 255 255 / 0.85); backdrop-filter: blur(8px);
@@ -62,18 +76,30 @@ ul.contains-task-list { padding-left: 1.25rem; }
   background: rgb(23 23 23 / 0.85);
 }
 .dark .mdxr-theme:hover { color: rgb(250 250 250); background: rgb(23 23 23); }
-.mdxr-theme .mdxr-theme-i { display: none; }
+.mdxr-theme .mdxr-theme-i {
+  display: inline-flex; grid-area: 1 / 1;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transform: scale(0.82) rotate(-12deg);
+  transition: opacity 0.18s ease,
+    transform 0.22s cubic-bezier(0.2, 0.7, 0.3, 1),
+    visibility 0s linear 0.18s;
+}
 .mdxr-theme[data-mode="auto"] .mdxr-theme-i-auto,
 .mdxr-theme[data-mode="light"] .mdxr-theme-i-light,
 .mdxr-theme[data-mode="dark"] .mdxr-theme-i-dark {
-  display: inline-flex;
-  animation: mdxr-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  opacity: 1; visibility: visible; pointer-events: auto;
+  transform: scale(1) rotate(0);
+  transition-delay: 0s;
 }
 .mdxr-theme svg { height: 1rem; width: 1rem; }
-@media print { .mdxr-theme { display: none; } }
+@media print {
+  .mdxr-theme { display: none; }
+  .mdxr-copy > .mdxr-copy-idle,
+  .mdxr-copy > .mdxr-copy-done { transition: none; transform: none; }
+}
 .mdxr-copy-done { display: none; }
-.copied .mdxr-copy-idle { display: none; }
-.copied .mdxr-copy-done {
+.copied:not(.mdxr-copy) .mdxr-copy-idle { display: none; }
+.copied:not(.mdxr-copy) .mdxr-copy-done {
   display: inline-flex;
   animation: mdxr-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -403,6 +429,9 @@ details[open] > summary .mdxr-chev { transform: rotate(90deg); }
   html { scroll-behavior: auto; }
   .mdxr-add,
   .mdxr-copy,
+  .mdxr-copy > .mdxr-copy-idle,
+  .mdxr-copy > .mdxr-copy-done,
+  .mdxr-theme .mdxr-theme-i,
   .mdxr-chev,
   .mdxr-choice,
   .mdxr-mark,
@@ -418,8 +447,7 @@ details[open] > summary .mdxr-chev { transform: rotate(90deg); }
   .mdxr-choice:active { transform: none; }
   .mdxr-move:active { transform: none; }
   .mdxr-theme:active { transform: none; }
-  .copied .mdxr-copy-done, .copy-failed { animation: none; }
-  .mdxr-theme .mdxr-theme-i { animation: none; }
+  .copied:not(.mdxr-copy) .mdxr-copy-done, .copy-failed { animation: none; }
   .mdxr-details::details-content,
   .mdxr-toc > details::details-content,
   .mdxr-tree details::details-content { transition: none; }

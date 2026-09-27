@@ -60,6 +60,11 @@ export interface DocumentOptions {
   title: string;
   body: string;
   css: string;
+  /**
+   * Initial effective theme for script-blocked previews. THEME_JS can change
+   * the class after first paint when scripts are enabled.
+   */
+  initialTheme?: "light" | "dark";
   /** Vanilla client bundle from `clientJs()` (copy/ask/theme handlers). */
   clientJs: string;
   needsMermaid: boolean;
@@ -73,7 +78,11 @@ export interface DocumentOptions {
 }
 
 export const htmlDocument = (o: DocumentOptions): string => `<!doctype html>
-<html lang="en">
+<html lang="en"${
+  o.initialTheme === undefined
+    ? ""
+    : ` class="${o.initialTheme}" style="color-scheme: ${o.initialTheme}"`
+}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">

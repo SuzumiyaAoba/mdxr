@@ -57,6 +57,8 @@ The watcher follows the document's render dependencies — a `theme` CSS file an
 
 The watcher records local MDX versions as files change. Use the version picker to render an earlier version, inspect its **Raw MDX**, or compare it with another version in **Diff**. History is stored under `.mdxr/history/`; capturing and viewing history is local and needs no API token.
 
+Choose **Export HTML** in the workspace to download one standalone review archive with the rendered document, conversation, comments, section review statuses, every saved MDX version, and their diffs. Images and stylesheets are embedded in the snapshot. Export reports an error if it cannot capture an external resource; the archive opens locally without the server.
+
 Pass a file path to use chat with an agent. To message a Codex TUI session that is already running, pass its thread ID. By default, mdxr connects to the local Codex daemon socket and queues each message on that thread, leaving the TUI session running:
 
 ```sh

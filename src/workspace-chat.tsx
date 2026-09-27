@@ -1,3 +1,4 @@
+import { Collapsible } from "@base-ui/react/collapsible";
 import { ArrowUp, X } from "lucide-react";
 import { createElement, Fragment, useMemo } from "react";
 import type { ReactElement } from "react";
@@ -31,6 +32,7 @@ export interface ConversationData {
 const EMPTY_MESSAGES: ChatMessage[] = [];
 
 interface WorkspaceChatProps {
+  open: boolean;
   provider: "codex" | "claude";
   conversation?: ConversationData;
   error: string;
@@ -128,6 +130,7 @@ const getMessageKeys = (messages: ChatMessage[]): string[] => {
 };
 
 export const WorkspaceChat = ({
+  open,
   provider,
   conversation,
   error,
@@ -142,115 +145,124 @@ export const WorkspaceChat = ({
   const isBusy = sending || conversation?.busy === true;
 
   return (
-    <aside
-      className="mdxr-workspace-chat"
-      aria-label="Agent chat"
-      id="mdxr-workspace-chat"
-      data-mdxr-agent-panel
-    >
-      <div className="mdxr-workspace-chat-header">
-        <div className="mdxr-workspace-chat-title">
-          <h2>Agent</h2>
-          <span className="mdxr-workspace-chat-provider">{providerLabel}</span>
-        </div>
-        <button
-          aria-label="Close chat"
-          onClick={onClose}
-          title="Close chat"
-          type="button"
-        >
-          <X aria-hidden="true" size={16} strokeWidth={1.75} />
-        </button>
-      </div>
-      <Conversation
-        aria-label="Conversation messages"
-        aria-live="polite"
-        aria-relevant="additions"
-        className="mdxr-workspace-chat-body"
+    <Collapsible.Root open={open}>
+      <Collapsible.Panel
+        render={<aside />}
+        className="mdxr-workspace-chat"
+        aria-label="Agent chat"
+        id="mdxr-workspace-chat"
+        data-mdxr-agent-panel
+        inert={!open}
       >
-        <ConversationContent className="mdxr-workspace-conversation-content">
-          {conversation === undefined &&
-            (chatError === undefined || chatError === "") && (
-              <output className="mdxr-workspace-loading">
-                Loading conversation…
+        <div className="mdxr-workspace-chat-header">
+          <div className="mdxr-workspace-chat-title">
+            <h2>Agent</h2>
+            <span className="mdxr-workspace-chat-provider">
+              {providerLabel}
+            </span>
+          </div>
+          <button
+            aria-label="Close chat"
+            onClick={onClose}
+            title="Close chat"
+            type="button"
+          >
+            <X aria-hidden="true" size={16} strokeWidth={1.75} />
+          </button>
+        </div>
+        <Conversation
+          aria-label="Conversation messages"
+          aria-live="polite"
+          aria-relevant="additions"
+          className="mdxr-workspace-chat-body"
+        >
+          <ConversationContent className="mdxr-workspace-conversation-content">
+            {conversation === undefined &&
+              (chatError === undefined || chatError === "") && (
+                <output className="mdxr-workspace-loading">
+                  Loading conversation…
+                </output>
+              )}
+            {conversation?.messages.length === 0 && (
+              <div className="mdxr-workspace-empty">
+                <strong>What would you like to change?</strong>
+                <p>Ask for an edit, or send feedback from Annotate.</p>
+              </div>
+            )}
+            {messages.map((message, index) => (
+              <div
+                className="mdxr-workspace-message"
+                data-role={message.role}
+                key={messageKeys[index]}
+              >
+                <span className="sr-only">
+                  {message.role === "user" ? "You" : providerLabel}:
+                </span>
+                <Message
+                  from={message.role}
+                  className="mdxr-workspace-message-frame"
+                >
+                  <MessageContent className="mdxr-workspace-message-content">
+                    {message.html === undefined ? (
+                      <span className="whitespace-pre-wrap">
+                        {message.content}
+                      </span>
+                    ) : (
+                      <MarkdownContent html={message.html} />
+                    )}
+                  </MessageContent>
+                </Message>
+              </div>
+            ))}
+            {isBusy && (
+              <output className="mdxr-workspace-pending" aria-live="polite">
+                <span aria-hidden="true" className="mdxr-workspace-pulse" />
+                {sending ? "Sending…" : `Waiting for ${providerLabel}…`}
               </output>
             )}
-          {conversation?.messages.length === 0 && (
-            <div className="mdxr-workspace-empty">
-              <strong>What would you like to change?</strong>
-              <p>Ask for an edit, or send feedback from Annotate.</p>
-            </div>
+          </ConversationContent>
+        </Conversation>
+        <div className="mdxr-workspace-chat-footer">
+          {chatError !== undefined && chatError !== "" && (
+            <p className="mdxr-workspace-error" role="alert">
+              {chatError}
+            </p>
           )}
-          {messages.map((message, index) => (
-            <div
-              className="mdxr-workspace-message"
-              data-role={message.role}
-              key={messageKeys[index]}
-            >
-              <span className="sr-only">
-                {message.role === "user" ? "You" : providerLabel}:
-              </span>
-              <Message
-                from={message.role}
-                className="mdxr-workspace-message-frame"
+          <PromptInput
+            aria-label="Message composer"
+            className="mdxr-workspace-composer"
+            disabled={isBusy}
+            onSubmit={onSend}
+          >
+            <PromptInputTextarea
+              aria-describedby="mdxr-workspace-chat-hint"
+              aria-label="Message to agent"
+              className="mdxr-workspace-composer-input"
+              placeholder="Describe a change…"
+            />
+            <PromptInputFooter className="mdxr-workspace-composer-footer">
+              <span
+                className="mdxr-workspace-hint"
+                id="mdxr-workspace-chat-hint"
               >
-                <MessageContent className="mdxr-workspace-message-content">
-                  {message.html === undefined ? (
-                    <span className="whitespace-pre-wrap">
-                      {message.content}
-                    </span>
-                  ) : (
-                    <MarkdownContent html={message.html} />
-                  )}
-                </MessageContent>
-              </Message>
-            </div>
-          ))}
-          {isBusy && (
-            <output className="mdxr-workspace-pending" aria-live="polite">
-              <span aria-hidden="true" className="mdxr-workspace-pulse" />
-              {sending ? "Sending…" : `Waiting for ${providerLabel}…`}
-            </output>
-          )}
-        </ConversationContent>
-      </Conversation>
-      <div className="mdxr-workspace-chat-footer">
-        {chatError !== undefined && chatError !== "" && (
-          <p className="mdxr-workspace-error" role="alert">
-            {chatError}
-          </p>
-        )}
-        <PromptInput
-          aria-label="Message composer"
-          className="mdxr-workspace-composer"
-          disabled={isBusy}
-          onSubmit={onSend}
-        >
-          <PromptInputTextarea
-            aria-describedby="mdxr-workspace-chat-hint"
-            aria-label="Message to agent"
-            className="mdxr-workspace-composer-input"
-            placeholder="Describe a change…"
-          />
-          <PromptInputFooter className="mdxr-workspace-composer-footer">
-            <span className="mdxr-workspace-hint" id="mdxr-workspace-chat-hint">
-              <span>
-                <kbd>Enter</kbd> to send
+                <span>
+                  <kbd>Enter</kbd> to send
+                </span>
+                <span>
+                  <kbd>Shift + Enter</kbd> for a new line
+                </span>
               </span>
-              <span>
-                <kbd>Shift + Enter</kbd> for a new line
-              </span>
-            </span>
-            <PromptInputSubmit
-              className="mdxr-workspace-send"
-              disabled={isBusy}
-              title="Send message"
-            >
-              <ArrowUp aria-hidden="true" size={16} strokeWidth={1.75} />
-            </PromptInputSubmit>
-          </PromptInputFooter>
-        </PromptInput>
-      </div>
-    </aside>
+              <PromptInputSubmit
+                className="mdxr-workspace-send"
+                disabled={isBusy}
+                title="Send message"
+              >
+                <ArrowUp aria-hidden="true" size={16} strokeWidth={1.75} />
+              </PromptInputSubmit>
+            </PromptInputFooter>
+          </PromptInput>
+        </div>
+      </Collapsible.Panel>
+    </Collapsible.Root>
   );
 };

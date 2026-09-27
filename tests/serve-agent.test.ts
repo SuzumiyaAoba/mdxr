@@ -9,8 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AgentMessage, AgentProvider } from "../src/agent-session.js";
 import { createAgentSession as createAgentSessionMock } from "../src/agent-session.js";
-import type { render } from "../src/render.js";
-import { renderFile } from "../src/render.js";
+import { render, renderFile } from "../src/render.js";
 import { serve } from "../src/serve.js";
 
 type AgentSession = ReturnType<typeof createAgentSessionMock>;
@@ -53,6 +52,7 @@ describe("preview agent API", () => {
     dir = await mkdtemp(path.join(os.tmpdir(), "mdxr-agent-"));
     filePath = path.join(dir, "document.mdx");
     await writeFile(filePath, "# Agent preview\n");
+    vi.mocked(render).mockReset().mockResolvedValue("historical preview");
     vi.mocked(renderFile).mockReset().mockResolvedValue("preview");
     vi.mocked(createAgentSessionMock).mockReset();
     activeProvider = "codex";
@@ -256,7 +256,14 @@ describe("preview agent API", () => {
   });
 
   it("ignores session-store watcher events while still watching the document", async () => {
-    const watch = vi.spyOn(fs, "watch");
+    // This test manually calls the captured callback; leave OS watcher events
+    // out so history-store writes cannot race with that controlled sequence.
+    const originalWatch = fs.watch.bind(fs);
+    const watch = vi.spyOn(fs, "watch").mockImplementation((...args) => {
+      const watcher = originalWatch(...args);
+      watcher.close();
+      return watcher;
+    });
     const baseUrl = await startServer("codex");
     expect(baseUrl).toContain("127.0.0.1");
     const listener = watch.mock.calls[0]?.at(-1);
@@ -345,6 +352,80 @@ describe("preview agent API", () => {
       },
     });
     /* oxlint-enable typescript/no-unsafe-assignment */
+  });
+
+  it("validates and passes the requested theme for history previews", async () => {
+    const baseUrl = await startServer();
+    const history = await historyBody(await fetch(`${baseUrl}/__mdxr_history`));
+
+    const themePreviews = await Promise.all(
+      (["dark", "light"] as const).map(async (theme) => {
+        const response = await fetch(
+          `${baseUrl}/__mdxr_history?view=preview&id=${history.latestId}&theme=${theme}`
+        );
+        return {
+          body: await response.text(),
+          status: response.status,
+          theme,
+        };
+      })
+    );
+    expect(themePreviews).toStrictEqual([
+      { body: "historical preview", status: 200, theme: "dark" },
+      { body: "historical preview", status: 200, theme: "light" },
+    ]);
+    const themeRenderCalls = vi
+      .mocked(render)
+      .mock.calls.map(([source, options]) => ({
+        dir: options?.dir,
+        filePath: options?.filePath,
+        initialTheme: options?.initialTheme,
+        liveReload: options?.liveReload,
+        source,
+      }))
+      .toSorted((first, second) =>
+        (first.initialTheme ?? "").localeCompare(second.initialTheme ?? "")
+      );
+    expect(themeRenderCalls).toStrictEqual([
+      {
+        dir,
+        filePath,
+        initialTheme: "dark",
+        liveReload: false,
+        source: "# Agent preview\n",
+      },
+      {
+        dir,
+        filePath,
+        initialTheme: "light",
+        liveReload: false,
+        source: "# Agent preview\n",
+      },
+    ]);
+
+    const defaultThemeResponse = await fetch(
+      `${baseUrl}/__mdxr_history?view=preview&id=${history.latestId}`
+    );
+    expect(defaultThemeResponse.status).toBe(200);
+    expect(vi.mocked(render)).toHaveBeenLastCalledWith("# Agent preview\n", {
+      dir,
+      filePath,
+      initialTheme: undefined,
+      liveReload: false,
+    });
+
+    const invalidThemeResponse = await fetch(
+      `${baseUrl}/__mdxr_history?view=preview&id=${history.latestId}&theme=auto`
+    );
+    expect({
+      body: await invalidThemeResponse.text(),
+      renderCallCount: vi.mocked(render).mock.calls.length,
+      status: invalidThemeResponse.status,
+    }).toStrictEqual({
+      body: '{"error":"Invalid preview theme"}',
+      renderCallCount: 3,
+      status: 400,
+    });
   });
 
   it("records the pre-instruction MDX version before forwarding a message", async () => {

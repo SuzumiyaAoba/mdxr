@@ -1,5 +1,6 @@
 import { parseAnnotationDocument } from "../annotations.js";
 import { parseSectionReviews } from "../section-reviews.js";
+import { WORKSPACE_EXPORT_STATE_EVENT } from "./workspace-export-state.js";
 
 interface ReviewControl {
   button: HTMLButtonElement;
@@ -81,6 +82,16 @@ class SectionReviews {
         this.load();
         this.refresh();
       }
+    });
+    document.addEventListener(WORKSPACE_EXPORT_STATE_EVENT, (event) => {
+      const state = event.detail;
+      this.load();
+      state.sectionReviews = this.controls.map(({ id, revision, title }) => ({
+        id,
+        reviewed: this.reviews.get(id) === revision,
+        revision,
+        title,
+      }));
     });
   }
 

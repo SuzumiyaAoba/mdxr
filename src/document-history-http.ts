@@ -8,6 +8,17 @@ import { highlightMdxSource } from "./rehype/shiki.js";
 import { render } from "./render.js";
 
 type DocumentHistory = ReturnType<typeof createDocumentHistory>;
+type PreviewTheme = "dark" | "light";
+
+/** `undefined` means the query is absent; `null` marks an unsupported value. */
+const parsePreviewTheme = (
+  value: string | null
+): PreviewTheme | null | undefined => {
+  if (value === null) {
+    return undefined;
+  }
+  return value === "light" || value === "dark" ? value : null;
+};
 
 const replyJson = (
   response: http.ServerResponse,
@@ -93,10 +104,16 @@ export const handleDocumentHistoryRequest = async (
       }
     }
     if (view === "preview" && id !== null) {
+      const theme = parsePreviewTheme(url.searchParams.get("theme"));
+      if (theme === null) {
+        replyJson(response, 400, { error: "Invalid preview theme" });
+        return;
+      }
       const source = await history.read(id);
       const html = await render(source, {
         dir: path.dirname(filePath),
         filePath,
+        initialTheme: theme ?? undefined,
         liveReload: false,
       });
       response.writeHead(200, {

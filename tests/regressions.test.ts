@@ -452,6 +452,29 @@ describe(ChartStyle, () => {
 describe(render, () => {
   afterAll(cleanTmpDirs);
 
+  it("renders an optional initial theme on the HTML root", async () => {
+    const dir = await makeDir();
+    const themes = await Promise.all(
+      (["dark", "light"] as const).map(async (theme) => ({
+        html: await render("# Theme preview", {
+          dir,
+          hydrate: false,
+          initialTheme: theme,
+        }),
+        theme,
+      }))
+    );
+    for (const { html, theme } of themes) {
+      expect(html).toContain(
+        `<html lang="en" class="${theme}" style="color-scheme: ${theme}">`
+      );
+    }
+
+    const html = await render("# Default theme", { dir, hydrate: false });
+    expect(html).toContain('<html lang="en">');
+    expect(html).not.toContain('style="color-scheme:');
+  });
+
   it("accepts numeric frontmatter titles", async () => {
     const dir = await makeDir();
     const html = await render("---\ntitle: 42\n---\n\nbody", { dir });

@@ -28,6 +28,7 @@ import {
 } from "./annotation-view.js";
 import type { AnnotationView } from "./annotation-view.js";
 import { writeClipboard } from "./doc-events.js";
+import { WORKSPACE_EXPORT_STATE_EVENT } from "./workspace-export-state.js";
 
 interface Draft {
   anchor: AnnotationAnchor;
@@ -722,6 +723,24 @@ class AnnotationController {
       if (event.key === this.storageKey) {
         this.load();
         this.refresh();
+      }
+    });
+    document.addEventListener(WORKSPACE_EXPORT_STATE_EVENT, (event) => {
+      const state = event.detail;
+      this.refresh();
+      state.annotations = structuredClone({
+        annotations: this.annotations,
+        history: this.history,
+      });
+      state.detachedAnnotationIds = [...this.detached];
+      if (this.draft === undefined) {
+        delete state.annotationDraft;
+      } else {
+        state.annotationDraft = {
+          anchor: structuredClone(this.draft.anchor),
+          ...(this.draft.id === undefined ? {} : { id: this.draft.id }),
+          comment: this.view.comment.value,
+        };
       }
     });
   }

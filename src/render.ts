@@ -79,6 +79,11 @@ const ownSources = async (): Promise<CssSource[]> => {
 export interface RenderOptions {
   liveReload?: boolean;
   /**
+   * Initial effective theme for previews with scripts disabled. In normal
+   * rendered documents, THEME_JS may replace this class after first paint.
+   */
+  initialTheme?: "light" | "dark";
+  /**
    * Inline a client bundle that hydrates the document (`hydrateRoot`), making
    * interactive components (Tabs, Accordion, Switch, …) actually work.
    * Default true; `false` emits purely static HTML.
@@ -323,6 +328,7 @@ export const render = async (
     clientJs: js,
     css,
     hydrateJs,
+    initialTheme: opts.initialTheme,
     liveReload: opts.liveReload,
     needsKatex: /class="[^"]*katex/u.test(docBody),
     needsMermaid: /class="[^"]*mermaid/u.test(docBody),

@@ -52,10 +52,11 @@ describe("document page navigation", () => {
   let plan: string;
   let noHeadings: string;
   let singleSection: string;
+  let nested: string;
 
   beforeAll(async () => {
     browser = await chromium.launch();
-    [html, plain, plan, noHeadings, singleSection] = await Promise.all([
+    [html, plain, plan, noHeadings, singleSection, nested] = await Promise.all([
       render(source),
       render(
         "---\ntitle: Plain\n---\n\n## Alpha\n\nAlpha text.\n\n## Beta\n\nBeta text.",
@@ -70,6 +71,16 @@ describe("document page navigation", () => {
       render("## Only section\n\nOnly section content.", {
         hydrate: false,
       }),
+      render(
+        `## Alpha\n\n${Array.from(
+          { length: 20 },
+          (_, index) => `Alpha paragraph ${index + 1}.`
+        ).join("\n\n")}\n\n## Beta\n\n${Array.from(
+          { length: 20 },
+          (_, index) => `Beta paragraph ${index + 1}.`
+        ).join("\n\n")}\n\n### Deep target\n\nDeep link destination.`,
+        { hydrate: false }
+      ),
     ]);
   }, 60_000);
 
@@ -85,6 +96,116 @@ describe("document page navigation", () => {
     await page.goto(`http://mdxr.test/${hash}`);
     return page;
   };
+
+  const openEmbeddedPage = async (host: "top" | "reading"): Promise<Page> => {
+    const page = await browser.newPage({
+      viewport: { height: 700, width: 1000 },
+    });
+    await page.route("http://mdxr.test/**", async (route) => {
+      const { pathname } = new URL(route.request().url());
+      const body =
+        pathname === "/child/"
+          ? nested
+          : `<html><body><div style="height:${host === "top" ? 1600 : 5000}px"></div><iframe title="Rendered document" src="about:blank" style="height:500px;width:800px"></iframe><div style="height:3000px"></div></body></html>`;
+      await route.fulfill({ body, contentType: "text/html" });
+    });
+    await page.addInitScript(() => {
+      localStorage.setItem("mdxr-view", "pages");
+    });
+    await page.goto(`http://mdxr.test/host/${host}`);
+    const startingScrollY = host === "top" ? 0 : 3000;
+    await page.evaluate((scrollY) => {
+      window.scrollTo(0, scrollY);
+    }, startingScrollY);
+    await page
+      .locator('iframe[title="Rendered document"]')
+      .evaluate((frame) => {
+        if (!(frame instanceof HTMLIFrameElement)) {
+          throw new Error("Expected the rendered document iframe");
+        }
+        frame.src = "http://mdxr.test/child/";
+      });
+    const frame = page.frameLocator('iframe[title="Rendered document"]');
+    await expect(
+      frame
+        .getByRole("group", { name: "Document view" })
+        .getByRole("button", { exact: true, name: "Pages" })
+        .getAttribute("aria-pressed")
+    ).resolves.toBe("true");
+    return page;
+  };
+
+  it("does not scroll the host when a stored Pages view opens below the fold", async () => {
+    const page = await openEmbeddedPage("top");
+    try {
+      await expect(
+        page.evaluate(() => ({
+          childScrollY:
+            document.querySelector<HTMLIFrameElement>(
+              'iframe[title="Rendered document"]'
+            )?.contentWindow?.scrollY ?? null,
+          hostScrollY: window.scrollY,
+        }))
+      ).resolves.toStrictEqual({ childScrollY: 0, hostScrollY: 0 });
+    } finally {
+      await page.close();
+    }
+  });
+
+  it("keeps a host reading position during an iframe deep link and page switch", async () => {
+    const page = await openEmbeddedPage("reading");
+    try {
+      const frame = page.frameLocator('iframe[title="Rendered document"]');
+      await frame.locator("body").evaluate(() => {
+        history.replaceState(null, "", "#deep-target");
+        window.dispatchEvent(new HashChangeEvent("hashchange"));
+      });
+      const childPosition = await frame.locator("body").evaluate(() => ({
+        deepTargetTop:
+          document
+            .querySelector<HTMLElement>("#deep-target")
+            ?.getBoundingClientRect().top ?? null,
+        scrollY: window.scrollY,
+        viewportHeight: window.innerHeight,
+      }));
+      const hostScrollY = await page.evaluate(() => window.scrollY);
+      expect({
+        childScrollsToDeepLink: childPosition.scrollY > 0,
+        deepLinkIsInView:
+          childPosition.deepTargetTop !== null &&
+          childPosition.deepTargetTop >= 0 &&
+          childPosition.deepTargetTop < childPosition.viewportHeight,
+        hostScrollY,
+      }).toStrictEqual({
+        childScrollsToDeepLink: true,
+        deepLinkIsInView: true,
+        hostScrollY: 3000,
+      });
+
+      await frame
+        .getByRole("tab", { exact: true, name: "Alpha" })
+        .evaluate((tab) => {
+          if (!(tab instanceof HTMLButtonElement)) {
+            throw new Error("Expected a page navigation tab");
+          }
+          tab.click();
+        });
+      await expect(
+        frame.getByText("Alpha paragraph 1.").isVisible()
+      ).resolves.toBeTruthy();
+      await expect(
+        page.evaluate(() => ({
+          childScrollY:
+            document.querySelector<HTMLIFrameElement>(
+              'iframe[title="Rendered document"]'
+            )?.contentWindow?.scrollY ?? null,
+          hostScrollY: window.scrollY,
+        }))
+      ).resolves.toStrictEqual({ childScrollY: 0, hostScrollY: 3000 });
+    } finally {
+      await page.close();
+    }
+  });
 
   it("switches between a continuous document and h2 pages without losing content", async () => {
     const page = await openPage();

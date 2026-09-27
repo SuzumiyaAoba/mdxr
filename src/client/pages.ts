@@ -27,7 +27,14 @@ const scrollToTarget = (target: HTMLElement): void => {
   const visible = Object.hasOwn(target.dataset, "mdxrPage")
     ? (target.firstElementChild ?? target)
     : target;
-  visible.scrollIntoView({ behavior: "instant", block: "start" });
+  const scrollMargin =
+    Number(getComputedStyle(visible).scrollMarginTop.replace("px", "")) || 0;
+  // scrollIntoView also scrolls ancestor frames, so restoring Pages view in
+  // a lazy-loaded preview can pull the containing documentation down the page.
+  window.scrollTo({
+    behavior: "instant",
+    top: visible.getBoundingClientRect().top + window.scrollY - scrollMargin,
+  });
 };
 
 const hashTarget = (hash: string): HTMLElement | null => {

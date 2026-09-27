@@ -49,8 +49,40 @@ cat plan.mdx | mdxr serve --open
 | --- | --- |
 | `-p, --port <port>` | Port to listen on (default `3737`) |
 | `--open` | Open the preview in the default browser once serving |
+| `--agent <agent>` | Show a local chat panel for `codex` or `claude` |
+| `--server <url>` | Codex App Server endpoint; accepts `unix:///absolute/path` or `ws://...` (requires `--agent codex`) |
+| `--session <id>` | Send messages to an existing Codex thread (requires `--agent codex`) |
 
-The watcher follows the document's render dependencies — a `theme` CSS file and its imports reload the preview too.
+The watcher follows the document's render dependencies — a `theme` CSS file and its imports reload the preview too. With `--agent`, the workspace includes an AI Elements chat panel. Use **Annotate** to add comments to rendered content, then send them directly to the same chat.
+
+The watcher records local MDX versions as files change. Use the version picker to render an earlier version, inspect its **Raw MDX**, or compare it with another version in **Diff**. History is stored under `.mdxr/history/`; capturing and viewing history is local and needs no API token.
+
+Pass a file path to use chat with an agent. To message a Codex TUI session that is already running, pass its thread ID. By default, mdxr connects to the local Codex daemon socket and queues each message on that thread, leaving the TUI session running:
+
+```sh
+mdxr serve plan.mdx --agent codex --session <thread-id>
+```
+
+Messages appear as queued while Codex is busy. Once Codex processes a message, its reply appears in the MDX preview. To use a specific daemon socket or WebSocket App Server, pass its endpoint with `--server`:
+
+```sh
+mdxr serve plan.mdx --agent codex --server unix:///absolute/path/to/app-server.sock --session <thread-id>
+mdxr serve plan.mdx --agent codex --server ws://127.0.0.1:4500 --session <thread-id>
+```
+
+When `--session` is omitted, mdxr uses this document's saved Codex thread ID in `.mdxr/sessions.json`, if one exists. Otherwise, it starts a new thread.
+
+Claude chat uses a long-lived Claude Agent SDK session managed by mdxr:
+
+```sh
+mdxr serve plan.mdx --agent claude
+```
+
+The Claude session is owned by mdxr and does not attach to a session started by an external Claude CLI process. `--session` applies only to Codex.
+
+The preview has no tool-approval UI, so actions that require approval are rejected. Claude runs with the `dontAsk` permission mode.
+
+The document-to-session mapping and conversation history are stored in the working directory's gitignored `.mdxr/sessions.json`. `--agent` requires a file input and does not support stdin. Agent replies are displayed as Markdown; JSX and raw HTML in replies are not executed.
 
 ## mdxr text
 

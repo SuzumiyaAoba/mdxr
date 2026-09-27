@@ -38,9 +38,16 @@ export const annotationHtml = (icon: (name: string) => string): string => `
       </form>
       <p class="mdxr-annotation-empty" data-annotation-empty>No comments</p>
       <ol class="mdxr-annotation-list" data-annotation-list></ol>
+      <details class="mdxr-annotation-history" data-annotation-history hidden>
+        <summary>History <span data-annotation-history-count>0</span></summary>
+        <div class="mdxr-annotation-history-list" data-annotation-history-list></div>
+      </details>
     </div>
     <footer class="mdxr-annotation-footer">
-      <button type="button" data-annotation-copy aria-label="Copy Markdown" title="Copy Markdown" disabled><span class="mdxr-annotation-copy-idle">${icon("copy")}</span><span class="mdxr-annotation-copy-done">${icon("check")}</span><span data-annotation-copy-label>Markdown</span></button>
+      <div class="mdxr-annotation-footer-actions">
+        <button type="button" data-annotation-copy aria-label="Copy Markdown" title="Copy Markdown" disabled><span class="mdxr-annotation-copy-idle">${icon("copy")}</span><span class="mdxr-annotation-copy-done">${icon("check")}</span><span data-annotation-copy-label>Markdown</span></button>
+        <button type="button" data-annotation-send aria-label="Send to chat" title="Send to chat" disabled hidden>${icon("send")}<span>Send to chat</span></button>
+      </div>
       <div class="mdxr-annotation-save-status" data-annotation-status-row data-state="saved"><p role="status" aria-live="polite" data-annotation-status></p></div>
       <div data-annotation-export hidden>
         <label class="mdxr-annotation-sr-only" for="mdxr-annotation-markdown">Markdown feedback</label>

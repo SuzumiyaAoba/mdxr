@@ -2,10 +2,11 @@ import {
   annotationsMarkdown,
   findAnnotationSource,
   parseAnnotationDocument,
-  parseAnnotations,
+  parseAnnotationStore,
 } from "../annotations.js";
 import type {
   AnnotationAnchor,
+  AnnotationBatch,
   AnnotationDocument,
   DocumentAnnotation,
 } from "../annotations.js";
@@ -22,6 +23,7 @@ import {
   annotationView,
   paintAnnotationTargets,
   positionSelectionButton,
+  renderAnnotationHistory,
   renderAnnotationList,
 } from "./annotation-view.js";
 import type { AnnotationView } from "./annotation-view.js";
@@ -32,6 +34,11 @@ interface Draft {
   id?: string;
 }
 
+const annotationId = (): string =>
+  typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
 /** Owns only the review chrome; the MDX/React tree is never rewritten. */
 class AnnotationController {
   private readonly root: HTMLElement;
@@ -40,6 +47,7 @@ class AnnotationController {
   private readonly view: AnnotationView;
   private readonly storageKey: string;
   private annotations: DocumentAnnotation[] = [];
+  private history: AnnotationBatch[] = [];
   private readonly targets = new Map<string, ResolvedAnnotation>();
   private readonly detached = new Set<string>();
   private draft?: Draft;
@@ -57,6 +65,33 @@ class AnnotationController {
     this.host = host;
     this.info = info;
     this.view = annotationView(host, info.file);
+    const revealSendButton = (): boolean => {
+      if (document.querySelector("[data-mdxr-agent]") === null) {
+        return false;
+      }
+      this.view.send.hidden = false;
+      return true;
+    };
+    if (!revealSendButton()) {
+      const observer = new MutationObserver(() => {
+        if (revealSendButton()) {
+          observer.disconnect();
+        }
+      });
+      observer.observe(document.documentElement, {
+        childList: true,
+        subtree: true,
+      });
+      document.addEventListener(
+        "DOMContentLoaded",
+        () => {
+          if (revealSendButton()) {
+            observer.disconnect();
+          }
+        },
+        { once: true }
+      );
+    }
     this.storageKey = `mdxr:annotations:v1:${info.file}`;
     this.load();
     this.bindEvents();
@@ -80,9 +115,9 @@ class AnnotationController {
 
   private load(): void {
     try {
-      this.annotations = parseAnnotations(
-        localStorage.getItem(this.storageKey)
-      );
+      const saved = parseAnnotationStore(localStorage.getItem(this.storageKey));
+      this.annotations = saved.annotations;
+      this.history = saved.history;
     } catch {
       this.status(
         "Saved annotations could not be loaded. New comments can still be copied as Markdown.",
@@ -91,12 +126,18 @@ class AnnotationController {
     }
   }
 
-  private persist(): void {
+  private persist(): boolean {
+    let saved = false;
     try {
       localStorage.setItem(
         this.storageKey,
-        JSON.stringify({ annotations: this.annotations, version: 1 })
+        JSON.stringify({
+          annotations: this.annotations,
+          history: this.history,
+          version: 1,
+        })
       );
+      saved = true;
       this.status("Saved in this browser", "saved");
     } catch {
       this.status(
@@ -107,6 +148,7 @@ class AnnotationController {
     this.view.export.hidden = true;
     this.resetCopyFeedback();
     this.refresh();
+    return saved;
   }
 
   private refresh(): void {
@@ -142,6 +184,7 @@ class AnnotationController {
       this.detached,
       this.draft?.id
     );
+    renderAnnotationHistory(this.view, this.history);
     this.paint();
   }
 
@@ -270,10 +313,7 @@ class AnnotationController {
     }
     const existing = this.annotations.find(({ id }) => id === this.draft?.id);
     if (existing === undefined) {
-      const id =
-        typeof crypto.randomUUID === "function"
-          ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const id = annotationId();
       this.annotations.push({ anchor: this.draft.anchor, comment, id });
     } else {
       existing.comment = comment;
@@ -387,18 +427,72 @@ class AnnotationController {
     this.view.copyLabel.textContent = "Markdown";
   }
 
-  private copy(): void {
-    this.resetCopyFeedback();
+  private handoff(
+    action: AnnotationBatch["action"]
+  ): AnnotationBatch | undefined {
+    if (
+      this.annotations.length === 0 ||
+      this.view.copy.dataset.busy === "true" ||
+      this.view.send.dataset.busy === "true"
+    ) {
+      return undefined;
+    }
     this.refresh();
-    const markdown = annotationsMarkdown(
-      this.info,
-      this.annotations,
-      this.detached
+    const annotations = structuredClone(this.annotations);
+    return {
+      action,
+      annotations,
+      createdAt: new Date().toISOString(),
+      id: annotationId(),
+      markdown: annotationsMarkdown(this.info, annotations, this.detached),
+    };
+  }
+
+  private archive(batch: AnnotationBatch): boolean {
+    const exported = new Map(
+      batch.annotations.map((annotation) => [
+        annotation.id,
+        JSON.stringify(annotation),
+      ])
     );
+    // Only clear the exact comments handed off; edits made while awaiting the
+    // clipboard or the agent response remain in the current review.
+    this.annotations = this.annotations.filter(
+      (annotation) => exported.get(annotation.id) !== JSON.stringify(annotation)
+    );
+    this.history.push({ ...batch, createdAt: new Date().toISOString() });
+    if (
+      this.draft?.id !== undefined &&
+      !this.annotations.some(({ id }) => id === this.draft?.id)
+    ) {
+      // An unsaved edit is still a draft, even when its saved version was sent.
+      this.draft = { anchor: this.draft.anchor };
+      this.view.form.setAttribute("aria-label", "New comment");
+      this.view.save.setAttribute("aria-label", "Save comment");
+      this.view.save.title = "Save comment (Ctrl / ⌘ + Enter)";
+    }
+    this.selection = undefined;
+    this.view.selection.hidden = true;
+    this.pick(false);
+    window.getSelection()?.removeAllRanges();
+    return this.persist();
+  }
+
+  private copy(): void {
+    const batch = this.handoff("copy");
+    if (batch === undefined) {
+      return;
+    }
+    this.resetCopyFeedback();
+    this.view.copy.dataset.busy = "true";
+    this.refresh();
+    const { markdown } = batch;
     this.view.markdown.value = markdown;
     writeClipboard(
       markdown,
       () => {
+        delete this.view.copy.dataset.busy;
+        const saved = this.archive(batch);
         this.view.export.hidden = true;
         this.view.copy.dataset.state = "copied";
         this.view.copyLabel.textContent = "Copied";
@@ -406,11 +500,15 @@ class AnnotationController {
           this.resetCopyFeedback();
         }, 2400);
         this.status(
-          "Markdown copied. Paste it into your coding agent.",
-          "success"
+          saved
+            ? "Markdown copied. Comments moved to History."
+            : "Markdown copied. History is available until this page closes; browser storage is unavailable.",
+          saved ? "success" : "warning"
         );
       },
       () => {
+        delete this.view.copy.dataset.busy;
+        this.refresh();
         this.view.export.hidden = false;
         this.view.markdown.focus();
         this.view.markdown.select();
@@ -420,6 +518,56 @@ class AnnotationController {
         );
       }
     );
+  }
+
+  private async send(): Promise<void> {
+    const batch = this.handoff("send");
+    if (batch === undefined) {
+      return;
+    }
+    this.view.send.dataset.busy = "true";
+    this.refresh();
+    this.status("Sending annotations to chat…", "info");
+    try {
+      const response = await fetch("/__mdxr_agent", {
+        body: JSON.stringify({ message: batch.markdown }),
+        headers: { "content-type": "application/json" },
+        method: "POST",
+      });
+      if (!response.ok) {
+        let result: unknown;
+        try {
+          result = await response.json();
+        } catch {
+          result = undefined;
+        }
+        const error =
+          typeof result === "object" &&
+          result !== null &&
+          "error" in result &&
+          typeof result.error === "string"
+            ? result.error
+            : "Could not send annotations to chat.";
+        throw new Error(error);
+      }
+      const saved = this.archive(batch);
+      this.status(
+        saved
+          ? "Annotations sent to chat. Comments moved to History."
+          : "Annotations sent to chat. History is available until this page closes; browser storage is unavailable.",
+        saved ? "success" : "warning"
+      );
+    } catch (error) {
+      this.status(
+        error instanceof Error
+          ? `Could not send annotations: ${error.message}`
+          : "Could not send annotations to chat.",
+        "warning"
+      );
+    } finally {
+      delete this.view.send.dataset.busy;
+      this.refresh();
+    }
   }
 
   private keydown(event: KeyboardEvent): void {
@@ -499,6 +647,9 @@ class AnnotationController {
     });
     view.copy.addEventListener("click", () => {
       this.copy();
+    });
+    view.send.addEventListener("click", () => {
+      void this.send();
     });
     view.list.addEventListener("click", (event) => {
       const button =

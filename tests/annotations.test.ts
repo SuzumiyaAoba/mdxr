@@ -3,9 +3,16 @@ import { describe, expect, it } from "vitest";
 import {
   annotationsMarkdown,
   findAnnotationSource,
+  parseAnnotationStore,
   parseAnnotations,
 } from "../src/annotations.js";
-import type { AnnotationAnchor, AnnotationSource } from "../src/annotations.js";
+import type {
+  AnnotationAnchor,
+  AnnotationBatch,
+  AnnotationSource,
+  AnnotationStore,
+  DocumentAnnotation,
+} from "../src/annotations.js";
 
 const source: AnnotationSource = {
   end: 8,
@@ -29,6 +36,28 @@ const anchor: AnnotationAnchor = {
   source,
   start: 7,
   suffix: " and diagrams.",
+};
+
+const annotation: DocumentAnnotation = {
+  anchor,
+  comment: "Make it clearer",
+  id: "a",
+};
+
+const copyBatch: AnnotationBatch = {
+  action: "copy",
+  annotations: [annotation],
+  createdAt: "2026-09-27T08:00:00.000Z",
+  id: "batch-copy",
+  markdown: "# Feedback\n",
+};
+
+const sendBatch: AnnotationBatch = {
+  action: "send",
+  annotations: [{ ...annotation, id: "b" }],
+  createdAt: "2026-09-27T08:05:00.000Z",
+  id: "batch-send",
+  markdown: "# Feedback\n\nSent",
 };
 
 describe("document annotation handoff", () => {
@@ -94,7 +123,6 @@ describe("document annotation handoff", () => {
   });
 
   it("validates persisted records and rejects corrupt versions and anchors", () => {
-    const annotation = { anchor, comment: "Make it clearer", id: "a" };
     expect(parseAnnotations(null)).toStrictEqual([]);
     expect(
       parseAnnotations(
@@ -119,5 +147,71 @@ describe("document annotation handoff", () => {
       );
     }
     expect(() => parseAnnotations("not json")).toThrow(SyntaxError);
+  });
+
+  it("reads legacy v1 stores without archive history", () => {
+    const raw = JSON.stringify({ annotations: [annotation], version: 1 });
+
+    expect(parseAnnotationStore(raw)).toStrictEqual({
+      annotations: [annotation],
+      history: [],
+    });
+    expect(parseAnnotations(raw)).toStrictEqual([annotation]);
+    expect(parseAnnotationStore(null)).toStrictEqual({
+      annotations: [],
+      history: [],
+    });
+  });
+
+  it("round-trips archive batches in oldest-to-newest order", () => {
+    const store: AnnotationStore = {
+      annotations: [annotation],
+      history: [copyBatch, sendBatch],
+    };
+
+    expect(
+      parseAnnotationStore(JSON.stringify({ version: 1, ...store }))
+    ).toStrictEqual(store);
+  });
+
+  it.each([
+    { annotations: [annotation], history: {}, version: 1 },
+    {
+      annotations: [annotation],
+      history: [{ ...copyBatch, createdAt: "not a date" }],
+      version: 1,
+    },
+    {
+      annotations: [annotation],
+      history: [copyBatch, { ...sendBatch, id: copyBatch.id }],
+      version: 1,
+    },
+    {
+      annotations: [annotation],
+      history: [{ ...copyBatch, annotations: [annotation, annotation] }],
+      version: 1,
+    },
+    {
+      annotations: [annotation],
+      history: [
+        {
+          ...copyBatch,
+          annotations: [
+            {
+              ...annotation,
+              anchor: {
+                ...anchor,
+                source: { ...source, start: 0 },
+              },
+            },
+          ],
+        },
+      ],
+      version: 1,
+    },
+  ])("rejects invalid archive history", (value) => {
+    expect(() => parseAnnotationStore(JSON.stringify(value))).toThrow(
+      /Invalid saved annotation history|Duplicate annotation batch identifiers|Duplicate annotation identifiers in batch/u
+    );
   });
 });

@@ -62,6 +62,7 @@
     "react-doctor": "react-doctor"
   },
   "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.281",
     "@base-ui/react": "^1.8.0",
     "@dagrejs/dagre": "^3.1.1",
     "@heroicons/react": "^2.2.0",
@@ -132,7 +133,8 @@
     "valibot": "^1.5.0",
     "vaul": "^1.1.2",
     "vfile": "^6.0.3",
-    "vfile-matter": "^5.0.1"
+    "vfile-matter": "^5.0.1",
+    "ws": "^8.21.3"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^5.3.1",
@@ -149,6 +151,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@types/unist": "^3.0.3",
+    "@types/ws": "^8.18.1",
     "@vitest/browser-playwright": "4.1.11",
     "@vitest/coverage-v8": "4.1.11",
     "lefthook": "^2.1.14",

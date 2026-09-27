@@ -277,6 +277,125 @@
   display: grid;
   gap: 32px;
 }
+.mdxr-annotation-history {
+  margin-top: 24px;
+}
+.mdxr-annotation-scroll:has(.mdxr-annotation-history:not([hidden]))
+  .mdxr-annotation-empty:not([hidden]) {
+  padding: 12px 0 4px;
+  text-align: left;
+}
+.mdxr-annotation-scroll:has(.mdxr-annotation-history:not([hidden]))
+  .mdxr-annotation-history {
+  margin-top: 16px;
+}
+.mdxr-annotation-history > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: var(--annotation-subtle);
+  color: var(--annotation-text);
+  font-size: 12px;
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+}
+.mdxr-annotation-history > summary::-webkit-details-marker,
+.mdxr-annotation-history-summary::-webkit-details-marker {
+  display: none;
+}
+.mdxr-annotation-history > summary::before,
+.mdxr-annotation-history-summary::before {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  content: "";
+  transform: rotate(-45deg);
+  transition: transform 120ms ease;
+}
+.mdxr-annotation-history[open] > summary::before,
+.mdxr-annotation-history-batch[open]
+  > .mdxr-annotation-history-summary::before {
+  transform: rotate(45deg);
+}
+.mdxr-annotation-history summary:focus-visible {
+  outline: 2px solid var(--annotation-accent);
+  outline-offset: 2px;
+}
+.mdxr-annotation-history > summary > span {
+  margin-left: auto;
+  color: var(--annotation-muted);
+  font: 10px var(--font-mono, ui-monospace, monospace);
+  font-variant-numeric: tabular-nums;
+}
+.mdxr-annotation-history-list {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+.mdxr-annotation-history-batch {
+  min-width: 0;
+  border-radius: 7px;
+  background: var(--annotation-subtle);
+}
+.mdxr-annotation-history-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 3px 8px;
+  padding: 8px 10px;
+  color: var(--annotation-muted);
+  font-size: 10px;
+  list-style: none;
+  cursor: pointer;
+}
+.mdxr-annotation-history-summary time {
+  font-variant-numeric: tabular-nums;
+}
+.mdxr-annotation-history-action {
+  color: var(--annotation-text);
+  font-size: 11px;
+  font-weight: 600;
+}
+.mdxr-annotation-history-batch-count {
+  margin-left: auto;
+  white-space: nowrap;
+}
+.mdxr-annotation-history-content {
+  display: grid;
+  gap: 8px;
+  padding: 0 8px 8px;
+}
+.mdxr-annotation-history-entry {
+  min-width: 0;
+  padding: 8px;
+  border-radius: 5px;
+  background: var(--annotation-bg);
+}
+.mdxr-annotation-history-quote {
+  max-height: 5rem;
+  margin-bottom: 6px !important;
+  overflow: auto;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+.mdxr-annotation-history-comment {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.65;
+}
+.mdxr-annotation-history-location {
+  margin: 7px 0 0;
+  overflow-wrap: anywhere;
+  color: var(--annotation-muted);
+  font: 10px/1.5 var(--font-mono, ui-monospace, monospace);
+}
 .mdxr-annotation-card {
   display: grid;
   grid-template-columns: 18px minmax(0, 1fr);
@@ -370,8 +489,25 @@
   overflow: auto;
   padding: 18px 20px 20px 24px;
 }
+.mdxr-annotation-footer-actions {
+  display: flex;
+  gap: 8px;
+}
 .mdxr-annotation-footer > button {
   --annotation-button-text: var(--annotation-text);
+}
+.mdxr-annotation-footer-actions > button {
+  --annotation-button-text: var(--annotation-text);
+}
+.mdxr-annotation-footer-actions [data-annotation-send] {
+  --annotation-button-bg: var(--annotation-primary);
+  --annotation-button-hover: color-mix(
+    in srgb,
+    var(--annotation-primary) 85%,
+    var(--annotation-bg)
+  );
+  --annotation-button-text: var(--annotation-primary-text);
+  --annotation-button-hover-text: var(--annotation-primary-text);
 }
 .mdxr-annotation-copy-done {
   display: none;
@@ -489,6 +625,9 @@
     animation: none;
   }
   .mdxr-annotations button {
+    transition: none;
+  }
+  .mdxr-annotation-history summary::before {
     transition: none;
   }
 }

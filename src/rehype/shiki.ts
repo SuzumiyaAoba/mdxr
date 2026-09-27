@@ -23,6 +23,8 @@ import type {
   DiffRow,
   FileDiff,
 } from "../ui/diff-parse.js";
+import { parseSyntaxLines } from "../workspace-syntax.js";
+import type { SyntaxLines } from "../workspace-syntax.js";
 
 /**
  * Fenced code blocks are syntax-highlighted with shiki at render time.
@@ -57,6 +59,7 @@ const PRELOADED_LANGS = [
   "jsx",
   "kotlin",
   "lua",
+  "mdx",
   "markdown",
   "php",
   "python",
@@ -205,6 +208,42 @@ const readyHighlighter = async (
     // Highlighter init/grammar-load failure degrades to unhighlighted code
     // rather than failing the whole document render.
     return undefined;
+  }
+};
+
+const plainSyntaxLines = (source: string): SyntaxLines =>
+  source.split("\n").map((text) => [{ style: {}, text }]);
+
+/** Tokenize a complete MDX document for the workspace source and diff views. */
+export const highlightMdxSource = async (
+  source: string
+): Promise<SyntaxLines> => {
+  const normalizedSource = source.replaceAll("\r\n", "\n");
+  if (normalizedSource.includes("\r")) {
+    return plainSyntaxLines(normalizedSource);
+  }
+  const highlighter = await readyHighlighter("mdx");
+  if (highlighter === undefined) {
+    return plainSyntaxLines(normalizedSource);
+  }
+
+  try {
+    const result = highlighter.codeToTokens(normalizedSource, {
+      defaultColor: false,
+      lang: "mdx",
+      themes: THEMES,
+    });
+    const syntax = parseSyntaxLines(
+      result.tokens.map((line) =>
+        line.map((token) => ({
+          style: token.htmlStyle ?? {},
+          text: token.content,
+        }))
+      )
+    );
+    return syntax ?? plainSyntaxLines(normalizedSource);
+  } catch {
+    return plainSyntaxLines(normalizedSource);
   }
 };
 

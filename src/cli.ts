@@ -4,6 +4,7 @@ import path from "node:path";
 
 import { cac } from "cac";
 
+import type { AgentProvider } from "./agent-session.js";
 import { mdxToAscii } from "./ascii/index.js";
 import { catalogEntries, formatCatalog, CONVENTIONS } from "./catalog.js";
 import { loadConfig } from "./config.js";
@@ -50,6 +51,29 @@ const fail = (err: unknown, json: boolean): never => {
     console.error(`mdxr: error: ${formatError(err)}`);
   }
   process.exit(1);
+};
+
+const validateAgentOptions = (
+  agent: string | undefined,
+  session: string | undefined,
+  server: string | undefined
+): AgentProvider | undefined => {
+  if (agent !== undefined && agent !== "codex" && agent !== "claude") {
+    throw new Error(`invalid --agent: ${agent} (expected codex or claude)`);
+  }
+  if (session !== undefined && agent === undefined) {
+    throw new Error("--session requires --agent");
+  }
+  if (session !== undefined && agent !== "codex") {
+    throw new Error("--session is only supported for codex");
+  }
+  if (server !== undefined && agent !== "codex") {
+    throw new Error("--server requires --agent codex");
+  }
+  if (session !== undefined && session.trim() === "") {
+    throw new Error("--session requires a non-empty ID");
+  }
+  return agent;
 };
 
 const cli = cac("mdxr");
@@ -128,10 +152,19 @@ cli
   .command("serve [file]", "Preview a document in the browser with live reload")
   .option("-p, --port <port>", "Port", { default: 3737 })
   .option("--open", "Open the preview in the default browser once serving")
+  .option("--agent <agent>", "Chat with codex or claude in the preview")
+  .option("--session <id>", "Send to an existing Codex thread")
+  .option("--server <url>", "Codex App Server ws:// or unix:// endpoint")
   .action(
     async (
       file: string | undefined,
-      opts: { open?: boolean; port: number | string }
+      opts: {
+        agent?: string;
+        open?: boolean;
+        port: number | string;
+        session?: string;
+        server?: string;
+      }
     ) => {
       try {
         // mri leaves a non-numeric flag as a string; http.listen would treat
@@ -141,7 +174,15 @@ cli
           throw new Error(`invalid --port: ${opts.port}`);
         }
         const open = opts.open === true;
+        const agent = validateAgentOptions(
+          opts.agent,
+          opts.session,
+          opts.server
+        );
         if (file === undefined || file === "-") {
+          if (agent !== undefined) {
+            throw new Error("--agent requires an MDX file");
+          }
           requireStdinSource();
           await serveSource(await readStdin(), port, {
             dir: process.cwd(),
@@ -150,7 +191,12 @@ cli
           });
           return;
         }
-        await serve(file, port, { open });
+        await serve(file, port, {
+          agent,
+          open,
+          server: opts.server,
+          session: opts.session,
+        });
       } catch (error) {
         fail(error, false);
       }

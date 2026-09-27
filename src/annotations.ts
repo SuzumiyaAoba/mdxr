@@ -39,6 +39,19 @@ export interface DocumentAnnotation {
   anchor: AnnotationAnchor;
 }
 
+export interface AnnotationBatch {
+  id: string;
+  createdAt: string;
+  action: "copy" | "send";
+  annotations: DocumentAnnotation[];
+  markdown: string;
+}
+
+export interface AnnotationStore {
+  annotations: DocumentAnnotation[];
+  history: AnnotationBatch[];
+}
+
 export const normalizeAnnotationText = (text: string): string =>
   text.replaceAll(/\s+/gu, " ").trim();
 
@@ -184,9 +197,29 @@ const isAnnotation = (value: unknown): value is DocumentAnnotation =>
   value.comment.trim() !== "" &&
   isAnchor(value.anchor);
 
-export const parseAnnotations = (raw: string | null): DocumentAnnotation[] => {
+const isIsoTimestamp = (value: unknown): value is string =>
+  typeof value === "string" &&
+  Number.isFinite(Date.parse(value)) &&
+  new Date(value).toISOString() === value;
+
+const isAnnotationBatch = (value: unknown): value is AnnotationBatch =>
+  isRecord(value) &&
+  typeof value.id === "string" &&
+  value.id !== "" &&
+  isIsoTimestamp(value.createdAt) &&
+  (value.action === "copy" || value.action === "send") &&
+  Array.isArray(value.annotations) &&
+  value.annotations.every(isAnnotation) &&
+  typeof value.markdown === "string";
+
+const hasUniqueAnnotationIds = (
+  annotations: readonly DocumentAnnotation[]
+): boolean =>
+  new Set(annotations.map(({ id }) => id)).size === annotations.length;
+
+export const parseAnnotationStore = (raw: string | null): AnnotationStore => {
   if (raw === null) {
-    return [];
+    return { annotations: [], history: [] };
   }
   const value: unknown = JSON.parse(raw);
   if (
@@ -198,11 +231,29 @@ export const parseAnnotations = (raw: string | null): DocumentAnnotation[] => {
     throw new Error("Invalid saved annotations");
   }
   const annotations: DocumentAnnotation[] = value.annotations;
-  if (new Set(annotations.map(({ id }) => id)).size !== annotations.length) {
+  if (!hasUniqueAnnotationIds(annotations)) {
     throw new Error("Duplicate annotation identifiers");
   }
-  return annotations;
+
+  const rawHistory = value.history;
+  if (rawHistory === undefined) {
+    return { annotations, history: [] };
+  }
+  if (!Array.isArray(rawHistory) || !rawHistory.every(isAnnotationBatch)) {
+    throw new Error("Invalid saved annotation history");
+  }
+  const history: AnnotationBatch[] = rawHistory;
+  if (new Set(history.map(({ id }) => id)).size !== history.length) {
+    throw new Error("Duplicate annotation batch identifiers");
+  }
+  if (history.some((batch) => !hasUniqueAnnotationIds(batch.annotations))) {
+    throw new Error("Duplicate annotation identifiers in batch");
+  }
+  return { annotations, history };
 };
+
+export const parseAnnotations = (raw: string | null): DocumentAnnotation[] =>
+  parseAnnotationStore(raw).annotations;
 
 export const parseAnnotationDocument = (
   raw: string

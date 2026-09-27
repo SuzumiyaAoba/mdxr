@@ -1,5 +1,5 @@
 import { annotationLocation } from "../annotations.js";
-import type { DocumentAnnotation } from "../annotations.js";
+import type { AnnotationBatch, DocumentAnnotation } from "../annotations.js";
 import type { ResolvedAnnotation } from "./annotation-anchors.js";
 import { targetRect } from "./annotation-anchors.js";
 
@@ -30,6 +30,9 @@ export const annotationView = (host: HTMLElement, file: string) => {
     figure: get("[data-annotation-figure]", HTMLSelectElement),
     figurePicker: get("[data-annotation-figure-picker]", HTMLElement),
     form: get("[data-annotation-form]", HTMLFormElement),
+    history: get("[data-annotation-history]", HTMLDetailsElement),
+    historyCount: get("[data-annotation-history-count]", HTMLElement),
+    historyList: get("[data-annotation-history-list]", HTMLElement),
     icons: get("[data-annotation-icons]", HTMLElement),
     list: get("[data-annotation-list]", HTMLElement),
     markdown: get("[data-annotation-markdown]", HTMLTextAreaElement),
@@ -39,6 +42,7 @@ export const annotationView = (host: HTMLElement, file: string) => {
     pick: get("[data-annotation-pick]", HTMLButtonElement),
     save: get("[data-annotation-save]", HTMLButtonElement),
     selection: get("[data-annotation-selection]", HTMLButtonElement),
+    send: get("[data-annotation-send]", HTMLButtonElement),
     status: get("[data-annotation-status]", HTMLElement),
     statusRow: get("[data-annotation-status-row]", HTMLElement),
     toggle: get("[data-annotation-toggle]", HTMLButtonElement),
@@ -47,6 +51,8 @@ export const annotationView = (host: HTMLElement, file: string) => {
 };
 
 export type AnnotationView = ReturnType<typeof annotationView>;
+
+const annotationHistorySignatures = new WeakMap<HTMLElement, string>();
 
 /** Clone trusted, server-rendered Lucide SVGs; user content stays plain text. */
 const annotationIcon = (view: AnnotationView, name: string): Node => {
@@ -155,8 +161,140 @@ export const renderAnnotationList = (
   view.count.textContent = String(annotations.length);
   view.count.hidden = annotations.length === 0;
   view.panelCount.textContent = String(annotations.length);
-  view.copy.disabled = annotations.length === 0;
+  const busy =
+    view.copy.dataset.busy === "true" || view.send.dataset.busy === "true";
+  view.copy.disabled = annotations.length === 0 || busy;
+  view.send.disabled = annotations.length === 0 || busy;
   view.empty.hidden = annotations.length > 0 || view.form.hidden !== true;
+};
+
+const formatBatchDate = (createdAt: string): string => {
+  const timestamp = Date.parse(createdAt);
+  return Number.isNaN(timestamp)
+    ? createdAt
+    : new Intl.DateTimeFormat(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }).format(timestamp);
+};
+
+const historyLocation = (annotation: DocumentAnnotation): string =>
+  annotation.anchor.source === undefined
+    ? annotation.anchor.heading
+    : annotationLocation(annotation.anchor.source);
+
+const historySignature = (history: readonly AnnotationBatch[]): string =>
+  JSON.stringify(
+    history.map((batch) => [
+      batch.id,
+      batch.createdAt,
+      batch.action,
+      batch.annotations.map((annotation) => [
+        annotation.id,
+        annotation.anchor.quote,
+        annotation.comment,
+        historyLocation(annotation),
+      ]),
+    ])
+  );
+
+export const renderAnnotationHistory = (
+  view: AnnotationView,
+  history: readonly AnnotationBatch[]
+): void => {
+  const batches = history.toReversed();
+  const signature = historySignature(batches);
+  view.historyCount.textContent = String(history.length);
+  view.history.hidden = history.length === 0;
+  view.empty.textContent =
+    history.length > 0 ? "No current comments" : "No comments";
+  if (annotationHistorySignatures.get(view.historyList) === signature) {
+    return;
+  }
+
+  const openBatchIds = new Set(
+    [
+      ...view.historyList.querySelectorAll<HTMLDetailsElement>(
+        "details[data-annotation-batch]"
+      ),
+    ]
+      .filter((batch) => batch.open)
+      .map((batch) => batch.dataset.annotationBatch)
+      .filter((id): id is string => id !== undefined)
+  );
+  const { activeElement } = document;
+  const focusedBatchId =
+    activeElement instanceof HTMLElement &&
+    view.historyList.contains(activeElement)
+      ? activeElement.closest<HTMLDetailsElement>(
+          "details[data-annotation-batch]"
+        )?.dataset.annotationBatch
+      : undefined;
+  const batchElements = batches.map((batch) => {
+    const details = document.createElement("details");
+    details.className = "mdxr-annotation-history-batch";
+    details.dataset.annotationBatch = batch.id;
+    details.open = openBatchIds.has(batch.id);
+
+    const summary = textElement(
+      "summary",
+      "",
+      "mdxr-annotation-history-summary"
+    );
+    const date = textElement("time", formatBatchDate(batch.createdAt));
+    date.dateTime = batch.createdAt;
+    const action = textElement(
+      "span",
+      batch.action === "copy" ? "Copied Markdown" : "Sent to chat",
+      "mdxr-annotation-history-action"
+    );
+    const count = textElement(
+      "span",
+      `${batch.annotations.length} ${batch.annotations.length === 1 ? "comment" : "comments"}`,
+      "mdxr-annotation-history-batch-count"
+    );
+    summary.append(date, action, count);
+
+    const entries = batch.annotations.map((annotation) => {
+      const entry = textElement("article", "", "mdxr-annotation-history-entry");
+      const { quote } = annotation.anchor;
+      if (quote !== "") {
+        entry.append(
+          textElement("blockquote", quote, "mdxr-annotation-history-quote")
+        );
+      }
+      entry.append(
+        textElement("p", annotation.comment, "mdxr-annotation-history-comment")
+      );
+      const location = historyLocation(annotation);
+      if (location !== "") {
+        const source = textElement(
+          "p",
+          location,
+          "mdxr-annotation-history-location"
+        );
+        source.title = location;
+        entry.append(source);
+      }
+      return entry;
+    });
+
+    const content = textElement("div", "", "mdxr-annotation-history-content");
+    content.append(...entries);
+    details.append(summary, content);
+    return details;
+  });
+
+  view.historyList.replaceChildren(...batchElements);
+  annotationHistorySignatures.set(view.historyList, signature);
+  if (focusedBatchId !== undefined) {
+    const focusedBatch = [
+      ...view.historyList.querySelectorAll<HTMLDetailsElement>(
+        "details[data-annotation-batch]"
+      ),
+    ].find((batch) => batch.dataset.annotationBatch === focusedBatchId);
+    focusedBatch?.querySelector("summary")?.focus({ preventScroll: true });
+  }
 };
 
 const visibleRect = (rect: DOMRect): boolean =>

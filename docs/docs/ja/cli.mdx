@@ -49,8 +49,40 @@ cat plan.mdx | mdxr serve --open
 | --- | --- |
 | `-p, --port <port>` | 待ち受けポート（デフォルト `3737`） |
 | `--open` | サーバー起動後にデフォルトブラウザでプレビューを開く |
+| `--agent <agent>` | `codex` または `claude` 用のローカルチャットを表示 |
+| `--server <url>` | Codex App Server の接続先。`unix:///absolute/path` または `ws://...` を指定（`--agent codex` が必要） |
+| `--session <id>` | 既存の Codex スレッドにメッセージを送信（`--agent codex` が必要） |
 
-ウォッチャーはドキュメントのレンダリング依存関係をたどります — `theme` の CSS ファイルとそのインポートも変更でプレビューが再読み込みされます。
+ウォッチャーはドキュメントのレンダリング依存関係をたどります — `theme` の CSS ファイルとそのインポートも変更でプレビューが再読み込みされます。`--agent` を指定すると、AI Elements ベースのチャットパネルがワークスペースに表示されます。**Annotate** でレンダリング済みの内容にコメントを付け、同じチャットへ直接送信できます。
+
+ウォッチャーは MDX の変更を検出してローカルに版を保存します。版の選択メニューから過去の版をレンダリングしたり、**Raw MDX** でソースを確認したり、**Diff** で別の版と比較したりできます。履歴は `.mdxr/history/` に保存されます。履歴の保存と閲覧はローカルで完結し、API トークンは不要です。
+
+エージェントとのチャットにはファイルパスを指定します。すでに起動している Codex TUI セッションにメッセージを送るには、そのスレッド ID を指定します。既定ではローカル Codex daemon のソケットに接続し、TUI セッションを動かしたままスレッドにメッセージをキューイングします。
+
+```sh
+mdxr serve plan.mdx --agent codex --session <thread-id>
+```
+
+Codex が処理中のメッセージはキュー待ちとして表示されます。Codex がメッセージを処理すると、回答が MDX プレビューに表示されます。特定の daemon ソケットまたは WebSocket App Server を使う場合は、接続先を `--server` に指定します。
+
+```sh
+mdxr serve plan.mdx --agent codex --server unix:///absolute/path/to/app-server.sock --session <thread-id>
+mdxr serve plan.mdx --agent codex --server ws://127.0.0.1:4500 --session <thread-id>
+```
+
+`--session` を省略した場合、`.mdxr/sessions.json` にこのドキュメントの Codex スレッド ID が保存されていれば、そのスレッドを使います。保存されていなければ、新しいスレッドを開始します。
+
+Claude チャットでは、mdxr が長寿命の Claude Agent SDK セッションを管理します。
+
+```sh
+mdxr serve plan.mdx --agent claude
+```
+
+Claude のセッションは mdxr が所有し、外部の Claude CLI で開始したセッションには接続しません。`--session` は Codex 専用です。
+
+プレビューにはツール承認 UI がないため、承認が必要な操作は拒否されます。Claude は `dontAsk` 権限モードで実行されます。
+
+ドキュメントとセッションの対応および会話履歴は、作業ディレクトリの gitignore 対象である `.mdxr/sessions.json` に保存されます。`--agent` はファイル入力専用で、stdin は使えません。エージェントの回答は Markdown として表示し、JSX と生 HTML は実行しません。
 
 ## mdxr text
 

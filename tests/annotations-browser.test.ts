@@ -1,3 +1,5 @@
+import { once } from "node:events";
+
 import { chromium } from "playwright";
 import type { Browser, Frame, Page } from "playwright";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -95,7 +97,7 @@ describe("document annotation interactions", () => {
   };
 
   it.each([false, true])(
-    "adds, edits, restores, exports, and deletes text and figure comments (hydrate: %s)",
+    "adds, edits, archives, restores, and separates text and figure comments (hydrate: %s)",
     async (hydrate) => {
       const page = await openPage(
         hydrate
@@ -151,33 +153,317 @@ describe("document annotation interactions", () => {
         ]) {
           expect(markdown).toContain(expected);
         }
+        await page.waitForFunction(
+          () =>
+            document.querySelector("[data-annotation-status]")?.textContent ===
+            "Markdown copied. Comments moved to History."
+        );
+        await page.waitForFunction(
+          () =>
+            document.querySelectorAll(
+              "[data-annotation-list] .mdxr-annotation-card"
+            ).length === 0
+        );
         await page.reload();
         await page.getByRole("button", { name: "Annotate" }).click();
-        expect({
-          attached: await page
-            .getByRole("button", { name: "Show target" })
-            .first()
-            .isEnabled(),
-          count: await page.locator(".mdxr-annotation-card").count(),
-        }).toStrictEqual({ attached: true, count: 2 });
-        await page
-          .getByRole("button", { exact: true, name: "Delete" })
-          .first()
-          .click();
-        await expect(
-          page.locator(".mdxr-annotation-card").count()
-        ).resolves.toBe(1);
+        const history = page.locator("[data-annotation-history]");
+        await history.locator(":scope > summary").click();
+        const historyBatch = page.locator(
+          "[data-annotation-history-list] details[data-annotation-batch]"
+        );
+        await historyBatch.locator(":scope > summary").click();
+        const restoredHistory = await page.evaluate(() => {
+          const historyList = document.querySelector<HTMLElement>(
+            "[data-annotation-history-list]"
+          );
+          const batchSummary = historyList?.querySelector("summary");
+          const date = historyList?.querySelector("time[datetime]");
+          const historyText = historyList?.textContent ?? "";
+          return {
+            activeCount: document.querySelectorAll(
+              "[data-annotation-list] .mdxr-annotation-card"
+            ).length,
+            batchCount: historyList?.querySelectorAll(
+              "details[data-annotation-batch]"
+            ).length,
+            copyAction: batchSummary?.textContent?.includes("Copied Markdown"),
+            dateStored: Boolean(date?.getAttribute("datetime")),
+            entryCount: historyList?.querySelectorAll(
+              ".mdxr-annotation-history-entry"
+            ).length,
+            readOnlyControls: historyList?.querySelectorAll(
+              "button, input, textarea"
+            ).length,
+            retainsComments:
+              historyText.includes("例を追加してください。") &&
+              historyText.includes("Label the arrows."),
+          };
+        });
+        expect(restoredHistory).toStrictEqual({
+          activeCount: 0,
+          batchCount: 1,
+          copyAction: true,
+          dateStored: true,
+          entryCount: 2,
+          readOnlyControls: 0,
+          retainsComments: true,
+        });
+        await addTextComment(page, "A later note.");
+        const separatedNotes = await page.evaluate(() => ({
+          activeComments: Array.from(
+            document.querySelectorAll(
+              "[data-annotation-list] .mdxr-annotation-comment-body"
+            ),
+            (comment) => comment.textContent
+          ),
+          batchCount: document.querySelectorAll(
+            "[data-annotation-history-list] details[data-annotation-batch]"
+          ).length,
+          historyCount: document.querySelector(
+            "[data-annotation-history-count]"
+          )?.textContent,
+        }));
+        expect(separatedNotes).toStrictEqual({
+          activeComments: ["A later note."],
+          batchCount: 1,
+          historyCount: "1",
+        });
+        await page.getByRole("button", { exact: true, name: "Delete" }).click();
+        await page.waitForFunction(
+          () =>
+            document.querySelectorAll(
+              "[data-annotation-list] .mdxr-annotation-card"
+            ).length === 0
+        );
         await page.getByRole("button", { name: "Close annotations" }).click();
         await page.getByText("More details", { exact: true }).click();
-        await expect(
-          page.locator("details").getAttribute("open")
-        ).resolves.not.toBeNull();
-        expect(errors).toStrictEqual([]);
+        const finalState = {
+          activeCount: await page
+            .locator("[data-annotation-list] .mdxr-annotation-card")
+            .count(),
+          detailsOpen:
+            (await page
+              .locator("#mdxr-root details")
+              .first()
+              .getAttribute("open")) !== null,
+          errors,
+          historyCount: await page
+            .locator(
+              "[data-annotation-history-list] details[data-annotation-batch]"
+            )
+            .count(),
+        };
+        expect(finalState).toStrictEqual({
+          activeCount: 0,
+          detailsOpen: true,
+          errors: [],
+          historyCount: 1,
+        });
       } finally {
         await page.close();
       }
     }
   );
+
+  it("archives only the sent snapshot and keeps comments edited in flight", async () => {
+    const page = await browser.newPage({
+      viewport: { height: 850, width: 1280 },
+    });
+    const submitted: string[] = [];
+    const handoff = new EventTarget();
+    const requestReceived = once(handoff, "request");
+    const responseReleased = once(handoff, "release");
+    const agentHtml = html.replace(
+      "</body>",
+      "<div data-mdxr-agent hidden></div></body>"
+    );
+    await page.route("http://mdxr.test/**", async (route) => {
+      if (new URL(route.request().url()).pathname === "/__mdxr_agent") {
+        const body = route.request().postData();
+        if (body !== null) {
+          const value: unknown = JSON.parse(body);
+          if (
+            typeof value === "object" &&
+            value !== null &&
+            "message" in value &&
+            typeof value.message === "string"
+          ) {
+            submitted.push(value.message);
+          }
+        }
+        if (route.request().method() === "POST") {
+          handoff.dispatchEvent(new Event("request"));
+          await responseReleased;
+        }
+        await route.fulfill({
+          body: JSON.stringify({
+            busy: false,
+            messages: [],
+            provider: "codex",
+          }),
+          contentType: "application/json",
+        });
+        return;
+      }
+      await route.fulfill({ body: agentHtml, contentType: "text/html" });
+    });
+    await page.goto("http://mdxr.test/review");
+    try {
+      await addTextComment(page, "Send these notes.");
+      const sendButton = page.getByRole("button", { name: "Send to chat" });
+      await expect(sendButton.isVisible()).resolves.toBeTruthy();
+      await sendButton.click();
+      await requestReceived;
+      await addTextComment(page, "Created while sending.");
+      await page
+        .getByRole("button", { exact: true, name: "Edit" })
+        .first()
+        .click();
+      await page
+        .getByRole("textbox", { exact: true, name: "Comment" })
+        .fill("Edited while sending.");
+      await page
+        .getByRole("button", { exact: true, name: "Save changes" })
+        .click();
+      handoff.dispatchEvent(new Event("release"));
+      await page.waitForFunction(
+        () =>
+          document.querySelector("[data-annotation-status]")?.textContent ===
+          "Annotations sent to chat. Comments moved to History."
+      );
+      await page.reload();
+      await page.getByRole("button", { name: "Annotate" }).click();
+      const history = page.locator("[data-annotation-history]");
+      await history.locator(":scope > summary").click();
+      const historyBatch = page.locator(
+        "[data-annotation-history-list] details[data-annotation-batch]"
+      );
+      await historyBatch.locator(":scope > summary").click();
+      const savedState = await page.evaluate(() => {
+        const historyList = document.querySelector<HTMLElement>(
+          "[data-annotation-history-list]"
+        );
+        const historyText = historyList?.textContent ?? "";
+        const summary = historyList?.querySelector("summary")?.textContent;
+        return {
+          activeComments: Array.from(
+            document.querySelectorAll(
+              "[data-annotation-list] .mdxr-annotation-comment-body"
+            ),
+            (comment) => comment.textContent
+          ),
+          batchCount: historyList?.querySelectorAll(
+            "details[data-annotation-batch]"
+          ).length,
+          dateStored: Boolean(
+            historyList
+              ?.querySelector("time[datetime]")
+              ?.getAttribute("datetime")
+          ),
+          historyContainsSentSnapshot:
+            historyText.includes("Send these notes.") &&
+            !historyText.includes("Created while sending.") &&
+            !historyText.includes("Edited while sending."),
+          sendAction: summary?.includes("Sent to chat"),
+        };
+      });
+      expect({
+        savedState,
+        submittedSnapshot: {
+          count: submitted.length,
+          excludesInFlightComment: !submitted[0]?.includes(
+            "Created while sending."
+          ),
+          hasQuote: submitted[0]?.includes("> rich text"),
+          hasSentComment: submitted[0]?.includes("Send these notes."),
+        },
+      }).toStrictEqual({
+        savedState: {
+          activeComments: ["Edited while sending.", "Created while sending."],
+          batchCount: 1,
+          dateStored: true,
+          historyContainsSentSnapshot: true,
+          sendAction: true,
+        },
+        submittedSnapshot: {
+          count: 1,
+          excludesInFlightComment: true,
+          hasQuote: true,
+          hasSentComment: true,
+        },
+      });
+    } finally {
+      handoff.dispatchEvent(new Event("release"));
+      await page.close();
+    }
+  });
+
+  it("keeps comments active when sending to chat fails", async () => {
+    const page = await browser.newPage({
+      viewport: { height: 850, width: 1280 },
+    });
+    const agentHtml = html.replace(
+      "</body>",
+      "<div data-mdxr-agent hidden></div></body>"
+    );
+    await page.route("http://mdxr.test/**", async (route) => {
+      if (new URL(route.request().url()).pathname === "/__mdxr_agent") {
+        if (route.request().method() === "POST") {
+          await route.fulfill({
+            body: JSON.stringify({ error: "Agent offline" }),
+            contentType: "application/json",
+            status: 503,
+          });
+          return;
+        }
+        await route.fulfill({
+          body: JSON.stringify({
+            busy: false,
+            messages: [],
+            provider: "codex",
+          }),
+          contentType: "application/json",
+        });
+        return;
+      }
+      await route.fulfill({ body: agentHtml, contentType: "text/html" });
+    });
+    await page.goto("http://mdxr.test/review");
+    try {
+      await addTextComment(page, "Keep this comment if sending fails.");
+      const sendButton = page.getByRole("button", { name: "Send to chat" });
+      await sendButton.waitFor({ state: "visible" });
+      await sendButton.click();
+      await page.waitForFunction(
+        () =>
+          document.querySelector("[data-annotation-status]")?.textContent ===
+          "Could not send annotations: Agent offline"
+      );
+      await page.reload();
+      await page.getByRole("button", { name: "Annotate" }).click();
+      const failureState = await page.evaluate(() => ({
+        activeComments: Array.from(
+          document.querySelectorAll(
+            "[data-annotation-list] .mdxr-annotation-comment-body"
+          ),
+          (comment) => comment.textContent
+        ),
+        historyBatches: document.querySelectorAll(
+          "[data-annotation-history-list] details[data-annotation-batch]"
+        ).length,
+        historyHidden: document
+          .querySelector<HTMLElement>("[data-annotation-history]")
+          ?.hasAttribute("hidden"),
+      }));
+      expect(failureState).toStrictEqual({
+        activeComments: ["Keep this comment if sending fails."],
+        historyBatches: 0,
+        historyHidden: true,
+      });
+    } finally {
+      await page.close();
+    }
+  });
 
   it("selects across inline elements with the keyboard shortcut and preserves a draft on close", async () => {
     const page = await openPage();
@@ -302,16 +588,44 @@ describe("document annotation interactions", () => {
         await page.reload();
         const restored = page.frameLocator('iframe[name="preview"]');
         await restored.getByRole("button", { name: "Annotate" }).click();
-        expect({
-          comments: await restored
-            .locator(".mdxr-annotation-comment-body")
-            .allTextContents(),
-          errors,
-        }).toStrictEqual({
-          comments: sandbox.includes("allow-same-origin")
-            ? ["更新したコメント"]
-            : [],
+        const history = restored.locator("[data-annotation-history]");
+        const storageAvailable = sandbox.includes("allow-same-origin");
+        if (storageAvailable) {
+          await history.locator(":scope > summary").click();
+          const batch = restored.locator(
+            "[data-annotation-history-list] details[data-annotation-batch]"
+          );
+          await batch.locator(":scope > summary").click();
+        }
+        const restoredState = await restored.locator("html").evaluate(() => {
+          const historyList = document.querySelector<HTMLElement>(
+            "[data-annotation-history-list]"
+          );
+          return {
+            activeComments: Array.from(
+              document.querySelectorAll(
+                "[data-annotation-list] .mdxr-annotation-comment-body"
+              ),
+              (comment) => comment.textContent
+            ),
+            archivedComment:
+              historyList?.textContent?.includes("更新したコメント"),
+            historyBatchCount: historyList?.querySelectorAll(
+              "details[data-annotation-batch]"
+            ).length,
+            historyHidden: document
+              .querySelector<HTMLElement>("[data-annotation-history]")
+              ?.hasAttribute("hidden"),
+          };
+        });
+        expect({ errors, restoredState }).toStrictEqual({
           errors: [],
+          restoredState: {
+            activeComments: [],
+            archivedComment: storageAvailable,
+            historyBatchCount: storageAvailable ? 1 : 0,
+            historyHidden: !storageAvailable,
+          },
         });
       } finally {
         await page.close();
@@ -472,9 +786,11 @@ describe("document annotation interactions", () => {
       });
       const comment = '<img src="x" onerror="alert(1)">';
       await addTextComment(page, comment);
-      await expect(
-        page.locator("[data-annotation-status]").textContent()
-      ).resolves.toContain("storage is unavailable");
+      await page.waitForFunction(() =>
+        document
+          .querySelector("[data-annotation-status]")
+          ?.textContent?.includes("storage is unavailable")
+      );
       await expect(
         page.locator(".mdxr-annotation-card img").count()
       ).resolves.toBe(0);
@@ -487,9 +803,20 @@ describe("document annotation interactions", () => {
       await expect(
         page.getByRole("textbox", { name: "Markdown feedback" }).inputValue()
       ).resolves.toContain(comment);
-      await expect(
-        page.locator("[data-annotation-status]").textContent()
-      ).resolves.toContain("Clipboard access failed");
+      const clipboardFailure = await page.evaluate(() => ({
+        activeCount: document.querySelectorAll(
+          "[data-annotation-list] .mdxr-annotation-card"
+        ).length,
+        historyHidden: document
+          .querySelector<HTMLElement>("[data-annotation-history]")
+          ?.hasAttribute("hidden"),
+        status: document.querySelector("[data-annotation-status]")?.textContent,
+      }));
+      expect(clipboardFailure).toStrictEqual({
+        activeCount: 1,
+        historyHidden: true,
+        status: "Clipboard access failed. Copy the selected Markdown below.",
+      });
     } finally {
       await page.close();
     }

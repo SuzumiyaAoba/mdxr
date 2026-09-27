@@ -105,6 +105,10 @@ ${THEME_TOGGLE_HTML}
 </aside>
 <div id="mdxr-content">
 <main id="mdxr-root" class="prose prose-neutral dark:prose-invert mx-auto max-w-3xl px-6 py-10">${o.body}</main>
+<nav class="mdxr-page-navigation" aria-label="Section navigation" hidden>
+<button type="button" data-mdxr-page-previous>${iconSvg("chevron-left")}<span class="mdxr-page-navigation-labels"><span>Previous</span><span data-mdxr-page-previous-title hidden></span></span></button>
+<button type="button" data-mdxr-page-next><span class="mdxr-page-navigation-labels"><span>Next</span><span data-mdxr-page-next-title hidden></span></span>${iconSvg("chevron-right")}</button>
+</nav>
 </div>
 ${o.annotations === undefined ? "" : `${annotationHtml(iconSvg)}<script type="application/json" id="mdxr-annotation-document">${JSON.stringify(o.annotations).replaceAll("<", "\\u003c")}</script>`}
 ${o.annotations === undefined ? "" : sectionReviewHtml(iconSvg)}

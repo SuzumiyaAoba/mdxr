@@ -51,10 +51,11 @@ describe("document page navigation", () => {
   let plain: string;
   let plan: string;
   let noHeadings: string;
+  let singleSection: string;
 
   beforeAll(async () => {
     browser = await chromium.launch();
-    [html, plain, plan, noHeadings] = await Promise.all([
+    [html, plain, plan, noHeadings, singleSection] = await Promise.all([
       render(source),
       render(
         "---\ntitle: Plain\n---\n\n## Alpha\n\nAlpha text.\n\n## Beta\n\nBeta text.",
@@ -64,6 +65,9 @@ describe("document page navigation", () => {
         '<Plan title="Wrapped plan">\n\nIntroduction.\n\n## Alpha\n\nAlpha text.\n\n## Beta\n\nBeta text.\n\n</Plan>'
       ),
       render("# No pages\n\n> ## Nested only\n\n```md\n## Not a heading\n```", {
+        hydrate: false,
+      }),
+      render("## Only section\n\nOnly section content.", {
         hydrate: false,
       }),
     ]);
@@ -137,6 +141,168 @@ describe("document page navigation", () => {
         // Only the authored Tabs remains.
         panels: await page.getByRole("tabpanel").count(),
       }).toStrictEqual({ content: [true, true, true, true], panels: 1 });
+    } finally {
+      await page.close();
+    }
+  });
+
+  it("shows adjacent section buttons in Pages view and navigates both ways", async () => {
+    const page = await openPage();
+    try {
+      const navigation = page.locator("nav.mdxr-page-navigation");
+      const previous = navigation.locator("[data-mdxr-page-previous]");
+      const next = navigation.locator("[data-mdxr-page-next]");
+      const previousTitle = previous.locator("[data-mdxr-page-previous-title]");
+      const nextTitle = next.locator("[data-mdxr-page-next-title]");
+      expect({
+        label: await navigation.getAttribute("aria-label"),
+        visible: await navigation.isVisible(),
+      }).toStrictEqual({ label: "Section navigation", visible: false });
+
+      await mode(page, "Pages").click();
+      expect({
+        navigationVisible: await navigation.isVisible(),
+        next: await next.textContent(),
+        nextAtRight: await next.evaluate((button) => {
+          const icon = button.querySelector("svg");
+          if (icon === null) {
+            return false;
+          }
+          const buttonBounds = button.getBoundingClientRect();
+          const iconBounds = icon.getBoundingClientRect();
+          return (
+            iconBounds.left > buttonBounds.left + buttonBounds.width * 0.75
+          );
+        }),
+        nextTitle: await nextTitle.textContent(),
+        nextTitleHidden: await nextTitle.isHidden(),
+        nextVisible: await next.isVisible(),
+        previous: await previous.textContent(),
+        previousTitle: await previousTitle.textContent(),
+        previousTitleHidden: await previousTitle.isHidden(),
+        previousVisible: await previous.isVisible(),
+      }).toStrictEqual({
+        navigationVisible: true,
+        next: "NextFirst section",
+        nextAtRight: true,
+        nextTitle: "First section",
+        nextTitleHidden: false,
+        nextVisible: true,
+        previous: "Previous",
+        previousTitle: "",
+        previousTitleHidden: true,
+        previousVisible: false,
+      });
+
+      await next.focus();
+      await page.keyboard.press("Enter");
+      expect({
+        focused: await page
+          .locator("#mdxr-content")
+          .evaluate((content) => document.activeElement === content),
+        hash: new URL(page.url()).hash,
+        next: await next.textContent(),
+        nextTitle: await nextTitle.textContent(),
+        nextTitleHidden: await nextTitle.isHidden(),
+        nextVisible: await next.isVisible(),
+        previous: await previous.textContent(),
+        previousTitle: await previousTitle.textContent(),
+        previousTitleHidden: await previousTitle.isHidden(),
+        previousVisible: await previous.isVisible(),
+        selected: await sections(page)
+          .getByRole("tab", { selected: true })
+          .textContent(),
+      }).toStrictEqual({
+        focused: true,
+        hash: "#first-section",
+        next: "Next日本語 & code",
+        nextTitle: "日本語 & code",
+        nextTitleHidden: false,
+        nextVisible: true,
+        previous: "PreviousOverview",
+        previousTitle: "Overview",
+        previousTitleHidden: false,
+        previousVisible: true,
+        selected: "First section",
+      });
+
+      await next.click();
+      await next.click();
+      expect({
+        hash: new URL(page.url()).hash,
+        next: await next.textContent(),
+        nextTitle: await nextTitle.textContent(),
+        nextTitleHidden: await nextTitle.isHidden(),
+        nextVisible: await next.isVisible(),
+        previous: await previous.textContent(),
+        previousAtLeft: await previous.evaluate((button) => {
+          const icon = button.querySelector("svg");
+          if (icon === null) {
+            return false;
+          }
+          const buttonBounds = button.getBoundingClientRect();
+          const iconBounds = icon.getBoundingClientRect();
+          return (
+            iconBounds.right < buttonBounds.left + buttonBounds.width * 0.25
+          );
+        }),
+        previousTitle: await previousTitle.textContent(),
+        previousTitleHidden: await previousTitle.isHidden(),
+        previousVisible: await previous.isVisible(),
+        selected: await sections(page)
+          .getByRole("tab", { selected: true })
+          .textContent(),
+      }).toStrictEqual({
+        hash: "#first-section-1",
+        next: "Next",
+        nextTitle: "",
+        nextTitleHidden: true,
+        nextVisible: false,
+        previous: "Previous日本語 & code",
+        previousAtLeft: true,
+        previousTitle: "日本語 & code",
+        previousTitleHidden: false,
+        previousVisible: true,
+        selected: "First section",
+      });
+
+      await previous.click();
+      await mode(page, "Document").click();
+      expect({
+        hash: new URL(page.url()).hash,
+        navigationVisible: await navigation.isVisible(),
+      }).toStrictEqual({
+        hash: `#${encodeURIComponent("日本語-code")}`,
+        navigationVisible: false,
+      });
+    } finally {
+      await page.close();
+    }
+  });
+
+  it("hides both section buttons when there is only one page", async () => {
+    const page = await openPage(singleSection);
+    try {
+      await mode(page, "Pages").click();
+      const navigation = page.locator("nav.mdxr-page-navigation");
+      const next = navigation.locator("[data-mdxr-page-next]");
+      const previous = navigation.locator("[data-mdxr-page-previous]");
+      await expect(navigation.isVisible()).resolves.toBeTruthy();
+      expect({
+        next: await next.isVisible(),
+        nextTitleHidden: await next
+          .locator("[data-mdxr-page-next-title]")
+          .isHidden(),
+        previous: await previous.isVisible(),
+        previousTitleHidden: await previous
+          .locator("[data-mdxr-page-previous-title]")
+          .isHidden(),
+      }).toStrictEqual({
+        next: false,
+        nextTitleHidden: true,
+        previous: false,
+        previousTitleHidden: true,
+      });
     } finally {
       await page.close();
     }
@@ -336,17 +502,22 @@ describe("document page navigation", () => {
         alpha: await page.getByText("Alpha text.").isVisible(),
         beta: await page.getByText("Beta text.").isVisible(),
         controls: await mode(page, "Pages").isVisible(),
+        navigation: await page.locator("nav.mdxr-page-navigation").isVisible(),
         tabs: await sections(page).isVisible(),
       }).toStrictEqual({
         alpha: true,
         beta: true,
         controls: false,
+        navigation: false,
         tabs: false,
       });
       await page.emulateMedia({ media: "screen" });
       await expect(
         page.getByText("Beta text.").isVisible()
       ).resolves.toBeFalsy();
+      await expect(
+        page.locator("nav.mdxr-page-navigation").isVisible()
+      ).resolves.toBeTruthy();
     } finally {
       await page.close();
     }
@@ -387,14 +558,23 @@ describe("document page navigation", () => {
     const headingless = await openPage(noHeadings);
     try {
       await page.setContent(plain);
-      await expect(
-        page.getByText("Alpha text.").isVisible()
-      ).resolves.toBeTruthy();
-      await expect(
-        page.getByText("Beta text.").isVisible()
-      ).resolves.toBeTruthy();
-      await expect(mode(page, "Pages").isVisible()).resolves.toBeFalsy();
-      await expect(mode(headingless, "Pages").isVisible()).resolves.toBeFalsy();
+      expect({
+        alpha: await page.getByText("Alpha text.").isVisible(),
+        beta: await page.getByText("Beta text.").isVisible(),
+        headinglessMode: await mode(headingless, "Pages").isVisible(),
+        headinglessNavigation: await headingless
+          .locator("nav.mdxr-page-navigation")
+          .isVisible(),
+        mode: await mode(page, "Pages").isVisible(),
+        navigation: await page.locator("nav.mdxr-page-navigation").isVisible(),
+      }).toStrictEqual({
+        alpha: true,
+        beta: true,
+        headinglessMode: false,
+        headinglessNavigation: false,
+        mode: false,
+        navigation: false,
+      });
     } finally {
       await page.close();
       await headingless.close();
@@ -426,11 +606,61 @@ describe("document page navigation", () => {
     try {
       await mode(page, "Pages").click();
       await sections(page).getByRole("tab", { name: "Beta" }).click();
+      expect({
+        nextTitle: await page
+          .locator("[data-mdxr-page-next-title]")
+          .textContent(),
+        nextTitleHidden: await page
+          .locator("[data-mdxr-page-next-title]")
+          .isHidden(),
+        nextVisible: await page.locator("[data-mdxr-page-next]").isVisible(),
+        previousTitle: await page
+          .locator("[data-mdxr-page-previous-title]")
+          .textContent(),
+        previousTitleHidden: await page
+          .locator("[data-mdxr-page-previous-title]")
+          .isHidden(),
+        previousVisible: await page
+          .locator("[data-mdxr-page-previous]")
+          .isVisible(),
+      }).toStrictEqual({
+        nextTitle: "",
+        nextTitleHidden: true,
+        nextVisible: false,
+        previousTitle: "Alpha",
+        previousTitleHidden: false,
+        previousVisible: true,
+      });
       await page.goBack();
       await expect
         .poll(async () => await page.getByText("Alpha text.").isVisible())
         .toBe(true);
       expect(new URL(page.url()).hash).toBe("");
+      expect({
+        nextTitle: await page
+          .locator("[data-mdxr-page-next-title]")
+          .textContent(),
+        nextTitleHidden: await page
+          .locator("[data-mdxr-page-next-title]")
+          .isHidden(),
+        nextVisible: await page.locator("[data-mdxr-page-next]").isVisible(),
+        previousTitle: await page
+          .locator("[data-mdxr-page-previous-title]")
+          .textContent(),
+        previousTitleHidden: await page
+          .locator("[data-mdxr-page-previous-title]")
+          .isHidden(),
+        previousVisible: await page
+          .locator("[data-mdxr-page-previous]")
+          .isVisible(),
+      }).toStrictEqual({
+        nextTitle: "Beta",
+        nextTitleHidden: false,
+        nextVisible: true,
+        previousTitle: "",
+        previousTitleHidden: true,
+        previousVisible: false,
+      });
     } finally {
       await page.close();
     }

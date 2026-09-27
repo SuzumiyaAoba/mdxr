@@ -3,7 +3,9 @@
 }
 
 .mdxr-view-controls[hidden],
-.mdxr-pages[hidden] {
+.mdxr-pages[hidden],
+.mdxr-page-navigation[hidden],
+.mdxr-page-navigation button[hidden] {
   display: none;
 }
 
@@ -97,6 +99,78 @@
   box-shadow: inset 3px 0 var(--sidebar-primary);
 }
 
+.mdxr-page-navigation {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  max-width: 48rem;
+  margin: 2rem auto 0;
+  padding: 0 1.5rem 2.5rem;
+}
+
+.mdxr-page-navigation button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mdxr-page-navigation button[data-mdxr-page-previous] {
+  grid-column: 1;
+}
+
+.mdxr-page-navigation-labels {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 0.125rem;
+}
+
+.mdxr-page-navigation-labels > :first-child {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  line-height: 1.25;
+}
+
+.mdxr-page-navigation-labels > [data-mdxr-page-previous-title],
+.mdxr-page-navigation-labels > [data-mdxr-page-next-title] {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.mdxr-page-navigation button[data-mdxr-page-next] {
+  grid-column: 2;
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.mdxr-page-navigation button[data-mdxr-page-next] .mdxr-page-navigation-labels {
+  align-items: flex-end;
+}
+
+.mdxr-page-navigation button svg {
+  flex: 0 0 auto;
+}
+
+.mdxr-page-navigation button:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.mdxr-page-navigation button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
 @media screen and (prefers-reduced-motion: no-preference) {
   .mdxr-view-controls button,
   .mdxr-pages [role="tab"] {
@@ -160,11 +234,25 @@
   body[data-mdxr-view="pages"] #mdxr-root {
     padding-top: 2rem;
   }
+
+  .mdxr-page-navigation {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+
+  .mdxr-page-navigation button {
+    width: 100%;
+  }
+
+  .mdxr-page-navigation button[data-mdxr-page-next] {
+    grid-column: 1;
+  }
 }
 
 @media print {
   .mdxr-view-controls,
-  .mdxr-pages {
+  .mdxr-pages,
+  .mdxr-page-navigation {
     display: none;
   }
 }

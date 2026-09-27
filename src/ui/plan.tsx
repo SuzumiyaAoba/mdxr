@@ -26,7 +26,7 @@ const hasMeta = (p: PlanHeaderProps): boolean =>
 export const PlanHeader = (p: PlanHeaderProps): ReactElement => (
   <header className={`mb-8 border-b pb-4 ${BORDER_CLS}`}>
     <div className="flex flex-wrap items-center gap-3">
-      {nonEmpty(p.title) ? <h1 className="m-0">{p.title}</h1> : null}
+      {nonEmpty(p.title) ? <h1 className="m-0!">{p.title}</h1> : null}
       {nonEmpty(p.status) ? <StatusBadge status={p.status} /> : null}
     </div>
     {hasMeta(p) ? (

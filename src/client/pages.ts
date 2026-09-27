@@ -2,7 +2,25 @@ interface DocumentPage {
   element: HTMLElement;
   tab: HTMLButtonElement;
   target: HTMLElement;
+  title: string;
 }
+
+const updatePageButton = (
+  button: HTMLButtonElement | null,
+  page: DocumentPage | undefined
+): void => {
+  if (button === null) {
+    return;
+  }
+  button.hidden = page === undefined;
+  const title = button.querySelector<HTMLElement>(
+    "[data-mdxr-page-previous-title], [data-mdxr-page-next-title]"
+  );
+  if (title !== null) {
+    title.textContent = page?.title ?? "";
+    title.hidden = page === undefined;
+  }
+};
 
 const scrollToTarget = (target: HTMLElement): void => {
   // Page wrappers use display:contents in continuous view and have no box.
@@ -43,10 +61,11 @@ const storeView = (paged: boolean): void => {
 const pageTabs = (root: HTMLElement, tabs: HTMLElement): DocumentPage[] =>
   [...root.querySelectorAll<HTMLElement>("[data-mdxr-page]")].map(
     (element, index) => {
+      const title = element.dataset.mdxrPageTitle ?? `Section ${index + 1}`;
       const tab = document.createElement("button");
       tab.type = "button";
       tab.id = `mdxr-page-tab:${index}`;
-      tab.textContent = element.dataset.mdxrPageTitle ?? `Section ${index + 1}`;
+      tab.textContent = title;
       tab.setAttribute("role", "tab");
       tab.setAttribute("aria-controls", "mdxr-content");
       tabs.append(tab);
@@ -54,6 +73,7 @@ const pageTabs = (root: HTMLElement, tabs: HTMLElement): DocumentPage[] =>
         element,
         tab,
         target: element.querySelector<HTMLElement>("h1[id],h2[id]") ?? element,
+        title,
       };
     }
   );
@@ -63,6 +83,9 @@ class PageNavigation {
   private readonly content: HTMLElement;
   private readonly controls: HTMLElement;
   private readonly sidebar: HTMLElement;
+  private readonly navigation: HTMLElement | null;
+  private readonly previous: HTMLButtonElement | null;
+  private readonly next: HTMLButtonElement | null;
   private readonly visibility = document.createElement("style");
   private active = 0;
   private paged = false;
@@ -77,6 +100,9 @@ class PageNavigation {
     this.content = content;
     this.controls = controls;
     this.sidebar = sidebar;
+    this.navigation = content.querySelector(".mdxr-page-navigation");
+    this.previous = content.querySelector("[data-mdxr-page-previous]");
+    this.next = content.querySelector("[data-mdxr-page-next]");
     this.pages = pageTabs(root, tabs);
     document.head.append(this.visibility);
     this.bindEvents();
@@ -108,6 +134,8 @@ class PageNavigation {
       item.tab.setAttribute("aria-selected", String(i === index));
       item.tab.tabIndex = i === index ? 0 : -1;
     }
+    updatePageButton(this.previous, this.pages[index - 1]);
+    updatePageButton(this.next, this.pages[index + 1]);
     if (this.paged) {
       this.content.setAttribute("aria-labelledby", page.tab.id);
     }
@@ -118,6 +146,9 @@ class PageNavigation {
     this.paged = paged;
     document.body.dataset.mdxrView = paged ? "pages" : "document";
     this.sidebar.hidden = !paged;
+    if (this.navigation !== null) {
+      this.navigation.hidden = !paged;
+    }
     for (const button of this.controls.querySelectorAll("button")) {
       button.setAttribute(
         "aria-pressed",
@@ -231,6 +262,14 @@ class PageNavigation {
   }
 
   private bindEvents(): void {
+    this.previous?.addEventListener("click", () => {
+      this.open(this.active - 1);
+      this.content.focus({ preventScroll: true });
+    });
+    this.next?.addEventListener("click", () => {
+      this.open(this.active + 1);
+      this.content.focus({ preventScroll: true });
+    });
     for (const button of this.controls.querySelectorAll("button")) {
       button.addEventListener("click", () => {
         this.switchView(button.dataset.mdxrView === "pages");

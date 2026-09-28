@@ -1,5 +1,6 @@
 import type { ReactElement, ReactNode } from "react";
 
+import { DiagramViewport } from "./diagram-viewport.js";
 import { TEXT, SUNKEN_CLS } from "./tones.js";
 
 /** Native SVG sizing and a checkbox keep fitting/zoom available without JS. */
@@ -27,7 +28,10 @@ export const GraphViewport = ({
         Actual size
       </label>
     ) : null}
-    <div className={`mdxr-graph-scroll overflow-x-auto p-3 ${SUNKEN_CLS}`}>
+    <DiagramViewport
+      title={title ?? "Graph"}
+      canvasClassName={`mdxr-graph-scroll overflow-x-auto p-3 ${SUNKEN_CLS}`}
+    >
       <svg
         aria-label={title ?? "Graph"}
         className="mdxr-graph-image"
@@ -47,6 +51,6 @@ export const GraphViewport = ({
           </div>
         </foreignObject>
       </svg>
-    </div>
+    </DiagramViewport>
   </div>
 );

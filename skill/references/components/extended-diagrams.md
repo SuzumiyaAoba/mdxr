@@ -1,6 +1,6 @@
 # Diagrams components
 
-All data and options attributes contain literal JSON strings. No MDX expressions are needed. HTML includes interactive controls; ASCII retains static data.
+All data and options attributes contain literal JSON strings. No MDX expressions are needed. SVG diagrams such as `SequenceDiagram`, `StateDiagram`, `Architecture`, `MindMap`, and `ServiceTopology` provide **Zoom in**, **Zoom out**, and **Reset view** controls in HTML. Drag to pan, or use Ctrl/⌘+wheel; with a diagram focused, `+`/`-` zoom, arrow keys pan, and `0`/Home reset. Touchscreens support drag and pinch. Without JavaScript these diagrams remain static. ASCII retains static data.
 
 ## SequenceDiagram
 

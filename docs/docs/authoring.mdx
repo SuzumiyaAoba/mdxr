@@ -52,6 +52,8 @@ The author writes Markdown; the renderer turns shorthands into catalog component
 | `$…$` / `$$…$$` | KaTeX math |
 | `` `src/x.ts` `` naming a real file | `<FileRef>` chip with editor link |
 
+`<Graph>`, Mermaid, and SVG diagram components such as `Architecture` and `SequenceDiagram` provide **Zoom in**, **Zoom out**, and **Reset view** controls. Drag to pan; Ctrl/⌘+wheel zooms. Focus a diagram and use `+`/`-` to zoom, arrow keys to pan, and `0`/Home to reset. Touchscreens support drag and pinch. Without JavaScript, server-rendered diagrams stay static; Mermaid remains source text until its renderer runs, while Graph's native fit and **Actual size** control still work.
+
 The `:::` directive syntax wraps most container components — `:::findings`, `:::gantt`, `:::barchart`, `:::board`, `:::tests`, … — see the [catalog](/components) for the full mapping, or `mdxr catalog --json` for the machine-readable version.
 
 ## Reading by section

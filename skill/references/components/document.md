@@ -70,7 +70,7 @@ Icons also work as CSS classes (mask-image, single-color) on any element:
 ```
 ````
 
-renders a framed block with filename + copy button; the header carries a file-type icon picked from the filename (or language), and links to the file in your editor when it exists on disk (see "File links" in [../components.md](../components.md)). Code is syntax-highlighted with Shiki (light/dark dual theme), so always tag the fence with a language (`ts`, `python`, `diff`, …). ` ```mermaid ` renders a diagram.
+renders a framed block with filename + copy button; the header carries a file-type icon picked from the filename (or language), and links to the file in your editor when it exists on disk (see "File links" in [../components.md](../components.md)). Code is syntax-highlighted with Shiki (light/dark dual theme), so always tag the fence with a language (`ts`, `python`, `diff`, …). ` ```mermaid ` renders a diagram with **Zoom in**, **Zoom out**, and **Reset view** controls. Drag to pan; Ctrl/⌘+wheel zooms. When focused, `+`/`-` zoom, arrow keys pan, and `0`/Home reset. Touchscreens support drag and pinch. Mermaid stays as source text until JavaScript renders it; other server-rendered diagrams remain static without JavaScript.
 
 The fence meta also controls line presentation:
 

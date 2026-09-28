@@ -48,7 +48,7 @@ npx skills add Suzumiyaaoba/mdxr --skill mdxr
 
 > auth 機能の実装計画を書いて、mdxr で HTML にレンダリングして。
 
-場所を指定しない限り、ドキュメントはリポジトリルートの `.mdxr/` に作成されます — `.mdxr/auth-plan.mdx` は `mdxr serve` で `http://localhost:3737` にプレビューされます。
+指定がない場合、新しいドキュメントは `.mdxr/yyyyMMddhhmmss-<name>.mdx` に保存します。`yyyyMMddhhmmss` は作成時のローカル日時を表す14桁のゼロ埋め形式（24時間制）です（例: `.mdxr/20260929140530-auth-plan.mdx`）。ファイル名またはファイルパスが指定された場合はそれを優先します。ディレクトリだけが指定された場合は、その中に日時付きのファイル名で保存します。`mdxr serve .mdxr/20260929140530-auth-plan.mdx` でプレビューできます。
 
 計画書だけでなく、レポート、レビュー、調査サマリー、リリースノート、ポストモーテムにも使えます。
 

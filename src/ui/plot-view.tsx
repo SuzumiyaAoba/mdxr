@@ -3,6 +3,7 @@ import { useId } from "react";
 import { keyed } from "../extended/data.js";
 import type { PlotMark, PlotModel } from "../extended/plots.js";
 import { DataGrid, DataPanel } from "./data-view.js";
+import { DiagramViewport } from "./diagram-viewport.js";
 import { useFileLink } from "./file-link.js";
 
 const SvgShape = ({ mark }: { mark: PlotMark }) => {
@@ -101,7 +102,7 @@ export const PlotView = ({
   const uid = useId();
   return (
     <DataPanel title={title} id={id} summary={model.summary}>
-      <div className="overflow-x-auto p-3">
+      <DiagramViewport title={title} canvasClassName="overflow-x-auto p-3">
         <svg
           className="mx-auto h-auto w-full min-w-96"
           viewBox={`0 0 ${model.width} ${model.height}`}
@@ -117,7 +118,7 @@ export const PlotView = ({
             <SvgMark key={key} mark={mark} />
           ))}
         </svg>
-      </div>
+      </DiagramViewport>
       <details className="border-t border-neutral-200 p-3 text-sm dark:border-neutral-700">
         <summary className="cursor-pointer">Chart data</summary>
         <DataGrid rows={model.rows} />

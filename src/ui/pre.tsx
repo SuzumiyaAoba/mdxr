@@ -7,6 +7,7 @@ import { DocContext } from "../doc-context.js";
 import { asString, isRecord, nonEmpty } from "../guards.js";
 import { fenceFilename, firstLine, splitPathLines } from "../lines.js";
 import { CaptionBar, CopyButton, MaybeLink, Panel } from "./bits.js";
+import { DiagramViewport } from "./diagram-viewport.js";
 import type { DiffHl } from "./diff-parse.js";
 import { parseDiffHl } from "./diff-parse.js";
 import { DiffView } from "./diff.js";
@@ -102,11 +103,13 @@ const specialView = (
 ): ReactElement | undefined => {
   if (lang === "mermaid") {
     return (
-      <pre
-        className={`mermaid my-6 flex justify-center rounded-lg border p-4 ${SURFACE_CLS} ${BORDER_CLS}`}
+      <DiagramViewport
+        title={filename ?? "Mermaid diagram"}
+        className={`my-6 rounded-lg border ${SURFACE_CLS} ${BORDER_CLS}`}
+        canvasClassName="overflow-x-auto p-4"
       >
-        {text}
-      </pre>
+        <pre className="mermaid m-0 flex justify-center">{text}</pre>
+      </DiagramViewport>
     );
   }
   if (lang === "diff" || lang === "patch") {

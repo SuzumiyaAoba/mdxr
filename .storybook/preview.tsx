@@ -2,6 +2,7 @@ import type { Preview } from "@storybook/react-vite";
 import { useEffect } from "react";
 
 import { BASE_CSS } from "../src/assets/css.js";
+import { initDiagramViewports } from "../src/client/diagram-viewports.js";
 import { handleDocEvent, syncBoards } from "../src/client/doc-events.js";
 import { enhanceRenderedBlocks } from "./enhance.js";
 
@@ -13,6 +14,7 @@ if (typeof document !== "undefined") {
   const style = document.createElement("style");
   style.textContent = BASE_CSS;
   document.head.append(style);
+  initDiagramViewports();
   // Rendered documents inline these listeners via the client bundle.
   for (const type of [
     "click",

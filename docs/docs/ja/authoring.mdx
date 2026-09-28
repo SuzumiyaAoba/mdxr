@@ -52,6 +52,8 @@ editor: cursor       # エディタリンクのスキーム。mdxr.config.ts を
 | `$…$` / `$$…$$` | KaTeX 数式 |
 | `` `src/x.ts` ``（実在するファイル） | エディタリンク付き `<FileRef>` チップ |
 
+`<Graph>`、Mermaid、`Architecture` や `SequenceDiagram` などの SVG 図には **Zoom in**、**Zoom out**、**Reset view** の操作バーがあります。図をドラッグすると移動し、Ctrl/⌘+ホイールで拡大・縮小できます。図にフォーカスして `+`/`-` で拡大・縮小、矢印キーで移動、`0`/Home で初期表示に戻せます。タッチ画面ではドラッグとピンチに対応します。JavaScript 無効時はサーバー描画の図を静的に表示します。Mermaid はレンダラーが動くまでソーステキストを表示し、Graph の fit と **Actual size** は引き続き使えます。
+
 `:::` ディレクティブ構文はほとんどのコンテナコンポーネントを包みます — `:::findings`、`:::gantt`、`:::barchart`、`:::board`、`:::tests` など。全マッピングは [カタログ](/ja/components)、機械可読版は `mdxr catalog --json` を参照してください。
 
 ## セクションごとの閲覧

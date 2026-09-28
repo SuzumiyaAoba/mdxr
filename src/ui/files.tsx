@@ -96,13 +96,15 @@ export const File = defineComponent(
     );
     return (
       <ListRow>
-        <RowIcon name={fileIcon(path)} />
-        <MaybeLink
-          className={`min-w-0 overflow-x-auto whitespace-nowrap ${LINK_CLS}`}
-          href={link}
-        >
-          {label}
-        </MaybeLink>
+        <span className="inline-flex max-w-full min-w-0 items-center gap-3">
+          <RowIcon name={fileIcon(path)} />
+          <MaybeLink
+            className={`min-w-0 overflow-x-auto whitespace-nowrap ${LINK_CLS}`}
+            href={link}
+          >
+            {label}
+          </MaybeLink>
+        </span>
         {r === undefined ? null : (
           <Tag className={r.cls} icon={r.icon}>
             {kind}

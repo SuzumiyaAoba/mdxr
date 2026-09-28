@@ -48,7 +48,7 @@ After either setup, ask for a deliverable:
 
 > Write an implementation plan for the auth feature and render it to HTML with mdxr.
 
-Documents land in `.mdxr/` at the repo root — `.mdxr/auth-plan.mdx` previews at `http://localhost:3737` via `mdxr serve` — unless you specify a location.
+By default, new documents use `.mdxr/yyyyMMddhhmmss-<name>.mdx`, with a zero-padded 14-digit local creation time in 24-hour format (for example, `.mdxr/20260929140530-auth-plan.mdx`). A filename or file path you provide takes priority. If you specify only a directory, save the document there with a timestamped filename. Preview it with `mdxr serve .mdxr/20260929140530-auth-plan.mdx`.
 
 Plans, reports, reviews, investigation summaries, release notes, and postmortems all work.
 

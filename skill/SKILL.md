@@ -9,12 +9,12 @@ Write documents as **Markdown + a small set of JSX components** (MDX). Do NOT wr
 
 ## Workflow
 
-1. Write the document as `.mdxr/<name>.mdx` at the project root, creating `.mdxr/` if needed (unless the user gave a path). `.mdxr/` is untracked scratch space: if the project is a git repo, make sure `.gitignore` lists `.mdxr/` — append it when missing.
-2. Show it to the user: run `npx @suzumiyaaoba/mdxr serve .mdxr/plan.mdx --open` **in the background** and leave it running — `serve` stays attached for live reload. It prints `mdxr: serving … at http://localhost:PORT` (if the port is taken it picks the next free one) and `--open` launches that URL in the user's default browser. Do NOT `mdxr render --open` when the goal is to show the document — that's a one-shot file, not the live preview.
-3. Or pipe MDX directly: `cat .mdxr/plan.mdx | npx @suzumiyaaoba/mdxr serve --open`
-4. When a standalone `.html` file is the deliverable itself (to save or share), render it: `npx @suzumiyaaoba/mdxr render .mdxr/plan.mdx` (default output is the source path with `.html`). Piping also works: `cat .mdxr/plan.mdx | npx @suzumiyaaoba/mdxr render > .mdxr/plan.html` (`mdxr render -` also reads stdin; `-o out.html` sets the path).
-5. On errors, the message includes `file:line:col` — fix and re-run. `npx @suzumiyaaoba/mdxr render .mdxr/plan.mdx --format json` prints machine-readable errors.
-6. Plain-text deliverable: `npx @suzumiyaaoba/mdxr text .mdxr/plan.mdx` renders the document to Markdown readable in a terminal — components become ASCII stand-ins (checkbox lists, bar charts, GFM tables); interactive-only widgets degrade to their text.
+1. Write new documents to `.mdxr/yyyyMMddhhmmss-<name>.mdx` at the project root. Use a zero-padded 14-digit timestamp from local time; the hour uses 24-hour time. Choose a concise, meaningful name such as `auth-plan`. If the user specifies a filename or full path, use it as given; if they specify only a directory, create the timestamped filename there. When editing an existing document, keep its current path. Record the chosen path once and reuse that exact path in every later command; if each shell call is separate, substitute the recorded path for `$doc` and do not regenerate the timestamp. For example: `doc=".mdxr/$(date +%Y%m%d%H%M%S)-auth-plan.mdx"`. Create `.mdxr/` if needed. `.mdxr/` is untracked scratch space: if the project is a git repo, make sure `.gitignore` lists `.mdxr/` — append it when missing.
+2. Show it to the user: run `npx @suzumiyaaoba/mdxr serve "$doc" --open` **in the background** and leave it running — `serve` stays attached for live reload. It prints `mdxr: serving … at http://localhost:PORT` (if the port is taken it picks the next free one) and `--open` launches that URL in the user's default browser. Do NOT `mdxr render --open` when the goal is to show the document — that's a one-shot file, not the live preview.
+3. Or pipe MDX directly: `cat "$doc" | npx @suzumiyaaoba/mdxr serve --open`
+4. When a standalone `.html` file is the deliverable itself (to save or share), render it: `npx @suzumiyaaoba/mdxr render "$doc"` (default output is the source path with `.html`). Piping also works: `cat "$doc" | npx @suzumiyaaoba/mdxr render > "${doc%.*}.html"` (`mdxr render -` also reads stdin; `-o out.html` sets the path).
+5. On errors, the message includes `file:line:col` — fix and re-run. `npx @suzumiyaaoba/mdxr render "$doc" --format json` prints machine-readable errors.
+6. Plain-text deliverable: `npx @suzumiyaaoba/mdxr text "$doc"` renders the document to Markdown readable in a terminal — components become ASCII stand-ins (checkbox lists, bar charts, GFM tables); interactive-only widgets degrade to their text.
 
 ## Rules
 

@@ -12,8 +12,54 @@ ul.contains-task-list { padding-left: 1.25rem; }
   max-width: none !important;
 }
 .mdxr-graph-tools:focus-within { outline: 2px solid rgb(14 165 233); outline-offset: -2px; }
+/* Navigation is a progressive enhancement: no-JS documents keep native sizing
+ * and scrolling. Transform only the outer SVG, never its icons/edge layers. */
+.mdxr-diagram-tools { display: none; }
+.mdxr-diagrams-ready .mdxr-graph-tools { display: none; }
+.mdxr-diagrams-ready .mdxr-diagram:has(.mdxr-diagram-canvas svg) > .mdxr-diagram-tools {
+  display: flex; align-items: center; justify-content: flex-end; gap: 0.25rem;
+  flex-wrap: wrap; padding: 0.375rem 0.75rem; color: rgb(82 82 82);
+  border-bottom: 1px solid rgb(229 229 229); font-size: 0.75rem;
+}
+.mdxr-diagram-hint { flex: 1 1 12rem; }
+.mdxr-diagram-actions {
+  display: flex; align-items: center; gap: 0.25rem; flex-shrink: 0;
+  min-width: 0; margin: 0; padding: 0; border: 0;
+}
+.mdxr-diagram-tools button {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 2rem; height: 2rem; padding: 0; border-radius: 0.375rem;
+  background: transparent; color: inherit; cursor: pointer;
+}
+.mdxr-diagram-tools button:hover { background: rgb(229 229 229); }
+.mdxr-diagram-tools button:disabled { opacity: 0.35; cursor: default; }
+.mdxr-diagram-tools button:focus-visible, .mdxr-diagram-canvas:focus-visible {
+  outline: 2px solid rgb(14 165 233); outline-offset: -2px;
+}
+.mdxr-diagram-tools svg { width: 1rem; height: 1rem; }
+.mdxr-diagram-tools output { min-width: 3rem; text-align: center; font-variant-numeric: tabular-nums; }
+.dark .mdxr-diagram-tools { color: rgb(163 163 163) !important; border-color: rgb(64 64 64) !important; }
+.dark .mdxr-diagram-tools button:hover { background: rgb(64 64 64); }
+.mdxr-diagrams-ready .mdxr-diagram-canvas:has(svg) {
+  display: flex; align-items: safe center; justify-content: safe center;
+  overflow: hidden; min-height: 12rem; max-height: 70vh;
+  cursor: grab; touch-action: none;
+}
+.mdxr-diagram-canvas > svg, .mdxr-diagram-canvas > .mermaid { flex: none; }
+.mdxr-diagram-canvas > .mermaid { width: 100%; }
+.mdxr-diagrams-ready .mdxr-diagram-canvas[data-dragging] { cursor: grabbing; user-select: none; }
+.mdxr-diagram-canvas > svg, .mdxr-diagram-canvas > .mermaid > svg {
+  transform: var(--mdxr-diagram-transform, none); transform-origin: 0 0;
+}
+.mdxr-diagram-canvas > .mermaid:has(svg) { overflow: visible; padding: 0; background: transparent; }
 @media print {
-  .mdxr-graph-tools { display: none; }
+  .mdxr-graph-tools, .mdxr-diagram-tools { display: none !important; }
+  .mdxr-diagram-canvas {
+    overflow: visible !important; min-height: 0 !important; max-height: none !important;
+  }
+  .mdxr-diagram-canvas > svg, .mdxr-diagram-canvas > .mermaid > svg {
+    transform: none !important; min-width: 0 !important; max-width: 100% !important;
+  }
   .mdxr-graph-scroll { overflow: visible; }
   .mdxr-graph-view:has(.mdxr-graph-actual:checked) .mdxr-graph-image,
   .mdxr-graph-view .mdxr-graph-image {

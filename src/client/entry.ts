@@ -1,4 +1,5 @@
 import { initAnnotations } from "./annotations.js";
+import { initDiagramViewports } from "./diagram-viewports.js";
 import { handleDocEvent, syncBoards } from "./doc-events.js";
 import { initPages } from "./pages.js";
 import { initSectionReviews } from "./section-reviews.js";
@@ -28,6 +29,7 @@ for (const b of document.querySelectorAll("[data-ask]")) {
 // Move-button `disabled` state depends on each card's lane position —
 // client-side knowledge. Seed it once (and again after every move).
 syncBoards(document);
+initDiagramViewports();
 initPages();
 initSectionReviews();
 initAnnotations();

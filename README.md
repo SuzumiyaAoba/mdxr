@@ -107,7 +107,7 @@ Once the instructions or skill are installed, ask your agent, for example:
 
 > Write an implementation plan for the auth feature and render it to HTML with mdxr.
 
-Plans, reports, reviews, investigation summaries, release notes, and postmortems all work. Documents go in `.mdxr/` unless you specify another location.
+Plans, reports, reviews, investigation summaries, release notes, and postmortems all work. By default, new documents use `.mdxr/yyyyMMddhhmmss-<name>.mdx`, with a zero-padded 14-digit local creation time in 24-hour format (for example, `.mdxr/20260929140530-auth-plan.mdx`). A filename or file path you provide takes priority. If you specify only a directory, the document gets a timestamped filename there.
 
 ## License
 

@@ -340,32 +340,24 @@ describe("workspace HTML export", () => {
       });
       const archivePage = await offlineContext.newPage();
       await archivePage.goto(pathToFileURL(archivePath).href);
-
-      const sectionLinks = await archivePage
-        .locator("nav")
-        .evaluate((nav) =>
-          Array.from(nav.querySelectorAll("a"), ({ hash }) => hash)
-        );
       const sectionIds = await archivePage
-        .locator("main")
-        .evaluate((main) =>
-          Array.from(main.querySelectorAll(":scope > section"), ({ id }) => id)
+        .locator(".mdxr-export")
+        .evaluate((exportRoot) =>
+          Array.from(
+            exportRoot.querySelectorAll(":scope > section"),
+            ({ id }) => id
+          )
         );
-      const snapshot = await archivePage
-        .locator('iframe[title="Document snapshot"]')
-        .evaluate((iframe) => ({
-          sandbox: iframe.getAttribute("sandbox"),
-          srcdoc: iframe.getAttribute("srcdoc"),
-        }));
-      const snapshotFrame = archivePage.frameLocator(
-        'iframe[title="Document snapshot"]'
-      );
-      const snapshotNote = await snapshotFrame
+      const appendixInsideRoot =
+        (await archivePage.locator("#mdxr-root > .mdxr-export").count()) === 1;
+      const iframeCount = await archivePage.locator("iframe").count();
+      const snapshotNote = await archivePage
         .locator('textarea[aria-label="Document note"]')
         .inputValue();
-      const snapshotImage = await snapshotFrame
+      const snapshotImage = await archivePage
         .locator('img[alt="Offline snapshot"]')
         .getAttribute("src");
+      const archiveTitle = await archivePage.title();
       const archiveText = await archivePage.locator("main").textContent();
       const exportDataText = await archivePage
         .locator("script#mdxr-export-data[type='application/json']")
@@ -380,9 +372,10 @@ describe("workspace HTML export", () => {
 
       expect({
         hasAllArchiveSections:
-          sectionLinks.join(",") ===
-            "#document,#chat,#comments,#reviews,#history" &&
-          sectionIds.join(",") === "document,chat,comments,reviews,history",
+          appendixInsideRoot &&
+          iframeCount === 0 &&
+          archiveTitle.endsWith("Workspace archive") &&
+          sectionIds.join(",") === "chat,comments,reviews,history",
         hasDocumentChatCommentAndDiff: [
           "This is the original review snapshot.",
           "This is the current review snapshot.",
@@ -394,16 +387,14 @@ describe("workspace HTML export", () => {
           "Unsent chat draft <keep me>",
           "Design — Reviewed",
         ].every((expected) => archiveText?.includes(expected) === true),
-        hasSandboxedSnapshot:
-          snapshot.sandbox === "" &&
-          (snapshot.srcdoc?.includes("export snapshot marker") ?? false),
+        hasEmbeddedSnapshot: archiveText?.includes("export snapshot marker"),
         preservesBrowserDocumentState:
           snapshotNote === "Edited in browser" &&
           (snapshotImage?.startsWith("data:image/svg+xml;base64,") ?? false),
       }).toStrictEqual({
         hasAllArchiveSections: true,
         hasDocumentChatCommentAndDiff: true,
-        hasSandboxedSnapshot: true,
+        hasEmbeddedSnapshot: true,
         preservesBrowserDocumentState: true,
       });
       expect({

@@ -6,7 +6,7 @@ import { captureWorkspaceDocument } from "./client/workspace-snapshot.js";
 import { isRecord } from "./guards.js";
 import { downloadText } from "./ui/data-download.js";
 import type { WorkspaceExportData } from "./workspace-export-data.js";
-import { workspaceExportHtml } from "./workspace-export-html.js";
+import { workspaceExportAppendix } from "./workspace-export-html.js";
 
 const isExportVersion = (value: unknown): boolean =>
   isRecord(value) &&
@@ -68,18 +68,17 @@ const loadExportData = async (): Promise<WorkspaceExportData> => {
 
 const exportWorkspace = async (): Promise<void> => {
   const state = collectWorkspaceBrowserState();
-  const { title } = document;
-  const [workspace, snapshot] = await Promise.all([
-    loadExportData(),
-    captureWorkspaceDocument(),
-  ]);
+  const workspace = await loadExportData();
+  // The appendix markup is built first, then captured inside the snapshot —
+  // the export is the document itself with its archive appended, not a
+  // wrapper page around it.
+  const snapshot = await captureWorkspaceDocument({
+    appendix: workspaceExportAppendix(workspace, state),
+    title: `${document.title} — Workspace archive`,
+  });
   const basename = workspace.file.split(/[\\/]/u).at(-1) ?? "workspace";
   const filename = `${basename.replace(/\.[^.]+$/u, "")}-workspace.html`;
-  downloadText(
-    workspaceExportHtml(workspace, state, snapshot, title),
-    filename,
-    "text/html;charset=utf-8"
-  );
+  downloadText(snapshot, filename, "text/html;charset=utf-8");
 };
 
 export const WorkspaceExportButton = () => {

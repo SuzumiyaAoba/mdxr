@@ -217,13 +217,24 @@ const embedElements = async (
 };
 
 /** Capture synchronously, then inline assets without changing the live document. */
-export const captureWorkspaceDocument = async (): Promise<string> => {
+export const captureWorkspaceDocument = async (options?: {
+  /** Raw markup inserted at the end of the document body (export appendix). */
+  appendix?: string;
+  /** Override for the standalone page <title>. */
+  title?: string;
+}): Promise<string> => {
   const root = document.querySelector("#mdxr-root");
   if (root === null) {
     throw new Error("Document is not available for export");
   }
   const container = document.createElement("div");
-  container.append(cloneSnapshot(root));
+  const snapshot = cloneSnapshot(root);
+  container.append(snapshot);
+  if (options?.appendix !== undefined && snapshot instanceof Element) {
+    // Script elements survive insertAdjacentHTML as inert markup — they are
+    // serialized into the snapshot but never executed on export.
+    snapshot.insertAdjacentHTML("beforeend", options.appendix);
+  }
   const styles = [
     ...document.querySelectorAll("style, link[rel=stylesheet]"),
   ].map((element) => ({
@@ -245,5 +256,6 @@ export const captureWorkspaceDocument = async (): Promise<string> => {
     ? "dark"
     : "";
   const safeCss = css.join("\n").replaceAll(/<\/style/giu, "<\\/style");
-  return `<!doctype html><html lang="${escapeExportHtml(document.documentElement.lang || "en")}" class="${theme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; media-src data:; font-src data:; style-src 'unsafe-inline';"><style>${safeCss}\n*,*::before,*::after{animation:none!important;transition:none!important}#mdxr-root{padding-top:2rem!important}[data-mdxr-page]{display:contents!important}</style></head><body class="${escapeExportHtml(document.body.className.replaceAll(/\bmdxr-[\w-]+\b/gu, ""))}">${container.innerHTML}</body></html>`;
+  const title = options?.title ?? document.title;
+  return `<!doctype html><html lang="${escapeExportHtml(document.documentElement.lang || "en")}" class="${theme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; media-src data:; font-src data:; style-src 'unsafe-inline';"><title>${escapeExportHtml(title)}</title><style>${safeCss}\n*,*::before,*::after{animation:none!important;transition:none!important}#mdxr-root{padding-top:2rem!important}[data-mdxr-page]{display:contents!important}</style></head><body class="${escapeExportHtml(document.body.className.replaceAll(/\bmdxr-[\w-]+\b/gu, ""))}">${container.innerHTML}</body></html>`;
 };

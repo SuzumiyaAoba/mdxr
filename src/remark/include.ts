@@ -1,4 +1,4 @@
-import { readFileSync, realpathSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 
 import remarkDirective from "remark-directive";
@@ -9,7 +9,7 @@ import remarkMdx from "remark-mdx";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
 import type { Node, Parent } from "unist";
-import type { VFile } from "vfile";
+import { VFile } from "vfile";
 
 import { isRecord } from "../guards.js";
 import { isParent, jsxAttr, jsxAttrs, textContent } from "./ast.js";
@@ -24,6 +24,26 @@ declare module "unist" {
   }
 }
 
+export interface LinkedDocument {
+  ancestors: string[];
+  id: string;
+  path: string;
+  section?: string;
+}
+
+export interface IncludeOptions {
+  ancestors?: string[];
+  inlineAssets?: boolean;
+  section?: string;
+}
+
+declare module "vfile" {
+  interface DataMap {
+    includeDependencies?: string[];
+    linkedDocuments?: LinkedDocument[];
+  }
+}
+
 const parser = unified()
   .use(remarkParse)
   .use(remarkMdx)
@@ -32,10 +52,10 @@ const parser = unified()
   .use(remarkMath)
   .use(remarkDirective);
 const REMOTE = /^(?:[a-z][a-z\d+.-]*:|#|\/)/iu;
-const isInclude = (node: Node): node is MdxTarget =>
+const isDocumentReference = (node: Node): node is MdxTarget =>
   (node.type === "mdxJsxFlowElement" || node.type === "mdxJsxTextElement") &&
   "name" in node &&
-  node.name === "Include";
+  (node.name === "Include" || node.name === "DocumentLink");
 const sectionNodes = (nodes: Node[], section: string): Node[] => {
   const slugFor = createHeadingSlugger();
   const slugs = new Map<Node, string>();
@@ -113,67 +133,131 @@ const rebase = (node: Node, origin: string, root: string): void => {
   }
 };
 
-const includedDocument = (
+const includePath = (
   target: MdxTarget,
   origin: string,
   chain: string[],
   file: VFile
-): { abs: string; tree: Parent } => {
-  if (target.type === "mdxJsxTextElement") {
+): string => {
+  const source = jsxAttr(target, "path");
+  if (source === undefined || source === "") {
+    file.fail(`${target.name} requires path`, target);
+  }
+  if (
+    target.name === "DocumentLink" &&
+    ![".md", ".mdx"].includes(path.extname(source).toLowerCase())
+  ) {
     file.fail(
-      "Include must be used as a block element",
+      "DocumentLink requires an .md or .mdx file",
       target,
       "mdxr:include"
     );
-  }
-  const source = jsxAttr(target, "path");
-  if (source === undefined || source === "") {
-    file.fail("Include requires path", target);
   }
   const abs = realpathSync(path.resolve(path.dirname(origin), source));
   const ancestors = new Set(chain);
   if (ancestors.has(abs)) {
     file.fail(`Include cycle: ${[...chain, abs].join(" → ")}`, target);
   }
-  const included = parser.parse(readFileSync(abs, "utf-8"));
+  file.data.includeDependencies ??= [];
+  file.data.includeDependencies.push(abs);
+  return abs;
+};
+
+const includedDocument = (
+  target: MdxTarget,
+  abs: string,
+  parentFile: VFile
+): Parent => {
+  const file = new VFile({ path: abs, value: readFileSync(abs, "utf-8") });
+  const included = parser.parse(file);
   remarkNoJs()(included, file);
   remarkMdxrDirectives()(included, file);
+  parentFile.messages.push(...file.messages);
   const section = jsxAttr(target, "section");
   const nodes = included.children.filter((node) => node.type !== "yaml");
-  const tree: Parent = {
+  return {
     children:
       section === undefined || section === ""
         ? nodes
         : sectionNodes(nodes, section),
     type: "root",
   };
-  target.attributes = jsxAttrs({ path: source, section });
-  return { abs, tree };
 };
 
-export const remarkInclude = () => (tree: Node, file: VFile) => {
-  remarkNoJs()(tree, file);
-  const rootFile = path.resolve(file.path || "document.mdx");
-  const root = path.dirname(rootFile);
-  const expand = (parent: Parent, origin: string, chain: string[]): void => {
-    if (chain.length > 32) {
-      file.fail("Include: nesting exceeds 32 files");
-    }
-    for (const child of parent.children) {
-      child.data = { ...child.data, mdxrSourceFile: origin };
-      if (isInclude(child)) {
-        const included = includedDocument(child, origin, chain, file);
-        expand(included.tree, included.abs, [...chain, included.abs]);
-        child.children = included.tree.children;
-        continue;
+const linkDocument = (
+  target: MdxTarget,
+  abs: string,
+  chain: string[],
+  file: VFile
+): void => {
+  file.data.linkedDocuments ??= [];
+  const documents = file.data.linkedDocuments;
+  const section = jsxAttr(target, "section");
+  const id = `mdxr-document-${documents.length + 1}`;
+  documents.push({ ancestors: chain, id, path: abs, section });
+  target.attributes = jsxAttrs({
+    document: id,
+    label: jsxAttr(target, "label"),
+    path: jsxAttr(target, "path"),
+    section,
+  });
+  target.children = [];
+};
+
+export const remarkInclude =
+  (opts: IncludeOptions = {}) =>
+  (tree: Node, file: VFile) => {
+    remarkNoJs()(tree, file);
+    const filename = path.resolve(file.path || "document.mdx");
+    const rootFile = existsSync(filename) ? realpathSync(filename) : filename;
+    const directory = path.dirname(filename);
+    const root = existsSync(directory) ? realpathSync(directory) : directory;
+    const expand = (parent: Parent, origin: string, chain: string[]): void => {
+      if (chain.length > 32) {
+        file.fail("Include: nesting exceeds 32 files");
       }
-      rebase(child, path.dirname(origin), root);
-      if (isParent(child)) {
-        expand(child, origin, chain);
+      const originDirectory = origin === filename ? root : path.dirname(origin);
+      for (const child of parent.children) {
+        child.data = { ...child.data, mdxrSourceFile: origin };
+        if (isDocumentReference(child)) {
+          if (child.name === "Include" && child.type === "mdxJsxTextElement") {
+            file.fail(
+              "Include must be used as a block element",
+              child,
+              "mdxr:include"
+            );
+          }
+          const abs = includePath(child, origin, chain, file);
+          if (child.name === "DocumentLink") {
+            linkDocument(child, abs, chain, file);
+            rebase(child, originDirectory, root);
+            continue;
+          }
+          const included = includedDocument(child, abs, file);
+          expand(included, abs, [...chain, abs]);
+          child.attributes = jsxAttrs({
+            path: jsxAttr(child, "path"),
+            section: jsxAttr(child, "section"),
+          });
+          child.children = included.children;
+          continue;
+        }
+        rebase(child, originDirectory, root);
+        if (isParent(child)) {
+          expand(child, origin, chain);
+        }
       }
+    };
+    if (isParent(tree)) {
+      if (opts.section !== undefined) {
+        tree.children = [
+          ...tree.children.filter((node) => node.type === "yaml"),
+          ...sectionNodes(
+            tree.children.filter((node) => node.type !== "yaml"),
+            opts.section
+          ),
+        ];
+      }
+      expand(tree, filename, [...(opts.ancestors ?? []), rootFile]);
     }
   };
-  if (isParent(tree)) {
-    expand(tree, rootFile, [rootFile]);
-  }
-};

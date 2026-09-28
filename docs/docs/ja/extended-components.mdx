@@ -15,7 +15,8 @@ sidebar:
 
 ## 計算と動作の仕様
 
-- `Include path="..." section="heading-slug"` はコンパイル時にローカルMD/MDXを展開します。独立したブロックとして記述し、文章の途中には置かないでください。パスは読み込み元のファイル基準です。相対リンクを補正し、循環と実行可能なMDXを拒否します。描画時には参照ファイルが必要です。`CodeFile` と同様、信頼するローカル文書を指定してください。
+- `<Include path="./notes.md" />` はローカルの Markdown / MDX ファイルをコンパイル時に埋め込みます。独立したブロックとして記述し、`section="heading-slug"` を指定するとその見出しと本文を選べます。パスは読み込み元ファイル基準で、相対リンクは補正されます。循環と実行可能な MDX は拒否します。描画時には参照ファイルが必要です。`serve` は文書ディレクトリ外のファイルも変更監視します。`CodeFile` と同様、信頼するローカル文書を指定してください。
+- `<DocumentLink path="./notes.mdx" label="ノートを開く" section="overview" />` はローカルの Markdown / MDX ファイルを mdxr で HTML に描画し、新しいタブで開きます。mdxr のテーマとプロジェクト定義コンポーネントが適用され、エディタ用リンクは開きません。`label` と `section` は省略でき、label の既定値はパスです。描画後のページは親 HTML に同梱されるため、別ファイルを生成せずに `render` と `serve` の両方で使えます。開くときは mdxr 共通のクライアント JavaScript が必要で、`hydrate: false` でも動きます。リンク先はレンダリング時点のスナップショットです。`serve` 中に参照ファイルを変更した場合、親ページの再読込後にリンクを開き直してください。
 - `Source` / `Cite` と `CrossRef` は後方に書いた参照先も解決します。IDの重複と参照先の欠落はエラーです。`TableOfFigures` の `kind` は `Figure` / `DataTable` / `NumberedEquation` / `Theorem` などを指定できます。
 - 分位点はR7補間、箱ひげは1.5×IQR、密度推定はGaussian kernelを使います。`bandwidth` は明示指定も可能です。カレンダーの日付はUTCです。`Experiment` は二項比率のWilson 95%区間を計算し、因果関係や有意差は判定しません。分母0の比率は計算不能として表示します。
 - `DecisionMatrix` は `options.weights` が必要です。`TestMatrix` は `options.axes` の未実施組み合わせを `not-run` とします。`DependencyPlan` は非負の期間と先行IDから計算し、営業日やリソース制約は推測しません。`DataValidation` の `options.rules` は `field` / `required` / `type` / `min` / `max` / `enum` を扱います。型は `string` / `number` / `integer` / `boolean` / `array` / `object` / `null` で、任意項目の欠落・null・空文字は検証対象外です。数値範囲を検証できない値も違反として集計します。`Experiment` の件数・成功数は非負の整数とし、成功数は件数以下にします。

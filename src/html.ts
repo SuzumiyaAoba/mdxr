@@ -75,6 +75,7 @@ export interface DocumentOptions {
    * `<main id="mdxr-root">`, making Base UI primitives interactive.
    */
   hydrateJs?: string;
+  linkedDocuments?: Record<string, { html: string; path: string }>;
 }
 
 export const htmlDocument = (o: DocumentOptions): string => `<!doctype html>
@@ -112,6 +113,7 @@ ${THEME_TOGGLE_HTML}
 </div>
 ${o.annotations === undefined ? "" : `${annotationHtml(iconSvg)}<script type="application/json" id="mdxr-annotation-document">${JSON.stringify(o.annotations).replaceAll("<", "\\u003c")}</script>`}
 ${o.annotations === undefined ? "" : sectionReviewHtml(iconSvg)}
+${o.linkedDocuments === undefined || Object.keys(o.linkedDocuments).length === 0 ? "" : `<script type="application/json" id="mdxr-linked-documents">${JSON.stringify(o.linkedDocuments).replaceAll("<", "\\u003c")}</script>`}
 <script>${inlineScript(o.clientJs)}</script>
 ${o.needsMermaid ? `<script type="module">${inlineScript(MERMAID_JS)}</script>` : ""}
 ${o.liveReload === true ? `<script>${inlineScript(LIVE_RELOAD_JS)}</script>` : ""}

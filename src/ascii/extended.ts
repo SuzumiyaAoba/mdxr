@@ -350,6 +350,28 @@ Object.assign(extendedRenderers, {
     flow: (node: MdxTarget) =>
       recordsTable(dependencyMatrixModel(nodeRows(node)).rows),
   },
+  DocumentLink: {
+    flow: (node: MdxTarget) => {
+      const path = attr(node, "path") ?? "";
+      const section = attr(node, "section");
+      return [
+        para([
+          link(section === undefined ? path : `${path}#${section}`, [
+            txt(attr(node, "label") ?? path),
+          ]),
+        ]),
+      ];
+    },
+    text: (node: MdxTarget) => {
+      const path = attr(node, "path") ?? "";
+      const section = attr(node, "section");
+      return [
+        link(section === undefined ? path : `${path}#${section}`, [
+          txt(attr(node, "label") ?? path),
+        ]),
+      ];
+    },
+  },
   DocumentSearch: {
     flow: () => [
       para([txt("Search this document using your viewer’s Find command.")]),

@@ -50,7 +50,7 @@ export const EXTENDED_FEATURES = [
   },
   {
     category: "evidence",
-    components: ["Include"],
+    components: ["Include", "DocumentLink"],
     name: "Include",
     number: 9,
   },

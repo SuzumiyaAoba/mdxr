@@ -21,6 +21,7 @@ import { editorUrl } from "./editor.js";
 import { enhanceRenderError, formatError } from "./format-error.js";
 import { isComponent, isRecord } from "./guards.js";
 import { importBundledCode } from "./load-user-module.js";
+import { rehypeLinkedAssets } from "./rehype/linked-assets.js";
 import { rehypeShiki } from "./rehype/shiki.js";
 import { remarkMdxrAlerts } from "./remark/alerts.js";
 import { remarkAnnotationSources } from "./remark/annotation-sources.js";
@@ -30,6 +31,7 @@ import { remarkMdxrDirectives } from "./remark/directives.js";
 import { remarkFilePaths } from "./remark/file-paths.js";
 import { remarkMdxrHeadings } from "./remark/headings.js";
 import { remarkInclude } from "./remark/include.js";
+import type { IncludeOptions, LinkedDocument } from "./remark/include.js";
 import { remarkNoJs } from "./remark/no-js.js";
 import { remarkDocumentPages } from "./remark/pages.js";
 import { remarkReferences } from "./remark/references.js";
@@ -39,6 +41,8 @@ import { takeUsedIcons } from "./ui/icon.js";
 export interface MdxResult {
   annotationSources: AnnotationSource[];
   body: string;
+  dependencies: string[];
+  linkedDocuments: LinkedDocument[];
   frontmatter: Record<string, unknown>;
   /**
    * Compiled MDX module source (ESM, `react/jsx-runtime` imports). The same
@@ -131,7 +135,7 @@ export const mdxToHtml = async (
   source: string,
   components: ComponentMap,
   filePath = "document.mdx",
-  opts: { editor?: string; hydrate?: boolean } = {}
+  opts: { editor?: string; hydrate?: boolean; include?: IncludeOptions } = {}
 ): Promise<MdxResult> => {
   const file = new VFile({ path: filePath, value: source });
   matter(file);
@@ -165,14 +169,18 @@ export const mdxToHtml = async (
   const compiled = await compile(file, {
     baseUrl: import.meta.url,
     format: "mdx",
-    rehypePlugins: [rehypeKatex, rehypeShiki],
+    rehypePlugins: [
+      rehypeKatex,
+      rehypeShiki,
+      [rehypeLinkedAssets, { enabled: opts.include?.inlineAssets }],
+    ],
     remarkPlugins: [
       remarkFrontmatter,
       remarkGfm,
       remarkMath,
       remarkDirective,
       remarkMdxrDirectives,
-      remarkInclude,
+      [remarkInclude, opts.include ?? {}],
       remarkMdxrAlerts,
       remarkNoJs,
       remarkMdxrHeadings,
@@ -185,6 +193,7 @@ export const mdxToHtml = async (
       remarkSectionReviews,
     ],
   });
+  const { includeDependencies, linkedDocuments = [] } = compiled.data;
   // Non-fatal plugin diagnostics (unknown directives, …) reach the user here.
   for (const m of compiled.messages) {
     process.stderr.write(`mdxr: warning: ${formatError(m)}\n`);
@@ -239,9 +248,11 @@ export const mdxToHtml = async (
     body,
     code,
     context,
+    dependencies: [...new Set(includeDependencies)],
     fileLinks: Object.fromEntries(fileLinks),
     frontmatter,
     hydrated,
+    linkedDocuments,
     renderWithHeader: (header) => {
       try {
         const html = renderDocument(header);

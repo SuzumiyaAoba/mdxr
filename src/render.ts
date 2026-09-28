@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { existsSync } from "node:fs";
+import { existsSync, realpathSync } from "node:fs";
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 
@@ -17,6 +17,7 @@ import { buildHydrateScript } from "./hydrate.js";
 import { loadUserModule, resolveModuleEntry } from "./load-user-module.js";
 import { mdxToHtml } from "./mdx.js";
 import { pkgRoot } from "./paths.js";
+import type { IncludeOptions } from "./remark/include.js";
 import type { CssSource } from "./tailwind.js";
 import { buildCss } from "./tailwind.js";
 import { builtinComponents } from "./ui/index.js";
@@ -90,7 +91,7 @@ export interface RenderOptions {
    */
   hydrate?: boolean;
   /**
-   * Files the render pulled in (theme CSS and its imports) — `mdxr serve`
+   * Files the render pulled in (includes, theme CSS and its imports) — `mdxr serve`
    * registers them as extra watch targets so edits outside the document's
    * own directory still trigger a rebuild.
    */
@@ -192,10 +193,10 @@ const frontmatterHeader = (
   };
 };
 
-/** Render MDX source text to a standalone HTML document. */
-export const render = async (
+const renderDocument = async (
   source: string,
-  opts: RenderSourceOptions = {}
+  opts: RenderSourceOptions,
+  include: IncludeOptions = {}
 ): Promise<string> => {
   const dir = path.resolve(opts.dir ?? process.cwd());
   // Relative filePaths anchor to `dir`, not cwd — mdxToHtml resolves
@@ -226,8 +227,10 @@ export const render = async (
     annotationSources,
     body,
     code,
+    dependencies: includeDependencies,
     fileLinks,
     frontmatter,
+    linkedDocuments,
     renderedAt,
     renderWithHeader,
     usedComponents,
@@ -235,6 +238,7 @@ export const render = async (
   } = await mdxToHtml(source, components, filePath, {
     editor: config.editor,
     hydrate: opts.hydrate,
+    include,
   });
 
   const fmStr = (key: string): string | undefined => {
@@ -301,7 +305,10 @@ export const render = async (
       : [{ content: config.componentsCode, extension: "js" }]),
   ];
   const { css, dependencies } = await buildCss(sources, config.themePath);
-  opts.onDependencies?.(dependencies);
+  const documentDependencies = new Set([
+    ...dependencies,
+    ...includeDependencies,
+  ]);
 
   const [js, hydrateJs] = await Promise.all([
     clientJs(),
@@ -317,6 +324,46 @@ export const render = async (
     }),
   ]);
 
+  const documents: Record<string, { html: string; path: string }> = {};
+  const sourceDirectory = path.dirname(filePath);
+  const documentBase = existsSync(sourceDirectory)
+    ? realpathSync(sourceDirectory)
+    : sourceDirectory;
+  for (const linked of linkedDocuments) {
+    // Sequential renders keep icon collection and nested include chains isolated.
+    // oxlint-disable-next-line no-await-in-loop
+    const linkedSource = await readFile(linked.path, "utf-8");
+    // oxlint-disable-next-line no-await-in-loop
+    const html = await renderDocument(
+      linkedSource,
+      {
+        ...opts,
+        dir,
+        filePath: linked.path,
+        liveReload: false,
+        onDependencies: (paths) => {
+          for (const dependency of paths) {
+            documentDependencies.add(dependency);
+          }
+        },
+      },
+      {
+        ancestors: linked.ancestors,
+        inlineAssets: true,
+        section: linked.section,
+      }
+    );
+    documents[linked.id] = {
+      html,
+      path: path
+        .relative(documentBase, linked.path)
+        .split(path.sep)
+        .map(encodeURIComponent)
+        .join("/"),
+    };
+  }
+  opts.onDependencies?.([...documentDependencies]);
+
   return htmlDocument({
     annotations: {
       file: filePath,
@@ -329,12 +376,19 @@ export const render = async (
     css,
     hydrateJs,
     initialTheme: opts.initialTheme,
+    linkedDocuments: documents,
     liveReload: opts.liveReload,
     needsKatex: /class="[^"]*katex/u.test(docBody),
     needsMermaid: /class="[^"]*mermaid/u.test(docBody),
     title,
   });
 };
+
+/** Render MDX source text to a standalone HTML document. */
+export const render = async (
+  source: string,
+  opts: RenderSourceOptions = {}
+): Promise<string> => await renderDocument(source, opts);
 
 /** Read `mdxPath` and render it to a standalone HTML document. */
 export const renderFile = async (

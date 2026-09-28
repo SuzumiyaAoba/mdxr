@@ -179,6 +179,30 @@ export const Include = defineComponent(
   },
   ({ children }) => <div className="contents">{children}</div>
 );
+export const DocumentLink = defineComponent(
+  {
+    description:
+      "Open a local Markdown/MDX file in a new tab rendered with the mdxr theme and project components; optional label and heading section.",
+    schema: v.looseObject({
+      document: v.optional(v.string()),
+      label: v.optional(v.string()),
+      path: v.string(),
+      section: v.optional(v.string()),
+    }),
+  },
+  ({ document, label, path, section }) => (
+    <a
+      className="text-sky-700 underline dark:text-sky-300"
+      data-mdxr-document={document}
+      href={safeHref(section === undefined ? path : `${path}#${section}`)}
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      {label ?? path}
+      <span className="sr-only"> (opens in a new tab)</span>
+    </a>
+  )
+);
 export const TableOfFigures = defineComponent(
   {
     description:

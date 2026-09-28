@@ -135,3 +135,19 @@
     @apply font-sans;
   }
 }
+
+@layer components {
+  /* Inline code (paths, commands) often has no break opportunity for
+   * Chromium — it does not break at "/" — so a long token overflows the
+   * article. Give it a capped inline scroll box instead: the same horizontal-
+   * scroll treatment fenced blocks get. Chips (`CODE_CHIP_CLS`) keep their
+   * `inline-flex` display (utilities layer wins) and only pick up the cap,
+   * nowrap, and scroll. `pre` is excluded: it scrolls itself and `nowrap`
+   * would collapse its newlines. */
+  .prose code:not(:where(pre *)) {
+    display: inline-block;
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}

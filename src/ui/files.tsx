@@ -97,7 +97,10 @@ export const File = defineComponent(
     return (
       <ListRow>
         <RowIcon name={fileIcon(path)} />
-        <MaybeLink className={LINK_CLS} href={link}>
+        <MaybeLink
+          className={`min-w-0 overflow-x-auto whitespace-nowrap ${LINK_CLS}`}
+          href={link}
+        >
           {label}
         </MaybeLink>
         {r === undefined ? null : (

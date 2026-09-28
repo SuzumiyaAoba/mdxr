@@ -1,6 +1,6 @@
 ---
 name: mdxr
-description: Write rich plan/report documents as MDX using the mdxr component catalog, then render them to standalone HTML with `npx @suzumiyaaoba/mdxr render`. Use when creating plan files, status reports, reviews, or any structured document meant to be viewed as a styled HTML page — and whenever the user explicitly asks for a deliverable written or rendered with mdxr, regardless of document type.
+description: Write rich plan/report documents as MDX using the mdxr component catalog, then preview them in the browser with `npx @suzumiyaaoba/mdxr serve` or render them to standalone HTML with `npx @suzumiyaaoba/mdxr render`. Use when creating plan files, status reports, reviews, or any structured document meant to be viewed as a styled HTML page — and whenever the user explicitly asks for a deliverable written or rendered with mdxr, regardless of document type.
 ---
 
 # mdxr — agent-authored documents rendered to HTML
@@ -10,10 +10,10 @@ Write documents as **Markdown + a small set of JSX components** (MDX). Do NOT wr
 ## Workflow
 
 1. Write the document as `.mdxr/<name>.mdx` at the project root, creating `.mdxr/` if needed (unless the user gave a path). `.mdxr/` is untracked scratch space: if the project is a git repo, make sure `.gitignore` lists `.mdxr/` — append it when missing.
-2. Render and open it for the user: `npx @suzumiyaaoba/mdxr render .mdxr/plan.mdx --open` (the default output is the source path with `.html` — `.mdxr/plan.html`; `--open` launches the file in the user's default browser: `open` on macOS, `xdg-open` on Linux, `start` on Windows).
-3. Or pipe MDX directly: `cat .mdxr/plan.mdx | npx @suzumiyaaoba/mdxr render > .mdxr/plan.html` (`mdxr render -` also reads stdin; `-o out.html` writes a file — required for `--open`).
-4. On errors, the message includes `file:line:col` — fix and re-run. `npx @suzumiyaaoba/mdxr render .mdxr/plan.mdx --format json` prints machine-readable errors.
-5. Preview while editing: `npx @suzumiyaaoba/mdxr serve .mdxr/plan.mdx --open` — or pipe: `cat .mdxr/plan.mdx | npx @suzumiyaaoba/mdxr serve --open`
+2. Show it to the user: run `npx @suzumiyaaoba/mdxr serve .mdxr/plan.mdx --open` **in the background** and leave it running — `serve` stays attached for live reload. It prints `mdxr: serving … at http://localhost:PORT` (if the port is taken it picks the next free one) and `--open` launches that URL in the user's default browser. Do NOT `mdxr render --open` when the goal is to show the document — that's a one-shot file, not the live preview.
+3. Or pipe MDX directly: `cat .mdxr/plan.mdx | npx @suzumiyaaoba/mdxr serve --open`
+4. When a standalone `.html` file is the deliverable itself (to save or share), render it: `npx @suzumiyaaoba/mdxr render .mdxr/plan.mdx` (default output is the source path with `.html`). Piping also works: `cat .mdxr/plan.mdx | npx @suzumiyaaoba/mdxr render > .mdxr/plan.html` (`mdxr render -` also reads stdin; `-o out.html` sets the path).
+5. On errors, the message includes `file:line:col` — fix and re-run. `npx @suzumiyaaoba/mdxr render .mdxr/plan.mdx --format json` prints machine-readable errors.
 6. Plain-text deliverable: `npx @suzumiyaaoba/mdxr text .mdxr/plan.mdx` renders the document to Markdown readable in a terminal — components become ASCII stand-ins (checkbox lists, bar charts, GFM tables); interactive-only widgets degrade to their text.
 
 ## Rules

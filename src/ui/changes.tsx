@@ -79,7 +79,10 @@ export const Change = defineComponent(
           {k.label}
         </Tag>
         <RowIcon name={fileIcon(nonEmpty(to) ? to : path)} />
-        <MaybeLink className={LINK_CLS} href={link}>
+        <MaybeLink
+          className={`min-w-0 overflow-x-auto whitespace-nowrap ${LINK_CLS}`}
+          href={link}
+        >
           {label}
         </MaybeLink>
         <RowNote>{children}</RowNote>

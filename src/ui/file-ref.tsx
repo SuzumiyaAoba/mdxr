@@ -25,7 +25,10 @@ export const FileRef = defineComponent(
     return (
       <CodeChip>
         <Icon className="h-3.5 w-3.5 opacity-60" name={fileIcon(path)} />
-        <MaybeLink className={LINK_CLS} href={link}>
+        <MaybeLink
+          className={`min-w-0 overflow-x-auto whitespace-nowrap ${LINK_CLS}`}
+          href={link}
+        >
           {label}
         </MaybeLink>
         <CopyButton

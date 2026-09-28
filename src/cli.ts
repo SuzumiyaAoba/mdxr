@@ -151,7 +151,11 @@ cli
 
 cli
   .command("serve [file]", "Preview a document in the browser with live reload")
-  .option("-p, --port <port>", "Port", { default: 3737 })
+  .option(
+    "-p, --port <port>",
+    "Preferred port; if taken, the next free port is used",
+    { default: 3737 }
+  )
   .option("--open", "Open the preview in the default browser once serving")
   .option("--agent <agent>", "Chat with codex or claude in the preview")
   .option("--session <id>", "Send to an existing Codex thread")
@@ -326,13 +330,16 @@ cli
         if (!global) {
           // Agents write mdxr documents to .mdxr/ — keep that scratch space
           // out of git. A --global install is about the home dir, so the
-          // project's .gitignore is left alone.
+          // project's .gitignore is left alone; a global git excludes rule
+          // makes the project rule redundant too.
           const status = await ensureDocsDirIgnored(process.cwd());
-          console.log(
-            status === "added"
-              ? "mdxr: added .mdxr/ to .gitignore"
-              : "mdxr: .gitignore already covers .mdxr/"
-          );
+          const messages = {
+            added: "mdxr: added .mdxr/ to .gitignore",
+            global:
+              "mdxr: .mdxr/ is already covered by your global git excludes",
+            present: "mdxr: .gitignore already covers .mdxr/",
+          } as const;
+          console.log(messages[status]);
         }
       } catch (error) {
         fail(error, false);

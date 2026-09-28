@@ -1,6 +1,7 @@
 import { once } from "node:events";
 import fs from "node:fs";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import http from "node:http";
 import type { Server } from "node:http";
 import os from "node:os";
 import path from "node:path";
@@ -160,6 +161,30 @@ describe("preview agent API", () => {
       serve(filePath, 0, { agent: "claude", session: "claude-session" })
     ).rejects.toThrow("--session is only supported for codex");
     expect(createAgentSessionMock).not.toHaveBeenCalled();
+  });
+
+  it("falls back to a free port when the requested one is taken", async () => {
+    const blocker = http.createServer();
+    try {
+      blocker.listen(0, "127.0.0.1");
+      await once(blocker, "listening");
+      const blockedAddress = blocker.address();
+      if (typeof blockedAddress !== "object" || blockedAddress === null) {
+        throw new Error("blocker server is not listening");
+      }
+
+      server = await serve(filePath, blockedAddress.port);
+      const address = server.address();
+      if (typeof address !== "object" || address === null) {
+        throw new Error("preview server is not listening");
+      }
+      expect(address.port).toBeGreaterThan(blockedAddress.port);
+      const response = await fetch(`http://127.0.0.1:${address.port}/`);
+      await expect(response.text()).resolves.toContain("preview");
+    } finally {
+      blocker.close();
+      await once(blocker, "close");
+    }
   });
 
   it("rejects a shared App Server endpoint for Claude", async () => {

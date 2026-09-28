@@ -1,4 +1,5 @@
 import {
+  mkdir,
   mkdtemp,
   readFile,
   readdir,
@@ -130,6 +131,12 @@ describe(ensureDocsDirIgnored, () => {
       await mkdtemp(path.join(os.tmpdir(), "mdxr-ignore-"))
     );
     tmpDirs.push(dir);
+    // The dev's own git config must not leak in: GIT_CONFIG_GLOBAL points at
+    // a nonexistent file and HOME at the sandbox, so the global excludes
+    // probe sees "unset" and falls back to <dir>/.config/git/ignore.
+    process.env.GIT_CONFIG_GLOBAL = path.join(dir, "gitconfig");
+    process.env.HOME = dir;
+    process.env.USERPROFILE = dir;
     return dir;
   };
 
@@ -212,6 +219,40 @@ describe(ensureDocsDirIgnored, () => {
     await expect(ensureDocsDirIgnored(dir)).resolves.toBe("added");
     await expect(readFile(path.join(dir, ".gitignore"), "utf-8")).resolves.toBe(
       "# .mdxr/\n.mdxr/\n"
+    );
+  });
+
+  it("skips the project .gitignore when the global excludes file covers .mdxr", async () => {
+    const dir = await makeDir();
+    // makeDir set HOME=dir, so the default excludes path lives here.
+    await mkdir(path.join(dir, ".config", "git"), { recursive: true });
+    await writeFile(path.join(dir, ".config", "git", "ignore"), ".mdxr/\n");
+
+    await expect(ensureDocsDirIgnored(dir)).resolves.toBe("global");
+    await expect(readdir(dir)).resolves.not.toContain(".gitignore");
+  });
+
+  it("honors a custom core.excludesFile from the global git config", async () => {
+    const dir = await makeDir();
+    const excludes = path.join(dir, "my-excludes");
+    await writeFile(excludes, ".mdxr\n");
+    await writeFile(
+      path.join(dir, "gitconfig"),
+      `[core]\n\texcludesFile = ${excludes}\n`
+    );
+
+    await expect(ensureDocsDirIgnored(dir)).resolves.toBe("global");
+    await expect(readdir(dir)).resolves.not.toContain(".gitignore");
+  });
+
+  it("still writes .gitignore when the global excludes negates .mdxr", async () => {
+    const dir = await makeDir();
+    await mkdir(path.join(dir, ".config", "git"), { recursive: true });
+    await writeFile(path.join(dir, ".config", "git", "ignore"), "!.mdxr/\n");
+
+    await expect(ensureDocsDirIgnored(dir)).resolves.toBe("added");
+    await expect(readFile(path.join(dir, ".gitignore"), "utf-8")).resolves.toBe(
+      ".mdxr/\n"
     );
   });
 });

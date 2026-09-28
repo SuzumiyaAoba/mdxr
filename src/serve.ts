@@ -45,6 +45,46 @@ const SKIP_DIRS = new Set([
   "storybook-static",
 ]);
 
+/** Upper bound on consecutive EADDRINUSE retries before give-up. */
+const MAX_PORT_ATTEMPTS = 100;
+
+/**
+ * Bind `server` on loopback to `port`, or to the next free port after it —
+ * a probe-then-bind helper would just race the real listen. Port 0 already
+ * asks the OS for a port, so it binds once and never retries.
+ */
+const listenOnFreePort = async (
+  server: http.Server,
+  port: number
+): Promise<void> => {
+  for (let attempt = 0; ; attempt += 1) {
+    const candidate = port + attempt;
+    try {
+      server.listen(candidate, "127.0.0.1");
+      // Ports are probed strictly in order — the next candidate is only
+      // tried after the previous one refused with EADDRINUSE.
+      // oxlint-disable-next-line no-await-in-loop
+      await once(server, "listening");
+      if (attempt > 0) {
+        console.log(`mdxr: port ${port} is taken, using ${candidate}`);
+      }
+      return;
+    } catch (error) {
+      const busy =
+        error instanceof Error &&
+        (error as NodeJS.ErrnoException).code === "EADDRINUSE";
+      if (
+        !busy ||
+        port === 0 ||
+        attempt >= MAX_PORT_ATTEMPTS ||
+        candidate >= 65_535
+      ) {
+        throw error;
+      }
+    }
+  }
+};
+
 const handleDocumentResponse = (
   req: http.IncomingMessage,
   res: http.ServerResponse,
@@ -370,14 +410,11 @@ const servePreview = async (
   // Edits during startup must wait for the initial render too.
   reloading = rebuild(notify);
   await reloading;
-
   // Bind loopback only — the startup log says localhost, and a preview
   // server has no auth: listening on 0.0.0.0 would expose the document
   // (and its file links) to the LAN.
   try {
-    server.listen(port, "127.0.0.1");
-    // Rejects on 'error' (e.g. EADDRINUSE) before 'listening'.
-    await once(server, "listening");
+    await listenOnFreePort(server, port);
   } catch (error) {
     // Close fires the 'close' handler above — without it a failed listen
     // would leave the watchers armed and keep the process alive.

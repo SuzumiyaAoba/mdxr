@@ -19,7 +19,7 @@ mdxr init --global                # ホームディレクトリへの導入を�
 mdxr init --force                 # 生成した指示と参照を更新
 ```
 
-グローバルインストールでは、`$CODEX_HOME/MDXR.md`（`CODEX_HOME` 未設定時は `~/.codex/MDXR.md`）と `$CODEX_HOME/mdxr/references/`、および `~/.claude/` 以下の同等ファイルを作成します。`$CODEX_HOME/AGENTS.md` には Codex 用ファイルを読む指示を追加し、`~/.claude/CLAUDE.md` からは `@./MDXR.md` を読み込みます。`--local` を指定すると、プロジェクト内に `.codex/MDXR.md` と `.claude/MDXR.md` を作成し、ルートの `AGENTS.md` と `CLAUDE.md` から参照します。ローカルインストールでは、ドキュメントとレンダリング済み HTML の保存先 `.mdxr/` も `.gitignore` に追加します。`--force` は生成した指示ファイルと参照を更新し、他の設定内容は保持します。
+グローバルインストールでは、`$CODEX_HOME/MDXR.md`（`CODEX_HOME` 未設定時は `~/.codex/MDXR.md`）と `$CODEX_HOME/mdxr/references/`、および `~/.claude/` 以下の同等ファイルを作成します。`$CODEX_HOME/AGENTS.md` には Codex 用ファイルを読む指示を追加し、`~/.claude/CLAUDE.md` からは `@./MDXR.md` を読み込みます。`--local` を指定すると、プロジェクト内に `.codex/MDXR.md` と `.claude/MDXR.md` を作成し、ルートの `AGENTS.md` と `CLAUDE.md` から参照します。ローカルインストールでは、ドキュメントとレンダリング済み HTML の保存先 `.mdxr/` も `.gitignore` に追加します — グローバルの git 除外ファイルがすでに `.mdxr/` をカバーしている場合は追加しません。`--force` は生成した指示ファイルと参照を更新し、他の設定内容は保持します。
 
 同じディレクトリに `AGENTS.override.md` がある場合は、生成された Codex の読み込み指示もそちらに追加してください。同じディレクトリの `AGENTS.md` より `AGENTS.override.md` が優先されます。
 
@@ -48,7 +48,7 @@ npx skills add Suzumiyaaoba/mdxr --skill mdxr
 
 > auth 機能の実装計画を書いて、mdxr で HTML にレンダリングして。
 
-場所を指定しない限り、ドキュメントはリポジトリルートの `.mdxr/` に作成されます — `.mdxr/auth-plan.mdx` は `.mdxr/auth-plan.html` にレンダリングされます。
+場所を指定しない限り、ドキュメントはリポジトリルートの `.mdxr/` に作成されます — `.mdxr/auth-plan.mdx` は `mdxr serve` で `http://localhost:3737` にプレビューされます。
 
 計画書だけでなく、レポート、レビュー、調査サマリー、リリースノート、ポストモーテムにも使えます。
 

@@ -47,7 +47,7 @@ cat plan.mdx | mdxr serve --open
 
 | フラグ | 説明 |
 | --- | --- |
-| `-p, --port <port>` | 待ち受けポート（デフォルト `3737`） |
+| `-p, --port <port>` | 待ち受けポート（デフォルト `3737`）。使用中の場合は次の空きポートを利用 |
 | `--open` | サーバー起動後にデフォルトブラウザでプレビューを開く |
 | `--agent <agent>` | `codex` または `claude` 用のローカルチャットを表示 |
 | `--server <url>` | Codex App Server の接続先。`unix:///absolute/path` または `ws://...` を指定（`--agent codex` が必要） |
@@ -139,4 +139,4 @@ mdxr init --skill                      # 同梱の Agent Skill をインスト�
 | `--force` | mdxr の指示と参照を更新。`--skill` と併用するとスキルディレクトリを置き換え |
 | `--skill` | 指示ファイルの代わりに同梱の Agent Skill をインストール。スキルのデフォルト先はプロジェクト |
 
-グローバルインストールでは、`$CODEX_HOME/MDXR.md`（`CODEX_HOME` 未設定時は `~/.codex/MDXR.md`）と `$CODEX_HOME/mdxr/references/`、および `~/.claude/` 以下の同等ファイルを作成します。`$CODEX_HOME/AGENTS.md` に Codex 用ファイルを読む指示を追加し、Claude の `~/.claude/CLAUDE.md` から `@./MDXR.md` を読み込みます。ローカルインストールでは、プロジェクトに `.codex/MDXR.md` と `.claude/MDXR.md` を作成し、ルートの `AGENTS.md` と `CLAUDE.md` から参照します。Claude の `CLAUDE.md` では `@./.claude/MDXR.md` を読み込みます。また、`.mdxr/` をプロジェクトの `.gitignore` に追加します。`--force` は生成した指示と参照を更新し、エージェント設定の他の内容を保持します。
+グローバルインストールでは、`$CODEX_HOME/MDXR.md`（`CODEX_HOME` 未設定時は `~/.codex/MDXR.md`）と `$CODEX_HOME/mdxr/references/`、および `~/.claude/` 以下の同等ファイルを作成します。`$CODEX_HOME/AGENTS.md` に Codex 用ファイルを読む指示を追加し、Claude の `~/.claude/CLAUDE.md` から `@./MDXR.md` を読み込みます。ローカルインストールでは、プロジェクトに `.codex/MDXR.md` と `.claude/MDXR.md` を作成し、ルートの `AGENTS.md` と `CLAUDE.md` から参照します。Claude の `CLAUDE.md` では `@./.claude/MDXR.md` を読み込みます。また、`.mdxr/` をプロジェクトの `.gitignore` に追加します — グローバルの git 除外ファイル（`core.excludesFile`、通常は `~/.config/git/ignore`）が `.mdxr/` をカバー済みの場合は追加しません。`--force` は生成した指示と参照を更新し、エージェント設定の他の内容を保持します。

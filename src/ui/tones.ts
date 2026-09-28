@@ -110,8 +110,11 @@ export const TEXT_MICRO = "text-[0.65rem]";
 export const TEXT_SUB = "text-[0.7rem]";
 
 /** Muted mono chip text — the `path:lines` location label shared by
- * file-referencing components (Flow, Trace, Tests, Search, Approvals). */
-export const LOC_CLS = `font-mono text-xs ${TEXT.faint}`;
+ * file-referencing components (Flow, Trace, Tests, Search, Approvals).
+ * The link renders as a scrollable inline box (`whitespace-nowrap` +
+ * `overflow-x-auto` + `min-w-0`) so a path longer than the row scrolls
+ * sideways instead of overflowing — Chromium won't break at "/". */
+export const LOC_CLS = `inline-block max-w-full min-w-0 overflow-x-auto whitespace-nowrap align-baseline font-mono text-xs ${TEXT.faint}`;
 
 /** Inline `<code>` look inside list rows — `font-mono` on the body text color. */
 export const MONO_CLS = `font-mono text-[0.85em] ${TEXT.code}`;

@@ -50,7 +50,7 @@ export const CodeHeader = (props: {
   return (
     <CaptionBar className="flex items-center justify-between">
       <MaybeLink
-        className={`inline-flex items-center gap-1.5 font-mono ${LINK_CLS}`}
+        className={`inline-flex min-w-0 items-center gap-1.5 overflow-x-auto font-mono whitespace-nowrap ${LINK_CLS}`}
         href={link}
       >
         {label}

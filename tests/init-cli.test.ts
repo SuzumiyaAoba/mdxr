@@ -1,12 +1,13 @@
 import { execFile } from "node:child_process";
 import type { ExecFileException } from "node:child_process";
 import {
-  mkdtemp,
   mkdir,
+  mkdtemp,
   readFile,
   readdir,
   realpath,
   rm,
+  writeFile,
 } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -44,6 +45,9 @@ const runCli = async (args: string[], sandbox: Sandbox): Promise<CliResult> => {
         env: {
           ...process.env,
           CODEX_HOME: sandbox.codexHome,
+          // Keep the real git config out: a dev machine with core.excludesFile
+          // set would otherwise change what the CLI does under test.
+          GIT_CONFIG_GLOBAL: path.join(sandbox.home, "gitconfig"),
           HOME: sandbox.home,
           USERPROFILE: sandbox.home,
         },
@@ -113,6 +117,24 @@ describe("mdxr init CLI", () => {
     await expect(readdir(sandbox.codexHome)).rejects.toMatchObject({
       code: "ENOENT",
     });
+  });
+
+  it("skips .gitignore when the global git excludes file already covers .mdxr", async () => {
+    const sandbox = await makeSandbox();
+    // HOME is the sandbox, so git's default excludes path is under it.
+    await mkdir(path.join(sandbox.home, ".config", "git"), {
+      recursive: true,
+    });
+    await writeFile(
+      path.join(sandbox.home, ".config", "git", "ignore"),
+      ".mdxr/\n"
+    );
+
+    const result = await runCli(["--local"], sandbox);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain("global git excludes");
+    await expect(readdir(sandbox.project)).resolves.not.toContain(".gitignore");
   });
 
   it("keeps the legacy local default for --skill", async () => {

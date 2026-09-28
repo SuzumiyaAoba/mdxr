@@ -1,7 +1,9 @@
+import { execFile } from "node:child_process";
 import fs from "node:fs";
 import fsp from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { promisify } from "node:util";
 
 import { own } from "./guards.js";
 import { pkgRoot } from "./paths.js";
@@ -39,13 +41,48 @@ const docsDirIsIgnored = (source: string): boolean => {
   return ignored;
 };
 
+// execFile has a custom promisify signature that preserves both output streams.
+// oxlint-disable-next-line typescript/strict-void-return
+const execFileAsync = promisify(execFile);
+
+/** `git config --get core.excludesFile`, or git's default global ignore. */
+const globalExcludesFile = async (): Promise<string> => {
+  const fallback = path.join(os.homedir(), ".config", "git", "ignore");
+  try {
+    const { stdout } = await execFileAsync("git", [
+      "config",
+      "--get",
+      "core.excludesFile",
+    ]);
+    const configured = stdout.trim();
+    if (configured === "") {
+      return fallback;
+    }
+    // Git expands a leading ~ itself.
+    return configured.startsWith("~/")
+      ? path.join(os.homedir(), configured.slice(2))
+      : configured;
+  } catch {
+    // No git, or the key is unset — the default location still applies.
+    return fallback;
+  }
+};
+
 /**
  * Ensures the project's .gitignore covers `.mdxr/` — created or appended
- * as needed. Returns "present" when an existing rule already covers it.
+ * as needed. Returns "present" when an existing project rule covers it,
+ * "global" when the user's global excludes file already does (nothing is
+ * written — the project file would just duplicate it).
  */
 export const ensureDocsDirIgnored = async (
   base: string
-): Promise<"added" | "present"> => {
+): Promise<"added" | "global" | "present"> => {
+  const globalIgnore = await fsp
+    .readFile(await globalExcludesFile(), "utf-8")
+    .catch(() => null);
+  if (globalIgnore !== null && docsDirIsIgnored(globalIgnore)) {
+    return "global";
+  }
   const file = path.join(base, ".gitignore");
   const existing = await fsp.readFile(file, "utf-8").catch(() => null);
   if (existing !== null && docsDirIsIgnored(existing)) {

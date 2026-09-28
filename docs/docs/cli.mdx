@@ -47,7 +47,7 @@ cat plan.mdx | mdxr serve --open
 
 | Flag | Description |
 | --- | --- |
-| `-p, --port <port>` | Port to listen on (default `3737`) |
+| `-p, --port <port>` | Preferred port (default `3737`); if taken, the next free port is used |
 | `--open` | Open the preview in the default browser once serving |
 | `--agent <agent>` | Show a local chat panel for `codex` or `claude` |
 | `--server <url>` | Codex App Server endpoint; accepts `unix:///absolute/path` or `ws://...` (requires `--agent codex`) |
@@ -139,4 +139,4 @@ mdxr init --skill                      # install the bundled Agent Skill
 | `--force` | Refresh generated MDXR instructions and references, or replace the skill directory with `--skill` |
 | `--skill` | Install the bundled Agent Skill instead of the instruction files; skill installs default to the project directory |
 
-The global install creates `$CODEX_HOME/MDXR.md` (or `~/.codex/MDXR.md` if `CODEX_HOME` is unset) and `$CODEX_HOME/mdxr/references/`, plus matching files under `~/.claude/`. It adds an instruction to read the Codex file in `$CODEX_HOME/AGENTS.md`; Claude's `~/.claude/CLAUDE.md` imports `@./MDXR.md`. A local install creates `.codex/MDXR.md` and `.claude/MDXR.md` in the project and references them from the root `AGENTS.md` and `CLAUDE.md`; Claude's `CLAUDE.md` imports `@./.claude/MDXR.md`. It also adds `.mdxr/` to the project's `.gitignore`. `--force` updates the generated instructions and references while preserving the rest of your agent config files.
+The global install creates `$CODEX_HOME/MDXR.md` (or `~/.codex/MDXR.md` if `CODEX_HOME` is unset) and `$CODEX_HOME/mdxr/references/`, plus matching files under `~/.claude/`. It adds an instruction to read the Codex file in `$CODEX_HOME/AGENTS.md`; Claude's `~/.claude/CLAUDE.md` imports `@./MDXR.md`. A local install creates `.codex/MDXR.md` and `.claude/MDXR.md` in the project and references them from the root `AGENTS.md` and `CLAUDE.md`; Claude's `CLAUDE.md` imports `@./.claude/MDXR.md`. It also adds `.mdxr/` to the project's `.gitignore` — skipped when your global git excludes file (`core.excludesFile`, usually `~/.config/git/ignore`) already covers `.mdxr/`. `--force` updates the generated instructions and references while preserving the rest of your agent config files.

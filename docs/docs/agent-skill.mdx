@@ -19,7 +19,7 @@ mdxr init --global                # explicitly install into your home directory
 mdxr init --force                 # refresh generated instructions and references
 ```
 
-The global install creates `$CODEX_HOME/MDXR.md` (or `~/.codex/MDXR.md` if `CODEX_HOME` is unset) and `$CODEX_HOME/mdxr/references/`, plus matching files under `~/.claude/`. It adds a read instruction to `$CODEX_HOME/AGENTS.md`; `~/.claude/CLAUDE.md` imports `@./MDXR.md`. Pass `--local` to write `.codex/MDXR.md` and `.claude/MDXR.md` in the current project and reference them from the root `AGENTS.md` and `CLAUDE.md`. A local install also adds `.mdxr/` to `.gitignore`, where agents save documents and rendered HTML. `--force` refreshes generated instruction files and references while preserving the rest of your config files.
+The global install creates `$CODEX_HOME/MDXR.md` (or `~/.codex/MDXR.md` if `CODEX_HOME` is unset) and `$CODEX_HOME/mdxr/references/`, plus matching files under `~/.claude/`. It adds a read instruction to `$CODEX_HOME/AGENTS.md`; `~/.claude/CLAUDE.md` imports `@./MDXR.md`. Pass `--local` to write `.codex/MDXR.md` and `.claude/MDXR.md` in the current project and reference them from the root `AGENTS.md` and `CLAUDE.md`. A local install also adds `.mdxr/` to `.gitignore`, where agents save documents and rendered HTML — skipped when your global git excludes file already covers it. `--force` refreshes generated instruction files and references while preserving the rest of your config files.
 
 If a directory also has an `AGENTS.override.md`, add the generated Codex read instruction there too; Codex gives it precedence over `AGENTS.md` in the same directory.
 
@@ -48,7 +48,7 @@ After either setup, ask for a deliverable:
 
 > Write an implementation plan for the auth feature and render it to HTML with mdxr.
 
-Documents land in `.mdxr/` at the repo root — `.mdxr/auth-plan.mdx` renders to `.mdxr/auth-plan.html` — unless you specify a location.
+Documents land in `.mdxr/` at the repo root — `.mdxr/auth-plan.mdx` previews at `http://localhost:3737` via `mdxr serve` — unless you specify a location.
 
 Plans, reports, reviews, investigation summaries, release notes, and postmortems all work.
 

@@ -35,7 +35,7 @@ mdxr render plan.mdx --format json   # machine-readable errors
 
 ### `mdxr serve [file]`
 
-Preview a document in the browser with live reload (`-p, --port`, default `3737`; `--open` to launch the browser once serving).
+Preview a document in the browser with live reload (`-p, --port`, default `3737`; if taken, the next free port is used; `--open` to launch the browser once serving).
 
 ### Review the rendered document
 

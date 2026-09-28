@@ -4,6 +4,8 @@ Index: [../components.md](../components.md). MDX attributes are always strings; 
 
 The full shadcn/ui set (Base UI primitives) is registered: `Button`, `Badge`, `Card`/`CardHeader`/…, `Alert`, `Tabs`, `Accordion`, `Dialog`, `Input`, `Label`, `Table`, `Progress`, `Skeleton`, `Separator`, `Kbd`, `Spinner`, and more — run `mdxr catalog` for the complete list. Use them as plain MDX elements; attributes are strings (`variant="outline"`, `size="sm"`).
 
+**These are generic primitives, not document components.** Before using `Card`, `Table`, `Tabs`, `Accordion`, `Badge`, or `Alert` to present document content, check the index for a dedicated component — `<Steps>`, `<Tests>`, `<Endpoints>`, `<Findings>`, `<Review>`, `<Matrix>`, `<Callout>`, `<Stats>` cover the common report/plan shapes and add semantics (status pills, counts, verdicts, editor links) that a plain `Card`/`Table` cannot. shadcn primitives are the right choice for app-like fragments and demos that have no dedicated component — e.g. illustrating a settings panel, a form, or UI states.
+
 **Note:** rendered documents include a hydration bundle, so stateful primitives (`Dialog`, `Tabs`, `Accordion`, `Tooltip`, `Select`, `Switch`, menus, …) are interactive in the browser — tabs switch, accordions open, switches flip. `mdxr render --no-hydrate` emits purely static HTML where they render their initial state only. Portal-based overlays (`Dialog`, `Tooltip`, `Select`, menus) still render nothing until opened — prefer `Card`, `Alert`, `Badge`, `Table`, `Kbd`, `Separator`, `Progress`, `Skeleton` for always-visible content.
 
 ```mdx

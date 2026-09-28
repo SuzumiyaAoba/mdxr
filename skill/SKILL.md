@@ -19,6 +19,7 @@ Write documents as **Markdown + a small set of JSX components** (MDX). Do NOT wr
 ## Rules
 
 - **No JS in documents.** `import`/`export` and `{expressions}` are rejected. All attributes are strings: `<Step status="done">`, not `status={...}`.
+- **Use the most specific component for the job.** The catalog has dedicated components for structured content — task/status lists → `<Steps>`, file inventories → `<Files>`, test reports → `<Tests>`, API routes → `<Endpoints>`, comparisons → `<Matrix>`/`<Before>`/`<After>`, findings → `<Findings>`, diffs → ` ```diff ` fences. Reach for generic building blocks (plain lists/tables, shadcn `Card`/`Table`/`Tabs`, `Wireframe*`) only when no dedicated component fits — a generic substitute loses the semantic chrome (status badges, counts, editor file links, verdict pills).
 - Prefer plain Markdown for prose; use components only for structure.
 - If a needed component is missing, run `npx @suzumiyaaoba/mdxr catalog --json` to see the full catalog, then define it in the project's component file — see `references/extending.md` for the extension mechanism.
 - For component usage, read `references/components.md` (the index — includes a syntax cheatsheet), then only the `references/components/*.md` detail file(s) the document needs.

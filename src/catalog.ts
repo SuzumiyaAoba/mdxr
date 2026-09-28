@@ -281,7 +281,11 @@ export const CONVENTIONS = [
 ];
 
 export const formatCatalog = (entries: CatalogEntry[]): string => {
-  const lines: string[] = ["Components:", ""];
+  const lines: string[] = [
+    "Components:",
+    "  Pick the most specific component for the job: a dedicated semantic component (<Steps>, <Tests>, <Endpoints>, <Findings>, …) beats a generic Card/Table/bullet list, which loses its badges, counts, and file links. shadcn/ui and Wireframe* entries are generic building blocks for content with no dedicated component.",
+    "",
+  ];
   for (const e of entries) {
     const props = Object.entries(e.props)
       .map(([k, p]) => `${k}${p.required ? "" : "?"}: ${p.type}`)

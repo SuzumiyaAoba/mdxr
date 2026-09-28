@@ -48,7 +48,7 @@ After either setup, ask for a deliverable:
 
 > Write an implementation plan for the auth feature and render it to HTML with mdxr.
 
-By default, new documents use `.mdxr/yyyyMMddhhmmss-<name>.mdx`, with a zero-padded 14-digit local creation time in 24-hour format (for example, `.mdxr/20260929140530-auth-plan.mdx`). A filename or file path you provide takes priority. If you specify only a directory, save the document there with a timestamped filename. Preview it with `mdxr serve .mdxr/20260929140530-auth-plan.mdx`.
+By default, new documents use `.mdxr/yyyyMMddhhmmss-<name>/index.mdx`, with a zero-padded 14-digit local creation time in 24-hour format (for example, `.mdxr/20260929140530-auth-plan/index.mdx`). Keep images and related MDX files in the document's directory. A file path you provide takes priority, and existing documents keep their current paths. If you specify only a directory, create a timestamped subdirectory there and save the document as `index.mdx`. Preview it with `mdxr serve .mdxr/20260929140530-auth-plan/index.mdx`.
 
 Plans, reports, reviews, investigation summaries, release notes, and postmortems all work.
 

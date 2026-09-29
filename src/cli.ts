@@ -4,6 +4,7 @@ import path from "node:path";
 
 import { cac } from "cac";
 
+import packageJson from "../package.json" with { type: "json" };
 import type { AgentProvider } from "./agent-session.js";
 import { mdxToAscii } from "./ascii/index.js";
 import { catalogEntries, formatCatalog, CONVENTIONS } from "./catalog.js";
@@ -77,7 +78,7 @@ const validateAgentOptions = (
   return agent;
 };
 
-const cli = cac("mdxr");
+const cli = cac("mdxr").version(packageJson.version);
 
 cli
   .command("render [file]", "Render an .mdx document to a standalone HTML file")

@@ -5,7 +5,24 @@ description: Write rich plan/report documents as MDX using the mdxr component ca
 
 # mdxr — agent-authored documents rendered to HTML
 
+MDXR version: 0.13.0
+
 Write documents as **Markdown + a small set of JSX components** (MDX). Do NOT write raw HTML: `mdxr render` compiles the document deterministically, so markup, styling and scripts are never emitted by the model.
+
+## Version check
+
+Before using these instructions for a task, run `npx @suzumiyaaoba/mdxr --version` and compare the version in `mdxr/<version>` with the **MDXR version** above. Use the same executable, working directory, and package version that you will use for `render`, `serve`, `text`, or `catalog`: if you use `pnpm exec mdxr`, a global `mdxr`, or a pinned `npx @suzumiyaaoba/mdxr@<version>`, check that exact command instead. Check again if you switch executables or package versions.
+
+If the versions differ in either direction, tell the user both versions and recommend updating these instructions and their references to match the CLI. Use the same CLI with `init --force` and preserve the original installation target:
+
+| Instructions being read | Update arguments |
+| --- | --- |
+| Global Codex `MDXR.md` in `$CODEX_HOME` or `~/.codex` | `init --tool codex --global --force` |
+| Global Claude `~/.claude/MDXR.md` | `init --tool claude --global --force` |
+| Project `.codex/MDXR.md` or `.claude/MDXR.md` | `init --tool codex --local --force` or `init --tool claude --local --force`, respectively |
+| Agent Skill `SKILL.md` | `init --skill --tool <tool> --local --force` (use `--global` for a home-directory install); `<tool>` is `agents` for `.agents/skills/mdxr`, `claude` for `.claude/skills/mdxr`, or `devin` for `.devin/skills/mdxr` / `~/.config/devin/skills/mdxr` |
+
+For example, when using `npx`, pin the update command to the **reported CLI version**: `npx @suzumiyaaoba/mdxr@<cli-version> init --tool codex --global --force`. Run local updates from the project containing this prompt, and preserve `CODEX_HOME` for global Codex installs. Do not switch to `@latest` just to refresh the prompt, since that may select a different CLI version. For a skill installed through another tool or at another path, use its original installation method and scope to obtain the skill from the matching MDXR version. `--force` replaces the generated prompt and references (including edits made directly to those files); existing `AGENTS.md` / `CLAUDE.md` contents are preserved. After an update, reread the installed prompt and any references already loaded, then check the versions again. If `--version` is unsupported, report that the CLI version could not be verified and recommend upgrading the CLI and reinstalling matching instructions.
 
 ## Workflow
 

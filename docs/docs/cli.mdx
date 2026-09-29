@@ -7,6 +7,15 @@ sidebar:
 
 `mdxr` is a single CLI for rendering, previewing, and authoring. Run it ad hoc with `npx @suzumiyaaoba/mdxr <command>` or install it globally (`npm i -g @suzumiyaaoba/mdxr`).
 
+## mdxr --version
+
+Print the version of the package resolved by this CLI invocation. `-v` is a shorthand:
+
+```sh
+mdxr --version
+mdxr -v
+```
+
 ## mdxr render
 
 Render an `.mdx` document — a file argument or stdin — to a standalone HTML file.
@@ -140,3 +149,5 @@ mdxr init --skill                      # install the bundled Agent Skill
 | `--skill` | Install the bundled Agent Skill instead of the instruction files; skill installs default to the project directory |
 
 The global install creates `$CODEX_HOME/MDXR.md` (or `~/.codex/MDXR.md` if `CODEX_HOME` is unset) and `$CODEX_HOME/mdxr/references/`, plus matching files under `~/.claude/`. It adds an instruction to read the Codex file in `$CODEX_HOME/AGENTS.md`; Claude's `~/.claude/CLAUDE.md` imports `@./MDXR.md`. A local install creates `.codex/MDXR.md` and `.claude/MDXR.md` in the project and references them from the root `AGENTS.md` and `CLAUDE.md`; Claude's `CLAUDE.md` imports `@./.claude/MDXR.md`. It also adds `.mdxr/` to the project's `.gitignore` — skipped when your global git excludes file (`core.excludesFile`, usually `~/.config/git/ignore`) already covers `.mdxr/`. `--force` updates the generated instructions and references while preserving the rest of your agent config files.
+
+The bundled prompts tell the agent to compare their recorded version with `--version` from the CLI used for the task. If they differ, the agent reports both versions and recommends `mdxr init --force` with the same CLI, preserving the original `--tool` and `--local`/`--global` scope; Skill installs also keep `--skill`. See [Agent setup](/agent-skill) for details.

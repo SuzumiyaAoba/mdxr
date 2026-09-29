@@ -16,6 +16,8 @@ import { promisify } from "node:util";
 
 import { afterEach, describe, expect, it } from "vitest";
 
+import packageJson from "../package.json";
+
 const cliPath = fileURLToPath(new URL("../dist/cli.mjs", import.meta.url));
 // execFile has a custom promisify signature that preserves both output streams.
 // oxlint-disable-next-line typescript/strict-void-return -- Use the custom promise API from node:child_process.
@@ -109,8 +111,8 @@ describe("mdxr init CLI", () => {
     expect(installedFiles).toStrictEqual([
       expect.stringContaining("./.codex/MDXR.md"),
       expect.stringContaining("@./.claude/MDXR.md"),
-      expect.stringContaining("mdxr"),
-      expect.stringContaining("mdxr"),
+      expect.stringContaining(`MDXR version: ${packageJson.version}`),
+      expect.stringContaining(`MDXR version: ${packageJson.version}`),
       ".mdxr/\n",
     ]);
     await expect(readdir(sandbox.home)).resolves.toStrictEqual([]);
@@ -151,10 +153,25 @@ describe("mdxr init CLI", () => {
       readFile(path.join(sandbox.project, ".gitignore"), "utf-8"),
     ]);
     expect(installedFiles).toStrictEqual([
-      expect.stringContaining("mdxr"),
+      expect.stringContaining(`MDXR version: ${packageJson.version}`),
       ".mdxr/\n",
     ]);
     await expect(readdir(sandbox.home)).resolves.toStrictEqual([]);
+    await expect(readdir(sandbox.codexHome)).rejects.toMatchObject({
+      code: "ENOENT",
+    });
+  });
+
+  it("installs a versioned skill globally with --skill --global", async () => {
+    const sandbox = await makeSandbox();
+
+    const result = await runCli(["--skill", "--global"], sandbox);
+
+    expect(result.exitCode).toBe(0);
+    await expect(
+      readFile(path.join(sandbox.home, ".agents/skills/mdxr/SKILL.md"), "utf-8")
+    ).resolves.toContain(`MDXR version: ${packageJson.version}`);
+    await expect(readdir(sandbox.project)).resolves.toStrictEqual([]);
     await expect(readdir(sandbox.codexHome)).rejects.toMatchObject({
       code: "ENOENT",
     });
@@ -203,7 +220,7 @@ describe("mdxr init CLI", () => {
     );
     await expect(
       readFile(path.join(sandbox.codexHome, "MDXR.md"), "utf-8")
-    ).resolves.toContain("mdxr");
+    ).resolves.toContain(`MDXR version: ${packageJson.version}`);
     await expect(readdir(sandbox.project)).resolves.toStrictEqual([]);
     await expect(readdir(sandbox.home)).resolves.toStrictEqual([]);
   });

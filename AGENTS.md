@@ -144,13 +144,14 @@ This project uses **React Doctor** for React health checks (correctness, perform
 
 Publishing to npm is automated via `.github/workflows/release.yml`:
 
-1. Bump `version` in `package.json` and commit.
+1. Bump `version` in `package.json`, run `pnpm skill:sync`, and commit both `package.json` and `skill/SKILL.md`.
 2. Push a matching tag (`git tag v0.1.0 && git push origin v0.1.0`, or create a GitHub release). The workflow verifies the tag matches `package.json`.
 3. Requires the `NPM_TOKEN` repo secret (npm granular access token with publish permission for `@suzumiyaaoba/mdxr`). Provenance attestation is enabled via `--provenance`.
 
 Notes:
 
 - `pnpm publish` runs `prepack` (`pnpm build`) automatically, so `dist/` is always rebuilt before packing.
+- `pnpm build` and `prepack` sync the version in `skill/SKILL.md`; `pnpm check` fails if it does not match `package.json`.
 - Node >= 22.13 is required for the dev toolchain (pnpm 11 uses `node:sqlite`; ultracite pulls in execa 10 which needs `Set.prototype.union`; `vp pack` uses `Promise.withResolvers`). CI uses standalone pnpm so `pnpm test` still runs on the Node 20 matrix leg — `pnpm check` is gated to `node-version != 20`, and `pnpm build` runs under Node 22 even on the 20 leg (tests self-import `@suzumiyaaoba/mdxr`, which resolves via `exports` to `dist/`, so the build must precede tests).
 
 ---

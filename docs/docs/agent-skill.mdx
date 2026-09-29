@@ -23,6 +23,10 @@ The global install creates `$CODEX_HOME/MDXR.md` (or `~/.codex/MDXR.md` if `CODE
 
 If a directory also has an `AGENTS.override.md`, add the generated Codex read instruction there too; Codex gives it precedence over `AGENTS.md` in the same directory.
 
+## Check the prompt version
+
+The bundled prompt tells the agent to compare the version recorded in the installed `MDXR.md` or Agent Skill with `mdxr --version` from the same CLI or package pin it will use for the task. If they differ in either direction, the agent reports both versions and recommends refreshing with that same CLI and the original tool and scope, adding `--force` and keeping `--skill` for a Skill install. It does not silently switch to another or unpinned `@latest` version, and it rereads the installed prompt and references after refreshing.
+
 ## Install the Agent Skill
 
 Use `--skill` to install the bundled skill into a supported skills directory:

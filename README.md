@@ -10,6 +10,7 @@ Run directly with `npx` — no install required:
 npx @suzumiyaaoba/mdxr render plan.mdx     # writes plan.html
 npx @suzumiyaaoba/mdxr serve plan.mdx      # live preview at http://localhost:3737
 npx @suzumiyaaoba/mdxr catalog             # list available components
+npx @suzumiyaaoba/mdxr --version           # print the package version
 npx @suzumiyaaoba/mdxr init                # install mdxr instructions for Codex and Claude
 ```
 
@@ -75,6 +76,8 @@ mdxr init --skill                      # install the Agent Skill instead
 ```
 
 The global install creates `$CODEX_HOME/MDXR.md` (or `~/.codex/MDXR.md` when `CODEX_HOME` is unset) and its `mdxr/references/`, plus matching files under `~/.claude/`. It adds a read instruction to `$CODEX_HOME/AGENTS.md`; Claude's `~/.claude/CLAUDE.md` imports `@./MDXR.md`. Use `--local` to create `.codex/MDXR.md` and `.claude/MDXR.md` in the project, with references from the root `AGENTS.md` and `CLAUDE.md`. A local install also adds `.mdxr/` to `.gitignore` for agent-authored documents and rendered HTML. `--force` refreshes generated instruction files and references while preserving the rest of your config files.
+
+The bundled prompts tell the agent to compare their recorded version with `--version` from the CLI used for the task. If they differ, the agent reports both versions and recommends refreshing with `init --force` from that same CLI, preserving the original tool and install scope; Skill installs also keep `--skill`. See [Agent setup](docs/docs/agent-skill.mdx) for details.
 
 ## Wireframes
 

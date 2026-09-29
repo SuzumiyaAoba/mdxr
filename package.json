@@ -42,11 +42,12 @@
     "access": "public"
   },
   "scripts": {
-    "build": "vp pack",
+    "skill:sync": "node scripts/sync-skill-version.mjs",
+    "build": "pnpm skill:sync && vp pack",
     "build:examples": "pnpm build && node scripts/render-examples.ts",
     "test": "vp test",
     "typecheck": "tsc --noEmit",
-    "check": "ultracite check",
+    "check": "pnpm skill:sync --check && ultracite check",
     "fix": "ultracite fix",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",

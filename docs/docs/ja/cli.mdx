@@ -7,6 +7,15 @@ sidebar:
 
 `mdxr` はレンダリング・プレビュー・オーサリングのための単一 CLI です。`npx @suzumiyaaoba/mdxr <command>` で都度実行するか、グローバルインストール（`npm i -g @suzumiyaaoba/mdxr`）して使います。
 
+## mdxr --version
+
+この CLI 呼び出しで解決されるパッケージのバージョンを表示します。`-v` は短縮形です:
+
+```sh
+mdxr --version
+mdxr -v
+```
+
 ## mdxr render
 
 `.mdx` ドキュメント（ファイル引数または stdin）をスタンドアロン HTML ファイルにレンダリングします。
@@ -140,3 +149,5 @@ mdxr init --skill                      # 同梱の Agent Skill をインスト�
 | `--skill` | 指示ファイルの代わりに同梱の Agent Skill をインストール。スキルのデフォルト先はプロジェクト |
 
 グローバルインストールでは、`$CODEX_HOME/MDXR.md`（`CODEX_HOME` 未設定時は `~/.codex/MDXR.md`）と `$CODEX_HOME/mdxr/references/`、および `~/.claude/` 以下の同等ファイルを作成します。`$CODEX_HOME/AGENTS.md` に Codex 用ファイルを読む指示を追加し、Claude の `~/.claude/CLAUDE.md` から `@./MDXR.md` を読み込みます。ローカルインストールでは、プロジェクトに `.codex/MDXR.md` と `.claude/MDXR.md` を作成し、ルートの `AGENTS.md` と `CLAUDE.md` から参照します。Claude の `CLAUDE.md` では `@./.claude/MDXR.md` を読み込みます。また、`.mdxr/` をプロジェクトの `.gitignore` に追加します — グローバルの git 除外ファイル（`core.excludesFile`、通常は `~/.config/git/ignore`）が `.mdxr/` をカバー済みの場合は追加しません。`--force` は生成した指示と参照を更新し、エージェント設定の他の内容を保持します。
+
+配布プロンプトは、エージェントに記録された版と作業で使う CLI の `--version` を照合させます。不一致時は両方の版を伝え、同じ CLI で元の `--tool` と `--local`/`--global` の範囲を保ったまま `mdxr init --force` で更新する方法を案内します。Skill の場合は `--skill` も維持します。詳しくは[エージェントのセットアップ](/ja/agent-skill)を参照してください。

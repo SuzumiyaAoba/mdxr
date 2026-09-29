@@ -12,6 +12,7 @@ import path from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
 
+import packageJson from "../package.json";
 import { ensureDocsDirIgnored, installSkill } from "../src/init.js";
 
 describe(installSkill, () => {
@@ -40,10 +41,26 @@ describe(installSkill, () => {
     const dir = await makeDir();
     process.chdir(dir);
     const paths = await installSkill({});
-    expect(paths).toStrictEqual([path.join(dir, ".agents/skills/mdxr")]);
     const files = await readdir(paths[0] ?? "");
-    expect(files).toContain("SKILL.md");
-    expect(files).toContain("references");
+    const skill = await readFile(
+      path.join(paths[0] ?? "", "SKILL.md"),
+      "utf-8"
+    );
+    expect({
+      hasForceGuidance: skill.includes("--force"),
+      hasSkillFiles: ["SKILL.md", "references"].every((file) =>
+        files.includes(file)
+      ),
+      hasVersion: skill.includes(`MDXR version: ${packageJson.version}`),
+      hasVersionCheck: skill.includes("Version check"),
+      installPaths: paths,
+    }).toStrictEqual({
+      hasForceGuidance: true,
+      hasSkillFiles: true,
+      hasVersion: true,
+      hasVersionCheck: true,
+      installPaths: [path.join(dir, ".agents/skills/mdxr")],
+    });
   });
 
   it("installs into .claude/skills for the claude tool", async () => {
@@ -85,10 +102,21 @@ describe(installSkill, () => {
     process.chdir(dir);
     const [dest] = await installSkill({ tool: "agents" });
     const stale = path.join(dest ?? "", "STALE.md");
+    const skill = path.join(dest ?? "", "SKILL.md");
+    const originalSkill = await readFile(skill, "utf-8");
+    const outdatedSkill = originalSkill.replace(
+      `MDXR version: ${packageJson.version}`,
+      "MDXR version: 0.0.0-test"
+    );
+    expect(outdatedSkill).not.toBe(originalSkill);
+    await writeFile(skill, outdatedSkill);
     await writeFile(stale, "leftover\n");
     await installSkill({ force: true, tool: "agents" });
     await expect(readdir(dest ?? "")).resolves.not.toContain("STALE.md");
     await expect(readdir(dest ?? "")).resolves.toContain("SKILL.md");
+    await expect(readFile(skill, "utf-8")).resolves.toContain(
+      `MDXR version: ${packageJson.version}`
+    );
   });
 
   it("rejects an unknown tool before writing anything", async () => {

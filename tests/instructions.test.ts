@@ -13,6 +13,7 @@ import path from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import packageJson from "../package.json";
 import { installInstructions } from "../src/instructions.js";
 
 const exists = async (file: string): Promise<boolean> => {
@@ -95,6 +96,11 @@ describe(installInstructions, () => {
       codex?.instructions ?? "",
       "utf-8"
     );
+    for (const instructions of [claudeInstructions, codexInstructions]) {
+      expect(instructions).toContain(`MDXR version: ${packageJson.version}`);
+      expect(instructions).toContain("Version check");
+      expect(instructions).toContain("--force");
+    }
     expect({
       claudeConfig,
       claudeHasInstructions: claudeInstructions.startsWith("# mdxr"),
@@ -206,13 +212,31 @@ describe(installInstructions, () => {
       "utf-8"
     );
 
-    expect(installed).toHaveLength(2);
-    expect(claudeConfig).toBe("@./.claude/MDXR.md\n");
-    expect(codexConfig).toContain("`./.codex/MDXR.md`");
-    expect(claudeInstructions).toContain(
-      ".claude/mdxr/references/components.md"
-    );
-    expect(codexInstructions).toContain(".codex/mdxr/references/components.md");
+    expect({
+      claudeConfig: claudeConfig === "@./.claude/MDXR.md\n",
+      claudeHasComponentReference: claudeInstructions.includes(
+        ".claude/mdxr/references/components.md"
+      ),
+      claudeHasVersion: claudeInstructions.includes(
+        `MDXR version: ${packageJson.version}`
+      ),
+      codexConfigReferencesPrompt: codexConfig.includes("`./.codex/MDXR.md`"),
+      codexHasComponentReference: codexInstructions.includes(
+        ".codex/mdxr/references/components.md"
+      ),
+      codexHasVersion: codexInstructions.includes(
+        `MDXR version: ${packageJson.version}`
+      ),
+      installedCount: installed.length,
+    }).toStrictEqual({
+      claudeConfig: true,
+      claudeHasComponentReference: true,
+      claudeHasVersion: true,
+      codexConfigReferencesPrompt: true,
+      codexHasComponentReference: true,
+      codexHasVersion: true,
+      installedCount: 2,
+    });
   });
 
   it("preserves an existing CRLF config body and its trailing newline", async () => {
@@ -262,7 +286,7 @@ describe(installInstructions, () => {
     ).toHaveLength(1);
   });
 
-  it("preserves user config and removes stale references on force reinstall", async () => {
+  it("updates an outdated prompt and preserves user config on force reinstall", async () => {
     const [initial] = await installInstructions({
       global: true,
       tool: "codex",
@@ -270,9 +294,17 @@ describe(installInstructions, () => {
     const codexDir = path.join(homeDir, ".codex");
     const referencesDir = path.join(codexDir, "mdxr/references");
     const originalConfig = await readFile(initial?.config ?? "", "utf-8");
+    const originalInstructions = await readFile(
+      initial?.instructions ?? "",
+      "utf-8"
+    );
+    const outdatedInstructions = originalInstructions.replace(
+      `MDXR version: ${packageJson.version}`,
+      "MDXR version: 0.0.0-test"
+    );
+    await writeFile(initial?.instructions ?? "", outdatedInstructions);
     const staleReference = path.join(referencesDir, "stale.md");
     await writeFile(staleReference, "stale content\n");
-    await writeFile(initial?.instructions ?? "", "user edit\n");
 
     const [reinstalled] = await installInstructions({
       force: true,
@@ -280,17 +312,32 @@ describe(installInstructions, () => {
       tool: "codex",
     });
 
-    expect(reinstalled?.status).toBe("present");
-    await expect(readFile(reinstalled?.config ?? "", "utf-8")).resolves.toBe(
-      originalConfig
-    );
-    await expect(
-      readFile(reinstalled?.instructions ?? "", "utf-8")
-    ).resolves.toMatch(/^# mdxr/u);
-    await expect(exists(staleReference)).resolves.toBeFalsy();
-    await expect(
-      exists(path.join(referencesDir, "components.md"))
-    ).resolves.toBeTruthy();
+    const [
+      updatedConfig,
+      updatedInstructions,
+      staleReferenceExists,
+      hasComponents,
+    ] = await Promise.all([
+      readFile(reinstalled?.config ?? "", "utf-8"),
+      readFile(reinstalled?.instructions ?? "", "utf-8"),
+      exists(staleReference),
+      exists(path.join(referencesDir, "components.md")),
+    ]);
+    expect({
+      componentsReferenceInstalled: hasComponents,
+      configPreserved: updatedConfig === originalConfig,
+      outdatedPromptChanged: outdatedInstructions !== originalInstructions,
+      promptUpdated: updatedInstructions === originalInstructions,
+      staleReferenceRemoved: !staleReferenceExists,
+      status: reinstalled?.status,
+    }).toStrictEqual({
+      componentsReferenceInstalled: true,
+      configPreserved: true,
+      outdatedPromptChanged: true,
+      promptUpdated: true,
+      staleReferenceRemoved: true,
+      status: "present",
+    });
   });
 
   it("refuses a modified MDXR file before writing any other targets", async () => {

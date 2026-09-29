@@ -32,6 +32,24 @@ export const RelatedFiles: Story = {
   ),
 };
 
+export const LongRows: Story = {
+  render: () => (
+    <Files title="Long paths and descriptions">
+      <File
+        path="src/components/deeply/nested/directory/structure/with/a/very/long/component-name-that-keeps-going.tsx"
+        kind="integration-investigation-with-a-deliberately-long-kind-label"
+      >
+        This description has many words and continues far past the viewport so
+        readers can scroll to its final phrase.
+      </File>
+      <File path="README.md">
+        This row has a description but intentionally leaves its kind empty.
+      </File>
+      <File path="package.json" kind="config" />
+    </Files>
+  ),
+};
+
 export const NoTitle: Story = {
   render: () => (
     <Files>

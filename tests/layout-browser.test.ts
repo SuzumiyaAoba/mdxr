@@ -192,4 +192,136 @@ const x = 1;
       await browser.close();
     }
   });
+
+  it("aligns Files columns and scrolls long row content inside its table", async () => {
+    const browser = await chromium.launch();
+    try {
+      const title = "Files overflow regression";
+      const longPath =
+        "src/components/deeply/nested/directory/structure/with/a/very/long/component-name-that-keeps-going.tsx";
+      const longKind =
+        "integration-investigation-with-a-deliberately-long-kind-label";
+      const longDescription =
+        "This description has many words and continues far past the viewport so readers can scroll to its final phrase.";
+      const page = await browser.newPage({
+        viewport: { height: 844, width: 390 },
+      });
+      await page.setContent(
+        await render(
+          `<Files title="${title}"><File path="${longPath}" kind="${longKind}">${longDescription}</File><File path="README.md">This row has a description but intentionally leaves its kind empty.</File><File path="package.json" kind="config" /></Files>`,
+          { hydrate: false }
+        )
+      );
+
+      const filesRegion = page.getByRole("region", { name: title });
+      const report = await filesRegion.evaluate((region) => {
+        if (!(region instanceof HTMLElement)) {
+          return null;
+        }
+
+        const table = region.querySelector("table");
+        if (!(table instanceof HTMLTableElement)) {
+          return null;
+        }
+
+        const headers = [
+          ...table.querySelectorAll<HTMLTableCellElement>("thead th"),
+        ];
+        const rows = [
+          ...table.querySelectorAll<HTMLTableRowElement>("tbody tr"),
+        ];
+        if (headers.length !== 3 || rows.length !== 3) {
+          return null;
+        }
+
+        const cells = rows.map((row) => [...row.cells]);
+        const [firstRow = [], secondRow = [], thirdRow = []] = cells;
+        const alignedColumns = cells.every(
+          (row) =>
+            row.length === headers.length &&
+            row.every((cell, index) => {
+              const header = headers[index];
+              return (
+                header !== undefined &&
+                Math.abs(
+                  cell.getBoundingClientRect().left -
+                    header.getBoundingClientRect().left
+                ) < 1
+              );
+            })
+        );
+        const longTextNodes = firstRow.map((element) =>
+          document.createTreeWalker(element, NodeFilter.SHOW_TEXT).nextNode()
+        );
+        const longTextLineCounts = longTextNodes.map((textNode) => {
+          if (textNode === null) {
+            return 0;
+          }
+          const range = document.createRange();
+          range.selectNodeContents(textNode);
+          return range.getClientRects().length;
+        });
+        const longTextEndsReachable = longTextNodes.map((textNode) => {
+          if (textNode === null) {
+            return false;
+          }
+          const range = document.createRange();
+          range.selectNodeContents(textNode);
+          const scrollerBounds = region.getBoundingClientRect();
+          const initialBounds = range.getBoundingClientRect();
+          const maxScrollLeft = Math.max(
+            0,
+            region.scrollWidth - region.clientWidth
+          );
+          region.scrollLeft = Math.min(
+            maxScrollLeft,
+            Math.max(
+              region.scrollLeft,
+              region.scrollLeft + initialBounds.right - scrollerBounds.right + 1
+            )
+          );
+          const finalRight = range.getBoundingClientRect().right;
+          return finalRight <= region.getBoundingClientRect().right + 1;
+        });
+        const documentWidth = document.documentElement;
+
+        return {
+          alignedColumns,
+          documentOverflow:
+            documentWidth.scrollWidth - documentWidth.clientWidth,
+          emptyDescriptionCell: thirdRow[2]?.textContent?.trim() === "",
+          emptyKind: secondRow[1]?.textContent?.trim() === "",
+          hasHorizontalOverflow: region.scrollWidth > region.clientWidth,
+          longTextEndsReachable,
+          longTextLineCounts,
+        };
+      });
+
+      expect(report).toStrictEqual({
+        alignedColumns: true,
+        documentOverflow: 0,
+        emptyDescriptionCell: true,
+        emptyKind: true,
+        hasHorizontalOverflow: true,
+        longTextEndsReachable: [true, true, true],
+        longTextLineCounts: [1, 1, 1],
+      });
+
+      await filesRegion.evaluate((region) => {
+        region.scrollLeft = 0;
+      });
+      await filesRegion.focus();
+      await filesRegion.press("ArrowRight");
+      await expect
+        .poll(async () => {
+          const scrollLeft = await filesRegion.evaluate(
+            (region) => region.scrollLeft
+          );
+          return scrollLeft;
+        })
+        .toBeGreaterThan(0);
+    } finally {
+      await browser.close();
+    }
+  });
 });

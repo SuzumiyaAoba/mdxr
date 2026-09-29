@@ -2,15 +2,19 @@ import { describe, expect, it } from "vitest";
 
 import {
   annotationsMarkdown,
+  annotationStatus,
   findAnnotationSource,
+  parseAnnotationDocument,
   parseAnnotationStore,
   parseAnnotations,
 } from "../src/annotations.js";
 import type {
   AnnotationAnchor,
   AnnotationBatch,
+  AnnotationResolution,
   AnnotationSource,
   AnnotationStore,
+  AnnotationVersion,
   DocumentAnnotation,
 } from "../src/annotations.js";
 
@@ -42,6 +46,25 @@ const annotation: DocumentAnnotation = {
   anchor,
   comment: "Make it clearer",
   id: "a",
+};
+
+const version: AnnotationVersion = {
+  contentHash: "a".repeat(64),
+  createdAt: "2026-09-27T08:00:00.000Z",
+  id: "00000000-0000-4000-8000-000000000001",
+  sequence: 2,
+};
+
+const resolution: AnnotationResolution = {
+  resolvedAt: "2026-09-27T08:05:00.000Z",
+  revision: "compiled-revision-2",
+  version,
+};
+
+const resolvedAnnotation: DocumentAnnotation = {
+  ...annotation,
+  resolution,
+  status: "resolved",
 };
 
 const copyBatch: AnnotationBatch = {
@@ -76,6 +99,7 @@ describe("document annotation handoff", () => {
     for (const expected of [
       "# Feedback: A &lt;plan&gt;",
       "Source block: ` /project/plan.mdx:7-8 `",
+      "Comment ID: ` a `",
       "Section: Design",
       "> rich &lt;text&gt;\n> \\*\\*quoted\\*\\*",
       "Use **emphasis**.\n\n- Keep the API",
@@ -143,7 +167,7 @@ describe("document annotation handoff", () => {
       { annotations: [{ ...annotation, comment: " " }], version: 1 },
     ]) {
       expect(() => parseAnnotations(JSON.stringify(value))).toThrow(
-        /Invalid saved annotations|Duplicate annotation identifiers/u
+        /Invalid saved annotations|Invalid saved annotation history|Duplicate annotation identifiers/u
       );
     }
     expect(() => parseAnnotations("not json")).toThrow(SyntaxError);
@@ -163,15 +187,166 @@ describe("document annotation handoff", () => {
     });
   });
 
-  it("round-trips archive batches in oldest-to-newest order", () => {
+  it("restores the latest archived snapshot for IDs missing from a legacy store", () => {
+    const archivedFirst = {
+      ...copyBatch,
+      annotations: [
+        { ...annotation, comment: "Current should take precedence" },
+        { ...annotation, comment: "Older archived comment", id: "b" },
+      ],
+    };
+    const archivedLatest = {
+      ...sendBatch,
+      annotations: [
+        { ...annotation, comment: "Latest archived comment", id: "b" },
+      ],
+    };
+    const raw = JSON.stringify({
+      annotations: [{ ...annotation, comment: "Unsaved current edit" }],
+      history: [archivedFirst, archivedLatest],
+      version: 1,
+    });
+    const migrated = parseAnnotationStore(raw);
+
+    expect(
+      migrated.annotations.map(({ comment, id }) => ({ comment, id }))
+    ).toStrictEqual([
+      { comment: "Unsaved current edit", id: "a" },
+      { comment: "Latest archived comment", id: "b" },
+    ]);
+    expect(migrated.history).toStrictEqual([archivedFirst, archivedLatest]);
+    const recovered = migrated.annotations.find(({ id }) => id === "b");
+    const latestArchived = migrated.history[1]?.annotations[0];
+    if (recovered === undefined || latestArchived === undefined) {
+      throw new Error("Expected to recover the archived comment");
+    }
+    expect(recovered).not.toBe(latestArchived);
+    recovered.comment = "Edited after migration";
+    expect(latestArchived.comment).toBe("Latest archived comment");
+  });
+
+  it("does not restore deleted archived comments from a v2 store", () => {
+    const raw = JSON.stringify({
+      annotations: [],
+      history: [sendBatch],
+      version: 2,
+    });
+
+    expect(parseAnnotationStore(raw)).toStrictEqual({
+      annotations: [],
+      history: [sendBatch],
+    });
+  });
+
+  it("round-trips archive batches in oldest-to-newest order for v2 stores", () => {
     const store: AnnotationStore = {
       annotations: [annotation],
       history: [copyBatch, sendBatch],
     };
 
     expect(
-      parseAnnotationStore(JSON.stringify({ version: 1, ...store }))
+      parseAnnotationStore(JSON.stringify({ version: 2, ...store }))
     ).toStrictEqual(store);
+  });
+
+  it("defaults old comments to open and validates resolved version metadata", () => {
+    const parsed = parseAnnotationStore(
+      JSON.stringify({
+        annotations: [annotation, { ...resolvedAnnotation, id: "resolved" }],
+        history: [],
+        version: 2,
+      })
+    );
+    expect(parsed.annotations.map(annotationStatus)).toStrictEqual([
+      "open",
+      "resolved",
+    ]);
+
+    const invalidAnnotations = [
+      { ...annotation, status: "closed" },
+      { ...annotation, resolution },
+      { ...resolvedAnnotation, resolution: undefined },
+      {
+        ...resolvedAnnotation,
+        resolution: { ...resolution, revision: "" },
+      },
+      {
+        ...resolvedAnnotation,
+        resolution: { ...resolution, resolvedAt: "bad" },
+      },
+      {
+        ...resolvedAnnotation,
+        resolution: {
+          ...resolution,
+          version: { ...version, id: "not-a-version-id" },
+        },
+      },
+      {
+        ...resolvedAnnotation,
+        resolution: {
+          ...resolution,
+          version: { ...version, contentHash: "bad" },
+        },
+      },
+      {
+        ...resolvedAnnotation,
+        resolution: {
+          ...resolution,
+          version: { ...version, createdAt: "bad" },
+        },
+      },
+      {
+        ...resolvedAnnotation,
+        resolution: {
+          ...resolution,
+          version: { ...version, sequence: 0 },
+        },
+      },
+    ];
+    for (const invalidAnnotation of invalidAnnotations) {
+      expect(() =>
+        parseAnnotationStore(
+          JSON.stringify({
+            annotations: [invalidAnnotation],
+            history: [],
+            version: 2,
+          })
+        )
+      ).toThrow("Invalid saved annotations");
+    }
+  });
+
+  it("filters resolved comments from Markdown while retaining open stable IDs", () => {
+    const markdown = annotationsMarkdown(
+      { file: "/project/plan.mdx", title: "Plan" },
+      [annotation, { ...resolvedAnnotation, id: "resolved-id" }]
+    );
+
+    expect(markdown).toContain("Comment ID: ` a `");
+    expect(markdown).not.toContain("resolved-id");
+    expect(markdown.match(/^## /gmu)).toHaveLength(1);
+  });
+
+  it("accepts legacy annotation documents and validates optional source hashes", () => {
+    const legacyDocument = {
+      file: source.file,
+      revision: "compiled-revision",
+      sources: [source],
+      title: "Plan",
+    };
+    expect(
+      parseAnnotationDocument(JSON.stringify(legacyDocument))
+    ).toStrictEqual(legacyDocument);
+    expect(
+      parseAnnotationDocument(
+        JSON.stringify({ ...legacyDocument, contentHash: "b".repeat(64) })
+      )?.contentHash
+    ).toBe("b".repeat(64));
+    expect(
+      parseAnnotationDocument(
+        JSON.stringify({ ...legacyDocument, contentHash: "invalid" })
+      )
+    ).toBeUndefined();
   });
 
   it.each([

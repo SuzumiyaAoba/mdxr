@@ -56,11 +56,11 @@ Preview a document in the browser with live reload (`-p, --port`, default `3737`
 
 Select text and click **Add comment**, or open **Annotate → Select figure** to comment on an image, diagram, or chart. Edit or delete comments in the panel, then **Copy Markdown** to send the quoted targets, source locations, and feedback to a coding agent.
 
-Saved annotations remain in your browser for that document; they do not modify the source file or travel with the HTML. If the document changes, targets that cannot be identified keep their original quotes and are marked unavailable. [Review annotations](https://suzumiyaaoba.com/mdxr/annotations) describes keyboard shortcuts, storage, and clipboard fallbacks.
+Saved annotations remain in your browser for that document; they do not modify the source file or travel with the HTML. Track comments as open or resolved, and resolve them against the version you reviewed. Copying or sending feedback keeps the current comments and hands off only open comments; each handoff saves a snapshot of the open comments it contains. If the document changes, targets that cannot be identified keep their original quotes and are marked unavailable. [Review annotations](https://suzumiyaaoba.com/mdxr/annotations) describes keyboard shortcuts, storage, and clipboard fallbacks.
 
 Each document-level `##` section also has a **Not reviewed / Reviewed** toggle. Review status is saved locally per document and restored after reload; sections with changed content require review again. In **Pages** view, the sidebar shows section statuses and review progress. See [Section review status](https://suzumiyaaoba.com/mdxr/authoring#section-review-status).
 
-In the `mdxr serve` workspace, choose **Export HTML** to download one standalone review archive with the rendered document, chat, comments, section review statuses, every saved MDX version, and their diffs. Images and stylesheets are embedded in the snapshot; if an external resource cannot be captured, export reports an error instead of omitting it. Open the file locally to review or share the captured state without running the server.
+In the `mdxr serve` workspace, choose **Export HTML** to download one standalone review archive with the rendered document, chat, comments, section review statuses, every saved MDX version, and their diffs. Comment status, resolution time, revision, and reviewed version are included; links jump to matching versions in the archive. Images and stylesheets are embedded in the snapshot; if an external resource cannot be captured, export reports an error instead of omitting it. Open the file locally to review or share the captured state without running the server.
 
 ### `mdxr text [file]`
 

@@ -1,12 +1,36 @@
+import { createHash } from "node:crypto";
 import { mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { parseAnnotationDocument } from "../src/annotations.js";
+import { render } from "../src/render.js";
 import { renderDoc } from "./helpers.js";
 
 describe("annotation source locations", () => {
+  it("embeds the original source hash separately from the compiled revision", async () => {
+    const source = "---\ntitle: Source hash\n---\n\n日本語本文。\n";
+    const html = await render(source, {
+      filePath: path.join(os.tmpdir(), "source-hash.mdx"),
+      hydrate: false,
+    });
+    const rawDocument =
+      /<script type="application\/json" id="mdxr-annotation-document">(?<json>[\s\S]*?)<\/script>/u.exec(
+        html
+      )?.groups?.json;
+    if (rawDocument === undefined) {
+      throw new Error("Rendered annotation document was missing");
+    }
+    const document = parseAnnotationDocument(rawDocument);
+
+    expect(document?.contentHash).toBe(
+      createHash("sha256").update(source).digest("hex")
+    );
+    expect(document?.revision).not.toBe(document?.contentHash);
+  });
+
   it("indexes formatted text and figures without changing the rendered tree", async () => {
     const { annotationSources, body } = await renderDoc(
       '# Design\n\nRender **rich text** and diagrams.\n\n<Figure src="design.svg" caption="Architecture" />',

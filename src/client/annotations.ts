@@ -1,4 +1,5 @@
 import {
+  annotationStatus,
   annotationsMarkdown,
   findAnnotationSource,
   parseAnnotationDocument,
@@ -8,6 +9,7 @@ import type {
   AnnotationAnchor,
   AnnotationBatch,
   AnnotationDocument,
+  AnnotationStatus,
   DocumentAnnotation,
 } from "../annotations.js";
 import {
@@ -19,6 +21,7 @@ import {
   targetRect,
 } from "./annotation-anchors.js";
 import type { ResolvedAnnotation } from "./annotation-anchors.js";
+import { resolveAnnotationVersion } from "./annotation-resolution.js";
 import {
   annotationView,
   paintAnnotationTargets,
@@ -33,6 +36,7 @@ import { WORKSPACE_EXPORT_STATE_EVENT } from "./workspace-export-state.js";
 interface Draft {
   anchor: AnnotationAnchor;
   id?: string;
+  originalComment?: string;
 }
 
 const annotationId = (): string =>
@@ -49,6 +53,8 @@ class AnnotationController {
   private readonly storageKey: string;
   private annotations: DocumentAnnotation[] = [];
   private history: AnnotationBatch[] = [];
+  private filter: "all" | AnnotationStatus = "all";
+  private readonly resolving = new Set<string>();
   private readonly targets = new Map<string, ResolvedAnnotation>();
   private readonly detached = new Set<string>();
   private draft?: Draft;
@@ -65,7 +71,7 @@ class AnnotationController {
     this.root = root;
     this.host = host;
     this.info = info;
-    this.view = annotationView(host, info.file);
+    this.view = annotationView(host, info.file, info.revision);
     const revealSendButton = (): boolean => {
       if (document.querySelector("[data-mdxr-agent]") === null) {
         return false;
@@ -120,10 +126,7 @@ class AnnotationController {
       this.annotations = saved.annotations;
       this.history = saved.history;
     } catch {
-      this.status(
-        "Saved annotations could not be loaded. New comments can still be copied as Markdown.",
-        "warning"
-      );
+      this.status(this.view.labels.loadError, "warning");
     }
   }
 
@@ -135,16 +138,13 @@ class AnnotationController {
         JSON.stringify({
           annotations: this.annotations,
           history: this.history,
-          version: 1,
+          version: 2,
         })
       );
       saved = true;
-      this.status("Saved in this browser", "saved");
+      this.status(this.view.labels.saved, "saved");
     } catch {
-      this.status(
-        "Browser storage is unavailable. Copy Markdown before closing this page to keep your comments.",
-        "warning"
-      );
+      this.status(this.view.labels.storageUnavailable, "warning");
     }
     this.view.export.hidden = true;
     this.resetCopyFeedback();
@@ -183,14 +183,25 @@ class AnnotationController {
       this.view,
       this.annotations,
       this.detached,
-      this.draft?.id
+      this.draft?.id,
+      this.filter,
+      this.resolving
     );
     renderAnnotationHistory(this.view, this.history);
     this.paint();
   }
 
   private paint(): void {
-    paintAnnotationTargets(this.view, [...this.targets.values()], this.active);
+    const visibleTargets = this.annotations
+      .filter(
+        (annotation) =>
+          annotationStatus(annotation) === "open" && this.filter !== "resolved"
+      )
+      .flatMap((annotation) => {
+        const target = this.targets.get(annotation.id);
+        return target === undefined ? [] : [target];
+      });
+    paintAnnotationTargets(this.view, visibleTargets, this.active);
     if (
       this.selection !== undefined &&
       this.draft === undefined &&
@@ -253,7 +264,7 @@ class AnnotationController {
   ): void {
     if (this.draft !== undefined && this.view.comment.value.trim() !== "") {
       this.open(true);
-      this.status("Finish the current comment first.", "warning");
+      this.status(this.view.labels.finishCurrentComment, "warning");
       this.view.comment.focus({ preventScroll: true });
       return;
     }
@@ -261,7 +272,11 @@ class AnnotationController {
       anchor.revision = this.info.revision;
       anchor.source = findAnnotationSource(anchor, this.info.sources);
     }
-    this.draft = { anchor, id: annotation?.id };
+    this.draft = {
+      anchor,
+      id: annotation?.id,
+      originalComment: annotation?.comment,
+    };
     this.resetCopyFeedback();
     this.pick(false);
     this.active = target;
@@ -272,14 +287,18 @@ class AnnotationController {
     this.view.empty.hidden = true;
     this.view.form.setAttribute(
       "aria-label",
-      annotation === undefined ? "New comment" : "Edit comment"
+      annotation === undefined
+        ? this.view.labels.newComment
+        : this.view.labels.editComment
     );
     this.view.draftQuote.textContent = anchor.quote;
     this.view.comment.value = annotation?.comment ?? "";
     const saveLabel =
-      annotation === undefined ? "Save comment" : "Save changes";
+      annotation === undefined
+        ? this.view.labels.saveComment
+        : this.view.labels.saveChanges;
     this.view.save.setAttribute("aria-label", saveLabel);
-    this.view.save.title = `${saveLabel} (Ctrl / ⌘ + Enter)`;
+    this.view.save.title = this.view.labels.saveTitle(saveLabel);
     this.open(true);
     window.getSelection()?.removeAllRanges();
     this.view.form.scrollIntoView({ block: "nearest" });
@@ -288,7 +307,9 @@ class AnnotationController {
       this.view,
       this.annotations,
       this.detached,
-      this.draft.id
+      this.draft.id,
+      this.filter,
+      this.resolving
     );
     if (target !== undefined) {
       this.showTarget(target);
@@ -313,11 +334,35 @@ class AnnotationController {
       return;
     }
     const existing = this.annotations.find(({ id }) => id === this.draft?.id);
+    if (
+      this.draft.id !== undefined &&
+      existing?.comment !== this.draft.originalComment
+    ) {
+      this.status(this.view.labels.editConflict, "warning");
+      this.view.comment.focus({ preventScroll: true });
+      return;
+    }
     if (existing === undefined) {
       const id = annotationId();
-      this.annotations.push({ anchor: this.draft.anchor, comment, id });
+      this.annotations.push({
+        anchor: this.draft.anchor,
+        comment,
+        id,
+        status: "open",
+      });
     } else {
+      if (existing.comment !== comment) {
+        existing.status = "open";
+        delete existing.resolution;
+      }
       existing.comment = comment;
+    }
+    if (
+      this.filter === "resolved" &&
+      (existing === undefined || annotationStatus(existing) === "open")
+    ) {
+      this.filter = "open";
+      this.view.filter.value = this.filter;
     }
     this.cancel();
     this.persist();
@@ -346,7 +391,7 @@ class AnnotationController {
     );
     this.view.useFigure.disabled = this.figures.length === 0;
     if (this.figures.length === 0) {
-      this.status("No figures found.", "warning");
+      this.status(this.view.labels.noFiguresFound, "warning");
     }
     this.view.figure.focus();
   }
@@ -402,7 +447,24 @@ class AnnotationController {
         break;
       }
       case "edit": {
+        if (this.resolving.has(annotation.id)) {
+          return;
+        }
         this.begin(annotation.anchor, target, annotation);
+        break;
+      }
+      case "resolve": {
+        void this.resolve(annotation);
+        break;
+      }
+      case "reopen": {
+        annotation.status = "open";
+        delete annotation.resolution;
+        const saved = this.persist();
+        if (saved) {
+          this.status(this.view.labels.reopenedSaved, "success");
+        }
+        this.focusCardAction(annotation.id, "resolve");
         break;
       }
       case "delete": {
@@ -422,10 +484,90 @@ class AnnotationController {
     }
   }
 
+  private focusCardAction(id: string, action: string): void {
+    const button = [
+      ...this.view.list.querySelectorAll<HTMLButtonElement>(
+        "button[data-annotation-action]"
+      ),
+    ].find(
+      (candidate) =>
+        candidate.dataset.annotationId === id &&
+        candidate.dataset.annotationAction === action
+    );
+    (button ?? this.view.filter).focus({ preventScroll: true });
+  }
+
+  private finishResolution(id: string): void {
+    this.resolving.delete(id);
+    const focused = document.activeElement;
+    const restoreFocus =
+      focused === document.body ||
+      (focused instanceof HTMLElement && focused.dataset.annotationId === id);
+    this.refresh();
+    if (restoreFocus) {
+      const current = this.annotations.find(
+        (annotation) => annotation.id === id
+      );
+      this.focusCardAction(
+        id,
+        current !== undefined && annotationStatus(current) === "resolved"
+          ? "reopen"
+          : "resolve"
+      );
+    }
+  }
+
+  private async resolve(annotation: DocumentAnnotation): Promise<void> {
+    if (
+      annotationStatus(annotation) === "resolved" ||
+      this.resolving.has(annotation.id)
+    ) {
+      return;
+    }
+    if (this.draft?.id === annotation.id) {
+      this.status(this.view.labels.finishCurrentComment, "warning");
+      this.view.comment.focus({ preventScroll: true });
+      return;
+    }
+    this.resolving.add(annotation.id);
+    this.refresh();
+    const snapshot = JSON.stringify({
+      anchor: annotation.anchor,
+      comment: annotation.comment,
+    });
+    this.status(this.view.labels.resolving);
+    try {
+      const resolution = await resolveAnnotationVersion(this.info);
+      const current = this.annotations.find(({ id }) => id === annotation.id);
+      if (current === undefined || annotationStatus(current) === "resolved") {
+        this.status(this.view.labels.changedWhileResolving, "warning");
+        return;
+      }
+      if (
+        JSON.stringify({ anchor: current.anchor, comment: current.comment }) !==
+        snapshot
+      ) {
+        this.status(this.view.labels.changedWhileResolving, "warning");
+        return;
+      }
+      current.status = "resolved";
+      current.resolution = resolution;
+      this.active = undefined;
+      const saved = this.persist();
+      if (saved) {
+        this.status(this.view.labels.resolvedSaved, "success");
+      }
+    } catch {
+      this.status(this.view.labels.resolutionError, "warning");
+    } finally {
+      this.finishResolution(annotation.id);
+    }
+  }
+
   private resetCopyFeedback(): void {
     clearTimeout(this.copyTimer);
     delete this.view.copy.dataset.state;
-    this.view.copyLabel.textContent = "Markdown";
+    this.view.copyLabel.textContent = this.view.labels.copyMarkdown;
   }
 
   private handoff(
@@ -439,7 +581,14 @@ class AnnotationController {
       return undefined;
     }
     this.refresh();
-    const annotations = structuredClone(this.annotations);
+    const annotations = structuredClone(
+      this.annotations.filter(
+        (annotation) => annotationStatus(annotation) === "open"
+      )
+    );
+    if (annotations.length === 0) {
+      return undefined;
+    }
     return {
       action,
       annotations,
@@ -450,28 +599,8 @@ class AnnotationController {
   }
 
   private archive(batch: AnnotationBatch): boolean {
-    const exported = new Map(
-      batch.annotations.map((annotation) => [
-        annotation.id,
-        JSON.stringify(annotation),
-      ])
-    );
-    // Only clear the exact comments handed off; edits made while awaiting the
-    // clipboard or the agent response remain in the current review.
-    this.annotations = this.annotations.filter(
-      (annotation) => exported.get(annotation.id) !== JSON.stringify(annotation)
-    );
+    // Handoffs are immutable snapshots; the review keeps its comment IDs and state.
     this.history.push({ ...batch, createdAt: new Date().toISOString() });
-    if (
-      this.draft?.id !== undefined &&
-      !this.annotations.some(({ id }) => id === this.draft?.id)
-    ) {
-      // An unsaved edit is still a draft, even when its saved version was sent.
-      this.draft = { anchor: this.draft.anchor };
-      this.view.form.setAttribute("aria-label", "New comment");
-      this.view.save.setAttribute("aria-label", "Save comment");
-      this.view.save.title = "Save comment (Ctrl / ⌘ + Enter)";
-    }
     this.selection = undefined;
     this.view.selection.hidden = true;
     this.pick(false);
@@ -496,14 +625,14 @@ class AnnotationController {
         const saved = this.archive(batch);
         this.view.export.hidden = true;
         this.view.copy.dataset.state = "copied";
-        this.view.copyLabel.textContent = "Copied";
+        this.view.copyLabel.textContent = this.view.labels.copyCopied;
         this.copyTimer = setTimeout(() => {
           this.resetCopyFeedback();
         }, 2400);
         this.status(
           saved
-            ? "Markdown copied. Comments moved to History."
-            : "Markdown copied. History is available until this page closes; browser storage is unavailable.",
+            ? this.view.labels.copiedToHistory
+            : this.view.labels.copiedToHistoryStorageUnavailable,
           saved ? "success" : "warning"
         );
       },
@@ -513,10 +642,7 @@ class AnnotationController {
         this.view.export.hidden = false;
         this.view.markdown.focus();
         this.view.markdown.select();
-        this.status(
-          "Clipboard access failed. Copy the selected Markdown below.",
-          "warning"
-        );
+        this.status(this.view.labels.clipboardFailure, "warning");
       }
     );
   }
@@ -528,7 +654,7 @@ class AnnotationController {
     }
     this.view.send.dataset.busy = "true";
     this.refresh();
-    this.status("Sending annotations to chat…", "info");
+    this.status(this.view.labels.sending, "info");
     try {
       const response = await fetch("/__mdxr_agent", {
         body: JSON.stringify({ message: batch.markdown }),
@@ -548,21 +674,27 @@ class AnnotationController {
           "error" in result &&
           typeof result.error === "string"
             ? result.error
-            : "Could not send annotations to chat.";
-        throw new Error(error);
+            : "";
+        this.status(
+          error === ""
+            ? this.view.labels.sendFallbackFailed
+            : this.view.labels.sendFailed(error),
+          "warning"
+        );
+        return;
       }
       const saved = this.archive(batch);
       this.status(
         saved
-          ? "Annotations sent to chat. Comments moved to History."
-          : "Annotations sent to chat. History is available until this page closes; browser storage is unavailable.",
+          ? this.view.labels.sentToHistory
+          : this.view.labels.sentToHistoryStorageUnavailable,
         saved ? "success" : "warning"
       );
     } catch (error) {
       this.status(
-        error instanceof Error
-          ? `Could not send annotations: ${error.message}`
-          : "Could not send annotations to chat.",
+        error instanceof Error && error.message !== ""
+          ? this.view.labels.sendFailed(error.message)
+          : this.view.labels.sendFallbackFailed,
         "warning"
       );
     } finally {
@@ -646,6 +778,14 @@ class AnnotationController {
         this.showTarget(this.active);
       }
     });
+    view.filter.addEventListener("change", () => {
+      const { value } = view.filter;
+      if (value === "all" || value === "open" || value === "resolved") {
+        this.filter = value;
+        this.active = undefined;
+        this.refresh();
+      }
+    });
     view.copy.addEventListener("click", () => {
       this.copy();
     });
@@ -720,7 +860,7 @@ class AnnotationController {
       this.schedule();
     });
     window.addEventListener("storage", (event) => {
-      if (event.key === this.storageKey) {
+      if (event.key === this.storageKey || event.key === null) {
         this.load();
         this.refresh();
       }

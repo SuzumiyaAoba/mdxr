@@ -384,6 +384,7 @@ describe("workspace HTML export", () => {
           "Please preserve both document versions.",
           maliciousMessage,
           COMMENT_TEXT,
+          "Status: Open",
           "Unsent chat draft <keep me>",
           "Design — Reviewed",
         ].every((expected) => archiveText?.includes(expected) === true),
@@ -451,23 +452,22 @@ describe("workspace HTML export", () => {
       const storageStatus = page.locator("[data-annotation-status]");
       await storageStatus.waitFor({ state: "visible" });
       const storageWarning = await storageStatus.textContent();
+      const commentId = await page
+        .locator("[data-annotation-card]")
+        .getAttribute("data-annotation-card");
+      if (commentId === null) {
+        throw new Error("Saved comment ID is missing");
+      }
+      await page.getByRole("button", { exact: true, name: "Edit" }).click();
+      await page
+        .getByRole("textbox", { exact: true, name: "Comment" })
+        .fill("A note still being written.");
       await page.getByRole("button", { name: "Copy Markdown" }).click();
       await page.waitForFunction(() =>
         document
           .querySelector("[data-annotation-status]")
           ?.textContent?.includes("History is available until this page closes")
       );
-
-      await selectText(
-        page,
-        "The quote to comment on is export snapshot marker."
-      );
-      await page
-        .getByRole("button", { exact: true, name: "Add comment" })
-        .click();
-      await page
-        .getByRole("textbox", { exact: true, name: "Comment" })
-        .fill("A note still being written.");
 
       const downloadPromise = page.waitForEvent("download");
       await page.getByRole("button", EXPORT_BUTTON).click();
@@ -505,13 +505,18 @@ describe("workspace HTML export", () => {
         browser: {
           annotationDraft: {
             comment: "A note still being written.",
+            id: commentId,
           },
           annotations: {
-            annotations: [],
+            annotations: [
+              { comment: "Archived before storage failed.", id: commentId },
+            ],
             history: [
               {
                 action: "copy",
-                annotations: [{ comment: "Archived before storage failed." }],
+                annotations: [
+                  { comment: "Archived before storage failed.", id: commentId },
+                ],
               },
             ],
           },

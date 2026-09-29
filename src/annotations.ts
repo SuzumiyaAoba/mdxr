@@ -15,6 +15,7 @@ export interface AnnotationDocument {
   revision: string;
   title: string;
   sources: AnnotationSource[];
+  contentHash?: string;
 }
 
 export interface AnnotationAnchor {
@@ -37,6 +38,23 @@ export interface DocumentAnnotation {
   id: string;
   comment: string;
   anchor: AnnotationAnchor;
+  status?: AnnotationStatus;
+  resolution?: AnnotationResolution;
+}
+
+export type AnnotationStatus = "open" | "resolved";
+
+export interface AnnotationVersion {
+  id: string;
+  contentHash: string;
+  createdAt: string;
+  sequence: number;
+}
+
+export interface AnnotationResolution {
+  revision: string;
+  resolvedAt: string;
+  version?: AnnotationVersion;
 }
 
 export interface AnnotationBatch {
@@ -51,6 +69,10 @@ export interface AnnotationStore {
   annotations: DocumentAnnotation[];
   history: AnnotationBatch[];
 }
+
+export const annotationStatus = (
+  annotation: DocumentAnnotation
+): AnnotationStatus => annotation.status ?? "open";
 
 export const normalizeAnnotationText = (text: string): string =>
   text.replaceAll(/\s+/gu, " ").trim();
@@ -121,6 +143,9 @@ export const annotationsMarkdown = (
   annotations: readonly DocumentAnnotation[],
   detached: ReadonlySet<string> = new Set()
 ): string => {
+  const openAnnotations = annotations.filter(
+    (annotation) => annotationStatus(annotation) === "open"
+  );
   const lines = [
     `# Feedback: ${markdownText(normalizeAnnotationText(document.title))}`,
     "",
@@ -128,11 +153,12 @@ export const annotationsMarkdown = (
     "",
     "Please address the following review comments in the source document.",
   ];
-  for (const [index, annotation] of annotations.entries()) {
+  for (const [index, annotation] of openAnnotations.entries()) {
     const { anchor, comment } = annotation;
     lines.push(
       "",
       `## ${index + 1}. ${anchor.kind === "text" ? "Text" : "Figure"} comment`,
+      `Comment ID: ${codeSpan(annotation.id)}`,
       ""
     );
     if (anchor.source !== undefined) {
@@ -166,6 +192,13 @@ export const annotationsMarkdown = (
 const isIndex = (value: unknown): value is number =>
   typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
 
+const HASH_PATTERN = /^[\da-f]{64}$/iu;
+const VERSION_ID_PATTERN =
+  /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/iu;
+
+const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === "string" && value !== "";
+
 const isSource = (value: unknown): value is AnnotationSource =>
   isRecord(value) &&
   ["file", "text", "heading", "label", "image"].every(
@@ -189,18 +222,48 @@ const isAnchor = (value: unknown): value is AnnotationAnchor =>
   value.end >= value.start &&
   (value.source === undefined || isSource(value.source));
 
-const isAnnotation = (value: unknown): value is DocumentAnnotation =>
-  isRecord(value) &&
-  typeof value.id === "string" &&
-  value.id !== "" &&
-  typeof value.comment === "string" &&
-  value.comment.trim() !== "" &&
-  isAnchor(value.anchor);
-
 const isIsoTimestamp = (value: unknown): value is string =>
   typeof value === "string" &&
   Number.isFinite(Date.parse(value)) &&
   new Date(value).toISOString() === value;
+
+export const isAnnotationVersion = (
+  value: unknown
+): value is AnnotationVersion =>
+  isRecord(value) &&
+  typeof value.id === "string" &&
+  VERSION_ID_PATTERN.test(value.id) &&
+  typeof value.contentHash === "string" &&
+  HASH_PATTERN.test(value.contentHash) &&
+  isIsoTimestamp(value.createdAt) &&
+  typeof value.sequence === "number" &&
+  Number.isSafeInteger(value.sequence) &&
+  value.sequence >= 1;
+
+const isAnnotationResolution = (
+  value: unknown
+): value is AnnotationResolution =>
+  isRecord(value) &&
+  isNonEmptyString(value.revision) &&
+  isIsoTimestamp(value.resolvedAt) &&
+  (value.version === undefined || isAnnotationVersion(value.version));
+
+const isAnnotation = (value: unknown): value is DocumentAnnotation => {
+  if (!isRecord(value)) {
+    return false;
+  }
+  const status = value.status === undefined ? "open" : value.status;
+  return (
+    isNonEmptyString(value.id) &&
+    typeof value.comment === "string" &&
+    value.comment.trim() !== "" &&
+    isAnchor(value.anchor) &&
+    (status === "open" || status === "resolved") &&
+    (status === "resolved"
+      ? isAnnotationResolution(value.resolution)
+      : value.resolution === undefined)
+  );
+};
 
 const isAnnotationBatch = (value: unknown): value is AnnotationBatch =>
   isRecord(value) &&
@@ -217,6 +280,24 @@ const hasUniqueAnnotationIds = (
 ): boolean =>
   new Set(annotations.map(({ id }) => id)).size === annotations.length;
 
+const restoreArchivedAnnotations = (
+  current: DocumentAnnotation[],
+  history: readonly AnnotationBatch[]
+): DocumentAnnotation[] => {
+  const currentIds = new Set(current.map(({ id }) => id));
+  const latestSnapshots = new Map<string, DocumentAnnotation>();
+  for (const batch of history) {
+    for (const annotation of batch.annotations) {
+      latestSnapshots.delete(annotation.id);
+      latestSnapshots.set(annotation.id, annotation);
+    }
+  }
+  const recovered = [...latestSnapshots]
+    .filter(([id]) => !currentIds.has(id))
+    .map(([, annotation]) => structuredClone(annotation));
+  return [...current, ...recovered];
+};
+
 export const parseAnnotationStore = (raw: string | null): AnnotationStore => {
   if (raw === null) {
     return { annotations: [], history: [] };
@@ -224,7 +305,7 @@ export const parseAnnotationStore = (raw: string | null): AnnotationStore => {
   const value: unknown = JSON.parse(raw);
   if (
     !isRecord(value) ||
-    value.version !== 1 ||
+    (value.version !== 1 && value.version !== 2) ||
     !Array.isArray(value.annotations) ||
     !value.annotations.every(isAnnotation)
   ) {
@@ -237,6 +318,9 @@ export const parseAnnotationStore = (raw: string | null): AnnotationStore => {
 
   const rawHistory = value.history;
   if (rawHistory === undefined) {
+    if (value.version === 2) {
+      throw new Error("Invalid saved annotation history");
+    }
     return { annotations, history: [] };
   }
   if (!Array.isArray(rawHistory) || !rawHistory.every(isAnnotationBatch)) {
@@ -249,7 +333,13 @@ export const parseAnnotationStore = (raw: string | null): AnnotationStore => {
   if (history.some((batch) => !hasUniqueAnnotationIds(batch.annotations))) {
     throw new Error("Duplicate annotation identifiers in batch");
   }
-  return { annotations, history };
+  return {
+    annotations:
+      value.version === 1
+        ? restoreArchivedAnnotations(annotations, history)
+        : annotations,
+    history,
+  };
 };
 
 export const parseAnnotations = (raw: string | null): DocumentAnnotation[] =>
@@ -263,6 +353,9 @@ export const parseAnnotationDocument = (
     typeof value.file === "string" &&
     typeof value.title === "string" &&
     typeof value.revision === "string" &&
+    (value.contentHash === undefined ||
+      (typeof value.contentHash === "string" &&
+        HASH_PATTERN.test(value.contentHash))) &&
     Array.isArray(value.sources) &&
     value.sources.every(isSource)
     ? {
@@ -270,6 +363,9 @@ export const parseAnnotationDocument = (
         revision: value.revision,
         sources: value.sources,
         title: value.title,
+        ...(value.contentHash === undefined
+          ? {}
+          : { contentHash: value.contentHash }),
       }
     : undefined;
 };

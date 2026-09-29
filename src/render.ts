@@ -382,6 +382,7 @@ const renderDocument = async (
 
   return htmlDocument({
     annotations: {
+      contentHash: createHash("sha256").update(source).digest("hex"),
       file: filePath,
       revision: createHash("sha256").update(code).digest("hex"),
       sources: annotationSources,

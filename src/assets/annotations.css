@@ -221,6 +221,21 @@
   border-radius: 4px;
   background: var(--annotation-subtle);
 }
+.mdxr-annotation-filter {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 18px;
+}
+.mdxr-annotation-filter select {
+  max-width: 100%;
+  padding: 6px 28px 6px 9px;
+  border: 1px solid color-mix(in srgb, var(--annotation-muted) 22%, transparent);
+  border-radius: 6px;
+  background: var(--annotation-bg);
+  color: var(--annotation-text);
+  font: inherit;
+  font-size: 11px;
+}
 .mdxr-annotation-composer {
   margin: 0 0 32px;
   padding: 0;
@@ -428,6 +443,21 @@
 .mdxr-annotation-reference > button {
   margin: -2px -8px 0 0;
 }
+.mdxr-annotation-status {
+  flex: none;
+  margin-top: 3px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  color: var(--annotation-accent);
+  background: color-mix(in srgb, var(--annotation-accent) 12%, transparent);
+  font-size: 10px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.mdxr-annotation-status[data-status="resolved"] {
+  color: var(--annotation-success);
+  background: color-mix(in srgb, var(--annotation-success) 12%, transparent);
+}
 .mdxr-annotation-kind {
   margin-top: 5px;
   color: var(--annotation-accent);
@@ -445,6 +475,33 @@
   overflow-wrap: anywhere;
   font-size: 14px;
   line-height: 1.8;
+}
+.mdxr-annotation-resolution {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px 10px;
+  margin: 8px 0;
+  color: var(--annotation-muted);
+  font-size: 10px;
+}
+.mdxr-annotation-resolution time {
+  font-variant-numeric: tabular-nums;
+}
+.mdxr-annotation-resolution > span {
+  overflow-wrap: anywhere;
+}
+.mdxr-annotation-resolution a {
+  color: var(--annotation-info);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.mdxr-annotation-updated-warning {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--annotation-accent);
+  font-size: 11px;
+  line-height: 1.55;
 }
 .mdxr-annotation-card-footer {
   display: flex;
@@ -464,6 +521,12 @@
 }
 [data-annotation-action="edit"] > svg {
   color: var(--annotation-accent);
+}
+[data-annotation-action="resolve"] > svg {
+  color: var(--annotation-success);
+}
+[data-annotation-action="reopen"] > svg {
+  color: var(--annotation-info);
 }
 [data-annotation-action="delete"] > svg {
   color: var(--annotation-danger);

@@ -23,7 +23,7 @@ Custom components can expose a `<figure>` or an element with `data-mdxr-figure` 
 
 ## Send feedback to a coding agent
 
-Click **Copy Markdown** to copy all saved comments. The output includes the document path, section, quoted text or figure caption, image path when available, and your comment. MDX source block line numbers are included when the target identifies an unambiguous source block; included documents keep their own file paths and line numbers.
+Click **Copy Markdown** to copy the open comments. The output includes the document path, section, quoted text or figure caption, image path when available, and your comment. MDX source block line numbers are included when the target identifies an unambiguous source block; included documents keep their own file paths and line numbers. Resolved comments stay in the current list and are not sent again unless you reopen them.
 
 ```markdown
 # Feedback: Implementation plan
@@ -46,9 +46,15 @@ Specify the retry limit and explain which errors are retryable.
 
 Paste the Markdown into your coding agent. If clipboard access is blocked, the panel displays a selected Markdown field for manual copying.
 
+## Track comment status
+
+Each comment is **Open** until you mark it **Resolved**. The panel can show all, open, or resolved comments. Resolving a comment records the time and the document revision currently displayed. In a `mdxr serve` workspace, the resolution also points to that saved version and provides a preview link when the version is available. A standalone render records the revision and time without a preview link. Editing a comment reopens it so the new feedback is included in the next handoff.
+
+Copying Markdown or sending comments to an agent leaves the current comments in place. The history stores a snapshot of the open comments actually copied or sent, with their status at that time. Later edits and status changes do not rewrite earlier snapshots.
+
 ## Saved reviews and document changes
 
-Saved annotations stay in browser local storage, separated by document path within the same browser origin. They are not written into the MDX or HTML file, and sending someone the HTML does not share your annotations. Copy Markdown to move a review between browsers or share it.
+Saved comments and past copy/send history stay in browser local storage, separated by document path within the same browser origin. Removing a comment from the current list does not bring it back after a reload, while its past history remains saved. Annotations are not written into the MDX or HTML file, and sending someone the HTML does not share your live annotations. Copy Markdown to move open feedback between browsers or share it.
 
 After a rebuild, annotations reattach only when the target can still be identified. If a target changed, disappeared, or became ambiguous, the panel preserves the original quotation and marks the target as unavailable. These comments remain editable and exportable, with an explicit note that their location refers to the original selection.
 

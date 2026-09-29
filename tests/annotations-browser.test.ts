@@ -1,7 +1,7 @@
 import { once } from "node:events";
 
 import { chromium } from "playwright";
-import type { Browser, Frame, Page } from "playwright";
+import type { Browser, Frame, Locator, Page } from "playwright";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { render } from "../src/render.js";
@@ -47,13 +47,17 @@ const selectText = async (
   }, quote);
 };
 
+const beginTextComment = async (page: Page): Promise<void> => {
+  await page.locator("#mdxr-root").click({ position: { x: 5, y: 5 } });
+  await selectText(page);
+  await page.getByRole("button", { exact: true, name: "Add comment" }).click();
+};
+
 const addTextComment = async (
   page: Page,
   comment = "Explain the formatting."
 ): Promise<void> => {
-  await page.locator("#mdxr-root").click({ position: { x: 5, y: 5 } });
-  await selectText(page);
-  await page.getByRole("button", { exact: true, name: "Add comment" }).click();
+  await beginTextComment(page);
   await page
     .getByRole("textbox", { exact: true, name: "Comment" })
     .fill(comment);
@@ -73,6 +77,29 @@ const clipboardStub = async (page: Frame | Page): Promise<void> => {
   });
 };
 
+const readContentHash = async (page: Page): Promise<string> =>
+  await page.locator("#mdxr-annotation-document").evaluate((element) => {
+    const raw = element.textContent;
+    if (raw === null) {
+      throw new Error("Annotation document metadata missing");
+    }
+    const value: unknown = JSON.parse(raw);
+    if (
+      typeof value !== "object" ||
+      value === null ||
+      !("contentHash" in value) ||
+      typeof value.contentHash !== "string"
+    ) {
+      throw new Error("Annotation document content hash missing");
+    }
+    return value.contentHash;
+  });
+
+const readAnnotationStatus = async (locator: Locator): Promise<string | null> =>
+  await locator.evaluate((element) =>
+    element instanceof HTMLElement ? (element.dataset.status ?? null) : null
+  );
+
 describe("document annotation interactions", () => {
   let browser: Browser;
   let html: string;
@@ -85,8 +112,9 @@ describe("document annotation interactions", () => {
     await browser?.close();
   });
 
-  const openPage = async (content = html): Promise<Page> => {
+  const openPage = async (content = html, locale = "en-US"): Promise<Page> => {
     const page = await browser.newPage({
+      locale,
       viewport: { height: 850, width: 1280 },
     });
     await page.route("http://mdxr.test/**", async (route) => {
@@ -97,7 +125,7 @@ describe("document annotation interactions", () => {
   };
 
   it.each([false, true])(
-    "adds, edits, archives, restores, and separates text and figure comments (hydrate: %s)",
+    "adds, edits, records immutable snapshots, and separates text and figure comments (hydrate: %s)",
     async (hydrate) => {
       const page = await openPage(
         hydrate
@@ -156,13 +184,13 @@ describe("document annotation interactions", () => {
         await page.waitForFunction(
           () =>
             document.querySelector("[data-annotation-status]")?.textContent ===
-            "Markdown copied. Comments moved to History."
+            "Copied. Recorded in History."
         );
         await page.waitForFunction(
           () =>
             document.querySelectorAll(
               "[data-annotation-list] .mdxr-annotation-card"
-            ).length === 0
+            ).length === 2
         );
         await page.reload();
         await page.getByRole("button", { name: "Annotate" }).click();
@@ -200,7 +228,7 @@ describe("document annotation interactions", () => {
           };
         });
         expect(restoredHistory).toStrictEqual({
-          activeCount: 0,
+          activeCount: 2,
           batchCount: 1,
           copyAction: true,
           dateStored: true,
@@ -224,11 +252,21 @@ describe("document annotation interactions", () => {
           )?.textContent,
         }));
         expect(separatedNotes).toStrictEqual({
-          activeComments: ["A later note."],
+          activeComments: [
+            "例を追加してください。",
+            "Label the arrows.",
+            "A later note.",
+          ],
           batchCount: 1,
           historyCount: "1",
         });
-        await page.getByRole("button", { exact: true, name: "Delete" }).click();
+        const deleteButtons = page.getByRole("button", {
+          exact: true,
+          name: "Delete",
+        });
+        await deleteButtons.first().click();
+        await deleteButtons.first().click();
+        await deleteButtons.first().click();
         await page.waitForFunction(
           () =>
             document.querySelectorAll(
@@ -265,7 +303,7 @@ describe("document annotation interactions", () => {
     }
   );
 
-  it("archives only the sent snapshot and keeps comments edited in flight", async () => {
+  it("records the sent snapshot and keeps comments edited in flight", async () => {
     const page = await browser.newPage({
       viewport: { height: 850, width: 1280 },
     });
@@ -325,12 +363,20 @@ describe("document annotation interactions", () => {
       await page
         .getByRole("button", { exact: true, name: "Save changes" })
         .click();
+      await beginTextComment(page);
+      await page
+        .getByRole("textbox", { exact: true, name: "Comment" })
+        .fill("Draft kept while sending.");
       handoff.dispatchEvent(new Event("release"));
       await page.waitForFunction(
         () =>
           document.querySelector("[data-annotation-status]")?.textContent ===
-          "Annotations sent to chat. Comments moved to History."
+          "Sent. Recorded in History."
       );
+      await expect(
+        page.getByRole("textbox", { exact: true, name: "Comment" }).inputValue()
+      ).resolves.toBe("Draft kept while sending.");
+      await page.getByRole("button", { exact: true, name: "Cancel" }).click();
       await page.reload();
       await page.getByRole("button", { name: "Annotate" }).click();
       const history = page.locator("[data-annotation-history]");
@@ -460,6 +506,431 @@ describe("document annotation interactions", () => {
         historyBatches: 0,
         historyHidden: true,
       });
+    } finally {
+      await page.close();
+    }
+  });
+
+  it("localizes comment status, filtering, reopening, and open-only copy in Japanese", async () => {
+    const page = await openPage(html, "ja-JP");
+    try {
+      await clipboardStub(page);
+      await page.locator("[data-annotation-toggle]").click();
+      const initialLabels = {
+        filter: await page
+          .locator("[data-annotation-filter]")
+          .getAttribute("aria-label"),
+        resolved: await page
+          .locator("[data-annotation-filter] option[value='resolved']")
+          .textContent(),
+        toggle: await page
+          .locator("[data-annotation-toggle]")
+          .getAttribute("aria-label"),
+      };
+
+      const addJapaneseComment = async (comment: string): Promise<void> => {
+        await page.locator("#mdxr-root").click({ position: { x: 5, y: 5 } });
+        await selectText(page);
+        await page
+          .getByRole("button", { exact: true, name: "コメントを追加" })
+          .click();
+        await page
+          .getByRole("textbox", { exact: true, name: "コメント" })
+          .fill(comment);
+        await page
+          .getByRole("button", { exact: true, name: "コメントを保存" })
+          .click();
+      };
+      const resolvedComment = "対応内容を確認してください。";
+      const openComment = "このコメントは未対応のままです。";
+      await addJapaneseComment(resolvedComment);
+      await addJapaneseComment(openComment);
+
+      const firstCard = page.locator(".mdxr-annotation-card").first();
+      await firstCard.locator('[data-annotation-action="resolve"]').click();
+      await page.waitForFunction(
+        () =>
+          document.querySelector<HTMLElement>(".mdxr-annotation-card")?.dataset
+            .status === "resolved"
+      );
+      const resolvedCardText = await firstCard.textContent();
+      const resolvedCardState = {
+        count: await page.locator("[data-annotation-count]").textContent(),
+        hasRevision: resolvedCardText?.includes("記録したリビジョン:"),
+        hasStatus: resolvedCardText?.includes("対応済み"),
+        status: await readAnnotationStatus(firstCard),
+      };
+
+      await page.locator("[data-annotation-copy]").click();
+      await page.waitForFunction(
+        () =>
+          document.querySelector("[data-annotation-status]")?.textContent ===
+          "コピーしました。履歴に記録しました。"
+      );
+      const copiedMarkdown = await page
+        .locator("html")
+        .getAttribute("data-feedback");
+      const copiedOpenOnly = {
+        hasOpenComment: copiedMarkdown?.includes(openComment),
+        hasResolvedComment: copiedMarkdown?.includes(resolvedComment),
+        status: await page.locator("[data-annotation-status]").textContent(),
+      };
+
+      const filter = page.locator("[data-annotation-filter]");
+      await filter.selectOption("open");
+      const openCount = await page.locator(".mdxr-annotation-card").count();
+      await filter.selectOption("resolved");
+      const resolvedCount = await page.locator(".mdxr-annotation-card").count();
+      await filter.selectOption("all");
+      const resolvedCard = page.locator(".mdxr-annotation-card").first();
+      await resolvedCard.locator('[data-annotation-action="reopen"]').click();
+      await page.waitForFunction(
+        () =>
+          document.querySelector<HTMLElement>(".mdxr-annotation-card")?.dataset
+            .status === "open"
+      );
+      const reopenedState = {
+        cardStatus: await readAnnotationStatus(resolvedCard),
+        message: await page.locator("[data-annotation-status]").textContent(),
+      };
+
+      await resolvedCard.locator('[data-annotation-action="resolve"]').click();
+      await page.waitForFunction(
+        () =>
+          document.querySelector<HTMLElement>(".mdxr-annotation-card")?.dataset
+            .status === "resolved"
+      );
+      await filter.selectOption("resolved");
+      await resolvedCard
+        .getByRole("button", { exact: true, name: "編集" })
+        .click();
+      await page
+        .getByRole("textbox", { exact: true, name: "コメント" })
+        .fill("内容を更新したので未対応に戻します。");
+      await page
+        .getByRole("button", { exact: true, name: "変更を保存" })
+        .click();
+      await page.waitForFunction(
+        () =>
+          document.querySelector<HTMLElement>(".mdxr-annotation-card")?.dataset
+            .status === "open"
+      );
+      expect({
+        copiedOpenOnly,
+        filterCounts: { open: openCount, resolved: resolvedCount },
+        finalEditState: {
+          cardStatus: await readAnnotationStatus(
+            page.locator(".mdxr-annotation-card").first()
+          ),
+          filter: await filter.inputValue(),
+          message: await page.locator("[data-annotation-status]").textContent(),
+        },
+        initialLabels,
+        reopenedState,
+        resolvedCardState,
+      }).toStrictEqual({
+        copiedOpenOnly: {
+          hasOpenComment: true,
+          hasResolvedComment: false,
+          status: "コピーしました。履歴に記録しました。",
+        },
+        filterCounts: { open: 1, resolved: 1 },
+        finalEditState: {
+          cardStatus: "open",
+          filter: "open",
+          message: "このブラウザーに保存しました",
+        },
+        initialLabels: {
+          filter: "コメントを絞り込む",
+          resolved: "対応済み",
+          toggle: "コメント",
+        },
+        reopenedState: {
+          cardStatus: "open",
+          message: "未対応に戻しました。",
+        },
+        resolvedCardState: {
+          count: "1",
+          hasRevision: true,
+          hasStatus: true,
+          status: "resolved",
+        },
+      });
+    } finally {
+      await page.close();
+    }
+  });
+
+  it("links the matching historical version and warns after the document changes", async () => {
+    const withWorkspace = html.replace(
+      "</body>",
+      '<div id="mdxr-workspace-root" hidden></div></body>'
+    );
+    const page = await openPage(withWorkspace);
+    try {
+      await addTextComment(page, "Resolve against the rendered version.");
+      const contentHash = await readContentHash(page);
+      const matchedVersion = {
+        contentHash,
+        createdAt: "2026-09-29T10:00:00.000Z",
+        id: "11111111-1111-4111-8111-111111111111",
+        sequence: 2,
+      };
+      const laterVersion = {
+        contentHash: "0".repeat(64),
+        createdAt: "2026-09-30T10:00:00.000Z",
+        id: "22222222-2222-4222-8222-222222222222",
+        sequence: 3,
+      };
+      await page.route("**/__mdxr_history", async (route) => {
+        await route.fulfill({
+          body: JSON.stringify({ versions: [matchedVersion, laterVersion] }),
+          contentType: "application/json",
+        });
+      });
+      await page.getByRole("button", { name: "Mark as resolved" }).click();
+      await page.waitForFunction(
+        () =>
+          document.querySelector<HTMLElement>(".mdxr-annotation-card")?.dataset
+            .status === "resolved"
+      );
+      const originalLink = page.locator(".mdxr-annotation-version-link");
+      const originalHref = await originalLink.getAttribute("href");
+      if (originalHref === null) {
+        throw new Error("Resolved version link is missing");
+      }
+      const originalVersionLink = {
+        id: new URL(originalHref).searchParams.get("id"),
+        label: await originalLink.textContent(),
+        rel: await originalLink.getAttribute("rel"),
+        target: await originalLink.getAttribute("target"),
+      };
+
+      const changedDocument = await render(
+        `${SOURCE}\n\n## Follow-up\n\nA later document revision.\n`,
+        { filePath: "/project/review.mdx" }
+      );
+      await page.route("http://mdxr.test/updated", async (route) => {
+        await route.fulfill({
+          body: changedDocument,
+          contentType: "text/html",
+        });
+      });
+      await page.goto("http://mdxr.test/updated");
+      await page.locator("[data-annotation-toggle]").click();
+      const updatedWarning = await page
+        .locator(".mdxr-annotation-updated-warning")
+        .textContent();
+      const restoredLink = page.locator(".mdxr-annotation-version-link");
+      const restoredHref = await restoredLink.getAttribute("href");
+      if (restoredHref === null) {
+        throw new Error("Restored version link is missing");
+      }
+      const restoredVersionId = new URL(restoredHref).searchParams.get("id");
+      expect({
+        originalVersionLink,
+        restoredVersionId,
+        updatedWarning,
+      }).toStrictEqual({
+        originalVersionLink: {
+          id: matchedVersion.id,
+          label: "View corrected version · #2",
+          rel: "noopener noreferrer",
+          target: "_blank",
+        },
+        restoredVersionId: matchedVersion.id,
+        updatedWarning:
+          "The document has changed. Review this comment again before considering it resolved.",
+      });
+    } finally {
+      await page.close();
+    }
+  });
+
+  it("keeps a comment open after a history error and allows retry", async () => {
+    const withWorkspace = html.replace(
+      "</body>",
+      '<div id="mdxr-workspace-root" hidden></div></body>'
+    );
+    const page = await openPage(withWorkspace);
+    let attempts = 0;
+    try {
+      await addTextComment(page, "Retry version lookup.");
+      const contentHash = await readContentHash(page);
+      await page.route("**/__mdxr_history", async (route) => {
+        attempts += 1;
+        if (attempts === 1) {
+          await route.fulfill({
+            body: JSON.stringify({ error: "Unavailable" }),
+            contentType: "application/json",
+            status: 503,
+          });
+          return;
+        }
+        await route.fulfill({
+          body: JSON.stringify({
+            versions: [
+              {
+                contentHash,
+                createdAt: "2026-09-30T10:00:00.000Z",
+                id: "33333333-3333-4333-8333-333333333333",
+                sequence: 1,
+              },
+            ],
+          }),
+          contentType: "application/json",
+        });
+      });
+
+      const resolveButton = page.getByRole("button", {
+        name: "Mark as resolved",
+      });
+      await resolveButton.click();
+      await page.waitForFunction(
+        () =>
+          document.querySelector("[data-annotation-status]")?.textContent ===
+          "Could not record the resolved version. Reload the document and try again."
+      );
+      await expect(
+        readAnnotationStatus(page.locator(".mdxr-annotation-card").first())
+      ).resolves.toBe("open");
+      await resolveButton.click();
+      await page.waitForFunction(
+        () =>
+          document.querySelector<HTMLElement>(".mdxr-annotation-card")?.dataset
+            .status === "resolved"
+      );
+      expect(attempts).toBe(2);
+    } finally {
+      await page.close();
+    }
+  });
+
+  it("migrates v1 archived comments as independent active copies", async () => {
+    const page = await openPage();
+    try {
+      await clipboardStub(page);
+      await addTextComment(page, "Original archived snapshot.");
+      await page.getByRole("button", { name: "Copy Markdown" }).click();
+      await page.waitForFunction(
+        () =>
+          document.querySelector("[data-annotation-status]")?.textContent ===
+          "Copied. Recorded in History."
+      );
+      await page.evaluate(() => {
+        const key = "mdxr:annotations:v1:/project/review.mdx";
+        const raw = localStorage.getItem(key);
+        if (raw === null) {
+          throw new Error("Saved annotation store missing");
+        }
+        const value: unknown = JSON.parse(raw);
+        if (
+          typeof value !== "object" ||
+          value === null ||
+          !("annotations" in value) ||
+          !Array.isArray(value.annotations) ||
+          !("history" in value) ||
+          !Array.isArray(value.history) ||
+          !("version" in value)
+        ) {
+          throw new Error("Saved annotation store is invalid");
+        }
+        value.version = 1;
+        value.annotations = [];
+        localStorage.setItem(key, JSON.stringify(value));
+      });
+      await page.reload();
+      await page.locator("[data-annotation-toggle]").click();
+      await expect(page.locator(".mdxr-annotation-card").count()).resolves.toBe(
+        1
+      );
+      await page.getByRole("button", { exact: true, name: "Edit" }).click();
+      await page
+        .getByRole("textbox", { exact: true, name: "Comment" })
+        .fill("Edited after migration.");
+      await page
+        .getByRole("button", { exact: true, name: "Save changes" })
+        .click();
+      const history = page.locator("[data-annotation-history]");
+      await history.locator(":scope > summary").click();
+      const batch = page.locator(
+        "[data-annotation-history-list] details[data-annotation-batch]"
+      );
+      await batch.locator(":scope > summary").click();
+      await expect(
+        page.locator(".mdxr-annotation-comment-body").textContent()
+      ).resolves.toBe("Edited after migration.");
+      await expect(
+        page.locator(".mdxr-annotation-history-list").textContent()
+      ).resolves.toContain("Original archived snapshot.");
+      await expect(
+        page.locator(".mdxr-annotation-history-list").textContent()
+      ).resolves.not.toContain("Edited after migration.");
+    } finally {
+      await page.close();
+    }
+  });
+
+  it("keeps an edit draft when a different tab changes the saved comment", async () => {
+    const page = await openPage();
+    try {
+      await addTextComment(page, "Original shared comment.");
+      await page.getByRole("button", { exact: true, name: "Edit" }).click();
+      const draftInput = page.getByRole("textbox", {
+        exact: true,
+        name: "Comment",
+      });
+      await draftInput.fill("My local draft.");
+      await page.evaluate(() => {
+        const key = "mdxr:annotations:v1:/project/review.mdx";
+        const raw = localStorage.getItem(key);
+        if (raw === null) {
+          throw new Error("Saved annotation store missing");
+        }
+        const value: unknown = JSON.parse(raw);
+        if (
+          typeof value !== "object" ||
+          value === null ||
+          !("annotations" in value) ||
+          !Array.isArray(value.annotations)
+        ) {
+          throw new Error("Saved annotation is invalid");
+        }
+        const firstAnnotation: unknown = value.annotations[0];
+        if (
+          typeof firstAnnotation !== "object" ||
+          firstAnnotation === null ||
+          !("comment" in firstAnnotation) ||
+          typeof firstAnnotation.comment !== "string"
+        ) {
+          throw new Error("Saved annotation is invalid");
+        }
+        firstAnnotation.comment = "Changed in another tab.";
+        const newValue = JSON.stringify(value);
+        localStorage.setItem(key, newValue);
+        window.dispatchEvent(
+          new StorageEvent("storage", {
+            key,
+            newValue,
+            storageArea: localStorage,
+          })
+        );
+      });
+      await expect(
+        page.locator(".mdxr-annotation-comment-body").textContent()
+      ).resolves.toBe("Changed in another tab.");
+      await page
+        .getByRole("button", { exact: true, name: "Save changes" })
+        .click();
+      await expect(
+        page.locator("[data-annotation-status]").textContent()
+      ).resolves.toBe(
+        "This comment changed in another tab. Copy your draft, then edit it again."
+      );
+      await expect(draftInput.inputValue()).resolves.toBe("My local draft.");
+      await expect(
+        page.locator(".mdxr-annotation-comment-body").textContent()
+      ).resolves.toBe("Changed in another tab.");
     } finally {
       await page.close();
     }
@@ -621,7 +1092,7 @@ describe("document annotation interactions", () => {
         expect({ errors, restoredState }).toStrictEqual({
           errors: [],
           restoredState: {
-            activeComments: [],
+            activeComments: storageAvailable ? ["更新したコメント"] : [],
             archivedComment: storageAvailable,
             historyBatchCount: storageAvailable ? 1 : 0,
             historyHidden: !storageAvailable,

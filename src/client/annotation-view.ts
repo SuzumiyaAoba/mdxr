@@ -1,11 +1,83 @@
-import { annotationLocation } from "../annotations.js";
-import type { AnnotationBatch, DocumentAnnotation } from "../annotations.js";
+import { annotationLocation, annotationStatus } from "../annotations.js";
+import type {
+  AnnotationBatch,
+  AnnotationResolution,
+  AnnotationStatus,
+  DocumentAnnotation,
+} from "../annotations.js";
 import type { ResolvedAnnotation } from "./annotation-anchors.js";
 import { targetRect } from "./annotation-anchors.js";
+import { getAnnotationCopy } from "./annotation-copy.js";
+import type { AnnotationCopy } from "./annotation-copy.js";
 
 const filename = (file: string): string => file.split(/[\\/]/u).at(-1) ?? file;
 
-export const annotationView = (host: HTMLElement, file: string) => {
+const localizeAnnotationChrome = (
+  host: HTMLElement,
+  labels: AnnotationCopy
+): void => {
+  const setText = (selector: string, value: string): void => {
+    const element = host.querySelector<HTMLElement>(selector);
+    if (element !== null) {
+      element.textContent = value;
+    }
+  };
+  const setButton = (selector: string, label: string, title = label): void => {
+    const button = host.querySelector<HTMLButtonElement>(selector);
+    if (button !== null) {
+      button.setAttribute("aria-label", label);
+      button.title = title;
+    }
+  };
+
+  host.lang = labels.dateLocale === "ja-JP" ? "ja" : "en";
+  setText("[data-annotation-toggle-label]", labels.toggle);
+  setText("#mdxr-annotation-title", labels.panelTitle);
+  setText("[data-annotation-selection-label]", labels.addComment);
+  setText("[data-annotation-figure-label]", labels.figureLabel);
+  setText("[data-annotation-comment-label]", labels.commentLabel);
+  setText("[data-annotation-filter-label]", labels.filterLabel);
+  setText("[data-annotation-filter] [value='all']", labels.filterAll);
+  setText("[data-annotation-filter] [value='open']", labels.filterOpen);
+  setText("[data-annotation-filter] [value='resolved']", labels.filterResolved);
+  setText("[data-annotation-empty]", labels.noComments);
+  setText("[data-annotation-history-label]", labels.history);
+  setText("[data-annotation-copy-label]", labels.copyMarkdown);
+  setText("[data-annotation-send-label]", labels.sendToChat);
+  setText("[data-annotation-markdown-label]", labels.markdownFeedback);
+
+  const comment = host.querySelector<HTMLTextAreaElement>(
+    "[data-annotation-comment]"
+  );
+  if (comment !== null) {
+    comment.placeholder = labels.commentPlaceholder;
+  }
+  const form = host.querySelector<HTMLFormElement>("[data-annotation-form]");
+  form?.setAttribute("aria-label", labels.newComment);
+  setButton(
+    "[data-annotation-save]",
+    labels.saveComment,
+    labels.saveTitle(labels.saveComment)
+  );
+  setButton("[data-annotation-toggle]", labels.toggle);
+  setButton("[data-annotation-selection]", labels.addComment);
+  setButton("[data-annotation-pick]", labels.selectFigure);
+  setButton("[data-annotation-use-figure]", labels.commentOnFigure);
+  setButton("[data-annotation-close]", labels.close, labels.closeTitle);
+  setButton("[data-annotation-cancel]", labels.cancel);
+  setButton("[data-annotation-copy]", labels.copyMarkdown);
+  setButton("[data-annotation-send]", labels.sendToChat);
+  const filter = host.querySelector<HTMLSelectElement>(
+    "[data-annotation-filter]"
+  );
+  filter?.setAttribute("aria-label", labels.filterLabel);
+};
+
+export const annotationView = (
+  host: HTMLElement,
+  file: string,
+  revision = ""
+) => {
   const get = <T extends HTMLElement>(
     selector: string,
     type: new () => T
@@ -19,21 +91,26 @@ export const annotationView = (host: HTMLElement, file: string) => {
   const documentName = get("[data-annotation-document]", HTMLElement);
   documentName.textContent = filename(file);
   documentName.title = file;
+  const labels = getAnnotationCopy();
+  localizeAnnotationChrome(host, labels);
   return {
     comment: get("[data-annotation-comment]", HTMLTextAreaElement),
     copy: get("[data-annotation-copy]", HTMLButtonElement),
     copyLabel: get("[data-annotation-copy-label]", HTMLElement),
     count: get("[data-annotation-count]", HTMLElement),
+    currentRevision: revision,
     draftQuote: get("[data-annotation-draft-quote]", HTMLElement),
     empty: get("[data-annotation-empty]", HTMLElement),
     export: get("[data-annotation-export]", HTMLElement),
     figure: get("[data-annotation-figure]", HTMLSelectElement),
     figurePicker: get("[data-annotation-figure-picker]", HTMLElement),
+    filter: get("[data-annotation-filter]", HTMLSelectElement),
     form: get("[data-annotation-form]", HTMLFormElement),
     history: get("[data-annotation-history]", HTMLDetailsElement),
     historyCount: get("[data-annotation-history-count]", HTMLElement),
     historyList: get("[data-annotation-history-list]", HTMLElement),
     icons: get("[data-annotation-icons]", HTMLElement),
+    labels,
     list: get("[data-annotation-list]", HTMLElement),
     markdown: get("[data-annotation-markdown]", HTMLTextAreaElement),
     overlays: get("[data-annotation-overlays]", HTMLElement),
@@ -51,6 +128,8 @@ export const annotationView = (host: HTMLElement, file: string) => {
 };
 
 export type AnnotationView = ReturnType<typeof annotationView>;
+
+export type AnnotationFilter = "all" | AnnotationStatus;
 
 const annotationHistorySignatures = new WeakMap<HTMLElement, string>();
 
@@ -89,25 +168,92 @@ const actionButton = (
   return button;
 };
 
+const resolutionDetails = (
+  view: AnnotationView,
+  resolution: AnnotationResolution
+): HTMLElement => {
+  const details = textElement("div", "", "mdxr-annotation-resolution");
+  const timestamp = Date.parse(resolution.resolvedAt);
+  const formattedDate = Number.isNaN(timestamp)
+    ? resolution.resolvedAt
+    : new Intl.DateTimeFormat(view.labels.dateLocale, {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }).format(timestamp);
+  const resolvedAt = textElement("time", view.labels.resolvedOn(formattedDate));
+  resolvedAt.dateTime = resolution.resolvedAt;
+  const shortRevision = resolution.revision.slice(0, 12);
+  const revisionLabel = textElement(
+    "span",
+    view.labels.revisionLabel(shortRevision)
+  );
+  revisionLabel.title = view.labels.revisionLabel(resolution.revision);
+  details.append(resolvedAt, revisionLabel);
+  if (resolution.version !== undefined) {
+    const link = textElement(
+      "a",
+      view.labels.viewResolvedVersion(resolution.version.sequence)
+    );
+    const historyUrl = new URL("/__mdxr_history", window.location.href);
+    historyUrl.searchParams.set("view", "preview");
+    historyUrl.searchParams.set("id", resolution.version.id);
+    link.href = historyUrl.href;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.className = "mdxr-annotation-version-link";
+    details.append(link);
+  }
+  if (
+    view.currentRevision !== "" &&
+    resolution.revision !== view.currentRevision
+  ) {
+    details.append(
+      textElement(
+        "p",
+        view.labels.updatedWarning,
+        "mdxr-annotation-updated-warning"
+      )
+    );
+  }
+  return details;
+};
+
 export const renderAnnotationList = (
   view: AnnotationView,
   annotations: readonly DocumentAnnotation[],
   detached: ReadonlySet<string>,
-  editingId?: string
+  editingId?: string,
+  filter: AnnotationFilter = "all",
+  resolvingIds: ReadonlySet<string> = new Set()
 ): void => {
-  const cards = annotations.map(({ id, comment, anchor }, index) => {
+  const visibleAnnotations = annotations.filter(
+    (annotation) => filter === "all" || annotationStatus(annotation) === filter
+  );
+  const cards = visibleAnnotations.map((annotation, index) => {
+    const { id, comment, anchor, resolution } = annotation;
+    const status = annotationStatus(annotation);
+    const resolving = resolvingIds.has(id);
     const card = textElement("li", "", "mdxr-annotation-card");
     card.dataset.annotationCard = id;
     card.dataset.kind = anchor.kind;
+    card.dataset.status = status;
     card.toggleAttribute("data-editing", editingId === id);
     const content = textElement("div", "", "mdxr-annotation-note-content");
     const reference = textElement("div", "", "mdxr-annotation-reference");
     const kind = textElement("span", "", "mdxr-annotation-kind");
     kind.setAttribute(
       "aria-label",
-      anchor.kind === "text" ? "Text selection" : "Figure"
+      anchor.kind === "text"
+        ? view.labels.textSelection
+        : view.labels.figureKind
     );
     kind.append(annotationIcon(view, anchor.kind));
+    const statusBadge = textElement(
+      "span",
+      status === "open" ? view.labels.openStatus : view.labels.resolvedStatus,
+      "mdxr-annotation-status"
+    );
+    statusBadge.dataset.status = status;
     card.append(
       textElement(
         "span",
@@ -115,21 +261,28 @@ export const renderAnnotationList = (
         "mdxr-annotation-number"
       )
     );
-    const go = actionButton(view, "go", "Show target", id);
+    const go = actionButton(view, "go", view.labels.showTarget, id);
     go.disabled = detached.has(id);
-    reference.append(kind, textElement("blockquote", anchor.quote), go);
+    reference.append(
+      kind,
+      statusBadge,
+      textElement("blockquote", anchor.quote),
+      go
+    );
     content.append(reference);
     if (detached.has(id)) {
       const warning = textElement("div", "", "mdxr-annotation-detached");
       warning.append(
         annotationIcon(view, "warning"),
-        textElement("span", "Target unavailable")
+        textElement("span", view.labels.targetUnavailable)
       );
-      warning.title =
-        "The target changed or was removed. The original quote is preserved.";
+      warning.title = view.labels.targetUnavailableTitle;
       content.append(warning);
     }
     content.append(textElement("p", comment, "mdxr-annotation-comment-body"));
+    if (status === "resolved" && resolution !== undefined) {
+      content.append(resolutionDetails(view, resolution));
+    }
     const footer = textElement("div", "", "mdxr-annotation-card-footer");
     const location =
       anchor.source === undefined
@@ -138,7 +291,7 @@ export const renderAnnotationList = (
     if (location !== "") {
       const source = textElement("span", "", "mdxr-annotation-location");
       source.title = location;
-      source.setAttribute("aria-label", `Source: ${location}`);
+      source.setAttribute("aria-label", view.labels.sourceLabel(location));
       source.append(
         textElement(
           "span",
@@ -148,9 +301,24 @@ export const renderAnnotationList = (
       footer.append(source);
     }
     const actions = textElement("div", "", "mdxr-annotation-actions");
+    const statusAction = status === "open" ? "resolve" : "reopen";
+    const statusButton = actionButton(
+      view,
+      statusAction,
+      status === "open" ? view.labels.resolve : view.labels.reopen,
+      id
+    );
+    statusButton.disabled = resolving;
+    if (resolving) {
+      statusButton.setAttribute("aria-label", view.labels.resolving);
+      statusButton.title = view.labels.resolving;
+    }
+    const editButton = actionButton(view, "edit", view.labels.edit, id);
+    editButton.disabled = resolving;
     actions.append(
-      actionButton(view, "edit", "Edit", id),
-      actionButton(view, "delete", "Delete", id)
+      editButton,
+      statusButton,
+      actionButton(view, "delete", view.labels.delete, id)
     );
     footer.append(actions);
     content.append(footer);
@@ -158,21 +326,33 @@ export const renderAnnotationList = (
     return card;
   });
   view.list.replaceChildren(...cards);
-  view.count.textContent = String(annotations.length);
-  view.count.hidden = annotations.length === 0;
+  const openCount = annotations.filter(
+    (annotation) => annotationStatus(annotation) === "open"
+  ).length;
+  view.count.textContent = String(openCount);
+  view.count.hidden = openCount === 0;
   view.panelCount.textContent = String(annotations.length);
+  view.filter.value = filter;
+  let emptyMessage = view.labels.noComments;
+  if (annotations.length > 0 && filter === "open") {
+    emptyMessage = view.labels.noOpenComments;
+  } else if (annotations.length > 0 && filter === "resolved") {
+    emptyMessage = view.labels.noResolvedComments;
+  }
+  view.empty.textContent = emptyMessage;
   const busy =
     view.copy.dataset.busy === "true" || view.send.dataset.busy === "true";
-  view.copy.disabled = annotations.length === 0 || busy;
-  view.send.disabled = annotations.length === 0 || busy;
-  view.empty.hidden = annotations.length > 0 || view.form.hidden !== true;
+  view.copy.disabled = openCount === 0 || busy;
+  view.send.disabled = openCount === 0 || busy;
+  view.empty.hidden =
+    visibleAnnotations.length > 0 || view.form.hidden !== true;
 };
 
-const formatBatchDate = (createdAt: string): string => {
+const formatBatchDate = (createdAt: string, locale: string): string => {
   const timestamp = Date.parse(createdAt);
   return Number.isNaN(timestamp)
     ? createdAt
-    : new Intl.DateTimeFormat(undefined, {
+    : new Intl.DateTimeFormat(locale, {
         dateStyle: "medium",
         timeStyle: "short",
       }).format(timestamp);
@@ -193,6 +373,8 @@ const historySignature = (history: readonly AnnotationBatch[]): string =>
         annotation.id,
         annotation.anchor.quote,
         annotation.comment,
+        annotationStatus(annotation),
+        annotation.resolution,
         historyLocation(annotation),
       ]),
     ])
@@ -206,8 +388,12 @@ export const renderAnnotationHistory = (
   const signature = historySignature(batches);
   view.historyCount.textContent = String(history.length);
   view.history.hidden = history.length === 0;
-  view.empty.textContent =
-    history.length > 0 ? "No current comments" : "No comments";
+  if (view.list.childElementCount === 0 && view.filter.value === "all") {
+    view.empty.textContent =
+      history.length > 0
+        ? view.labels.noCurrentComments
+        : view.labels.noComments;
+  }
   if (annotationHistorySignatures.get(view.historyList) === signature) {
     return;
   }
@@ -241,16 +427,21 @@ export const renderAnnotationHistory = (
       "",
       "mdxr-annotation-history-summary"
     );
-    const date = textElement("time", formatBatchDate(batch.createdAt));
+    const date = textElement(
+      "time",
+      formatBatchDate(batch.createdAt, view.labels.dateLocale)
+    );
     date.dateTime = batch.createdAt;
     const action = textElement(
       "span",
-      batch.action === "copy" ? "Copied Markdown" : "Sent to chat",
+      batch.action === "copy"
+        ? view.labels.historyActionCopy
+        : view.labels.historyActionSend,
       "mdxr-annotation-history-action"
     );
     const count = textElement(
       "span",
-      `${batch.annotations.length} ${batch.annotations.length === 1 ? "comment" : "comments"}`,
+      view.labels.commentCount(batch.annotations.length),
       "mdxr-annotation-history-batch-count"
     );
     summary.append(date, action, count);

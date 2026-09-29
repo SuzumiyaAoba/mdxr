@@ -12,6 +12,7 @@ import { loadConfig } from "./config.js";
 import { formatError, parseErrorFormat } from "./format-error.js";
 import { ensureDocsDirIgnored, installSkill } from "./init.js";
 import { installInstructions } from "./instructions.js";
+import { serveLibrary } from "./library.js";
 import { openInBrowser } from "./open.js";
 import { loadUserComponents, render, renderFile } from "./render.js";
 import { serve, serveSource } from "./serve.js";
@@ -79,6 +80,34 @@ const validateAgentOptions = (
 };
 
 const cli = cac("mdxr").version(packageJson.version);
+
+cli
+  .command(
+    "library [dir]",
+    "Browse and search local Markdown and MDX documents"
+  )
+  .option(
+    "-p, --port <port>",
+    "Preferred port; if taken, the next free port is used",
+    { default: 3737 }
+  )
+  .option("--open", "Open the document library in the default browser")
+  .action(
+    async (
+      dir: string | undefined,
+      opts: { open?: boolean; port: number | string }
+    ) => {
+      try {
+        const port = Number(opts.port);
+        if (!Number.isInteger(port) || port < 0 || port > 65_535) {
+          throw new Error(`invalid --port: ${opts.port}`);
+        }
+        await serveLibrary(dir ?? ".mdxr", port, { open: opts.open === true });
+      } catch (error) {
+        fail(error, false);
+      }
+    }
+  );
 
 cli
   .command("render [file]", "Render an .mdx document to a standalone HTML file")

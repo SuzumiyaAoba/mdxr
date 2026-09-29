@@ -55,7 +55,7 @@ const MAX_PORT_ATTEMPTS = 100;
  * a probe-then-bind helper would just race the real listen. Port 0 already
  * asks the OS for a port, so it binds once and never retries.
  */
-const listenOnFreePort = async (
+export const listenOnFreePort = async (
   server: http.Server,
   port: number
 ): Promise<void> => {

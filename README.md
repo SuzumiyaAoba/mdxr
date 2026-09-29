@@ -9,6 +9,7 @@ Run directly with `npx` — no install required:
 ```sh
 npx @suzumiyaaoba/mdxr render plan.mdx     # writes plan.html
 npx @suzumiyaaoba/mdxr serve plan.mdx      # live preview at http://localhost:3737
+npx @suzumiyaaoba/mdxr library             # browse and search .mdxr
 npx @suzumiyaaoba/mdxr catalog             # list available components
 npx @suzumiyaaoba/mdxr --version           # print the package version
 npx @suzumiyaaoba/mdxr init                # install mdxr instructions for Codex and Claude
@@ -20,6 +21,19 @@ Or install it:
 npm install -g @suzumiyaaoba/mdxr          # global CLI
 npm install @suzumiyaaoba/mdxr             # library: import { render } from "@suzumiyaaoba/mdxr"
 ```
+
+### `mdxr library [dir]`
+
+Browse and search Markdown and MDX documents under a directory (defaults to `.mdxr`). The local browser UI searches titles, document text, and relative paths; supports status filtering and relevance, update-date, or title sorting; and opens each result in a new tab with the live preview workspace.
+
+Delete a document from its row to permanently remove that file; its assets and parent directories remain.
+
+```sh
+mdxr library                         # browse .mdxr
+mdxr library ./docs -p 3738 --open   # browse another directory
+```
+
+Search terms separated by spaces (including full-width spaces) use AND matching. Japanese text supports partial matches. Unicode NFKC normalization handles full-/half-width forms, including half-width kana with voiced marks; lowercasing makes letter case equivalent, and hiragana and katakana are treated as equivalent. For example, search for `かたろぐ ＡＰＩ`. The library indexes `.md`, `.markdown`, and `.mdx` files without running document JavaScript or custom components. Both the library and previews listen on loopback; generated and dependency directories such as `node_modules`, `dist`, `.git`, `.mdxr-cache`, `storybook-static`, and `.mdxr/history` are excluded, and symbolic links are not followed. Use the UI's refresh action to include added, changed, or deleted files. Existing `mdxr serve <file>` continues to preview one document.
 
 ### `mdxr render [file]`
 

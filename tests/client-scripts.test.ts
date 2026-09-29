@@ -7,6 +7,108 @@ import { LIVE_RELOAD_JS, MERMAID_JS, THEME_JS } from "../src/assets/scripts.js";
 import { clientJs } from "../src/client-js.js";
 import { inlineScript } from "../src/html.js";
 
+type MediaChangeListener = (event: { matches: boolean }) => void;
+
+class FakeThemeElement {
+  readonly attributes = new Map<string, string>();
+  readonly dataset: Record<string, string> = {};
+  readonly classes = new Set<string>();
+  readonly classList = {
+    contains: (name: string): boolean => this.classes.has(name),
+    remove: (name: string): void => {
+      this.classes.delete(name);
+    },
+    toggle: (name: string, force?: boolean): void => {
+      if (force ?? !this.classes.has(name)) {
+        this.classes.add(name);
+      } else {
+        this.classes.delete(name);
+      }
+    },
+  };
+  readonly style = { colorScheme: "" };
+
+  hasAttribute(name: string): boolean {
+    const datasetKey = name
+      .replace(/^data-/u, "")
+      .replaceAll(/-(?<letter>[a-z])/gu, (_match, letter: string) =>
+        letter.toUpperCase()
+      );
+    return this.attributes.has(name) || Object.hasOwn(this.dataset, datasetKey);
+  }
+
+  setAttribute(name: string, value: string): void {
+    this.attributes.set(name, value);
+  }
+}
+
+interface ThemeScriptHarness {
+  button: FakeThemeElement;
+  reactButton: FakeThemeElement;
+  root: FakeThemeElement;
+  triggerDOMContentLoaded: () => void;
+  triggerSystemChange: (matches: boolean) => void;
+}
+
+const runThemeScript = (
+  storedMode: string | null,
+  systemDark: boolean,
+  storageAvailable = true
+): ThemeScriptHarness => {
+  const root = new FakeThemeElement();
+  const button = new FakeThemeElement();
+  const reactButton = new FakeThemeElement();
+  reactButton.dataset.mdxrThemeReact = "";
+  reactButton.dataset.mode = "auto";
+  reactButton.setAttribute("aria-label", "テーマを切り替え");
+  const mediaListeners = new Set<MediaChangeListener>();
+  const domReadyListeners: (() => void)[] = [];
+
+  new vm.Script(THEME_JS).runInNewContext({
+    HTMLElement: FakeThemeElement,
+    addEventListener: (_type: string, listener: () => void): void => {
+      domReadyListeners.push(listener);
+    },
+    document: {
+      documentElement: root,
+      querySelectorAll: (): FakeThemeElement[] => [button, reactButton],
+    },
+    localStorage: {
+      getItem: (): string | null => {
+        if (!storageAvailable) {
+          throw new Error("Storage is unavailable");
+        }
+        return storedMode;
+      },
+    },
+    matchMedia: () => ({
+      addEventListener: (
+        _type: string,
+        listener: MediaChangeListener
+      ): void => {
+        mediaListeners.add(listener);
+      },
+      matches: systemDark,
+    }),
+  });
+
+  return {
+    button,
+    reactButton,
+    root,
+    triggerDOMContentLoaded: () => {
+      for (const listener of domReadyListeners) {
+        listener();
+      }
+    },
+    triggerSystemChange: (matches) => {
+      for (const listener of mediaListeners) {
+        listener({ matches });
+      }
+    },
+  };
+};
+
 /**
  * Smoke tests for every script inlined into rendered documents: a syntax
  * slip here silently breaks every emitted page, so each snippet gets parsed
@@ -64,6 +166,63 @@ describe(clientJs, () => {
 describe("inline script snippets", () => {
   it("THEME_JS parses", () => {
     expect(() => new vm.Script(THEME_JS)).not.toThrow();
+  });
+
+  it("applies a stored mode before paint and leaves React labels alone", () => {
+    const { button, reactButton, root, triggerDOMContentLoaded } =
+      runThemeScript("dark", false);
+    triggerDOMContentLoaded();
+
+    expect({
+      buttonLabel: button.attributes.get("aria-label"),
+      buttonMode: button.dataset.mode,
+      colorScheme: root.style.colorScheme,
+      darkClass: root.classList.contains("dark"),
+      htmlMode: root.dataset.mdxrThemeMode,
+      reactLabel: reactButton.attributes.get("aria-label"),
+      reactMode: reactButton.dataset.mode,
+    }).toStrictEqual({
+      buttonLabel: "Switch theme (current: dark)",
+      buttonMode: "dark",
+      colorScheme: "dark",
+      darkClass: true,
+      htmlMode: "dark",
+      reactLabel: "テーマを切り替え",
+      reactMode: "auto",
+    });
+  });
+
+  it("follows system color changes while in auto mode", () => {
+    const { root, triggerSystemChange } = runThemeScript(null, false);
+    triggerSystemChange(true);
+
+    expect({
+      colorScheme: root.style.colorScheme,
+      darkClass: root.classList.contains("dark"),
+      htmlMode: root.dataset.mdxrThemeMode,
+    }).toStrictEqual({
+      colorScheme: "dark",
+      darkClass: true,
+      htmlMode: "auto",
+    });
+  });
+
+  it("keeps an explicit mode when storage is unavailable", () => {
+    const { root, triggerSystemChange } = runThemeScript(null, true, false);
+    root.dataset.mdxrThemeMode = "dark";
+    root.classList.toggle("dark", true);
+    root.style.colorScheme = "dark";
+    triggerSystemChange(false);
+
+    expect({
+      colorScheme: root.style.colorScheme,
+      darkClass: root.classList.contains("dark"),
+      htmlMode: root.dataset.mdxrThemeMode,
+    }).toStrictEqual({
+      colorScheme: "dark",
+      darkClass: true,
+      htmlMode: "dark",
+    });
   });
 
   it("LIVE_RELOAD_JS parses", () => {

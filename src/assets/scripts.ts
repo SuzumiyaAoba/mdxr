@@ -49,34 +49,36 @@ export const THEME_JS = `
 var q = matchMedia('(prefers-color-scheme: dark)');
 var stored = null;
 try { stored = localStorage.getItem('mdxr-theme'); } catch (e) {}
-// Clear the server-only values used by script-blocked previews before
-// applying the user's saved or system theme.
-document.documentElement.classList.remove('light');
-document.documentElement.style.removeProperty('color-scheme');
-document.documentElement.classList.toggle(
-  'dark',
-  stored === 'dark' || (stored !== 'light' && q.matches)
-);
+var root = document.documentElement;
+var mode = stored === 'light' || stored === 'dark' ? stored : 'auto';
+var applyTheme = function (selectedMode, systemDark) {
+  var dark = selectedMode === 'dark' || (selectedMode === 'auto' && systemDark);
+  root.classList.remove('light');
+  root.classList.toggle('dark', dark);
+  root.style.colorScheme = dark ? 'dark' : 'light';
+};
+root.dataset.mdxrThemeMode = mode;
+applyTheme(mode, q.matches);
 q.addEventListener('change', function (e) {
-  var s = null;
-  try { s = localStorage.getItem('mdxr-theme'); } catch (e2) {}
-  if (s !== 'light' && s !== 'dark') {
-    document.documentElement.classList.toggle('dark', e.matches);
+  var currentMode = root.dataset.mdxrThemeMode || 'auto';
+  if (currentMode === 'auto') {
+    applyTheme(currentMode, e.matches);
   }
 });
 // This script runs in <head>, before the toggle button is parsed —
 // reflect the stored mode on it once the DOM exists.
 addEventListener('DOMContentLoaded', function () {
-  var s = null;
-  try { s = localStorage.getItem('mdxr-theme'); } catch (e) {}
-  var mode = s === 'light' || s === 'dark' ? s : 'auto';
+  var currentMode = root.dataset.mdxrThemeMode || 'auto';
   document.querySelectorAll('[data-mdxr-theme]').forEach(function (b) {
     if (!(b instanceof HTMLElement)) {
       return;
     }
-    b.dataset.mode = mode;
-    b.setAttribute('title', 'Theme: ' + mode);
-    b.setAttribute('aria-label', 'Switch theme (current: ' + mode + ')');
+    if (b.hasAttribute('data-mdxr-theme-react')) {
+      return;
+    }
+    b.dataset.mode = currentMode;
+    b.setAttribute('title', 'Theme: ' + currentMode);
+    b.setAttribute('aria-label', 'Switch theme (current: ' + currentMode + ')');
   });
 });
 `;

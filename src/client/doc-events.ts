@@ -10,58 +10,24 @@ import { handleAskClick, syncAsk } from "./doc-events/ask.js";
 import { handleBoard } from "./doc-events/board.js";
 import { handleComments } from "./doc-events/comments.js";
 import { closestEl, copyWithFeedback } from "./doc-events/shared.js";
+import { applyThemeMode, cycleThemeMode } from "./theme.js";
 
 export { syncBoards } from "./doc-events/board.js";
 export { writeClipboard } from "./doc-events/shared.js";
 
-// localStorage can throw on file:// or in hardened contexts — reads fall
-// back to "auto", writes are best-effort (the toggle still applies for
-// this view).
-const storedTheme = (): string => {
-  try {
-    return localStorage.getItem("mdxr-theme") ?? "auto";
-  } catch {
-    return "auto";
-  }
-};
-
-const persistTheme = (mode: string): void => {
-  try {
-    if (mode === "auto") {
-      localStorage.removeItem("mdxr-theme");
-    } else {
-      localStorage.setItem("mdxr-theme", mode);
-    }
-  } catch {
-    // Best-effort — see above.
-  }
-};
-
-const NEXT_MODE: Record<string, string> = {
-  auto: "light",
-  dark: "auto",
-  light: "dark",
-};
-
 // Cycles auto → light → dark, persists the choice, and repaints every
 // toggle's icon/label to match.
 const cycleTheme = (): void => {
-  const stored = storedTheme();
-  const mode = stored === "light" || stored === "dark" ? stored : "auto";
-  const next = NEXT_MODE[mode] ?? "auto";
-  persistTheme(next);
-  const dark =
-    next === "dark" ||
-    (next === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
-  document.documentElement.classList.toggle("dark", dark);
-  const title = `Theme: ${next}`;
+  const mode = cycleThemeMode();
+  applyThemeMode(mode);
+  const title = `Theme: ${mode}`;
   for (const b of document.querySelectorAll("[data-mdxr-theme]")) {
     if (!(b instanceof HTMLElement)) {
       continue;
     }
-    b.dataset.mode = next;
+    b.dataset.mode = mode;
     b.setAttribute("title", title);
-    b.setAttribute("aria-label", `Switch theme (current: ${next})`);
+    b.setAttribute("aria-label", `Switch theme (current: ${mode})`);
   }
 };
 

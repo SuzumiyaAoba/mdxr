@@ -96,7 +96,7 @@ Starlight-style extras: directories are collapsible (click to fold; works withou
 
 ### `<FileRef path="src/mdx.ts" lines="40-52" />`
 
-Inline file reference chip with a copy button. The icon is picked automatically from the file extension (`vscode-icons` set). Links to the file in the reader's editor (`vscode://file/…` by default) when it exists on disk; `href` overrides the URL, `editor: none` disables linking.
+Inline file reference chip with a copy button. The icon is picked automatically from the file extension (`vscode-icons` set). In `mdxr serve`, clicking a local reference opens a modal preview: images display as images, `.md`/`.markdown`/`.mdx` files have **Rendered** (MDXR) and **Raw** tabs, and other UTF-8 text files use syntax highlighting inferred from the filename. Opening generated HTML directly keeps the editor link (`vscode://file/…` by default); `href` takes priority.
 
 ### `<SymbolRef name="mdxToHtml" kind="fn" path="src/mdx.ts" lines="70-106" />`
 

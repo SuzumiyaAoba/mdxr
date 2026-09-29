@@ -78,6 +78,8 @@ Components that carry `path` — `<FileRef>`, `<SymbolRef>`, `<File>`, `<TraceFr
 
 Pick the scheme with `editor` in `mdxr.config.ts` or per-document frontmatter: `vscode` (default), `cursor`, `zed`, `vscode-insiders`, `windsurf`, `sublime`, `textmate`, `idea`, a custom `{path}`/`{line}` URL template like `"myed://open?f={path}&l={line}"`, or `none` to disable. `href="…"` on a component overrides the URL entirely.
 
+In `mdxr serve`, clicking a local `<FileRef>` opens a modal preview: image files show the image, `.md`/`.markdown`/`.mdx` files have **Rendered** (MDXR) and **Raw** tabs, and other UTF-8 text files use syntax highlighting inferred from the filename. An explicit `href` takes priority. When you open generated HTML directly, `<FileRef>` keeps its configured editor link.
+
 ## Rendering pipelines
 
 The same source feeds three outputs:

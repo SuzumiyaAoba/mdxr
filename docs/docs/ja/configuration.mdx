@@ -33,6 +33,8 @@ export default defineConfig({
 
 frontmatter の `editor:` がドキュメントごとに上書きし、コンポーネントの `href="…"` は URL を完全に上書きします。
 
+`mdxr serve` ではローカルの `<FileRef>` がプレビューモーダルを開きます。明示した `href` は引き続き優先されます。`editor` の設定は、生成した HTML を直接開いたときのリンクと、その他のファイル参照に適用されます。
+
 ## プロジェクト定義コンポーネント
 
 `defineComponent` と [valibot](https://valibot.dev) スキーマでコンポーネントを定義します — スキーマはレンダリング時の props 検証**と** `mdxr catalog` でのドキュメント化の両方に使われます。ドキュメントの属性は常に文字列として渡されるため、スキーマはそれに応じて強制変換と検証を行います。

@@ -19,6 +19,10 @@ export interface MountSpec {
   doc: AnyComponent;
   /** `fileLink(rel, line)` results recorded during SSR (`rel\0line` → url). */
   fileLinks: Record<string, string>;
+  /** `filePreview(rel)` results recorded during SSR (`rel` → URL). */
+  filePreviews: Record<string, string>;
+  /** Whether SSR had a file preview resolver, even when it returned no URLs. */
+  filePreviewEnabled: boolean;
   /** PlanHeader props, present iff the document header was rendered. */
   headerProps?: Record<string, string | undefined>;
   /** SSR render timestamp (ISO) — replayed into `DocContext.now`. */
@@ -51,6 +55,14 @@ export const mountDocument = (spec: MountSpec): void => {
         value: {
           fileLink: (rel: string, line?: string) =>
             spec.fileLinks[`${rel}\0${line ?? ""}`],
+          ...(spec.filePreviewEnabled
+            ? {
+                filePreview: (rel: string) =>
+                  Object.hasOwn(spec.filePreviews, rel)
+                    ? spec.filePreviews[rel]
+                    : undefined,
+              }
+            : {}),
           now: spec.now === undefined ? undefined : new Date(spec.now),
         },
       },

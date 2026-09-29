@@ -9,6 +9,7 @@ import { createAgentSession } from "./agent-session.js";
 import type { AgentProvider } from "./agent-session.js";
 import { handleDocumentHistoryRequest } from "./document-history-http.js";
 import { createDocumentHistory } from "./document-history.js";
+import { createFilePreviews } from "./file-preview-http.js";
 import { formatError } from "./format-error.js";
 import { openInBrowser } from "./open.js";
 import type { RenderSourceOptions } from "./render.js";
@@ -20,6 +21,7 @@ const errorPage = (err: unknown): string =>
   `<!doctype html><meta charset="utf-8"><body style="font-family:monospace;background:#1c1917;color:#fca5a5;padding:2rem"><h1>mdxr render error</h1><pre>${formatError(err).replaceAll("&", "&amp;").replaceAll("<", "&lt;")}</pre></body>`;
 
 interface PreviewTarget {
+  filePreviews: ReturnType<typeof createFilePreviews>;
   /** Label shown in the startup log. */
   label: string;
   /** Re-render the document; errors are served as an error page. */
@@ -251,6 +253,10 @@ const servePreview = async (
   };
   target.agent?.setOnUpdate(notifyAgent);
   const server = http.createServer((req, res) => {
+    if (req.url?.split("?")[0] === "/__mdxr_file") {
+      void target.filePreviews.handle(req, res);
+      return;
+    }
     if (req.url === "/__mdxr_workspace.js") {
       if (target.history === undefined) {
         res.writeHead(404);
@@ -466,7 +472,7 @@ const trackDeps = (
 /** Options for {@link serve} and {@link serveSource}. */
 export interface ServeOptions extends Omit<
   RenderSourceOptions,
-  "liveReload" | "onDependencies"
+  "filePreview" | "liveReload" | "onDependencies"
 > {
   /** Open the preview URL in the default browser once the server is listening. */
   open?: boolean;
@@ -495,6 +501,7 @@ export const serve = async (
   }
   const abs = path.resolve(mdxPath);
   const history = createDocumentHistory(abs);
+  const filePreviews = createFilePreviews();
   const server = await servePreview(
     {
       agent:
@@ -502,12 +509,17 @@ export const serve = async (
           ? undefined
           : createAgentSession(abs, opts.agent, opts.session, opts.server),
       agentProvider: opts.agent,
+      filePreviews,
       history,
       historyFile: abs,
       label: mdxPath,
       ...trackDeps(
         async (onDeps) =>
-          await renderFile(abs, { liveReload: true, onDependencies: onDeps })
+          await renderFile(abs, {
+            filePreview: filePreviews.register,
+            liveReload: true,
+            onDependencies: onDeps,
+          })
       ),
       watchDir: path.dirname(abs),
       watchFile: abs,
@@ -534,16 +546,21 @@ export const serveSource = async (
     throw new Error("Agent chat requires an MDX file");
   }
   const dir = path.resolve(opts.dir ?? process.cwd());
+  const filePreviews = createFilePreviews();
   const server = await servePreview(
     {
+      filePreviews,
       label: opts.filePath ?? "stdin",
       ...trackDeps(
         async (onDeps) =>
           await render(source, {
             dir,
+            documentControls: opts.documentControls,
             filePath: opts.filePath,
+            filePreview: filePreviews.register,
             hydrate: opts.hydrate,
             initialTheme: opts.initialTheme,
+            inlineAssets: opts.inlineAssets,
             liveReload: true,
             onDependencies: onDeps,
           })

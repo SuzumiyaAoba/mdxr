@@ -57,6 +57,7 @@ const THEME_TOGGLE_HTML = `<button type="button" class="mdxr-theme" data-mdxr-th
 
 export interface DocumentOptions {
   annotations?: AnnotationDocument;
+  documentControls?: boolean;
   title: string;
   body: string;
   css: string;
@@ -78,23 +79,28 @@ export interface DocumentOptions {
   linkedDocuments?: Record<string, { html: string; path: string }>;
 }
 
-export const htmlDocument = (o: DocumentOptions): string => `<!doctype html>
+export const htmlDocument = (o: DocumentOptions): string => {
+  const annotations = o.documentControls === false ? undefined : o.annotations;
+  return `<!doctype html>
 <html lang="en"${
-  o.initialTheme === undefined
-    ? ""
-    : ` class="${o.initialTheme}" style="color-scheme: ${o.initialTheme}"`
-}>
+    o.initialTheme === undefined
+      ? ""
+      : ` class="${o.initialTheme}" style="color-scheme: ${o.initialTheme}"`
+  }>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="generator" content="mdxr">
 <title>${escapeHtml(o.title)}</title>
-<script>${inlineScript(THEME_JS)}</script>
+${o.documentControls === false ? "" : `<script>${inlineScript(THEME_JS)}</script>`}
 ${o.needsKatex === true ? `<link rel="stylesheet" href="${KATEX_CDN_URL}">` : ""}
-<style>${inlineStyle(o.css)}${o.annotations === undefined ? "" : ANNOTATION_HIGHLIGHT_CSS}</style>
+<style>${inlineStyle(o.css)}${annotations === undefined ? "" : ANNOTATION_HIGHLIGHT_CSS}</style>
 </head>
 <body class="bg-white text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100">
-${THEME_TOGGLE_HTML}
+${
+  o.documentControls === false
+    ? ""
+    : `${THEME_TOGGLE_HTML}
 <div class="mdxr-view-controls" role="group" aria-label="Document view" hidden>
 <button type="button" data-mdxr-view="document" aria-pressed="true">${iconSvg("file-text")}<span>Document</span></button>
 <button type="button" data-mdxr-view="pages" aria-pressed="false">${iconSvg("panel-left")}<span>Pages</span></button>
@@ -103,16 +109,21 @@ ${THEME_TOGGLE_HTML}
 <p class="mdxr-pages-title">${escapeHtml(o.title)}</p>
 <p data-section-review-summary role="status" hidden></p>
 <div data-mdxr-page-tabs role="tablist" aria-label="Sections" aria-orientation="vertical"></div>
-</aside>
+</aside>`
+}
 <div id="mdxr-content">
 <main id="mdxr-root" class="prose prose-neutral dark:prose-invert mx-auto max-w-3xl px-6 py-10">${o.body}</main>
-<nav class="mdxr-page-navigation" aria-label="Section navigation" hidden>
+${
+  o.documentControls === false
+    ? ""
+    : `<nav class="mdxr-page-navigation" aria-label="Section navigation" hidden>
 <button type="button" data-mdxr-page-previous>${iconSvg("chevron-left")}<span class="mdxr-page-navigation-labels"><span>Previous</span><span data-mdxr-page-previous-title hidden></span></span></button>
 <button type="button" data-mdxr-page-next><span class="mdxr-page-navigation-labels"><span>Next</span><span data-mdxr-page-next-title hidden></span></span>${iconSvg("chevron-right")}</button>
-</nav>
+</nav>`
+}
 </div>
-${o.annotations === undefined ? "" : `${annotationHtml(iconSvg)}<script type="application/json" id="mdxr-annotation-document">${JSON.stringify(o.annotations).replaceAll("<", "\\u003c")}</script>`}
-${o.annotations === undefined ? "" : sectionReviewHtml(iconSvg)}
+${annotations === undefined ? "" : `${annotationHtml(iconSvg)}<script type="application/json" id="mdxr-annotation-document">${JSON.stringify(annotations).replaceAll("<", "\\u003c")}</script>`}
+${annotations === undefined ? "" : sectionReviewHtml(iconSvg)}
 ${o.linkedDocuments === undefined || Object.keys(o.linkedDocuments).length === 0 ? "" : `<script type="application/json" id="mdxr-linked-documents">${JSON.stringify(o.linkedDocuments).replaceAll("<", "\\u003c")}</script>`}
 <script>${inlineScript(o.clientJs)}</script>
 ${o.needsMermaid ? `<script type="module">${inlineScript(MERMAID_JS)}</script>` : ""}
@@ -121,3 +132,4 @@ ${o.hydrateJs === undefined ? "" : `<script>${inlineScript(o.hydrateJs)}</script
 </body>
 </html>
 `;
+};

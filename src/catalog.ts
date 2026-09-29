@@ -254,7 +254,7 @@ export const CONVENTIONS = [
     syntax: '```lang title="file.ts"',
   },
   {
-    result: "FileRef chip (editor link when the file exists)",
+    result: "FileRef chip (local preview in serve; editor link in static HTML)",
     syntax: "`src/x.ts` inline code naming a real file",
   },
   {

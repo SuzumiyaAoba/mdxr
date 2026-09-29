@@ -25,6 +25,10 @@ export interface HydrateSpec {
   componentsPath?: string;
   /** `fileLink(rel, line)` results recorded during SSR (`rel\0line` → url). */
   fileLinks: Record<string, string>;
+  /** `filePreview(rel)` results recorded during SSR (`rel` → URL). */
+  filePreviews: Record<string, string>;
+  /** Whether SSR had a file preview resolver, even when it returned no URLs. */
+  filePreviewEnabled: boolean;
   /** PlanHeader props, present iff the document header was rendered. */
   header?: Record<string, string | undefined>;
   /** SSR render timestamp (ISO) — replayed into `DocContext.now`. */
@@ -99,6 +103,8 @@ ${mountDocument}({
   components: { ${entries.join(", ")} },
   doc: __mdxrDoc,
   fileLinks: ${JSON.stringify(spec.fileLinks)},
+  filePreviews: ${JSON.stringify(spec.filePreviews)},
+  filePreviewEnabled: ${JSON.stringify(spec.filePreviewEnabled)},
   headerProps: ${JSON.stringify(spec.header)},
   now: ${JSON.stringify(spec.now)},
   planHeader: ${planHeader},

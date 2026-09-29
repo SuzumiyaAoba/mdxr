@@ -10,7 +10,12 @@ import {
 } from "@shikijs/transformers";
 import type { Element, ElementContent, Root } from "hast";
 import { createHighlighter } from "shiki";
-import type { Highlighter, LanguageInput, ShikiTransformer } from "shiki";
+import type {
+  BundledLanguage,
+  Highlighter,
+  LanguageInput,
+  ShikiTransformer,
+} from "shiki";
 import { visit } from "unist-util-visit";
 
 import { isRecord, own } from "../guards.js";
@@ -214,23 +219,30 @@ const readyHighlighter = async (
 const plainSyntaxLines = (source: string): SyntaxLines =>
   source.split("\n").map((text) => [{ style: {}, text }]);
 
-/** Tokenize a complete MDX document for the workspace source and diff views. */
-export const highlightMdxSource = async (
-  source: string
+const isBundledLanguage = (
+  highlighter: Highlighter,
+  lang: string
+): lang is BundledLanguage =>
+  Object.hasOwn(highlighter.getBundledLanguages(), lang);
+
+/** Tokenize source without interpreting Shiki's code-fence annotations. */
+export const highlightSource = async (
+  source: string,
+  lang: string
 ): Promise<SyntaxLines> => {
   const normalizedSource = source.replaceAll("\r\n", "\n");
   if (normalizedSource.includes("\r")) {
     return plainSyntaxLines(normalizedSource);
   }
-  const highlighter = await readyHighlighter("mdx");
-  if (highlighter === undefined) {
+  const highlighter = await readyHighlighter(lang);
+  if (highlighter === undefined || !isBundledLanguage(highlighter, lang)) {
     return plainSyntaxLines(normalizedSource);
   }
 
   try {
     const result = highlighter.codeToTokens(normalizedSource, {
       defaultColor: false,
-      lang: "mdx",
+      lang,
       themes: THEMES,
     });
     const syntax = parseSyntaxLines(
@@ -246,6 +258,11 @@ export const highlightMdxSource = async (
     return plainSyntaxLines(normalizedSource);
   }
 };
+
+/** Tokenize a complete MDX document for the workspace source and diff views. */
+export const highlightMdxSource = async (
+  source: string
+): Promise<SyntaxLines> => await highlightSource(source, "mdx");
 
 /**
  * Highlight `text` as `lang`, returning the inner HTML of shiki's `<code>`

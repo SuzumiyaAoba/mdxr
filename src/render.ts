@@ -78,6 +78,12 @@ const ownSources = async (): Promise<CssSource[]> => {
 };
 
 export interface RenderOptions {
+  /** Hide document-level controls when embedding a read-only preview. */
+  documentControls?: boolean;
+  /** @internal */
+  filePreview?: (absolutePath: string) => string | undefined;
+  /** Inline relative image assets in Markdown preview documents. */
+  inlineAssets?: boolean;
   liveReload?: boolean;
   /**
    * Initial effective theme for previews with scripts disabled. In normal
@@ -120,7 +126,9 @@ export interface RenderSourceOptions extends RenderOptions {
 const buildHydrateBundle = async (args: {
   code: string;
   config: ResolvedConfig;
+  filePreviewEnabled: boolean;
   fileLinks: Record<string, string>;
+  filePreviews: Record<string, string>;
   headerProps?: Record<string, string | undefined>;
   hydrate?: boolean;
   now: string;
@@ -138,6 +146,8 @@ const buildHydrateBundle = async (args: {
           ? undefined
           : resolveModuleEntry(args.config.componentsPath),
       fileLinks: args.fileLinks,
+      filePreviewEnabled: args.filePreviewEnabled,
+      filePreviews: args.filePreviews,
       header: args.headerProps,
       now: args.now,
       usedComponents: args.usedComponents,
@@ -229,6 +239,7 @@ const renderDocument = async (
     code,
     dependencies: includeDependencies,
     fileLinks,
+    filePreviews,
     frontmatter,
     linkedDocuments,
     renderedAt,
@@ -237,6 +248,7 @@ const renderDocument = async (
     usedIcons,
   } = await mdxToHtml(source, components, filePath, {
     editor: config.editor,
+    filePreview: opts.filePreview,
     hydrate: opts.hydrate,
     include,
   });
@@ -275,11 +287,13 @@ const renderDocument = async (
   // every id/name/htmlFor hydration compares.
   let docBody = body;
   let docFileLinks = fileLinks;
+  let docFilePreviews = filePreviews;
   let docIcons = usedIcons;
   if (headerProps !== undefined) {
     const pass = renderWithHeader(createElement(PlanHeader, headerProps));
     docBody = pass.html;
     docFileLinks = pass.fileLinks;
+    docFilePreviews = pass.filePreviews;
     docIcons = pass.usedIcons;
   }
 
@@ -316,6 +330,8 @@ const renderDocument = async (
       code,
       config,
       fileLinks: docFileLinks,
+      filePreviewEnabled: opts.filePreview !== undefined,
+      filePreviews: docFilePreviews,
       headerProps,
       hydrate: opts.hydrate,
       now: renderedAt,
@@ -374,6 +390,7 @@ const renderDocument = async (
     body: docBody,
     clientJs: js,
     css,
+    documentControls: opts.documentControls,
     hydrateJs,
     initialTheme: opts.initialTheme,
     linkedDocuments: documents,
@@ -388,7 +405,8 @@ const renderDocument = async (
 export const render = async (
   source: string,
   opts: RenderSourceOptions = {}
-): Promise<string> => await renderDocument(source, opts);
+): Promise<string> =>
+  await renderDocument(source, opts, { inlineAssets: opts.inlineAssets });
 
 /** Read `mdxPath` and render it to a standalone HTML document. */
 export const renderFile = async (

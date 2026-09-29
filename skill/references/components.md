@@ -6,7 +6,7 @@ This file is an index: each group lists what its components do and links to a de
 
 **Most specific component wins.** Prefer the dedicated semantic component over a generic substitute: a status/task list is `<Steps>` (not `Card`s or a bullet list), an API route table is `<Endpoints>` (not `Table`), a comparison is `<Matrix>` or `<Before>`/`<After>`, a file inventory is `<Files>`, test results are `<Tests>`. The generic building blocks — `Row`, `Stack`, `Grid`, `Columns`, and the whole `shadcn/ui`/`Wireframe*` sets — are for layouts and app-like fragments _without_ a dedicated component. A generic stand-in silently drops the semantic extras: status badges, auto counts, `+N −M` stats, severity pills, editor file links.
 
-**File links.** Components carrying `path` (`FileRef`, `SymbolRef`, `File`, `TraceFrame`, `FlowStep`, `Change`) and fenced-code filename headers become editor links — `vscode://file/…` by default — when the file exists on disk (paths resolve relative to the document). Frontmatter `editor:` or `editor` in `mdxr.config.ts` picks another editor: `cursor`, `zed`, `vscode-insiders`, `windsurf`, `sublime`, `textmate`, `idea`, a custom `{path}`/`{line}` URL template, or `none` to disable. `href="…"` on a component overrides the URL entirely. Inline code works too: `` `src/mdx.ts` `` (optional `:40-52` lines suffix) auto-converts to `<FileRef>` when it resolves to a real file — a bare `mdx.ts` without a `/` stays plain code.
+**File links.** Components carrying `path` (`FileRef`, `SymbolRef`, `File`, `TraceFrame`, `FlowStep`, `Change`) and fenced-code filename headers become editor links — `vscode://file/…` by default — when the file exists on disk (paths resolve relative to the document). In `mdxr serve`, clicking a local `<FileRef>` opens a modal preview: images display as images, `.md`/`.markdown`/`.mdx` files have **Rendered** (MDXR) and **Raw** tabs, and other UTF-8 text files use syntax highlighting inferred from the filename. An explicit `href="…"` takes priority. Opening generated HTML directly keeps the configured editor link. Frontmatter `editor:` or `editor` in `mdxr.config.ts` picks another editor: `cursor`, `zed`, `vscode-insiders`, `windsurf`, `sublime`, `textmate`, `idea`, a custom `{path}`/`{line}` URL template, or `none` to disable. Inline code works too: `` `src/mdx.ts` `` (optional `:40-52` lines suffix) auto-converts to `<FileRef>` when it resolves to a real file — a bare `mdx.ts` without a `/` stays plain code.
 
 ## Document scaffolding — details: [components/document.md](components/document.md)
 
@@ -58,7 +58,7 @@ This file is an index: each group lists what its components do and links to a de
 | `<Changes>` / `<Change>` | Change-set list (add/modify/delete/rename) |
 | `<Flow>` / `<FlowStep>` | Numbered call/execution chain — `:::flow` |
 | `<Tree>` | File tree from a nested list — collapsible folders, `…` placeholders, bold highlights, automatic icons |
-| `<FileRef>` | Inline file-reference chip with copy button |
+| `<FileRef>` | Inline file-reference chip with copy button; local preview in `mdxr serve` |
 | `<SymbolRef>` | Inline symbol chip (fn/type/class/…) |
 | `<CodeFile>` | Embeds a real file from disk as a code block |
 | `<Props>` / `<Prop>` | API/props table for a component or function |
@@ -184,7 +184,7 @@ Markdown shorthands and what they render as — the reverse lookup of the index 
 | `:::barchart` / `:::linechart` / `:::piechart` / `:::scatter` / `:::radar` / `:::funnel` / `:::quadrant` / `:::bridge` / `:::treemap` / `:::sankey` / `:::venn` | static chart panels — see [components/charts.md](components/charts.md) |
 | frontmatter `status:` / `date:` / `owner:` | document header badge + meta row |
 | `path`-carrying components (`<FileRef>`, `<File>`, `<TraceFrame>`, `<FlowStep>`, `<Change>`, `<SymbolRef path>`) + `title="…"` code headers | `vscode://file/…` editor links when the file exists; frontmatter `editor:` picks the scheme (`cursor`, `zed`, `none`, …) |
-| `` `src/x.ts` `` inline code naming a real file (optional `:L`/`:L-M`) | `<FileRef>` chip — icon, copy button, editor link (a bare `x.ts` stays plain code) |
+| `` `src/x.ts` `` inline code naming a real file (optional `:L`/`:L-M`) | `<FileRef>` chip — icon, copy button, local preview in `mdxr serve`, editor link in generated HTML (a bare `x.ts` stays plain code) |
 | ` ```mermaid ` fenced block | rendered diagram |
 | ` ```diff ` / ` ```patch ` fenced block | structured per-file diff cards |
 | `:::comments` + fence + `<Comment lines>` | line-anchored comment threads on code/diff |

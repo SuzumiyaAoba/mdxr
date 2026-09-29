@@ -7,6 +7,8 @@ export interface DocContextValue {
    * the file does not exist on disk.
    */
   fileLink?: (relPath: string, line?: string) => string | undefined;
+  /** Resolve a document-relative local file to its preview URL. */
+  filePreview?: (relPath: string) => string | undefined;
   /**
    * The document's render timestamp. Relative-time components (`<Due>`) must
    * read "now" from here: the value is serialized into the hydration payload,

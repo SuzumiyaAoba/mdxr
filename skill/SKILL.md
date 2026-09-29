@@ -64,6 +64,6 @@ For example, when using `npx`, pin the update command to the **reported CLI vers
 | `:::phase{title="…" status="doing"}` | `<Phase>` heading with status badge |
 | ` ```ts title="src/x.ts" ` | highlighted code block + filename bar |
 | ` ```diff ` / ` ```mermaid ` / ` ```console ` | diff cards / diagram / terminal transcript |
-| `` `src/x.ts` `` naming a real file | `<FileRef>` chip with editor link |
+| `` `src/x.ts` `` naming a real file | `<FileRef>` chip — local preview in `mdxr serve`, editor link in generated HTML |
 | `- [ ]` / `- [x]` | styled task list |
 | frontmatter `status:` / `date:` / `owner:` | document header badge + meta row |

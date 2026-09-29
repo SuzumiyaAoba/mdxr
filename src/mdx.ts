@@ -56,6 +56,8 @@ export interface MdxResult {
    * (no `existsSync` in the browser).
    */
   fileLinks: Record<string, string>;
+  /** Every `filePreview(rel)` result recorded during SSR (`rel` → URL). */
+  filePreviews: Record<string, string>;
   /**
    * Iconify names (`prefix:name`) resolved while rendering — the hydration
    * bundle registers exactly this subset instead of the full icon sets.
@@ -92,6 +94,7 @@ export interface MdxResult {
    */
   renderWithHeader: (header: ReactElement) => {
     fileLinks: Record<string, string>;
+    filePreviews: Record<string, string>;
     html: string;
     usedIcons: string[];
   };
@@ -131,11 +134,33 @@ const extractUsedComponents = (
   return [...used];
 };
 
+const createFilePreview = (
+  dir: string,
+  resolver: ((absolutePath: string) => string | undefined) | undefined,
+  filePreviews: Map<string, string>
+): ((relPath: string) => string | undefined) | undefined => {
+  if (resolver === undefined) {
+    return undefined;
+  }
+  return (relPath) => {
+    const url = resolver(path.resolve(dir, relPath));
+    if (url !== undefined) {
+      filePreviews.set(relPath, url);
+    }
+    return url;
+  };
+};
+
 export const mdxToHtml = async (
   source: string,
   components: ComponentMap,
   filePath = "document.mdx",
-  opts: { editor?: string; hydrate?: boolean; include?: IncludeOptions } = {}
+  opts: {
+    editor?: string;
+    filePreview?: (absolutePath: string) => string | undefined;
+    hydrate?: boolean;
+    include?: IncludeOptions;
+  } = {}
 ): Promise<MdxResult> => {
   const file = new VFile({ path: filePath, value: source });
   matter(file);
@@ -153,6 +178,7 @@ export const mdxToHtml = async (
   // Calls are recorded so the hydration bundle can replay identical results —
   // the client has no filesystem, so a missing map entry means "no link".
   const fileLinks = new Map<string, string>();
+  const filePreviews = new Map<string, string>();
   const fileLink = (rel: string, line?: string): string | undefined => {
     const abs = path.resolve(dir, rel);
     const url = existsSync(abs) ? editorUrl(editor, abs, line) : undefined;
@@ -163,6 +189,7 @@ export const mdxToHtml = async (
     }
     return url;
   };
+  const filePreview = createFilePreview(dir, opts.filePreview, filePreviews);
 
   // Compile once: the emitted module is imported for SSR *and* inlined into
   // the hydration bundle, so both sides run byte-identical document code.
@@ -213,7 +240,11 @@ export const mdxToHtml = async (
 
   takeUsedIcons();
   const renderedAt = new Date();
-  const context: DocContextValue = { fileLink, now: renderedAt };
+  const context: DocContextValue = {
+    fileLink,
+    filePreview,
+    now: renderedAt,
+  };
   // hydrateRoot reconciles against markup produced by renderToString — its
   // `<!-- -->` text-boundary comments keep adjacent text expressions from
   // merging in the DOM. renderToStaticMarkup omits them, so only purely
@@ -250,6 +281,7 @@ export const mdxToHtml = async (
     context,
     dependencies: [...new Set(includeDependencies)],
     fileLinks: Object.fromEntries(fileLinks),
+    filePreviews: Object.fromEntries(filePreviews),
     frontmatter,
     hydrated,
     linkedDocuments,
@@ -258,6 +290,7 @@ export const mdxToHtml = async (
         const html = renderDocument(header);
         return {
           fileLinks: Object.fromEntries(fileLinks),
+          filePreviews: Object.fromEntries(filePreviews),
           html,
           usedIcons: takeUsedIcons(),
         };

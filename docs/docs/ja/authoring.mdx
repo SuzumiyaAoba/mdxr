@@ -78,6 +78,8 @@ editor: cursor       # エディタリンクのスキーム。mdxr.config.ts を
 
 スキームは `mdxr.config.ts` の `editor` かドキュメントの frontmatter で選びます: `vscode`（デフォルト）、`cursor`、`zed`、`vscode-insiders`、`windsurf`、`sublime`、`textmate`、`idea`、`"myed://open?f={path}&l={line}"` のような `{path}`/`{line}` カスタムテンプレート、または無効化する `none`。コンポーネントの `href="…"` は URL を完全に上書きします。
 
+`mdxr serve` でローカルの `<FileRef>` をクリックすると、モーダルで内容を表示します。画像は画像として、`.md` / `.markdown` / `.mdx` は MDXR による **Rendered** 表示と **Raw** 表示をタブで切り替えられます。その他の UTF-8 テキストファイルはファイル名から言語を推定してシンタックスハイライトします。明示した `href` が優先されます。生成した HTML を直接開いた場合、`<FileRef>` は設定済みのエディタリンクを維持します。
+
 ## レンダリングパイプライン
 
 同じソースから 3 つの出力が得られます:

@@ -12,7 +12,7 @@ export interface LinkedAssetsOptions {
   enabled?: boolean;
 }
 
-const IMAGE_MIME_TYPES: Readonly<Record<string, string>> = {
+export const IMAGE_MIME_TYPES: Readonly<Record<string, string>> = {
   ".apng": "image/apng",
   ".avif": "image/avif",
   ".bmp": "image/bmp",

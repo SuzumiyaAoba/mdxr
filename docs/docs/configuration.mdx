@@ -33,6 +33,8 @@ export default defineConfig({
 
 Frontmatter `editor:` overrides it per document, and `href="…"` on a component overrides the URL entirely.
 
+In `mdxr serve`, a local `<FileRef>` opens a preview modal; an explicit `href` still takes priority. The `editor` setting controls the link in generated HTML opened directly, as well as other path references.
+
 ## Project-defined components
 
 Define components with `defineComponent` and a [valibot](https://valibot.dev) schema — the schema validates props at render time **and** documents the component in `mdxr catalog`. Document attributes always arrive as strings, so schemas coerce and validate accordingly.

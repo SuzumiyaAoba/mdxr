@@ -510,6 +510,7 @@ export const serve = async (
         async (onDeps) =>
           await renderFile(abs, {
             filePreview: filePreviews.register,
+            inlineAssets: true,
             liveReload: true,
             onDependencies: onDeps,
           })
@@ -553,7 +554,7 @@ export const serveSource = async (
             filePreview: filePreviews.register,
             hydrate: opts.hydrate,
             initialTheme: opts.initialTheme,
-            inlineAssets: opts.inlineAssets,
+            inlineAssets: opts.inlineAssets ?? true,
             liveReload: true,
             onDependencies: onDeps,
           })

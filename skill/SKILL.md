@@ -5,7 +5,7 @@ description: Write rich plan/report documents as MDX using the mdxr component ca
 
 # mdxr — agent-authored documents rendered to HTML
 
-MDXR version: 0.14.0
+MDXR version: 0.15.0
 
 Write documents as **Markdown + a small set of JSX components** (MDX). Do NOT write raw HTML: `mdxr render` compiles the document deterministically, so markup, styling and scripts are never emitted by the model.
 

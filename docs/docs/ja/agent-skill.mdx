@@ -52,7 +52,7 @@ npx skills add Suzumiyaaoba/mdxr --skill mdxr
 
 > auth 機能の実装計画を書いて、mdxr で HTML にレンダリングして。
 
-指定がない場合、新しいドキュメントは `.mdxr/yyyyMMddhhmmss-<name>/index.mdx` に保存します。`yyyyMMddhhmmss` は作成時のローカル日時を表す14桁のゼロ埋め形式（24時間制）です（例: `.mdxr/20260929140530-auth-plan/index.mdx`）。画像や関連する MDX ファイルは文書ごとのディレクトリにまとめます。ユーザーがファイルパスを指定した場合はそれを優先し、既存の文書は現在のパスを維持します。ディレクトリだけが指定された場合は、その配下に日時付きディレクトリを作成し、`index.mdx` として保存します。`mdxr serve .mdxr/20260929140530-auth-plan/index.mdx` でプレビューできます。
+指定がない場合、新しいドキュメントは `.mdxr/yyyyMMddhhmmss-<name>/index.mdx` に保存します。`yyyyMMddhhmmss` は作成時のローカル日時を表す14桁のゼロ埋め形式（24時間制）です（例: `.mdxr/20260929140530-auth-plan/index.mdx`）。画像や関連する MDX ファイルは文書ごとのディレクトリにまとめます。ユーザーがファイルパスを指定した場合はそれを優先し、既存の文書は現在のパスを維持します。ディレクトリだけが指定された場合は、その配下に日時付きディレクトリを作成し、`index.mdx` として保存します。`mdxr serve .mdxr/ --agent codex --open .mdxr/20260929140530-auth-plan/index.mdx` で `.mdxr/` 全体を配信し、作成した文書を直接開きます。Claude では `--agent claude` を使います。
 
 計画書だけでなく、レポート、レビュー、調査サマリー、リリースノート、ポストモーテムにも使えます。
 

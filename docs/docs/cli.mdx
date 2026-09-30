@@ -31,7 +31,7 @@ Search covers each document's title, body, and relative file path. Space-separat
 
 Filter by status and sort results by relevance, update date, or title. Results show a nearby text excerpt with matching terms highlighted. Use **Refresh** to re-index additions, edits, and deletions. Choose the interface language manually or let the browser language select Japanese or English. The selected language and System, Light, or Dark theme are saved for this library's browser origin.
 
-Opening a result launches the existing live preview workspace, including its document workspace and version history, in a new tab. `mdxr library` and its previews listen on loopback. Indexing reads document text and frontmatter without executing document JavaScript or project-defined components. It skips `node_modules`, `dist`, `.git`, `.mdxr-cache`, `storybook-static`, and `.mdxr/history`, and does not follow symbolic links. The existing `mdxr serve <file>` command continues to preview a single document.
+Opening a result launches the existing live preview workspace, including its document workspace and version history, in a new tab. `mdxr library` and its previews listen on loopback. Indexing reads document text and frontmatter without executing document JavaScript or project-defined components. It skips `node_modules`, `dist`, `.git`, `.mdxr-cache`, `storybook-static`, and `.mdxr/history`, and does not follow symbolic links. `mdxr serve` uses the same library with optional agent chat and a document path to open directly.
 
 Delete a document from its row to permanently remove only that document file; assets and parent directories remain. Confirm deletion in the UI before the file is removed.
 
@@ -70,39 +70,43 @@ The rendered HTML includes [review annotations](/annotations): select text or a 
 
 ## mdxr serve
 
-Preview a document in the browser with live reload. Also accepts stdin, like `render`.
+Serve the `.mdxr/` directory and browse all its Markdown and MDX documents. With no path argument, an empty `.mdxr/` is created if needed. Pass another directory to serve it instead. Each document opens in a workspace with live reload.
 
 ```sh
-mdxr serve plan.mdx                   # http://localhost:3737
-mdxr serve plan.mdx -p 8080 --open
-cat plan.mdx | mdxr serve --open
+mdxr serve                           # .mdxr/ at http://localhost:3737
+mdxr serve .mdxr/ --open .mdxr/20260930170000-plan/index.mdx
+mdxr serve ./reports -p 8080 --open ./reports/plan.mdx
+mdxr serve --open                    # open the directory listing
+cat plan.mdx | mdxr serve - --open   # explicit stdin preview
 ```
 
 | Flag | Description |
 | --- | --- |
 | `-p, --port <port>` | Preferred port (default `3737`); if taken, the next free port is used |
-| `--open` | Open the preview in the default browser once serving |
+| `--open [file]` | Open the named document directly, or the directory listing when no file is given |
 | `--agent <agent>` | Show a local chat panel for `codex` or `claude` |
 | `--server <url>` | Codex App Server endpoint; accepts `unix:///absolute/path` or `ws://...` (requires `--agent codex`) |
 | `--session <id>` | Send messages to an existing Codex thread (requires `--agent codex`) |
 
-The watcher follows the document's render dependencies — a `theme` CSS file and its imports reload the preview too. With `--agent`, the workspace includes an AI Elements chat panel. Use **Annotate** to add comments to rendered content, then send them directly to the same chat.
+The file given to `--open` is resolved from the working directory; absolute paths also work. The browser opens that document directly, and its preview URL includes the file path relative to the served directory. A file argument such as `mdxr serve .mdxr/20260930170000-plan/index.mdx --open` serves the entire containing `.mdxr/` library and selects that file. Files outside `.mdxr/` use their parent directory as the library.
+
+The watcher follows each opened document's render dependencies — a `theme` CSS file and its imports reload the preview too. With `--agent`, every document workspace includes an AI Elements chat panel. Use **Annotate** to add comments to rendered content, then send them directly to the same chat. Documents are rendered and agent sessions are opened when you select them from the library.
 
 The watcher records local MDX versions as files change. Use the version picker to render an earlier version, inspect its **Raw MDX**, or compare it with another version in **Diff**. History is stored under `.mdxr/history/`; capturing and viewing history is local and needs no API token.
 
 Choose **Export HTML** in the workspace to download one standalone review archive with the rendered document, conversation, comments, section review statuses, every saved MDX version, and their diffs. Images and stylesheets are embedded in the snapshot. Export reports an error if it cannot capture an external resource; the archive opens locally without the server.
 
-Pass a file path to use chat with an agent. To message a Codex TUI session that is already running, pass its thread ID. By default, mdxr connects to the local Codex daemon socket and queues each message on that thread, leaving the TUI session running:
+Pass `--agent` to enable chat in the directory's document workspaces. To message a Codex TUI session that is already running, pass its thread ID. By default, mdxr connects to the local Codex daemon socket and queues each message on that thread, leaving the TUI session running:
 
 ```sh
-mdxr serve plan.mdx --agent codex --session <thread-id>
+mdxr serve .mdxr/ --agent codex --session <thread-id> --open .mdxr/20260930170000-plan/index.mdx
 ```
 
 Messages appear as queued while Codex is busy. Once Codex processes a message, its reply appears in the MDX preview. To use a specific daemon socket or WebSocket App Server, pass its endpoint with `--server`:
 
 ```sh
-mdxr serve plan.mdx --agent codex --server unix:///absolute/path/to/app-server.sock --session <thread-id>
-mdxr serve plan.mdx --agent codex --server ws://127.0.0.1:4500 --session <thread-id>
+mdxr serve .mdxr/ --agent codex --server unix:///absolute/path/to/app-server.sock --session <thread-id>
+mdxr serve .mdxr/ --agent codex --server ws://127.0.0.1:4500 --session <thread-id>
 ```
 
 When `--session` is omitted, mdxr uses this document's saved Codex thread ID in `.mdxr/sessions.json`, if one exists. Otherwise, it starts a new thread.
@@ -110,14 +114,14 @@ When `--session` is omitted, mdxr uses this document's saved Codex thread ID in 
 Claude chat uses a long-lived Claude Agent SDK session managed by mdxr:
 
 ```sh
-mdxr serve plan.mdx --agent claude
+mdxr serve .mdxr/ --agent claude --open .mdxr/20260930170000-plan/index.mdx
 ```
 
 The Claude session is owned by mdxr and does not attach to a session started by an external Claude CLI process. `--session` applies only to Codex.
 
 The preview has no tool-approval UI, so actions that require approval are rejected. Claude runs with the `dontAsk` permission mode.
 
-The document-to-session mapping and conversation history are stored in the working directory's gitignored `.mdxr/sessions.json`. `--agent` requires a file input and does not support stdin. Agent replies are displayed as Markdown; JSX and raw HTML in replies are not executed.
+The document-to-session mapping and conversation history are stored in the working directory's gitignored `.mdxr/sessions.json`. `--agent` works with directory and file paths and does not support stdin. Agent replies are displayed as Markdown; JSX and raw HTML in replies are not executed.
 
 ## mdxr text
 

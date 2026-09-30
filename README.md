@@ -8,7 +8,7 @@ Run directly with `npx` — no install required:
 
 ```sh
 npx @suzumiyaaoba/mdxr render plan.mdx     # writes plan.html
-npx @suzumiyaaoba/mdxr serve plan.mdx      # live preview at http://localhost:3737
+npx @suzumiyaaoba/mdxr serve               # serve .mdxr at http://localhost:3737
 npx @suzumiyaaoba/mdxr library             # browse and search .mdxr
 npx @suzumiyaaoba/mdxr catalog             # list available components
 npx @suzumiyaaoba/mdxr --version           # print the package version
@@ -33,7 +33,7 @@ mdxr library                         # browse .mdxr
 mdxr library ./docs -p 3738 --open   # browse another directory
 ```
 
-Search terms separated by spaces (including full-width spaces) use AND matching. Japanese text supports partial matches. Unicode NFKC normalization handles full-/half-width forms, including half-width kana with voiced marks; lowercasing makes letter case equivalent, and hiragana and katakana are treated as equivalent. For example, search for `かたろぐ ＡＰＩ`. The library indexes `.md`, `.markdown`, and `.mdx` files without running document JavaScript or custom components. Both the library and previews listen on loopback; generated and dependency directories such as `node_modules`, `dist`, `.git`, `.mdxr-cache`, `storybook-static`, and `.mdxr/history` are excluded, and symbolic links are not followed. Use the UI's refresh action to include added, changed, or deleted files. Existing `mdxr serve <file>` continues to preview one document.
+Search terms separated by spaces (including full-width spaces) use AND matching. Japanese text supports partial matches. Unicode NFKC normalization handles full-/half-width forms, including half-width kana with voiced marks; lowercasing makes letter case equivalent, and hiragana and katakana are treated as equivalent. For example, search for `かたろぐ ＡＰＩ`. The library indexes `.md`, `.markdown`, and `.mdx` files without running document JavaScript or custom components. Both the library and previews listen on loopback; generated and dependency directories such as `node_modules`, `dist`, `.git`, `.mdxr-cache`, `storybook-static`, and `.mdxr/history` are excluded, and symbolic links are not followed. Use the UI's refresh action to include added, changed, or deleted files.
 
 ### `mdxr render [file]`
 
@@ -48,9 +48,19 @@ mdxr render plan.mdx --no-hydrate    # static HTML, no client bundle
 mdxr render plan.mdx --format json   # machine-readable errors
 ```
 
-### `mdxr serve [file]`
+### `mdxr serve [path]`
 
-Preview a document in the browser with live reload (`-p, --port`, default `3737`; if taken, the next free port is used; `--open` to launch the browser once serving).
+Serve all Markdown and MDX documents under `.mdxr/` by default, creating an empty directory when needed. The browser listing lets you search and open each document in its live workspace. Pass another directory to serve it instead (`-p, --port`, default `3737`; if taken, the next free port is used).
+
+```sh
+mdxr serve                                                        # serve .mdxr/
+mdxr serve .mdxr/ --agent codex --open .mdxr/20260930170000-plan/index.mdx
+mdxr serve ./reports --open ./reports/plan.mdx                     # open this document directly
+mdxr serve --open                                                 # open the directory listing
+cat plan.mdx | mdxr serve - --open                                 # explicit stdin preview
+```
+
+`--open <file>` takes a document path relative to the working directory, or an absolute path. It opens that document directly, with its relative file path in the preview URL. `--agent codex` or `--agent claude` enables chat in every document workspace. A file argument such as `mdxr serve .mdxr/20260930170000-plan/index.mdx --open` serves the containing `.mdxr/` library and opens that file; outside `.mdxr/`, it serves the file's parent directory.
 
 ### Review the rendered document
 
@@ -124,7 +134,7 @@ Once the instructions or skill are installed, ask your agent, for example:
 
 > Write an implementation plan for the auth feature and render it to HTML with mdxr.
 
-Plans, reports, reviews, investigation summaries, release notes, and postmortems all work. By default, new documents use `.mdxr/yyyyMMddhhmmss-<name>/index.mdx`, with a zero-padded 14-digit local creation time in 24-hour format (for example, `.mdxr/20260929140530-auth-plan/index.mdx`). Keep images and related MDX files in the document's directory. A file path you provide takes priority, and existing documents keep their current paths. If you specify only a directory, create a timestamped subdirectory there and save the document as `index.mdx`. Preview it with `mdxr serve .mdxr/20260929140530-auth-plan/index.mdx`.
+Plans, reports, reviews, investigation summaries, release notes, and postmortems all work. By default, new documents use `.mdxr/yyyyMMddhhmmss-<name>/index.mdx`, with a zero-padded 14-digit local creation time in 24-hour format (for example, `.mdxr/20260929140530-auth-plan/index.mdx`). Keep images and related MDX files in the document's directory. A file path you provide takes priority, and existing documents keep their current paths. If you specify only a directory, create a timestamped subdirectory there and save the document as `index.mdx`. Serve the directory and open the new document directly with `mdxr serve .mdxr/ --open .mdxr/20260929140530-auth-plan/index.mdx`.
 
 ## License
 

@@ -1,11 +1,22 @@
 import http from "node:http";
+import path from "node:path";
 
+import { validateAgentOptions } from "./agent-options.js";
 import { formatError } from "./format-error.js";
 import { createLibraryIndex } from "./library-index.js";
 import { libraryHtml, libraryJs } from "./library-page.js";
 import type { LibrarySort } from "./library-types.js";
 import { openInBrowser } from "./open.js";
 import { listenOnFreePort, serve } from "./serve.js";
+import type { ServeOptions } from "./serve.js";
+
+export interface LibraryOptions extends Pick<
+  ServeOptions,
+  "agent" | "session" | "server"
+> {
+  /** Open the listing, or a document file path resolved from the working directory. */
+  open?: boolean | string;
+}
 
 const SEARCH_PATH = "/__mdxr_library/search";
 const OPEN_PREFIX = "/__mdxr_library/open/";
@@ -32,7 +43,9 @@ const stopPreview = (server: http.Server): void => {
 };
 
 /** Reuse each document's existing live workspace until the library closes. */
-const createPreviews = () => {
+const createPreviews = (
+  opts: Pick<LibraryOptions, "agent" | "session" | "server">
+) => {
   const previews = new Map<string, PreviewEntry>();
   const generations = new Map<string, number>();
   let closed = false;
@@ -63,7 +76,7 @@ const createPreviews = () => {
       if (entry === undefined) {
         entry = {
           generation: generations.get(file) ?? 0,
-          pending: serve(file, 0),
+          pending: serve(file, 0, opts),
         };
         previews.set(file, entry);
       }
@@ -136,6 +149,24 @@ const parseSort = (value: string | null): LibrarySort | undefined => {
 type LibraryIndex = Awaited<ReturnType<typeof createLibraryIndex>>;
 type Previews = ReturnType<typeof createPreviews>;
 
+const initialPreviewPath = async (
+  dir: string,
+  file: string | undefined,
+  index: LibraryIndex
+): Promise<string> => {
+  if (file === undefined) {
+    return "/";
+  }
+  const id = path
+    .relative(path.resolve(dir), path.resolve(file))
+    .split(path.sep)
+    .join("/");
+  if ((await index.resolve(id)) === undefined) {
+    throw new Error(`Cannot open document in this library: ${file}`);
+  }
+  return `${OPEN_PREFIX}${encodeURIComponent(id)}`;
+};
+
 const isDeleteDocumentPath = (pathname: string): boolean =>
   pathname === DELETE_BASE || pathname.startsWith(DELETE_PREFIX);
 
@@ -163,7 +194,11 @@ const openDocument = async (
     return;
   }
   const url = await previews.open(file);
-  response.writeHead(303, { "cache-control": "no-store", location: url });
+  const documentPath = id.split("/").map(encodeURIComponent).join("/");
+  response.writeHead(303, {
+    "cache-control": "no-store",
+    location: `${url}/${documentPath}`,
+  });
   response.end();
 };
 
@@ -285,13 +320,23 @@ const handleLibraryRequest = async (
 export const serveLibrary = async (
   dir: string,
   port: number,
-  opts: { open?: boolean } = {}
+  opts: LibraryOptions = {}
 ): Promise<http.Server> => {
+  validateAgentOptions(opts.agent, opts.session, opts.server);
   const [index, html] = await Promise.all([
     createLibraryIndex(dir),
     libraryHtml(),
   ]);
-  const previews = createPreviews();
+  const initialPath = await initialPreviewPath(
+    dir,
+    typeof opts.open === "string" ? opts.open : undefined,
+    index
+  );
+  const previews = createPreviews({
+    agent: opts.agent,
+    server: opts.server,
+    session: opts.session,
+  });
   const server = http.createServer((request, response) => {
     void (async () => {
       try {
@@ -313,8 +358,8 @@ export const serveLibrary = async (
   }
   const url = serverUrl(server);
   console.log(`mdxr: library ${dir} at ${url}`);
-  if (opts.open === true) {
-    await openInBrowser(url);
+  if (opts.open === true || typeof opts.open === "string") {
+    await openInBrowser(`${url}${initialPath}`);
   }
   return server;
 };

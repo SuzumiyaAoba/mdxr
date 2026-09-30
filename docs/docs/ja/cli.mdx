@@ -31,7 +31,7 @@ mdxr library ./docs -p 3738 --open   # 別のディレクトリを表示
 
 status で絞り込み、関連度・更新日・タイトル順に並べ替えられます。結果には一致箇所の近くの抜粋を表示し、一致した語をハイライトします。**更新** を選ぶと追加・変更・削除を再索引します。UI 言語はブラウザーの言語から自動選択するか手動で切り替えられます。選択した UI 言語と自動・ライト・ダークのテーマは、このライブラリと同じオリジンに保存されます。
 
-文書を開くと、既存のライブプレビュー・ワークスペースを新しいタブに表示します。版履歴も利用できます。ライブラリとプレビューは loopback で待ち受けます。索引作成では文書内の JavaScript やプロジェクト独自コンポーネントを実行しません。`node_modules`、`dist`、`.git`、`.mdxr-cache`、`storybook-static`、`.mdxr/history` は除外し、シンボリックリンクをたどりません。既存の `mdxr serve <file>` は従来どおり単一文書のプレビューに使います。
+文書を開くと、既存のライブプレビュー・ワークスペースを新しいタブに表示します。版履歴も利用できます。ライブラリとプレビューは loopback で待ち受けます。索引作成では文書内の JavaScript やプロジェクト独自コンポーネントを実行しません。`node_modules`、`dist`、`.git`、`.mdxr-cache`、`storybook-static`、`.mdxr/history` は除外し、シンボリックリンクをたどりません。`mdxr serve` は同じライブラリにエージェントチャットと、指定した文書を直接開く機能を追加します。
 
 各行から文書を削除できます。UI で確認すると対象の文書ファイルだけを完全に削除し、assets と親ディレクトリは残します。
 
@@ -70,39 +70,43 @@ mdxr render plan.mdx --format json    # 機械可読なエラー出力
 
 ## mdxr serve
 
-ドキュメントをライブリロード付きでブラウザプレビューします。`render` と同様に stdin も受け付けます。
+`.mdxr/` 配下の Markdown・MDX 文書をまとめて配信します。パスを省略すると、`.mdxr/` がなければ空のディレクトリを作成します。別のディレクトリを指定することもできます。各文書はライブリロード付きのワークスペースで開きます。
 
 ```sh
-mdxr serve plan.mdx                   # http://localhost:3737
-mdxr serve plan.mdx -p 8080 --open
-cat plan.mdx | mdxr serve --open
+mdxr serve                           # .mdxr/ を http://localhost:3737 で配信
+mdxr serve .mdxr/ --open .mdxr/20260930170000-plan/index.mdx
+mdxr serve ./reports -p 8080 --open ./reports/plan.mdx
+mdxr serve --open                    # ディレクトリの一覧を開く
+cat plan.mdx | mdxr serve - --open   # stdin は - を明示
 ```
 
 | フラグ | 説明 |
 | --- | --- |
 | `-p, --port <port>` | 待ち受けポート（デフォルト `3737`）。使用中の場合は次の空きポートを利用 |
-| `--open` | サーバー起動後にデフォルトブラウザでプレビューを開く |
+| `--open [file]` | 指定した文書を直接開く。ファイルを省略するとディレクトリの一覧を開く |
 | `--agent <agent>` | `codex` または `claude` 用のローカルチャットを表示 |
 | `--server <url>` | Codex App Server の接続先。`unix:///absolute/path` または `ws://...` を指定（`--agent codex` が必要） |
 | `--session <id>` | 既存の Codex スレッドにメッセージを送信（`--agent codex` が必要） |
 
-ウォッチャーはドキュメントのレンダリング依存関係をたどります — `theme` の CSS ファイルとそのインポートも変更でプレビューが再読み込みされます。`--agent` を指定すると、AI Elements ベースのチャットパネルがワークスペースに表示されます。**Annotate** でレンダリング済みの内容にコメントを付け、同じチャットへ直接送信できます。
+`--open` のファイルパスは作業ディレクトリから解決し、絶対パスも利用できます。ブラウザではその文書を直接開き、プレビューの URL に配信ディレクトリからの相対パスが含まれます。`mdxr serve .mdxr/20260930170000-plan/index.mdx --open` のようにファイルを指定して起動した場合も、含まれる `.mdxr/` 全体を配信してその文書を開きます。`.mdxr/` 外のファイルでは、その親ディレクトリを配信します。
+
+ウォッチャーは開いた文書ごとのレンダリング依存関係をたどります — `theme` の CSS ファイルとそのインポートも変更でプレビューが再読み込みされます。`--agent` を指定すると、各文書のワークスペースに AI Elements ベースのチャットパネルが表示されます。**コメント** でレンダリング済みの内容にコメントを付け、同じチャットへ直接送信できます。文書のレンダリングとエージェントセッションの起動は、一覧から文書を選んだときに行います。
 
 ウォッチャーは MDX の変更を検出してローカルに版を保存します。版の選択メニューから過去の版をレンダリングしたり、**Raw MDX** でソースを確認したり、**Diff** で別の版と比較したりできます。履歴は `.mdxr/history/` に保存されます。履歴の保存と閲覧はローカルで完結し、API トークンは不要です。
 
 ワークスペースの **Export HTML** を選ぶと、レンダリング済みドキュメント、会話、コメント、セクションのレビュー状況、保存済みの全 MDX 版と差分を含む単一のレビュー用 HTML をダウンロードできます。画像とスタイルシートは本文に埋め込まれます。外部リソースを取得できない場合は省略せずエラーを表示します。サーバーを起動せずにローカルで開けます。
 
-エージェントとのチャットにはファイルパスを指定します。すでに起動している Codex TUI セッションにメッセージを送るには、そのスレッド ID を指定します。既定ではローカル Codex daemon のソケットに接続し、TUI セッションを動かしたままスレッドにメッセージをキューイングします。
+`--agent` で配信ディレクトリ内の各文書のチャットを有効にします。すでに起動している Codex TUI セッションにメッセージを送るには、そのスレッド ID を指定します。既定ではローカル Codex daemon のソケットに接続し、TUI セッションを動かしたままスレッドにメッセージをキューイングします。
 
 ```sh
-mdxr serve plan.mdx --agent codex --session <thread-id>
+mdxr serve .mdxr/ --agent codex --session <thread-id> --open .mdxr/20260930170000-plan/index.mdx
 ```
 
 Codex が処理中のメッセージはキュー待ちとして表示されます。Codex がメッセージを処理すると、回答が MDX プレビューに表示されます。特定の daemon ソケットまたは WebSocket App Server を使う場合は、接続先を `--server` に指定します。
 
 ```sh
-mdxr serve plan.mdx --agent codex --server unix:///absolute/path/to/app-server.sock --session <thread-id>
-mdxr serve plan.mdx --agent codex --server ws://127.0.0.1:4500 --session <thread-id>
+mdxr serve .mdxr/ --agent codex --server unix:///absolute/path/to/app-server.sock --session <thread-id>
+mdxr serve .mdxr/ --agent codex --server ws://127.0.0.1:4500 --session <thread-id>
 ```
 
 `--session` を省略した場合、`.mdxr/sessions.json` にこのドキュメントの Codex スレッド ID が保存されていれば、そのスレッドを使います。保存されていなければ、新しいスレッドを開始します。
@@ -110,14 +114,14 @@ mdxr serve plan.mdx --agent codex --server ws://127.0.0.1:4500 --session <thread
 Claude チャットでは、mdxr が長寿命の Claude Agent SDK セッションを管理します。
 
 ```sh
-mdxr serve plan.mdx --agent claude
+mdxr serve .mdxr/ --agent claude --open .mdxr/20260930170000-plan/index.mdx
 ```
 
 Claude のセッションは mdxr が所有し、外部の Claude CLI で開始したセッションには接続しません。`--session` は Codex 専用です。
 
 プレビューにはツール承認 UI がないため、承認が必要な操作は拒否されます。Claude は `dontAsk` 権限モードで実行されます。
 
-ドキュメントとセッションの対応および会話履歴は、作業ディレクトリの gitignore 対象である `.mdxr/sessions.json` に保存されます。`--agent` はファイル入力専用で、stdin は使えません。エージェントの回答は Markdown として表示し、JSX と生 HTML は実行しません。
+ドキュメントとセッションの対応および会話履歴は、作業ディレクトリの gitignore 対象である `.mdxr/sessions.json` に保存されます。`--agent` はディレクトリ・ファイルのどちらでも利用でき、stdin は使えません。エージェントの回答は Markdown として表示し、JSX と生 HTML は実行しません。
 
 ## mdxr text
 

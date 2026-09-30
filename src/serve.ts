@@ -4,6 +4,7 @@ import http from "node:http";
 import path from "node:path";
 
 import { handleAgentRequest } from "./agent-http.js";
+import { validateAgentOptions } from "./agent-options.js";
 import { injectAgentPreview } from "./agent-preview.js";
 import { createAgentSession } from "./agent-session.js";
 import type { AgentProvider } from "./agent-session.js";
@@ -490,15 +491,7 @@ export const serve = async (
   port: number,
   opts: Pick<ServeOptions, "open" | "agent" | "session" | "server"> = {}
 ): Promise<http.Server> => {
-  if (opts.session !== undefined && opts.agent === undefined) {
-    throw new Error("--session requires --agent");
-  }
-  if (opts.session !== undefined && opts.agent !== "codex") {
-    throw new Error("--session is only supported for codex");
-  }
-  if (opts.server !== undefined && opts.agent !== "codex") {
-    throw new Error("--server requires --agent codex");
-  }
+  validateAgentOptions(opts.agent, opts.session, opts.server);
   const abs = path.resolve(mdxPath);
   const history = createDocumentHistory(abs);
   const filePreviews = createFilePreviews();

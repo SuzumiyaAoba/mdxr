@@ -5,7 +5,7 @@ import path from "node:path";
 import { cac } from "cac";
 
 import packageJson from "../package.json" with { type: "json" };
-import type { AgentProvider } from "./agent-session.js";
+import { validateAgentOptions } from "./agent-options.js";
 import { mdxToAscii } from "./ascii/index.js";
 import { catalogEntries, formatCatalog, CONVENTIONS } from "./catalog.js";
 import { loadConfig } from "./config.js";
@@ -15,7 +15,8 @@ import { installInstructions } from "./instructions.js";
 import { serveLibrary } from "./library.js";
 import { openInBrowser } from "./open.js";
 import { loadUserComponents, render, renderFile } from "./render.js";
-import { serve, serveSource } from "./serve.js";
+import { serveDocuments } from "./serve-documents.js";
+import { serveSource } from "./serve.js";
 import { builtinComponents } from "./ui/index.js";
 
 const readStdin = async (): Promise<string> => {
@@ -54,29 +55,6 @@ const fail = (err: unknown, json: boolean): never => {
     console.error(`mdxr: error: ${formatError(err)}`);
   }
   process.exit(1);
-};
-
-const validateAgentOptions = (
-  agent: string | undefined,
-  session: string | undefined,
-  server: string | undefined
-): AgentProvider | undefined => {
-  if (agent !== undefined && agent !== "codex" && agent !== "claude") {
-    throw new Error(`invalid --agent: ${agent} (expected codex or claude)`);
-  }
-  if (session !== undefined && agent === undefined) {
-    throw new Error("--session requires --agent");
-  }
-  if (session !== undefined && agent !== "codex") {
-    throw new Error("--session is only supported for codex");
-  }
-  if (server !== undefined && agent !== "codex") {
-    throw new Error("--server requires --agent codex");
-  }
-  if (session !== undefined && session.trim() === "") {
-    throw new Error("--session requires a non-empty ID");
-  }
-  return agent;
 };
 
 const cli = cac("mdxr").version(packageJson.version);
@@ -180,22 +158,28 @@ cli
   );
 
 cli
-  .command("serve [file]", "Preview a document in the browser with live reload")
+  .command(
+    "serve [path]",
+    "Serve a document directory (default: .mdxr) with live previews"
+  )
   .option(
     "-p, --port <port>",
     "Preferred port; if taken, the next free port is used",
     { default: 3737 }
   )
-  .option("--open", "Open the preview in the default browser once serving")
+  .option(
+    "--open [file]",
+    "Open a document path or the directory listing in the default browser"
+  )
   .option("--agent <agent>", "Chat with codex or claude in the preview")
   .option("--session <id>", "Send to an existing Codex thread")
   .option("--server <url>", "Codex App Server ws:// or unix:// endpoint")
   .action(
     async (
-      file: string | undefined,
+      input: string | undefined,
       opts: {
         agent?: string;
-        open?: boolean;
+        open?: boolean | string;
         port: number | string;
         session?: string;
         server?: string;
@@ -208,27 +192,34 @@ cli
         if (!Number.isInteger(port) || port < 0 || port > 65_535) {
           throw new Error(`invalid --port: ${opts.port}`);
         }
-        const open = opts.open === true;
         const agent = validateAgentOptions(
           opts.agent,
           opts.session,
           opts.server
         );
-        if (file === undefined || file === "-") {
+        // cac drops a lone '-' unless it follows '--'; keep explicit stdin
+        // distinct from the default directory even when the parser omits it.
+        const fromStdin =
+          input === "-" ||
+          (input === undefined && process.argv.slice(2).includes("-"));
+        if (fromStdin) {
           if (agent !== undefined) {
-            throw new Error("--agent requires an MDX file");
+            throw new Error("--agent does not support stdin");
+          }
+          if (typeof opts.open === "string") {
+            throw new TypeError("--open <file> requires a document directory");
           }
           requireStdinSource();
           await serveSource(await readStdin(), port, {
             dir: process.cwd(),
             filePath: "<stdin>",
-            open,
+            open: opts.open === true,
           });
           return;
         }
-        await serve(file, port, {
+        await serveDocuments(input, port, {
           agent,
-          open,
+          open: opts.open,
           server: opts.server,
           session: opts.session,
         });

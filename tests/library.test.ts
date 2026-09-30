@@ -105,9 +105,12 @@ describe("document library HTTP", () => {
     );
     const openUrl = `${url}/__mdxr_library/open/${encodeURIComponent(name)}`;
     const opened = await fetch(openUrl, { redirect: "manual" });
-    expect(opened.status).toBe(303);
     const location = opened.headers.get("location");
-    expect(location).toMatch(/^http:\/\/localhost:\d+$/u);
+    expect(location).toMatch(/^http:\/\/localhost:\d+\//u);
+    expect({
+      path: decodeURIComponent(new URL(location ?? "").pathname),
+      status: opened.status,
+    }).toStrictEqual({ path: `/${name}`, status: 303 });
     const repeated = await fetch(openUrl, { redirect: "manual" });
     expect(repeated.headers.get("location")).toBe(location);
 

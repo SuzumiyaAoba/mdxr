@@ -7,6 +7,8 @@
 
 Render agent-authored MDX documents (plans, reports) to standalone HTML with a semantic component catalog.
 
+[![Watch the mdxr launch video](assets/mdxr-launch-poster.jpg)](assets/mdxr-launch.mp4)
+
 ## Usage
 
 Run directly with `npx` — no install required:

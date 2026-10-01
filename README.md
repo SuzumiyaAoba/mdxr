@@ -1,4 +1,9 @@
-# mdxr
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-wordmark-dark.svg">
+    <img src="assets/logo-wordmark.svg" alt="mdxr" width="218" height="70">
+  </picture>
+</h1>
 
 Render agent-authored MDX documents (plans, reports) to standalone HTML with a semantic component catalog.
 

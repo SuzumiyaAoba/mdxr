@@ -1,6 +1,7 @@
 import type http from "node:http";
 import path from "node:path";
 
+import type { ConfigOptions } from "./config.js";
 import { DocumentHistoryError } from "./document-history.js";
 import type { createDocumentHistory } from "./document-history.js";
 import { formatError } from "./format-error.js";
@@ -51,7 +52,8 @@ const replyPreview = async (
   history: DocumentHistory,
   filePath: string,
   id: string,
-  requestedTheme: string | null
+  requestedTheme: string | null,
+  configOptions: ConfigOptions
 ): Promise<void> => {
   const theme = parsePreviewTheme(requestedTheme);
   if (theme === null) {
@@ -60,6 +62,7 @@ const replyPreview = async (
   }
   const source = await history.read(id);
   const html = await render(source, {
+    ...configOptions,
     dir: path.dirname(filePath),
     filePath,
     initialTheme: theme ?? undefined,
@@ -72,7 +75,8 @@ const replyHistoryView = async (
   response: http.ServerResponse,
   history: DocumentHistory,
   filePath: string,
-  params: URLSearchParams
+  params: URLSearchParams,
+  configOptions: ConfigOptions
 ): Promise<void> => {
   const view = params.get("view");
   if (view === null) {
@@ -80,6 +84,10 @@ const replyHistoryView = async (
     return;
   }
   const id = params.get("id");
+  if (view === "dependencies" && id !== null) {
+    replyJson(response, 200, { id, ...(await history.dependencies?.(id)) });
+    return;
+  }
   if (view === "source" && id !== null) {
     const source = await history.read(id);
     const syntax = await highlightMdxSource(source);
@@ -95,7 +103,14 @@ const replyHistoryView = async (
     }
   }
   if (view === "preview" && id !== null) {
-    await replyPreview(response, history, filePath, id, params.get("theme"));
+    await replyPreview(
+      response,
+      history,
+      filePath,
+      id,
+      params.get("theme"),
+      configOptions
+    );
     return;
   }
   replyJson(response, 400, { error: "Invalid history view or version" });
@@ -106,7 +121,8 @@ export const handleDocumentHistoryRequest = async (
   request: http.IncomingMessage,
   response: http.ServerResponse,
   history: DocumentHistory | undefined,
-  filePath: string | undefined
+  filePath: string | undefined,
+  configOptions: ConfigOptions = {}
 ): Promise<void> => {
   if (history === undefined || filePath === undefined) {
     replyJson(response, 404, { error: "Document history is unavailable" });
@@ -122,7 +138,13 @@ export const handleDocumentHistoryRequest = async (
   }
   const url = new URL(request.url ?? "", "http://localhost");
   try {
-    await replyHistoryView(response, history, filePath, url.searchParams);
+    await replyHistoryView(
+      response,
+      history,
+      filePath,
+      url.searchParams,
+      configOptions
+    );
   } catch (error) {
     const detail = formatError(error);
     const missingVersion =

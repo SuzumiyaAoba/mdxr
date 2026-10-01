@@ -33,11 +33,11 @@ The default check parses documents without evaluating their JavaScript, project 
 
 Missing embedded files and ordinary local links are errors; missing file-reference chips are warnings because plans may refer to files that have not been created yet. External URLs and site-root URLs are not fetched or checked. Markdown link fragments are checked against local headings and explicit IDs. Independent diagnostics are collected from parseable documents, and checking continues after a malformed file. Directory traversal skips build/dependency directories and `.mdxr/history`, and does not follow symbolic links.
 
-`--render` additionally loads the document directory's `mdxr.config.*` and project components, then validates server rendering when static checks have no errors. This option executes trusted project configuration and component code; document JavaScript remains prohibited. It may use the renderer's build cache, but does not write an HTML output file.
+`--render` additionally loads the nearest project `mdxr.config.*` and project components, then validates server rendering when static checks have no errors. This option executes trusted project configuration and component code; document JavaScript remains prohibited. It may use the renderer's build cache, but does not write an HTML output file.
 
 | Flag | Description |
 | --- | --- |
-| `--format <format>` | Diagnostic output: `text` (default) or `json` |
+| `--format <format>` | Diagnostic output: `text` (default), `json`, or `github` |
 | `--strict` | Return a failure exit code for warnings as well as errors |
 | `--render` | Load project components and additionally validate rendering |
 
@@ -83,7 +83,7 @@ mdxr render plan.mdx --format json    # machine-readable errors
 | Flag | Description |
 | --- | --- |
 | `-o, --out <path>` | Output path. Defaults to `<file>.html`; stdout for stdin input or `-` |
-| `--format <format>` | Error output: `text` (default) or `json` |
+| `--format <format>` | Error output: `text` (default), `json`, or `github` |
 | `--no-hydrate` | Emit static HTML without the client hydration bundle |
 | `--open` | Open the rendered file in the default browser. Requires an output file |
 
@@ -212,3 +212,7 @@ mdxr init --skill                      # install the bundled Agent Skill
 The global install creates `$CODEX_HOME/MDXR.md` (or `~/.codex/MDXR.md` if `CODEX_HOME` is unset) and `$CODEX_HOME/mdxr/references/`, plus matching files under `~/.claude/`. It adds an instruction to read the Codex file in `$CODEX_HOME/AGENTS.md`; Claude's `~/.claude/CLAUDE.md` imports `@./MDXR.md`. A local install creates `.codex/MDXR.md` and `.claude/MDXR.md` in the project and references them from the root `AGENTS.md` and `CLAUDE.md`; Claude's `CLAUDE.md` imports `@./.claude/MDXR.md`. It also adds `.mdxr/` to the project's `.gitignore` — skipped when your global git excludes file (`core.excludesFile`, usually `~/.config/git/ignore`) already covers `.mdxr/`. `--force` updates the generated instructions and references while preserving the rest of your agent config files.
 
 The bundled prompts tell the agent to compare their recorded version with `--version` from the CLI used for the task. If they differ, the agent reports both versions and recommends `mdxr init --force` with the same CLI, preserving the original `--tool` and `--local`/`--global` scope; Skill installs also keep `--skill`. See [Agent setup](/agent-skill) for details.
+
+## Templates, review transfer and validation integrations
+
+See [Document workflows](/workflows) for `mdxr new`, `mdxr templates`, `check --watch`, `check --format github`, the public `@suzumiyaaoba/mdxr/check` API, review JSON import/export, Ask/Board autosave, related-document offline exports and dependency manifests. `check`, `render` and `serve` accept `--config <file>` and `--project <dir>`; see [Configuration](/configuration).

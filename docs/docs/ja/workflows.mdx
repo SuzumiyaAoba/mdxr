@@ -1,0 +1,97 @@
+---
+title: 文書の作成・検証・共有
+description: テンプレート、検証、レビューの受け渡し、回答の保存、オフライン共有、依存ファイルの履歴。
+sidebar:
+  order: 13
+---
+
+## テンプレートから作成する
+
+テンプレートは、frontmatter、見出し、手順・要件・テスト用のコンポーネントを含むMDXのひな型です。生成した内容を著者が埋めて文書を完成させます。
+
+```sh
+mdxr templates
+mdxr templates plan                   # ひな型のMDXを表示
+mdxr new --template plan --title "移行計画"
+mdxr new --template investigation --dir ./reports
+mdxr new ./review.mdx --template review --title "コードレビュー"
+```
+
+既定の保存先は、ローカル時刻による `.mdxr/yyyyMMddHHmmss-<template>/index.mdx` です。`--dir` は親ディレクトリ、ファイル引数または `--out` は正確な出力ファイルを指定します。既存ファイルは上書きしません。生成されるfrontmatterの `id` は、文書を移動しても維持してください。
+
+## 編集しながら検証する
+
+```sh
+mdxr check .mdxr --watch --strict
+mdxr check .mdxr --watch --render --project .
+```
+
+監視モードは起動時に検証し、その後は文書・Include・CodeFile・ローカルリソースの変更に追従します。文書ディレクトリ外の依存ファイルも対象です。`--render` では設定、コンポーネントのモジュール、テーマのインポートも監視します。Ctrl+Cで終了し、監視を解除できます。標準入力の監視には対応していません。
+
+ライブプレビューの **Check** にエラー・警告・綴りの候補を表示します。診断を選ぶと、Include先も含めた元のMDXを該当する行・列で開きます。**Recheck** で再検証できます。レンダリングに失敗しても、ワークスペースと元のソースを確認できます。文書一覧には静的検証の件数を表示し、検証上の問題がある文書で絞り込めます。一覧の検証はプロジェクト設定やコンポーネントを実行しません。
+
+## レビューを保存・取り込む
+
+**Review** → **Download review JSON** で、コメント、対象の引用・位置、解決履歴、フィードバック履歴、確認済みセクションを、バージョン付きの `mdxr-review` JSONに保存します。**Import review JSON** では、追加件数・競合・変更済みセクションを確認してから統合します。
+
+同じJSONを繰り返し取り込んでもレコードは重複しません。競合時は手元のレコードを維持し、**Use imported records for conflicts** を選んだ場合だけ取り込む側を採用します。文書IDが異なる場合は **Map reviews … to this document** で現在の文書への対応付けを明示してください。コメントは引用と前後の文脈から再照合し、対象が見つからないものも切り離されたコメントとして残します。変更済みのセクションは確認済みになりません。形式不正や未対応バージョンはエラーとして知らせます。
+
+通常の状態保存にはブラウザーのlocalStorageを使用し、従来の絶対パスによるレコードも文書IDへ移行します。文書移動後も同じ状態を使うには、frontmatterに固有の `id` を付けてください。テンプレートには最初からIDを含めます。IDのない文書はプロジェクトからの相対パスで識別し、プロジェクト外の単独ファイルでは従来の絶対パスを維持します。異なるブラウザーやプレビューのオリジン間ではJSONで受け渡します。
+
+## 回答とBoardの配置を復元する
+
+Askの回答とBoardのカード配置は、現在のブラウザーに自動保存し、再読み込み後に復元します。文書を編集する際は、ウィジェットに安定した識別子を付けると確実です。
+
+```mdx
+<Ask id="decisions" title="判断事項">
+  <Question name="approach" label="方針" type="text" />
+</Ask>
+
+<Board id="tasks" title="作業">
+  <Lane id="todo" title="未着手">
+    <BoardCard id="task-1" title="実装する" />
+  </Lane>
+  <Lane id="done" title="完了" />
+</Board>
+```
+
+回答を復元する前に、質問名・型・ラベル・選択肢を確認します。質問やBoardの識別子が変わった場合は、互換性のない状態を適用せず、元のデータを残します。通知の **Download retained answers** から回収できます。変更後の質問に新しく回答しても、以前のレコードは保持します。IDを省略するとタイトルと出現順から識別するため、並べ替える場合や同名のカードがある場合は固有のIDを推奨します。自動保存では元のMDXを書き換えません。
+
+## 関連文書をオフラインで共有する
+
+**Export HTML** で出力内容を選び、**Include related documents for offline reading** を有効にします。DocumentLinkのリンク先をHTML内に追加し、入れ子のリンクを辿り、同じ文書を重複収録せず、内部セクションへのリンクに置き換えます。画像やスタイルを埋め込み、HTMLのIDとアクセシビリティ参照の衝突を防ぎます。実行可能なスクリプトは無効のままです。プレビューですでに開いたリンクも、一時的なblob URLではなく元の埋め込みデータから解決します。
+
+出力したHTMLはプレビューサーバー終了後にも開けます。関連文書の選択を外した場合は、現在の文書と選択した記録だけを含めます。取得できないアセットや不完全なリンク先があれば、エクスポートはエラーを表示します。
+
+## 依存ファイルの履歴を確認する
+
+ライブプレビューの各版に、保存時刻と依存ファイルのパス・SHA-256ハッシュ・サイズを記録します。MDXが同じでも依存ファイルの内容が変われば、新しい版として保存します。版を選び **Dependency manifest** を開くと、保存時と現在の状態を、未変更・変更・欠落・保存時の欠落からの追加として確認できます。
+
+マニフェストのない従来の履歴も読み込めます。記録は依存関係の証跡であり、過去版のプレビューは現在の依存ファイルを読みます。Include、画像、コンポーネント、テーマの過去の内容を復元する機能ではありません。
+
+## CIとNode.jsから利用する
+
+```yaml
+- name: Validate documents
+  run: mdxr check .mdxr --strict --format github
+```
+
+GitHub向け出力には、ファイル・行・列・診断コードを付けたワークフロー注釈を使用し、制御文字をエスケープします。エラーとstrict時の警告による終了コードは、テキスト・JSON出力と共通です。
+
+```ts
+import {
+  checkDocument,
+  checkDocuments,
+  watchDocuments,
+  type CheckResult,
+} from "@suzumiyaaoba/mdxr/check";
+
+const result: CheckResult = await checkDocuments(".mdxr", { strict: true });
+const diagnostics = await checkDocument("# 文書", "document.mdx");
+const watcher = await watchDocuments(".mdxr", {}, (next) => {
+  process.stdout.write(`${next.errors} errors\n`);
+});
+watcher.close();
+```
+
+Node.js向けの公開エントリーです。静的検証ではプロジェクトのコードを実行しません。設定済みコンポーネントとレンダリングも検証する場合は `render: true` を指定し、`config`・`project` でCLIと同じ設定探索を使用できます。

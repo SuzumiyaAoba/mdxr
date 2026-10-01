@@ -1,4 +1,5 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { once } from "node:events";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -10,6 +11,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { injectAgentPreview } from "../src/agent-preview.js";
 import type { DocumentDiffLine } from "../src/document-history.js";
 import { render } from "../src/render.js";
+import { serve } from "../src/serve.js";
 import type { WorkspaceExportData } from "../src/workspace-export-data.js";
 import { workspaceJs } from "../src/workspace-js.js";
 
@@ -651,6 +653,53 @@ describe("workspace HTML export", () => {
       await page.close();
     }
   });
+
+  it.each(["Document only", "Document and review", "All records"])(
+    "downloads %s through the real preview server",
+    async (choice) => {
+      const dir = await mkdtemp(path.join(os.tmpdir(), "mdxr-export-live-"));
+      const file = path.join(dir, "document.mdx");
+      await writeFile(file, "# Live document\n\nLIVE_SERVER_DOCUMENT_MARKER\n");
+      const server = await serve(file, 0);
+      const page = await browser.newPage();
+      try {
+        const address = server.address();
+        if (typeof address !== "object" || address === null) {
+          throw new Error("Preview server is not listening");
+        }
+        await page.goto(`http://127.0.0.1:${address.port}/`);
+        await page.getByRole("button", EXPORT_BUTTON).click();
+        await page
+          .getByRole("radio", { name: new RegExp(choice, "u") })
+          .check();
+        const downloadPromise = page.waitForEvent("download");
+        await page
+          .getByRole("button", { exact: true, name: "Download HTML" })
+          .click();
+        const download = await downloadPromise;
+        const output = path.join(dir, download.suggestedFilename());
+        await download.saveAs(output);
+        const snapshot = await readFile(output, "utf-8");
+
+        expect({
+          document: snapshot.includes("LIVE_SERVER_DOCUMENT_MARKER"),
+          history: snapshot.includes('id="history"'),
+          review: snapshot.includes('id="comments"'),
+        }).toStrictEqual({
+          document: true,
+          history: choice === "All records",
+          review: choice !== "Document only",
+        });
+        await expect(page.getByRole("alert").count()).resolves.toBe(0);
+      } finally {
+        await page.close();
+        server.closeAllConnections();
+        server.close();
+        await once(server, "close");
+        await rm(dir, { force: true, recursive: true });
+      }
+    }
+  );
 
   it("keeps the export button inside a narrow mobile viewport", async () => {
     const { page } = await openWorkspace(browser, html, script, 320);

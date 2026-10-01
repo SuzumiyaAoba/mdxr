@@ -16,6 +16,7 @@ export default defineConfig({
   pack: {
     dts: true,
     entry: {
+      check: "src/check-api.ts",
       cli: "src/cli.ts",
       components: "src/components.ts",
       index: "src/index.ts",

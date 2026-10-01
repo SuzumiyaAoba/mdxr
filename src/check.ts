@@ -6,6 +6,7 @@ import { errorDiagnostic } from "./check-diagnostics.js";
 import type { DocumentDiagnostic } from "./check-diagnostics.js";
 import { checkSource } from "./check-source.js";
 import { loadConfig } from "./config.js";
+import type { ConfigOptions } from "./config.js";
 import { loadUserComponents, render } from "./render.js";
 import { builtinComponents } from "./ui/index.js";
 
@@ -18,7 +19,10 @@ const EXCLUDED_DIRECTORIES = new Set([
 ]);
 const DOCUMENT_EXTENSIONS = new Set([".md", ".markdown", ".mdx"]);
 
-export interface CheckOptions {
+export interface CheckOptions extends ConfigOptions {
+  onDependencies?: (paths: string[]) => void;
+  /** Load component contracts without performing a second render (preview use). */
+  projectComponents?: boolean;
   render?: boolean;
   strict?: boolean;
 }
@@ -57,20 +61,29 @@ export const checkDocument = async (
   try {
     const dir = path.dirname(path.resolve(filePath));
     let project;
-    if (options.render === true) {
-      const config = await loadConfig(dir);
+    if (options.render === true || options.projectComponents === true) {
+      const config = await loadConfig(dir, options);
       project = await loadUserComponents(config);
+      options.onDependencies?.([
+        ...(config.dependencies ?? []),
+        ...(project.dependencies ?? []),
+      ]);
     }
-    const diagnostics = checkSource(source, filePath, {
-      ...builtinComponents,
-      ...project?.components,
-    });
+    const diagnostics = checkSource(
+      source,
+      filePath,
+      {
+        ...builtinComponents,
+        ...project?.components,
+      },
+      options.onDependencies
+    );
     if (
       options.render === true &&
       !diagnostics.some(({ severity }) => severity === "error")
     ) {
       try {
-        await render(source, { dir, filePath, hydrate: false });
+        await render(source, { ...options, dir, filePath, hydrate: false });
       } catch (error) {
         diagnostics.push(errorDiagnostic(filePath, error, "mdxr:render"));
       }

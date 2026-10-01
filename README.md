@@ -162,6 +162,14 @@ Once the instructions or skill are installed, ask your agent, for example:
 
 Plans, reports, reviews, investigation summaries, release notes, and postmortems all work. By default, new documents use `.mdxr/yyyyMMddhhmmss-<name>/index.mdx`, with a zero-padded 14-digit local creation time in 24-hour format (for example, `.mdxr/20260929140530-auth-plan/index.mdx`). Keep images and related MDX files in the document's directory. A file path you provide takes priority, and existing documents keep their current paths. If you specify only a directory, create a timestamped subdirectory there and save the document as `index.mdx`. Serve the directory and open the new document directly with `mdxr serve .mdxr/ --open .mdxr/20260929140530-auth-plan/index.mdx`.
 
+## Document workflows
+
+Create editable MDX with `mdxr new --template plan|investigation|review --title "…"`; list or inspect templates with `mdxr templates [name]`. Generated files include a stable document ID and are never overwritten. `check`, `render` and `serve` discover ancestor configuration and accept `--config` / `--project`.
+
+Use `mdxr check .mdxr --watch`, `--format github` for CI annotations, or the typed Node.js API from `@suzumiyaaoba/mdxr/check`. Live workspaces show validation diagnostics and source locations even when rendering fails; the library lists static diagnostic counts.
+
+The Review dialog saves and imports versioned review JSON with conflict previews and explicit document mapping. Ask answers and Board placement survive reloads; stable widget IDs protect restoration after source edits. HTML exports can include nested related documents for offline reading. History records dependency hashes and reports changed or missing files; historical previews still use current dependency contents. See [Document workflows](https://suzumiyaaoba.com/mdxr/workflows) for examples and details.
+
 ## License
 
 MIT

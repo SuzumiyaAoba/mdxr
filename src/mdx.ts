@@ -20,6 +20,7 @@ import { DocContext } from "./doc-context.js";
 import { editorUrl } from "./editor.js";
 import { enhanceRenderError, formatError } from "./format-error.js";
 import { isComponent, isRecord } from "./guards.js";
+import { HydrationReady } from "./hydration-ready.js";
 import { importBundledCode } from "./load-user-module.js";
 import { rehypeLinkedAssets } from "./rehype/linked-assets.js";
 import { rehypeShiki } from "./rehype/shiki.js";
@@ -264,7 +265,8 @@ export const mdxToHtml = async (
           Fragment,
           null,
           header,
-          createElement(docComponent, { components })
+          createElement(docComponent, { components }),
+          createElement(HydrationReady)
         )
       )
     );

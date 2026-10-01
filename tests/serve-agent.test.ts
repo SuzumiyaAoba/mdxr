@@ -305,7 +305,14 @@ describe("preview agent API", () => {
     expect(sendAgentMessage).not.toHaveBeenCalled();
   });
 
-  it.each(["/__mdxr_agent", "/__mdxr_history", "/__mdxr_export"])(
+  it.each([
+    "/__mdxr_agent",
+    "/__mdxr_history",
+    "/__mdxr_export",
+    "/__mdxr_export?mode=document",
+    "/__mdxr_export?mode=review",
+    "/__mdxr_export?mode=workspace",
+  ])(
     "preserves local origin validation and response headers for %s",
     async (route) => {
       const baseUrl = await startServer("codex");

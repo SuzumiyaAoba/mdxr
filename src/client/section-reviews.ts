@@ -1,5 +1,8 @@
 import { parseAnnotationDocument } from "../annotations.js";
+import type { AnnotationDocument } from "../annotations.js";
+import { REVIEW_IMPORT_EVENT } from "../review-transfer.js";
 import { parseSectionReviews } from "../section-reviews.js";
+import { documentStorageKey } from "./document-identity.js";
 import { WORKSPACE_EXPORT_STATE_EVENT } from "./workspace-export-state.js";
 
 interface ReviewControl {
@@ -60,8 +63,12 @@ class SectionReviews {
   private reviews = new Map<string, string>();
   private storageAvailable = true;
 
-  constructor(root: HTMLElement, template: HTMLTemplateElement, file: string) {
-    this.storageKey = `mdxr:section-reviews:v1:${file}`;
+  constructor(
+    root: HTMLElement,
+    template: HTMLTemplateElement,
+    info: AnnotationDocument
+  ) {
+    this.storageKey = documentStorageKey("mdxr:section-reviews:v1:", info);
     this.summary = document.querySelector("[data-section-review-summary]");
     this.load();
     for (const host of root.querySelectorAll<HTMLElement>(
@@ -77,6 +84,24 @@ class SectionReviews {
       });
     }
     this.refresh();
+    document.addEventListener(REVIEW_IMPORT_EVENT, (event) => {
+      this.load();
+      for (const section of event.detail.sections) {
+        if (
+          this.controls.some(
+            (control) =>
+              control.id === section.id && control.revision === section.revision
+          )
+        ) {
+          this.reviews.set(section.id, section.revision);
+        }
+      }
+      this.save();
+      this.refresh();
+      if (!this.storageAvailable) {
+        event.detail.errors.push("Section reviews could not be saved");
+      }
+    });
     window.addEventListener("storage", (event) => {
       if (event.key === this.storageKey || event.key === null) {
         this.load();
@@ -189,7 +214,7 @@ export const initSectionReviews = (): SectionReviews | undefined => {
   // Review features share the document identity emitted by render().
   const info = parseAnnotationDocument(data.textContent ?? "{}");
   if (info !== undefined) {
-    return new SectionReviews(root, template, info.file);
+    return new SectionReviews(root, template, info);
   }
   return undefined;
 };

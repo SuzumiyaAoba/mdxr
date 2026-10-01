@@ -11,6 +11,7 @@ import { hydrateRoot } from "react-dom/client";
 import { mergeUserComponents } from "./component-map.js";
 import type { AnyComponent, ComponentMap } from "./define.js";
 import { DocContext } from "./doc-context.js";
+import { HydrationReady } from "./hydration-ready.js";
 
 export interface MountSpec {
   /** Catalog components assembled by the generated entry. */
@@ -72,7 +73,8 @@ export const mountDocument = (spec: MountSpec): void => {
         spec.headerProps === undefined || spec.planHeader === undefined
           ? null
           : createElement(spec.planHeader, spec.headerProps),
-        createElement(spec.doc, { components: spec.components })
+        createElement(spec.doc, { components: spec.components }),
+        createElement(HydrationReady)
       )
     )
   );

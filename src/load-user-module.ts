@@ -40,6 +40,7 @@ const sharedExternals: Plugin = {
 };
 
 export interface BundledModule {
+  dependencies: string[];
   module: Record<string, unknown>;
   /** Bundled source — also used as a Tailwind scan source. */
   code: string;
@@ -193,11 +194,18 @@ export const loadUserModule = async (
     jsx: "automatic",
     jsxImportSource: "react",
     logLevel: "silent",
+    metafile: true,
     platform: "node",
     plugins: [sharedExternals],
     target: "node20",
     write: false,
   });
   const code = result.outputFiles[0].text;
-  return { code, module: await importBundledCode(code, "components") };
+  return {
+    code,
+    dependencies: Object.keys(result.metafile.inputs).map((input) =>
+      path.resolve(input)
+    ),
+    module: await importBundledCode(code, "components"),
+  };
 };

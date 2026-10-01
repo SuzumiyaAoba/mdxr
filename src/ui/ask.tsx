@@ -141,13 +141,15 @@ export const Ask = defineComponent(
       "ユーザーへの質問フォーム。<Question> を並べる。ネイティブコントロールで JS なしに操作可能。回答はラベル付きの Markdown として表示され、「Copy answers」でコピー、「Save .md」で保存できる",
     schema: v.looseObject({
       description: v.optional(v.string()),
+      id: v.optional(v.string()),
       title: v.optional(v.string()),
     }),
   },
-  ({ title, description, children }) => (
+  ({ id, title, description, children }) => (
     <section
       className={`mdxr-ask ${PANEL_CLS}`}
       data-ask
+      data-ask-id={id}
       data-ask-title={nonEmpty(title) ? title : undefined}
     >
       <div className={CAPTION_CLS}>

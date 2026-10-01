@@ -8,7 +8,7 @@ import { createElement } from "react";
 import { clientJs } from "./client-js.js";
 import { mergeUserComponents } from "./component-map.js";
 import type { ResolvedConfig } from "./config.js";
-import { loadConfig } from "./config.js";
+import { findProjectRoot, loadConfig } from "./config.js";
 import type { ComponentMap } from "./define.js";
 import { formatError } from "./format-error.js";
 import { nonEmpty } from "./guards.js";
@@ -25,6 +25,7 @@ import { PlanHeader } from "./ui/plan.js";
 import { isStatus, STATUSES } from "./ui/status-badge.js";
 
 export interface LoadedComponents {
+  dependencies?: string[];
   components: ComponentMap;
   code?: string;
 }
@@ -34,8 +35,8 @@ export const loadComponents = async (
   componentsPath: string
 ): Promise<LoadedComponents> => {
   const entry = resolveModuleEntry(componentsPath);
-  const { module: mod, code } = await loadUserModule(entry);
-  return { code, components: mergeUserComponents(mod) };
+  const { module: mod, code, dependencies } = await loadUserModule(entry);
+  return { code, components: mergeUserComponents(mod), dependencies };
 };
 
 /** Components named by `config.componentsPath` — an empty map when unset. */
@@ -78,6 +79,8 @@ const ownSources = async (): Promise<CssSource[]> => {
 };
 
 export interface RenderOptions {
+  config?: string;
+  project?: string;
   /** Hide document-level controls when embedding a read-only preview. */
   documentControls?: boolean;
   /** @internal */
@@ -203,6 +206,54 @@ const frontmatterHeader = (
   };
 };
 
+const configDependencies = (config: ResolvedConfig): string[] => {
+  const dependencies: string[] = [...(config.dependencies ?? [])];
+  if (config.configPath !== undefined) {
+    dependencies.push(config.configPath);
+  }
+  if (config.componentsPath !== undefined) {
+    dependencies.push(resolveModuleEntry(config.componentsPath));
+  }
+  return dependencies;
+};
+const documentIdentity = (
+  id: string | undefined,
+  filePath: string,
+  project: string | undefined
+): string => {
+  if (id !== undefined) {
+    return id;
+  }
+  const relative = path.relative(
+    path.resolve(project ?? findProjectRoot(path.dirname(filePath))),
+    filePath
+  );
+  // Standalone files outside a detected project retain their existing path identity.
+  return relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)
+    ? filePath
+    : relative.split(path.sep).join("/");
+};
+
+const frontmatterString = (value: unknown): string | undefined => {
+  if (typeof value === "string") {
+    return value === "" ? undefined : value;
+  }
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
+  return typeof value === "number" ? String(value) : undefined;
+};
+
+const warnComponentOverrides = (components: ComponentMap): void => {
+  for (const name of Object.keys(components)) {
+    if (Object.hasOwn(builtinComponents, name)) {
+      process.stderr.write(
+        `mdxr: project component <${name}> overrides the built-in\n`
+      );
+    }
+  }
+};
+
 const renderDocument = async (
   source: string,
   opts: RenderSourceOptions,
@@ -213,20 +264,13 @@ const renderDocument = async (
   // `<CodeFile>`/`file:` links against file.dirname, and `dir` is the
   // documented base for those (e.g. `mdxr < doc.mdx` with -d).
   const filePath = path.resolve(dir, opts.filePath ?? "document.mdx");
-  const config: ResolvedConfig = await loadConfig(dir);
+  const config: ResolvedConfig = await loadConfig(path.dirname(filePath), opts);
 
   const user = await loadUserComponents(config);
 
   // hasOwn, not `in`: prototype names ("toString", "constructor") are not
   // catalog collisions.
-  const collisions = Object.keys(user.components).filter((k) =>
-    Object.hasOwn(builtinComponents, k)
-  );
-  for (const k of collisions) {
-    process.stderr.write(
-      `mdxr: project component <${k}> overrides the built-in\n`
-    );
-  }
+  warnComponentOverrides(user.components);
 
   const components: ComponentMap = {
     ...builtinComponents,
@@ -253,17 +297,8 @@ const renderDocument = async (
     include,
   });
 
-  const fmStr = (key: string): string | undefined => {
-    const val: unknown = frontmatter[key];
-    if (typeof val === "string") {
-      return val === "" ? undefined : val;
-    }
-    // YAML parses `date: 2026-09-16` into a Date.
-    if (val instanceof Date) {
-      return val.toISOString().slice(0, 10);
-    }
-    return typeof val === "number" ? String(val) : undefined;
-  };
+  const fmStr = (key: string): string | undefined =>
+    frontmatterString(frontmatter[key]);
 
   const fmTitle = fmStr("title");
   // `<h1>` may hold inline elements — take the full inner HTML, drop the
@@ -322,6 +357,8 @@ const renderDocument = async (
   const documentDependencies = new Set([
     ...dependencies,
     ...includeDependencies,
+    ...configDependencies(config),
+    ...(user.dependencies ?? []),
   ]);
 
   const [js, hydrateJs] = await Promise.all([
@@ -384,6 +421,7 @@ const renderDocument = async (
     annotations: {
       contentHash: createHash("sha256").update(source).digest("hex"),
       file: filePath,
+      id: documentIdentity(fmStr("id"), filePath, opts.project),
       revision: createHash("sha256").update(code).digest("hex"),
       sources: annotationSources,
       title,

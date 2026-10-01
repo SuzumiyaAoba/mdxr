@@ -7,6 +7,7 @@ import {
 } from "./linked-documents.js";
 import { initPages } from "./pages.js";
 import { initSectionReviews } from "./section-reviews.js";
+import { initWidgetAutosave } from "./widget-autosave.js";
 
 /**
  * Document entry point — bundled to an IIFE by `client-js.ts` and inlined
@@ -39,3 +40,4 @@ initDiagramViewports();
 initPages();
 initSectionReviews();
 initAnnotations();
+initWidgetAutosave();

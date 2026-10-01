@@ -101,7 +101,10 @@ const displayedDocumentPath = (): string => {
   }
 };
 
-const exportWorkspace = async (mode: WorkspaceExportMode): Promise<void> => {
+const exportWorkspace = async (
+  mode: WorkspaceExportMode,
+  includeRelated: boolean
+): Promise<void> => {
   const workspace =
     mode === "document" ? undefined : await loadExportData(mode);
   const appendix =
@@ -117,6 +120,7 @@ const exportWorkspace = async (mode: WorkspaceExportMode): Promise<void> => {
   // wrapper page around it.
   const snapshot = await captureWorkspaceDocument({
     appendix,
+    includeRelated,
     includeReviews: mode !== "document",
     title:
       mode === "workspace"
@@ -133,6 +137,7 @@ export const WorkspaceExportButton = () => {
   const modeId = useId();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<WorkspaceExportMode>("workspace");
+  const [includeRelated, setIncludeRelated] = useState(false);
   const [status, setStatus] = useState<"idle" | "exporting" | "done" | "error">(
     "idle"
   );
@@ -145,7 +150,7 @@ export const WorkspaceExportButton = () => {
     setOpen(false);
     setStatus("exporting");
     try {
-      await exportWorkspace(mode);
+      await exportWorkspace(mode, includeRelated);
       setStatus("done");
     } catch (error) {
       setExportError(
@@ -194,6 +199,16 @@ export const WorkspaceExportButton = () => {
                 </label>
               ))}
             </fieldset>
+            <label>
+              <input
+                type="checkbox"
+                checked={includeRelated}
+                onChange={(event) => {
+                  setIncludeRelated(event.target.checked);
+                }}
+              />{" "}
+              Include related documents for offline reading
+            </label>
             <div className="mdxr-workspace-export-actions">
               <Dialog.Close>Cancel</Dialog.Close>
               <button

@@ -22,6 +22,8 @@ export interface MdxrConfig {
 export const defineConfig = (config: MdxrConfig): MdxrConfig => config;
 
 export interface ResolvedConfig {
+  dependencies?: string[];
+  configPath?: string;
   componentsPath?: string;
   themePath?: string;
   /** Bundled mdxr.config code (Tailwind scan source). */
@@ -37,20 +39,96 @@ const CONFIG_FILES = [
   "mdxr.config.mjs",
 ];
 
-export const loadConfig = async (dir: string): Promise<ResolvedConfig> => {
-  const name = CONFIG_FILES.find((n) => fs.existsSync(path.join(dir, n)));
-  if (name === undefined) {
-    return { dir };
+export interface ConfigOptions {
+  /** Explicit configuration file; resolved from the working directory. */
+  config?: string;
+  /** Explicit project root, also the upper bound of ancestor discovery. */
+  project?: string;
+}
+
+export const findProjectRoot = (directory: string): string => {
+  let current = path.resolve(directory);
+  while (true) {
+    if (
+      fs.existsSync(path.join(current, ".git")) ||
+      fs.existsSync(path.join(current, "package.json"))
+    ) {
+      return current;
+    }
+    const parent = path.dirname(current);
+    if (parent === current) {
+      return process.cwd();
+    }
+    current = parent;
   }
-  const { module: mod, code } = await loadUserModule(path.join(dir, name));
+};
+
+/** Discover configuration without executing project code. Stop at a project boundary. */
+export const findConfig = (
+  dir: string,
+  options: ConfigOptions = {}
+): string | undefined => {
+  if (options.config !== undefined) {
+    const file = path.resolve(options.config);
+    if (!fs.existsSync(file)) {
+      throw new Error(`Configuration file does not exist: ${file}`);
+    }
+    return file;
+  }
+  const root =
+    options.project === undefined ? undefined : path.resolve(options.project);
+  let current = path.resolve(dir);
+  if (
+    root !== undefined &&
+    current !== root &&
+    !current.startsWith(`${root}${path.sep}`)
+  ) {
+    current = root;
+  }
+  while (true) {
+    const directory = current;
+    const name = CONFIG_FILES.find((candidate) =>
+      fs.existsSync(path.join(directory, candidate))
+    );
+    if (name !== undefined) {
+      return path.join(current, name);
+    }
+    const parent = path.dirname(current);
+    if (
+      current === root ||
+      parent === current ||
+      (root === undefined &&
+        (fs.existsSync(path.join(current, ".git")) ||
+          fs.existsSync(path.join(current, "package.json"))))
+    ) {
+      return undefined;
+    }
+    current = parent;
+  }
+};
+
+export const loadConfig = async (
+  dir: string,
+  options: ConfigOptions = {}
+): Promise<ResolvedConfig> => {
+  const configPath = findConfig(dir, options);
+  if (configPath === undefined) {
+    return { dir: path.resolve(options.project ?? dir) };
+  }
+  const configDir = path.dirname(configPath);
+  const { module: mod, code, dependencies } = await loadUserModule(configPath);
   const raw = isRecord(mod.default) ? mod.default : {};
   return {
     componentsCode: code,
     componentsPath: nonEmpty(raw.components)
-      ? path.resolve(dir, raw.components)
+      ? path.resolve(configDir, raw.components)
       : undefined,
-    dir,
+    configPath,
+    dependencies,
+    dir: configDir,
     editor: nonEmpty(raw.editor) ? raw.editor : undefined,
-    themePath: nonEmpty(raw.theme) ? path.resolve(dir, raw.theme) : undefined,
+    themePath: nonEmpty(raw.theme)
+      ? path.resolve(configDir, raw.theme)
+      : undefined,
   };
 };

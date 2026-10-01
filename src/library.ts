@@ -13,7 +13,7 @@ import type { ServeOptions } from "./serve.js";
 
 export interface LibraryOptions extends Pick<
   ServeOptions,
-  "agent" | "session" | "server"
+  "agent" | "session" | "server" | "config" | "project"
 > {
   /** Open the listing, or a document file path resolved from the working directory. */
   open?: boolean | string;
@@ -45,7 +45,10 @@ const stopPreview = (server: http.Server): void => {
 
 /** Reuse each document's existing live workspace until the library closes. */
 const createPreviews = (
-  opts: Pick<LibraryOptions, "agent" | "session" | "server">
+  opts: Pick<
+    LibraryOptions,
+    "agent" | "session" | "server" | "config" | "project"
+  >
 ) => {
   const previews = new Map<string, PreviewEntry>();
   const generations = new Map<string, number>();

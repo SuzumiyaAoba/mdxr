@@ -4,11 +4,21 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 
+import {
+  captureDependencies,
+  dependencyChanges,
+  isDependencySnapshot,
+} from "./dependency-history.js";
+import type {
+  DependencyChange,
+  DependencySnapshot,
+} from "./dependency-history.js";
 import { isRecord } from "./guards.js";
 
 export type DocumentVersionKind = "initial" | "before-instruction" | "change";
 
 export interface DocumentVersion {
+  dependencies?: DependencySnapshot[];
   /** Unique capture event ID. Multiple events can refer to the same blob. */
   id: string;
   contentHash: string;
@@ -31,7 +41,13 @@ export interface DocumentHistoryList {
 }
 
 export interface DocumentHistory {
-  capture: (kind: DocumentVersionKind) => Promise<DocumentVersion>;
+  capture: (
+    kind: DocumentVersionKind,
+    dependencies?: string[]
+  ) => Promise<DocumentVersion>;
+  dependencies?: (
+    id: string
+  ) => Promise<{ capturedAt: string; changes: DependencyChange[] }>;
   diff: (
     fromId: string,
     toId: string
@@ -160,7 +176,10 @@ const isStoredVersion = (
     parseVersionKind(value.kind) &&
     validDate &&
     validSize &&
-    validSequence
+    validSequence &&
+    (value.dependencies === undefined ||
+      (Array.isArray(value.dependencies) &&
+        value.dependencies.every(isDependencySnapshot)))
   );
 };
 
@@ -187,6 +206,9 @@ const readVersionEvent = async (
     );
   }
   return {
+    ...(raw.dependencies === undefined
+      ? {}
+      : { dependencies: raw.dependencies }),
     contentHash: raw.contentHash,
     createdAt: raw.createdAt,
     id: raw.id,
@@ -420,6 +442,9 @@ export const createDocumentHistory = (
           eventId
         );
         return {
+          ...(version.dependencies === undefined
+            ? {}
+            : { dependencies: version.dependencies }),
           contentHash: version.contentHash,
           createdAt: version.createdAt,
           id: version.id,
@@ -459,7 +484,10 @@ export const createDocumentHistory = (
   };
 
   return {
-    capture: async (kind: DocumentVersionKind): Promise<DocumentVersion> => {
+    capture: async (
+      kind: DocumentVersionKind,
+      dependencyFiles?: string[]
+    ): Promise<DocumentVersion> => {
       await fs.mkdir(versionsPath, { recursive: true });
       const release = await acquireLock(lockPath);
       try {
@@ -467,9 +495,22 @@ export const createDocumentHistory = (
         const contentHash = sha256(content);
         const current = await listUnlocked();
         const latest = current.versions.at(-1);
+        const files =
+          dependencyFiles ??
+          latest?.dependencies?.map((dependency) =>
+            path.resolve(rootDir, dependency.path)
+          );
+        const dependencies =
+          files === undefined
+            ? undefined
+            : await captureDependencies(
+                files.filter((file) => path.resolve(file) !== absoluteFilePath),
+                path.resolve(rootDir)
+              );
         if (
           kind !== "before-instruction" &&
-          latest?.contentHash === contentHash
+          latest?.contentHash === contentHash &&
+          JSON.stringify(latest.dependencies) === JSON.stringify(dependencies)
         ) {
           return latest;
         }
@@ -478,6 +519,7 @@ export const createDocumentHistory = (
         await writeImmutable(blobPath, content);
 
         const version: StoredVersion = {
+          ...(dependencies === undefined ? {} : { dependencies }),
           contentHash,
           createdAt: new Date().toISOString(),
           id: randomUUID(),
@@ -491,6 +533,17 @@ export const createDocumentHistory = (
       } finally {
         await release();
       }
+    },
+
+    dependencies: async (id: string) => {
+      const version = await findVersion(id);
+      return {
+        capturedAt: version.createdAt,
+        changes: await dependencyChanges(
+          version.dependencies ?? [],
+          path.resolve(rootDir)
+        ),
+      };
     },
 
     diff: async (

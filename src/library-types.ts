@@ -1,5 +1,8 @@
+import type { DocumentDiagnostic } from "./check-diagnostics.js";
+
 /** Browser-safe data exchanged by the local document library. */
 export interface LibraryDocument {
+  diagnostics?: DocumentDiagnostic[];
   id: string;
   path: string;
   title: string;

@@ -12,6 +12,7 @@ import type {
   AnnotationStatus,
   DocumentAnnotation,
 } from "../annotations.js";
+import { REVIEW_IMPORT_EVENT } from "../review-transfer.js";
 import {
   annotationFigures,
   captureFigureAnchor,
@@ -31,6 +32,7 @@ import {
 } from "./annotation-view.js";
 import type { AnnotationView } from "./annotation-view.js";
 import { writeClipboard } from "./doc-events.js";
+import { documentStorageKey } from "./document-identity.js";
 import { WORKSPACE_EXPORT_STATE_EVENT } from "./workspace-export-state.js";
 
 interface Draft {
@@ -99,9 +101,16 @@ class AnnotationController {
         { once: true }
       );
     }
-    this.storageKey = `mdxr:annotations:v1:${info.file}`;
+    this.storageKey = documentStorageKey("mdxr:annotations:v1:", info);
     this.load();
     this.bindEvents();
+    document.addEventListener(REVIEW_IMPORT_EVENT, (event) => {
+      this.annotations = structuredClone(event.detail.annotations.annotations);
+      this.history = structuredClone(event.detail.annotations.history);
+      if (!this.persist()) {
+        event.detail.errors.push("Comments could not be saved");
+      }
+    });
     this.refresh();
     // Re-resolve after hydration, Mermaid, tab changes, or other DOM updates.
     new MutationObserver(() => {

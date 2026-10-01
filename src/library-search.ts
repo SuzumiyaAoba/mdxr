@@ -319,6 +319,9 @@ export const searchLibraryDocuments = (
   );
 
   return ordered.map(({ document, excerpt, excerptMatches, titleMatches }) => ({
+    ...(document.diagnostics === undefined || document.diagnostics.length === 0
+      ? {}
+      : { diagnostics: document.diagnostics }),
     excerpt,
     excerptMatches,
     id: document.id,

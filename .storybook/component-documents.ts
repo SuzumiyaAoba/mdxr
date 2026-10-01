@@ -13,6 +13,7 @@ const DOCUMENTS = new Map([
   ["CrossRef", "cross-ref"],
   ["TermRef", "term-ref"],
   ["Include", "include"],
+  ["DocumentLink", "document-link"],
   ["TableOfFigures", "table-of-figures"],
   ["NumberedEquation", "numbered-equation"],
   ["Theorem", "theorem"],

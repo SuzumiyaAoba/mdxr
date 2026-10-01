@@ -7,11 +7,19 @@ import { validateAgentOptions } from "./agent-options.js";
 import { injectAgentPreview } from "./agent-preview.js";
 import { createAgentSession } from "./agent-session.js";
 import type { AgentProvider } from "./agent-session.js";
+import { errorDiagnostic } from "./check-diagnostics.js";
+import type { ConfigOptions } from "./config.js";
 import { handleDocumentHistoryRequest } from "./document-history-http.js";
 import { createDocumentHistory } from "./document-history.js";
 import { createFilePreviews } from "./file-preview-http.js";
 import { formatError } from "./format-error.js";
 import { openInBrowser } from "./open.js";
+import {
+  diagnoseFile,
+  handleDiagnosticSourceRequest,
+  handleDiagnosticsRequest,
+} from "./preview-diagnostics.js";
+import type { PreviewDiagnosticData } from "./preview-diagnostics.js";
 import { createPreviewWatcher } from "./preview-watch.js";
 import type { RenderSourceOptions } from "./render.js";
 import { render, renderFile } from "./render.js";
@@ -37,7 +45,19 @@ interface PreviewTarget {
   agentProvider?: AgentProvider;
   history?: ReturnType<typeof createDocumentHistory>;
   historyFile?: string;
+  configOptions?: ConfigOptions;
+  diagnose?: () => Promise<PreviewDiagnosticData>;
+  diagnosticDependencies?: () => string[];
 }
+
+const previewDependencies = (target: PreviewTarget): string[] => [
+  ...(target.deps?.() ?? []),
+  ...(target.diagnosticDependencies?.() ?? []),
+];
+const withWorkspace = (html: string, target: PreviewTarget): string =>
+  target.history === undefined
+    ? html
+    : injectAgentPreview(html, target.agentProvider);
 
 /** Upper bound on consecutive EADDRINUSE retries before give-up. */
 const MAX_PORT_ATTEMPTS = 100;
@@ -90,11 +110,12 @@ const handleDocumentResponse = (
       req,
       res,
       target.history,
-      target.historyFile
+      target.historyFile,
+      target.configOptions
     );
     return;
   }
-  if (req.url === "/__mdxr_export") {
+  if (req.url?.split("?")[0] === "/__mdxr_export") {
     void handleWorkspaceExportRequest(
       req,
       res,
@@ -128,12 +149,112 @@ const servePreview = async (
   let html = "";
   let closed = false;
   let capturedInitialVersion = false;
+  let diagnostics: PreviewDiagnosticData = {
+    checkedAt: new Date().toISOString(),
+    diagnostics: [],
+    file: target.label,
+    source: "",
+  };
   const clients = new Set<http.ServerResponse>();
   const notifyAgent = (): void => {
     broadcast(clients, "agent");
   };
   target.agent?.setOnUpdate(notifyAgent);
+
+  const rebuild = async (
+    watcher: ReturnType<typeof createPreviewWatcher>
+  ): Promise<void> => {
+    try {
+      if (target.diagnose !== undefined) {
+        diagnostics = await target.diagnose();
+      }
+      const rendered = await target.renderDoc();
+      html = withWorkspace(rendered, target);
+    } catch (error) {
+      if (
+        !diagnostics.diagnostics.some(({ severity }) => severity === "error")
+      ) {
+        diagnostics.diagnostics.push(
+          errorDiagnostic(
+            target.historyFile ?? target.label,
+            error,
+            "mdxr:render"
+          )
+        );
+      }
+      const page = `${errorPage(error).replace("</body>", "")}<script>new EventSource('/__mdxr_events').addEventListener('reload',()=>location.reload())</script>`;
+      html = withWorkspace(page, target);
+    }
+    if (target.history !== undefined) {
+      try {
+        await target.history.capture(
+          capturedInitialVersion ? "change" : "initial",
+          previewDependencies(target)
+        );
+        capturedInitialVersion = true;
+      } catch (error) {
+        diagnostics.diagnostics.push(
+          errorDiagnostic(
+            target.historyFile ?? target.label,
+            error,
+            "mdxr:history"
+          )
+        );
+      }
+    }
+    if (!closed) {
+      watcher.armDependencies(previewDependencies(target));
+    }
+  };
+
+  // Rebuilds chain onto each other: a change burst during a slow rebuild
+  // can't interleave two renders or serve an older result last. Every link
+  // swallows its own errors, so the stored tail can never reject — nothing
+  // awaits it, and an unhandled rejection would take the server down.
+  let reloading: Promise<void> = Promise.resolve();
+  const reload = (watcher: ReturnType<typeof createPreviewWatcher>): void => {
+    const prev = reloading;
+    reloading = (async () => {
+      await prev;
+      if (closed) {
+        return;
+      }
+      try {
+        await rebuild(watcher);
+        broadcast(clients, "reload");
+      } catch {
+        // Notified clients are best-effort; rebuild failures are already
+        // rendered into the error page by rebuild() itself.
+      }
+    })();
+  };
+
+  const watcher = createPreviewWatcher(target, () => {
+    reload(watcher);
+  });
   const server = http.createServer((req, res) => {
+    if (req.url?.split("?")[0] === "/__mdxr_diagnostics") {
+      void handleDiagnosticsRequest(
+        req,
+        res,
+        () => diagnostics,
+        async () => {
+          const previous = reloading;
+          reloading = (async () => {
+            await previous;
+            if (!closed) {
+              await rebuild(watcher);
+            }
+          })();
+          await reloading;
+        }
+      );
+      return;
+    }
+    if (req.url?.split("?")[0] === "/__mdxr_diagnostic_source") {
+      void handleDiagnosticSourceRequest(req, res, diagnostics);
+      return;
+    }
     if (req.url?.split("?")[0] === "/__mdxr_file") {
       void target.filePreviews.handle(req, res);
       return;
@@ -162,7 +283,10 @@ const servePreview = async (
     }
     if (req.url === "/__mdxr_agent") {
       void handleAgentRequest(req, res, target.agent, notifyAgent, async () => {
-        await target.history?.capture("before-instruction");
+        await target.history?.capture(
+          "before-instruction",
+          previewDependencies(target)
+        );
       });
       return;
     }
@@ -183,55 +307,6 @@ const servePreview = async (
       return;
     }
     handleDocumentResponse(req, res, target, html);
-  });
-
-  const rebuild = async (
-    watcher: ReturnType<typeof createPreviewWatcher>
-  ): Promise<void> => {
-    try {
-      if (target.history !== undefined) {
-        await target.history.capture(
-          capturedInitialVersion ? "change" : "initial"
-        );
-        capturedInitialVersion = true;
-      }
-      const rendered = await target.renderDoc();
-      html =
-        target.history === undefined
-          ? rendered
-          : injectAgentPreview(rendered, target.agentProvider);
-    } catch (error) {
-      html = errorPage(error);
-    }
-    if (!closed) {
-      watcher.armDependencies(target.deps?.() ?? []);
-    }
-  };
-
-  // Rebuilds chain onto each other: a change burst during a slow rebuild
-  // can't interleave two renders or serve an older result last. Every link
-  // swallows its own errors, so the stored tail can never reject — nothing
-  // awaits it, and an unhandled rejection would take the server down.
-  let reloading: Promise<void> = Promise.resolve();
-  const reload = (watcher: ReturnType<typeof createPreviewWatcher>): void => {
-    const prev = reloading;
-    reloading = (async () => {
-      await prev;
-      if (closed) {
-        return;
-      }
-      try {
-        await rebuild(watcher);
-        broadcast(clients, "reload");
-      } catch {
-        // Notified clients are best-effort; rebuild failures are already
-        // rendered into the error page by rebuild() itself.
-      }
-    })();
-  };
-
-  const watcher = createPreviewWatcher(target, () => {
-    reload(watcher);
   });
   const closeAgent = async (): Promise<void> => {
     try {
@@ -321,12 +396,16 @@ export interface ServeOptions extends Omit<
 export const serve = async (
   mdxPath: string,
   port: number,
-  opts: Pick<ServeOptions, "open" | "agent" | "session" | "server"> = {}
+  opts: Pick<
+    ServeOptions,
+    "open" | "agent" | "session" | "server" | "config" | "project"
+  > = {}
 ): Promise<http.Server> => {
   validateAgentOptions(opts.agent, opts.session, opts.server);
   const abs = path.resolve(mdxPath);
   const history = createDocumentHistory(abs);
   const filePreviews = createFilePreviews();
+  let diagnosticDependencies: string[] = [];
   const server = await servePreview(
     {
       agent:
@@ -334,6 +413,17 @@ export const serve = async (
           ? undefined
           : createAgentSession(abs, opts.agent, opts.session, opts.server),
       agentProvider: opts.agent,
+      configOptions: { config: opts.config, project: opts.project },
+      diagnose: async () => {
+        diagnosticDependencies = [];
+        return await diagnoseFile(abs, {
+          ...opts,
+          onDependencies: (files) => {
+            diagnosticDependencies.push(...files);
+          },
+        });
+      },
+      diagnosticDependencies: () => diagnosticDependencies,
       filePreviews,
       history,
       historyFile: abs,
@@ -341,10 +431,12 @@ export const serve = async (
       ...trackDeps(
         async (onDeps) =>
           await renderFile(abs, {
+            config: opts.config,
             filePreview: filePreviews.register,
             inlineAssets: true,
             liveReload: true,
             onDependencies: onDeps,
+            project: opts.project,
           })
       ),
       watchDir: path.dirname(abs),

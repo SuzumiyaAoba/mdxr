@@ -5,7 +5,9 @@ sidebar:
   order: 6
 ---
 
-プロジェクトは、レンダリングを実行するディレクトリの `mdxr.config.ts` で mdxr を設定します（`mdxr.config.mts`、`.js`、`.mjs` も検出されます）。すべてのフィールドはオプションです。
+プロジェクトは `mdxr.config.ts` で mdxr を設定します。すべてのフィールドはオプションです。
+
+設定は文書ディレクトリから上位へ探索し、最寄りの `mdxr.config.ts`・`.mts`・`.js`・`.mjs` を採用します。Gitまたはpackageのルートで探索を止め、`--project <dir>` で境界を指定できます。`--config <file>` は自動探索より優先します。設定の `components`・`theme` は設定ファイルからの相対パス、Include・CodeFile・画像は各文書からの相対パスとして解決します。`.mdxr/` 配下の文書にもプロジェクト設定が適用されます。
 
 ```ts mdxr.config.ts
 import { defineConfig } from "@suzumiyaaoba/mdxr";
@@ -91,3 +93,5 @@ mdxr は [Smooth Shadow Plugin](https://shadow.floriankiem.com/) を組み込ん
 ## ディスカバリ
 
 `mdxr catalog` はプロジェクトが公開するすべて — ビルトインと独自コンポーネント、`description` とスキーマ由来の props — を一覧します。エージェントも `mdxr catalog --json` で同じ一覧を読みます。
+
+Node.jsでは `@suzumiyaaoba/mdxr/check` の `findConfig(documentDirectory, { config, project })` で、設定コードを実行せず採用される設定ファイルのパスを確認できます。

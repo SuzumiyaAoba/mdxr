@@ -8,8 +8,11 @@ import {
 import { createRoot } from "react-dom/client";
 
 import { WorkspaceChat } from "./workspace-chat.js";
+import { WorkspaceDependencies } from "./workspace-dependencies.js";
+import { WorkspaceDiagnostics } from "./workspace-diagnostics.js";
 import { WorkspaceExportButton } from "./workspace-export.js";
 import { DocumentPane, HistoricalPreview } from "./workspace-panes.js";
+import { WorkspaceReviewButton } from "./workspace-review.js";
 import { useWorkspace } from "./workspace-state.js";
 import type { ViewMode } from "./workspace-state.js";
 import { useWorkspaceTheme } from "./workspace-theme.js";
@@ -76,6 +79,9 @@ const Workspace = ({ provider }: { provider?: "codex" | "claude" }) => {
             </button>
           ))}
           <WorkspaceExportButton />
+          <WorkspaceReviewButton />
+          <WorkspaceDiagnostics />
+          <WorkspaceDependencies id={currentId} />
         </nav>
       </header>
 

@@ -11,6 +11,7 @@ export interface AnnotationSource {
 }
 
 export interface AnnotationDocument {
+  id?: string;
   file: string;
   revision: string;
   title: string;
@@ -359,6 +360,7 @@ export const parseAnnotationDocument = (
     Array.isArray(value.sources) &&
     value.sources.every(isSource)
     ? {
+        ...(typeof value.id === "string" ? { id: value.id } : {}),
         file: value.file,
         revision: value.revision,
         sources: value.sources,

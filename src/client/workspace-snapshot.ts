@@ -1,4 +1,5 @@
 import { escapeExportHtml } from "../workspace-export-html.js";
+import { appendRelatedSnapshots } from "./related-snapshot.js";
 
 const CSS_URL =
   /url\(\s*(?:"(?<double>[^"]*)"|'(?<single>[^']*)'|(?<bare>[^\s)]*))\s*\)/gu;
@@ -224,6 +225,7 @@ export const captureWorkspaceDocument = async (options?: {
   title?: string;
   /** Omit the reader's review controls from a document-only snapshot. */
   includeReviews?: boolean;
+  includeRelated?: boolean;
 }): Promise<string> => {
   const root = document.querySelector("#mdxr-root");
   if (root === null) {
@@ -232,6 +234,14 @@ export const captureWorkspaceDocument = async (options?: {
   const container = document.createElement("div");
   const snapshot = cloneSnapshot(root);
   container.append(snapshot);
+  if (options?.includeRelated === true && snapshot instanceof Element) {
+    await appendRelatedSnapshots(
+      snapshot,
+      container,
+      cloneSnapshot,
+      embedElements
+    );
+  }
   if (options?.includeReviews === false) {
     for (const control of container.querySelectorAll(
       "mdxr-section-review, [data-section-review-summary]"

@@ -36,6 +36,10 @@
       "types": "./dist/components.d.mts",
       "default": "./dist/components.mjs"
     },
+    "./check": {
+      "types": "./dist/check.d.mts",
+      "default": "./dist/check.mjs"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {

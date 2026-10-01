@@ -51,11 +51,12 @@ export const BoardCard = defineComponent(
       "カンバンのカード。title は必須。priority/effort/owner/due で既存チップを並べられる。children は補足テキスト。ドラッグまたは両端の矢印ボタンでレーン間を移動できる",
     schema: v.looseObject({
       ...CHIP_PROPS,
+      id: v.optional(v.string()),
       status: STATUS_PROP,
       title: v.string(),
     }),
   },
-  ({ title, priority, effort, owner, due, status, children }) => {
+  ({ id, title, priority, effort, owner, due, status, children }) => {
     // Plain-text payload for the markdown serializer — element children
     // (links, emphasis) flatten to their visible text.
     const text = children === undefined ? "" : textOf(children).trim();
@@ -63,6 +64,7 @@ export const BoardCard = defineComponent(
       <div
         className={`rounded-md border bg-white p-2.5 shadow-sm dark:bg-neutral-950 ${BORDER_CLS}`}
         data-board-card=""
+        data-card-id={id}
         data-card-due={due}
         data-card-effort={effort}
         data-card-owner={owner}
@@ -104,11 +106,12 @@ export const Lane = defineComponent(
     description:
       "カンバンの列。<Board> の子として使う。title は列名、status でヘッダの色点 (todo|doing|done|blocked)。子の <BoardCard> 数がバッジになる。空の列もドロップ先になる",
     schema: v.looseObject({
+      id: v.optional(v.string()),
       status: STATUS_PROP,
       title: v.string(),
     }),
   },
-  ({ title, status, children }) => {
+  ({ id, title, status, children }) => {
     const count = flattenChildren(children).filter((c) =>
       isEl(c, BoardCard)
     ).length;
@@ -116,6 +119,7 @@ export const Lane = defineComponent(
       <section
         className="w-64 shrink-0 rounded-xl bg-neutral-100/70 p-2 dark:bg-neutral-900/70"
         data-board-lane=""
+        data-lane-id={id}
         data-lane-status={status}
         data-lane-title={title}
       >
@@ -143,11 +147,16 @@ export const Board = defineComponent(
   {
     description:
       "カンバンボードのコンテナ。<Lane> を横に並べる (はみ出しは横スクロール)。カードはドラッグまたは矢印ボタンで移動でき、移動後の状態を <Board> マークアップとしてコピーできる",
-    schema: v.looseObject(TITLE_PROP),
+    schema: v.looseObject({ ...TITLE_PROP, id: v.optional(v.string()) }),
   },
-  ({ title, children }) => (
+  ({ id, title, children }) => (
     <Section title={title}>
-      <div className="mdxr-board" data-board="" data-board-title={title}>
+      <div
+        className="mdxr-board"
+        data-board=""
+        data-board-id={id}
+        data-board-title={title}
+      >
         <div className="not-prose flex items-start gap-3 overflow-x-auto pb-1">
           {children}
         </div>

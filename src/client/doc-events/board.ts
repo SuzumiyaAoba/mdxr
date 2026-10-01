@@ -84,6 +84,7 @@ const moveCard = (card: HTMLElement, dir: number): void => {
   target?.querySelector(":scope > [data-board-cards]")?.append(card);
   if (target !== undefined) {
     syncBoard(board);
+    board.dispatchEvent(new Event("mdxr:boardchange", { bubbles: true }));
   }
 };
 
@@ -106,6 +107,7 @@ const dropBefore = (lane: HTMLElement, clientY: number): HTMLElement | null => {
 // `[attr name, dataset key]` in emitted order: title first (required),
 // then the chips in their rendered order.
 const CARD_ATTRS = [
+  ["id", "cardId"],
   ["status", "cardStatus"],
   ["priority", "cardPriority"],
   ["effort", "cardEffort"],
@@ -119,10 +121,12 @@ const boardAttr = (name: string, value: string | undefined): string =>
 // Serializes a board's current DOM into `<Board>`/`<Lane>`/`<BoardCard>`
 // markup — the source form, so pasting it back persists the arrangement.
 const boardMarkdown = (board: HTMLElement): string => {
-  const lines = [`<Board${boardAttr("title", board.dataset.boardTitle)}>`];
+  const lines = [
+    `<Board${boardAttr("title", board.dataset.boardTitle)}${boardAttr("id", board.dataset.boardId)}>`,
+  ];
   for (const lane of lanesOf(board)) {
     lines.push(
-      `  <Lane${boardAttr("title", lane.dataset.laneTitle)}${boardAttr("status", lane.dataset.laneStatus)}>`
+      `  <Lane${boardAttr("title", lane.dataset.laneTitle)}${boardAttr("id", lane.dataset.laneId)}${boardAttr("status", lane.dataset.laneStatus)}>`
     );
     for (const card of cardsOf(lane)) {
       const d = card.dataset;
@@ -255,6 +259,7 @@ const drop = (e: Event, el: Element): boolean => {
   }
   dragFinish(target.home);
   syncBoard(target.home);
+  target.home.dispatchEvent(new Event("mdxr:boardchange", { bubbles: true }));
   return true;
 };
 

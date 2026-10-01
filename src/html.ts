@@ -125,7 +125,7 @@ ${
 ${annotations === undefined ? "" : `${annotationHtml(iconSvg)}<script type="application/json" id="mdxr-annotation-document">${JSON.stringify(annotations).replaceAll("<", "\\u003c")}</script>`}
 ${annotations === undefined ? "" : sectionReviewHtml(iconSvg)}
 ${o.linkedDocuments === undefined || Object.keys(o.linkedDocuments).length === 0 ? "" : `<script type="application/json" id="mdxr-linked-documents">${JSON.stringify(o.linkedDocuments).replaceAll("<", "\\u003c")}</script>`}
-<script>${inlineScript(o.clientJs)}</script>
+<script data-mdxr-hydration="${o.hydrateJs === undefined ? "false" : "true"}">${inlineScript(o.clientJs)}</script>
 ${o.needsMermaid ? `<script type="module">${inlineScript(MERMAID_JS)}</script>` : ""}
 ${o.liveReload === true ? `<script>${inlineScript(LIVE_RELOAD_JS)}</script>` : ""}
 ${o.hydrateJs === undefined ? "" : `<script>${inlineScript(o.hydrateJs)}</script>`}

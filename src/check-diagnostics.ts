@@ -12,6 +12,22 @@ export interface DocumentDiagnostic {
   suggestion?: string;
 }
 
+export const isDocumentDiagnostic = (
+  value: unknown
+): value is DocumentDiagnostic =>
+  isRecord(value) &&
+  typeof value.file === "string" &&
+  typeof value.line === "number" &&
+  Number.isSafeInteger(value.line) &&
+  value.line >= 1 &&
+  typeof value.column === "number" &&
+  Number.isSafeInteger(value.column) &&
+  value.column >= 1 &&
+  typeof value.code === "string" &&
+  (value.severity === "error" || value.severity === "warning") &&
+  typeof value.message === "string" &&
+  (value.suggestion === undefined || typeof value.suggestion === "string");
+
 export const diagnosticAt = (
   file: string,
   node: Node | undefined,

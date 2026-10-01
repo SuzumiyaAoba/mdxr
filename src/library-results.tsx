@@ -7,7 +7,7 @@ import {
   FileText,
   Trash2,
 } from "lucide-react";
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import type { ReactNode } from "react";
 
 import { displayStatus, formatCount, formatDate } from "./library-language.js";
@@ -145,6 +145,26 @@ const LibraryDocumentCard = ({
           </span>
         )}
       </div>
+      {(document.diagnostics?.length ?? 0) > 0 && (
+        <a
+          href={documentHref(document)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mdxr-library__diagnostics"
+        >
+          {
+            document.diagnostics?.filter(({ severity }) => severity === "error")
+              .length
+          }{" "}
+          errors /{" "}
+          {
+            document.diagnostics?.filter(
+              ({ severity }) => severity === "warning"
+            ).length
+          }{" "}
+          warnings (static check)
+        </a>
+      )}
       {document.excerpt !== "" && (
         <p className="mdxr-library__excerpt">
           {highlight(document.excerpt, document.excerptMatches)}
@@ -178,6 +198,51 @@ const LibraryDocumentCard = ({
   </article>
 );
 
+const LibraryResultsHeading = ({
+  copy,
+  data,
+  language,
+  loading,
+  matched,
+  onlyIssues,
+  onIssuesChange,
+}: {
+  copy: LibraryCopy;
+  data: LibrarySearchResponse | undefined;
+  language: LibraryLanguage;
+  loading: boolean;
+  matched: number;
+  onlyIssues: boolean;
+  onIssuesChange: (checked: boolean) => void;
+}) => (
+  <div className="mdxr-library__results-heading">
+    <h2>{copy.documents}</h2>
+    <label>
+      <input
+        type="checkbox"
+        checked={onlyIssues}
+        onChange={(event) => {
+          onIssuesChange(event.target.checked);
+        }}
+      />{" "}
+      {language === "ja"
+        ? "検証の問題がある文書のみ"
+        : "Validation issues only"}
+    </label>
+    <output aria-live="polite" className="mdxr-library__count">
+      {data === undefined
+        ? copy.loading
+        : copy.resultCount(
+            formatCount(matched, language),
+            formatCount(data.total, language)
+          )}
+    </output>
+    {loading && (
+      <output className="mdxr-library__loading">{copy.loading}</output>
+    )}
+  </div>
+);
+
 export const LibraryResults = ({
   copy,
   data,
@@ -194,68 +259,70 @@ export const LibraryResults = ({
   handleRefresh: () => void;
   language: LibraryLanguage;
   loading: boolean;
-}) => (
-  <section
-    aria-busy={loading}
-    aria-label={copy.title}
-    className="mdxr-library__results"
-  >
-    <div className="mdxr-library__results-heading">
-      <h2>{copy.documents}</h2>
-      <output aria-live="polite" className="mdxr-library__count">
-        {data === undefined
-          ? copy.loading
-          : copy.resultCount(
-              formatCount(data.matched, language),
-              formatCount(data.total, language)
-            )}
-      </output>
-      {loading && (
-        <output className="mdxr-library__loading">{copy.loading}</output>
-      )}
-    </div>
-
-    {error && (
-      <div className="mdxr-library__error" role="alert">
-        <p>{copy.error}</p>
-        {data !== undefined && <p>{copy.staleError}</p>}
-        <button onClick={handleRefresh} type="button">
-          {copy.refresh}
-        </button>
-      </div>
-    )}
-
-    {data !== undefined && data.warnings.length > 0 && (
-      <LibraryWarningList
+}) => {
+  const [onlyIssues, setOnlyIssues] = useState(false);
+  const results =
+    data?.results.filter(
+      (document) => !onlyIssues || (document.diagnostics?.length ?? 0) > 0
+    ) ?? [];
+  return (
+    <section
+      aria-busy={loading}
+      aria-label={copy.title}
+      className="mdxr-library__results"
+    >
+      <LibraryResultsHeading
         copy={copy}
+        data={data}
         language={language}
-        warnings={data.warnings}
+        loading={loading}
+        matched={onlyIssues ? results.length : (data?.matched ?? 0)}
+        onlyIssues={onlyIssues}
+        onIssuesChange={setOnlyIssues}
       />
-    )}
 
-    {data !== undefined && data.results.length > 0 && (
-      <ul className="mdxr-library__list">
-        {data.results.map((document) => (
-          <li key={document.id}>
-            <LibraryDocumentCard
-              copy={copy}
-              document={document}
-              handleDelete={handleDelete}
-              language={language}
-            />
-          </li>
-        ))}
-      </ul>
-    )}
+      {error && (
+        <div className="mdxr-library__error" role="alert">
+          <p>{copy.error}</p>
+          {data !== undefined && <p>{copy.staleError}</p>}
+          <button onClick={handleRefresh} type="button">
+            {copy.refresh}
+          </button>
+        </div>
+      )}
 
-    {data !== undefined && data.results.length === 0 && (
-      <div className="mdxr-library__empty">
-        <FileSearch aria-hidden="true" size={28} strokeWidth={1.25} />
-        <output>
-          {data.total === 0 ? copy.emptyLibrary : copy.emptySearch}
-        </output>
-        {data.total === 0 && <p>{data.root}</p>}
-      </div>
-    )}
-  </section>
-);
+      {data !== undefined && data.warnings.length > 0 && (
+        <LibraryWarningList
+          copy={copy}
+          language={language}
+          warnings={data.warnings}
+        />
+      )}
+
+      {data !== undefined && results.length > 0 && (
+        <ul className="mdxr-library__list">
+          {results.map((document) => (
+            <li key={document.id}>
+              <LibraryDocumentCard
+                copy={copy}
+                document={document}
+                handleDelete={handleDelete}
+                language={language}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {data !== undefined && results.length === 0 && (
+        <div className="mdxr-library__empty">
+          <FileSearch aria-hidden="true" size={28} strokeWidth={1.25} />
+          <output>
+            {data.total === 0 ? copy.emptyLibrary : copy.emptySearch}
+          </output>
+          {data.total === 0 && <p>{data.root}</p>}
+        </div>
+      )}
+    </section>
+  );
+};

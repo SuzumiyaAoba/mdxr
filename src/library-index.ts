@@ -2,6 +2,8 @@ import type { Dirent } from "node:fs";
 import { lstat, readdir, realpath, unlink } from "node:fs/promises";
 import path from "node:path";
 
+import { checkSource } from "./check-source.js";
+import { findConfig } from "./config.js";
 import { parseLibraryDocument } from "./library-document.js";
 import {
   assertRootDirectory,
@@ -21,7 +23,17 @@ import type {
   LibraryWarning,
 } from "./library-types.js";
 
+const libraryDiagnostics = (source: string, file: string) => {
+  const configured = findConfig(path.dirname(file)) !== undefined;
+  return checkSource(source, file).map((diagnostic) =>
+    configured && diagnostic.code === "mdxr:unknown-component"
+      ? { ...diagnostic, severity: "warning" as const }
+      : diagnostic
+  );
+};
+
 interface IndexedDocument {
+  source: string;
   document: SearchableLibraryDocument;
   signature: string;
   warning?: LibraryWarning;
@@ -136,7 +148,9 @@ export const createLibraryIndex = async (
         const id = relativePath.split(path.sep).join("/");
         const old = indexed.get(id);
         if (old?.signature === signature) {
-          next.set(id, old);
+          const diagnostics = libraryDiagnostics(old.source, filePath);
+          const document = { ...old.document, diagnostics };
+          next.set(id, { ...old, document });
           if (old.warning !== undefined) {
             warnings.set(
               `${old.warning.path}\0${old.warning.reason}`,
@@ -151,7 +165,9 @@ export const createLibraryIndex = async (
         const warning = parsed.parseWarning
           ? warningFor(id, "parse")
           : undefined;
+        const diagnostics = libraryDiagnostics(read.source, filePath);
         const document: SearchableLibraryDocument = {
+          ...(diagnostics.length === 0 ? {} : { diagnostics }),
           body: parsed.body,
           id,
           path: id,
@@ -162,6 +178,7 @@ export const createLibraryIndex = async (
         const entry: IndexedDocument = {
           document,
           signature: read.signature,
+          source: read.source,
           ...(warning === undefined ? {} : { warning }),
         };
         next.set(id, entry);

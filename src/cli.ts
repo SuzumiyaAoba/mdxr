@@ -9,7 +9,10 @@ import { validateAgentOptions } from "./agent-options.js";
 import { mdxToAscii } from "./ascii/index.js";
 import { catalogEntries, formatCatalog, CONVENTIONS } from "./catalog.js";
 import { formatDiagnostic } from "./check-diagnostics.js";
+import { formatGithubDiagnostic } from "./check-github.js";
+import { watchDocuments } from "./check-watch.js";
 import { checkDocument, checkDocuments, checkResult } from "./check.js";
+import type { CheckResult } from "./check.js";
 import { loadConfig } from "./config.js";
 import { formatError, parseErrorFormat } from "./format-error.js";
 import { ensureDocsDirIgnored, installSkill } from "./init.js";
@@ -19,6 +22,11 @@ import { openInBrowser } from "./open.js";
 import { loadUserComponents, render, renderFile } from "./render.js";
 import { serveDocuments } from "./serve-documents.js";
 import { serveSource } from "./serve.js";
+import {
+  createDocument,
+  DOCUMENT_TEMPLATES,
+  templateSource,
+} from "./templates.js";
 import { builtinComponents } from "./ui/index.js";
 
 const readStdin = async (): Promise<string> => {
@@ -66,46 +74,126 @@ cli
     "check [path]",
     "Validate Markdown and MDX documents (default: .mdxr)"
   )
-  .option("--format <format>", "Diagnostic output: text | json")
+  .option("--format <format>", "Diagnostic output: text | json | github")
+  .option("--watch", "Revalidate documents and dependencies on changes")
+  .option("--config <file>", "Explicit project configuration")
+  .option("--project <dir>", "Project root for configuration discovery")
   .option("--strict", "Treat warnings as failures")
   .option("--render", "Also load project components and validate rendering")
   .action(
     async (
       input: string | undefined,
-      opts: { format?: string; strict?: boolean; render?: boolean }
+      opts: {
+        format?: string;
+        strict?: boolean;
+        render?: boolean;
+        watch?: boolean;
+        config?: string;
+        project?: string;
+      }
     ) => {
       const json = opts.format === "json";
       try {
-        parseErrorFormat(opts.format);
+        if (opts.format !== "github") {
+          parseErrorFormat(opts.format);
+        }
         const fromStdin =
           input === "-" ||
           (input === undefined && process.argv.slice(2).includes("-"));
         if (fromStdin) {
           requireStdinSource();
         }
-        const result = fromStdin
-          ? checkResult(
-              ["<stdin>"],
-              await checkDocument(await readStdin(), "<stdin>", opts),
-              opts.strict
-            )
-          : await checkDocuments(input, opts);
-        if (json) {
-          console.log(JSON.stringify(result));
-        } else {
-          for (const diagnostic of result.diagnostics) {
-            console.log(formatDiagnostic(diagnostic));
+        const output = (result: CheckResult): void => {
+          if (json) {
+            console.log(JSON.stringify(result));
+          } else {
+            for (const diagnostic of result.diagnostics) {
+              console.log(
+                opts.format === "github"
+                  ? formatGithubDiagnostic(diagnostic)
+                  : formatDiagnostic(diagnostic)
+              );
+            }
+            console.log(
+              `mdxr: checked ${result.files.length} documents: ${result.errors} errors, ${result.warnings} warnings`
+            );
           }
-          console.log(
-            `mdxr: checked ${result.files.length} documents: ${result.errors} errors, ${result.warnings} warnings`
-          );
+          process.exitCode = result.ok ? 0 : 1;
+        };
+        if (opts.watch === true) {
+          if (fromStdin) {
+            throw new Error("--watch requires a file or directory");
+          }
+          const watcher = await watchDocuments(input ?? ".mdxr", opts, output);
+          for (const signal of ["SIGINT", "SIGTERM"] as const) {
+            process.once(signal, () => {
+              watcher.close();
+            });
+          }
+          return;
         }
-        process.exitCode = result.ok ? 0 : 1;
+        output(
+          fromStdin
+            ? checkResult(
+                ["<stdin>"],
+                await checkDocument(await readStdin(), "<stdin>", opts),
+                opts.strict
+              )
+            : await checkDocuments(input, opts)
+        );
       } catch (error) {
         fail(error, json);
       }
     }
   );
+
+cli
+  .command("new [file]", "Create a document from a template")
+  .option("--template <name>", "plan | investigation | review")
+  .option("--title <title>", "Document title")
+  .option("-o, --out <file>", "Exact output file (never overwritten)")
+  .option("--dir <directory>", "Parent directory for a timestamped document")
+  .action(
+    async (
+      file: string | undefined,
+      opts: { template?: string; title?: string; out?: string; dir?: string }
+    ) => {
+      try {
+        if (file !== undefined && opts.out !== undefined) {
+          throw new Error("Use either a file argument or --out");
+        }
+        console.log(
+          `mdxr: created ${await createDocument({ ...opts, out: file ?? opts.out })}`
+        );
+      } catch (error) {
+        fail(error, false);
+      }
+    }
+  );
+cli
+  .command("templates [name]", "List templates or print a template's MDX")
+  .option("--json", "List template names as JSON")
+  .action((name: string | undefined, opts: { json?: boolean }) => {
+    try {
+      if (name === undefined) {
+        console.log(
+          opts.json === true
+            ? JSON.stringify(DOCUMENT_TEMPLATES)
+            : DOCUMENT_TEMPLATES.join("\n")
+        );
+        return;
+      }
+      const template = DOCUMENT_TEMPLATES.find(
+        (candidate) => candidate === name
+      );
+      if (template === undefined) {
+        throw new Error(`Unknown template: ${name}`);
+      }
+      writeStdout(templateSource(template));
+    } catch (error) {
+      fail(error, opts.json === true);
+    }
+  });
 
 cli
   .command(
@@ -141,6 +229,8 @@ cli
     "-o, --out <path>",
     "Output path (default: <file>.html; stdout for stdin input or '-')"
   )
+  .option("--config <file>", "Explicit project configuration")
+  .option("--project <dir>", "Project root for configuration discovery")
   .option("--format <format>", "Error output: text | json")
   .option(
     "--no-hydrate",
@@ -153,6 +243,8 @@ cli
       opts: {
         format?: string;
         hydrate?: boolean;
+        config?: string;
+        project?: string;
         open?: boolean;
         out?: string;
       }
@@ -180,11 +272,17 @@ cli
 
         const html = fromStdin
           ? await render(await readStdin(), {
+              config: opts.config,
               dir: process.cwd(),
               filePath: "<stdin>",
               hydrate: opts.hydrate,
+              project: opts.project,
             })
-          : await renderFile(file, { hydrate: opts.hydrate });
+          : await renderFile(file, {
+              config: opts.config,
+              hydrate: opts.hydrate,
+              project: opts.project,
+            });
 
         if (out === undefined) {
           writeStdout(html);
@@ -219,6 +317,8 @@ cli
     "--open [file]",
     "Open a document path or the directory listing in the default browser"
   )
+  .option("--config <file>", "Explicit project configuration")
+  .option("--project <dir>", "Project root for configuration discovery")
   .option("--agent <agent>", "Chat with codex or claude in the preview")
   .option("--session <id>", "Send to an existing Codex thread")
   .option("--server <url>", "Codex App Server ws:// or unix:// endpoint")
@@ -227,6 +327,8 @@ cli
       input: string | undefined,
       opts: {
         agent?: string;
+        config?: string;
+        project?: string;
         open?: boolean | string;
         port: number | string;
         session?: string;
@@ -259,15 +361,19 @@ cli
           }
           requireStdinSource();
           await serveSource(await readStdin(), port, {
+            config: opts.config,
             dir: process.cwd(),
             filePath: "<stdin>",
             open: opts.open === true,
+            project: opts.project,
           });
           return;
         }
         await serveDocuments(input, port, {
           agent,
+          config: opts.config,
           open: opts.open,
+          project: opts.project,
           server: opts.server,
           session: opts.session,
         });

@@ -149,7 +149,8 @@ const checkSection = (
 const checkLocalReference = (
   reference: LocalReference,
   file: string,
-  anchors: Set<string>
+  anchors: Set<string>,
+  dependencies?: Set<string>
 ): DocumentDiagnostic[] => {
   const { node, severity, value } = reference;
   if (
@@ -180,6 +181,7 @@ const checkLocalReference = (
       path.dirname(reference.baseFile ?? file),
       target
     );
+    dependencies?.add(absolutePath);
     const stats = statSync(absolutePath);
     if (reference.literalPath === true && !stats.isFile()) {
       throw new Error("not a regular file");
@@ -237,10 +239,12 @@ const referencesOf = (node: MdxTarget): LocalReference[] => {
 export const checkSource = (
   source: string,
   filePath: string,
-  components: ComponentMap = builtinComponents
+  components: ComponentMap = builtinComponents,
+  onDependencies?: (paths: string[]) => void
 ): DocumentDiagnostic[] => {
   const file = new VFile({ path: filePath, value: source });
   const diagnostics: DocumentDiagnostic[] = [];
+  const dependencies = new Set<string>();
   try {
     matter(file);
     const tree = parser.parse(file);
@@ -282,7 +286,9 @@ export const checkSource = (
     remarkReferences({ collect: true })(tree, file);
     const anchors = anchorsOf(tree);
     for (const reference of references) {
-      diagnostics.push(...checkLocalReference(reference, filePath, anchors));
+      diagnostics.push(
+        ...checkLocalReference(reference, filePath, anchors, dependencies)
+      );
     }
     for (const message of file.messages) {
       diagnostics.push({
@@ -297,5 +303,6 @@ export const checkSource = (
   } catch (error) {
     diagnostics.push(errorDiagnostic(filePath, error, "mdxr:syntax"));
   }
+  onDependencies?.([...dependencies]);
   return diagnostics;
 };

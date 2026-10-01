@@ -1,0 +1,97 @@
+---
+title: Document workflows
+description: Templates, validation, transferable reviews, saved answers, offline sharing, and dependency history.
+sidebar:
+  order: 13
+---
+
+## Create a document
+
+Templates are editable MDX starting points containing frontmatter, headings and semantic task, requirement or test components. They provide structure for an author to fill in.
+
+```sh
+mdxr templates
+mdxr templates plan                   # print its MDX
+mdxr new --template plan --title "Migration plan"
+mdxr new --template investigation --dir ./reports
+mdxr new ./review.mdx --template review --title "Code review"
+```
+
+The default destination is `.mdxr/yyyyMMddHHmmss-<template>/index.mdx`, using local time. `--dir` changes its parent directory; a file argument or `--out` specifies the exact file. Existing files are never overwritten. The generated frontmatter `id` remains stable when the document moves.
+
+## Validate while editing
+
+```sh
+mdxr check .mdxr --watch --strict
+mdxr check .mdxr --watch --render --project .
+```
+
+Watch mode validates immediately and then follows document, Include, CodeFile and local resource changes, including external dependencies. With `--render`, project configuration, component modules and theme imports are also tracked. Press Ctrl+C to release the watchers. Stdin cannot be watched.
+
+In a live workspace, **Check** shows validation errors, warnings and spelling suggestions. Select an entry to open its raw source at the reported line and column, including errors in included documents. **Recheck** reruns validation. The workspace and source diagnostics remain available when the document cannot render. Library rows show static diagnostic counts; **Validation issues only** filters the listing. Static library indexing never executes project configuration or components.
+
+## Save and import reviews
+
+**Review** → **Download review JSON** saves comments, their anchors and resolution history, feedback batches and reviewed sections in a versioned `mdxr-review` JSON file. Choose **Import review JSON** to preview record counts, conflicts and changed sections before merging.
+
+Repeated imports do not duplicate records. Local records win conflicts unless **Use imported records for conflicts** is selected. When document identifiers differ, explicitly select **Map reviews … to this document** to transfer a moved document's records. Comments are matched using their quotes and context; missing targets remain detached comments. Sections whose revision changed remain unreviewed. Invalid formats and unsupported versions produce an error.
+
+Browser state is stored in localStorage. Existing path-based records are migrated to the rendered document identifier. Add a unique frontmatter `id` to keep the identity stable across file moves; generated templates already include one. Documents without an explicit ID use their project-relative path; standalone files outside a detected project retain their absolute path. JSON import/export is the transfer mechanism between browsers or preview origins.
+
+## Restore answers and Board placement
+
+Ask answers and Board card positions save automatically in the current browser and restore after reload. Use stable identifiers when editing or moving widgets:
+
+```mdx
+<Ask id="decisions" title="Decisions">
+  <Question name="approach" label="Approach" type="text" />
+</Ask>
+
+<Board id="tasks" title="Tasks">
+  <Lane id="todo" title="Todo">
+    <BoardCard id="task-1" title="Implement" />
+  </Lane>
+  <Lane id="done" title="Done" />
+</Board>
+```
+
+Question names, types, labels and choices are checked before restoring values. Changed questions or Board identities keep their saved data without applying it to incompatible widgets. A notice offers **Download retained answers** for recovery. Editing a changed question starts a new answer while retaining its previous record. Widgets without IDs derive identities from their titles and occurrence; explicit unique IDs are recommended for stable restoration, including cards with duplicate titles. Changes stay in browser storage until the author copies or saves them; autosave does not rewrite MDX source.
+
+## Share related documents offline
+
+In **Export HTML**, choose a content mode and select **Include related documents for offline reading**. The export appends bundled DocumentLink targets, follows nested links, deduplicates repeated documents and rewrites links to local sections. Assets and styles are embedded, IDs and accessibility references are namespaced, and executable scripts remain disabled. Links already opened in the live preview are resolved from their original embedded data rather than their temporary blob URLs.
+
+The resulting HTML can be opened after the preview server closes. Without the related-documents option, the export includes only the current document and the records selected by its content mode. An unreadable asset or incomplete linked document produces an export error.
+
+## Inspect dependency history
+
+Every live-preview version stores dependency paths, SHA-256 hashes and sizes alongside its capture time. Changes to dependency content create a new version even if the MDX source is unchanged. Select a version and open **Dependency manifest** to compare its captured hashes with current files: unchanged, changed, missing or added since a missing capture.
+
+Older versions without a manifest remain readable. The manifest records provenance; historical rendering uses current dependency files. It does not restore old Include, image, component or theme contents.
+
+## Integrate validation with CI and Node.js
+
+```yaml
+- name: Validate documents
+  run: mdxr check .mdxr --strict --format github
+```
+
+GitHub output uses workflow annotations with file, line, column and diagnostic code. Command properties and text are escaped. Error and strict-warning exit codes match text and JSON output.
+
+```ts
+import {
+  checkDocument,
+  checkDocuments,
+  watchDocuments,
+  type CheckResult,
+} from "@suzumiyaaoba/mdxr/check";
+
+const result: CheckResult = await checkDocuments(".mdxr", { strict: true });
+const diagnostics = await checkDocument("# Document", "document.mdx");
+const watcher = await watchDocuments(".mdxr", {}, (next) => {
+  process.stdout.write(`${next.errors} errors\n`);
+});
+watcher.close();
+```
+
+This API is a Node.js package entry. Static validation does not execute project code. Set `render: true` to validate configured components and rendering; `config` and `project` select configuration in the same way as the CLI.

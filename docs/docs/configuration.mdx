@@ -5,7 +5,7 @@ sidebar:
   order: 6
 ---
 
-Projects configure mdxr with `mdxr.config.ts` in the directory the render runs from (`mdxr.config.mts`, `.js`, and `.mjs` are also picked up). Every field is optional.
+mdxr discovers the nearest `mdxr.config.ts` (`.mts`, `.js`, and `.mjs` are also supported), starting at the document directory and walking upward. Discovery stops at the first Git or package root. `--project <dir>` specifies the search boundary; `--config <file>` takes priority over discovery. Each field is optional. Configuration fields resolve relative to the config file, while Include, CodeFile and image paths remain relative to the source document. Nested `.mdxr/` documents therefore use their project configuration.
 
 ```ts mdxr.config.ts
 import { defineConfig } from "@suzumiyaaoba/mdxr";
@@ -91,3 +91,5 @@ For a surface with an integrated hairline edge, use `smooth-shadow-ring-md` (siz
 ## Discovery
 
 `mdxr catalog` lists everything a project exposes — built-ins plus your components, with the `description` and schema-derived props for each. Agents read the same list via `mdxr catalog --json`.
+
+In Node.js, `findConfig(documentDirectory, { config, project })` from `@suzumiyaaoba/mdxr/check` returns the selected configuration path without executing configuration code.

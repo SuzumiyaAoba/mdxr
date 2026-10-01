@@ -17,6 +17,7 @@ export const wrapWireframe = (
   const Component = component;
   return defineComponent(
     {
+      allowUnknownAttributes: true,
       description: `wireframe-ui ${name} (${family})${block ? " — complete screen block" : ""}; upstream props plus MDX string attributes.`,
       schema: wireframeSchema(name),
     },

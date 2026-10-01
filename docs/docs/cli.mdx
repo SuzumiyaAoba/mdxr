@@ -1,6 +1,6 @@
 ---
 title: CLI reference
-description: Every mdxr command — render, serve, library, text, catalog, and init — with all flags.
+description: Every mdxr command — check, render, serve, library, text, catalog, and init — with all flags.
 sidebar:
   order: 2
 ---
@@ -15,6 +15,33 @@ Print the version of the package resolved by this CLI invocation. `-v` is a shor
 mdxr --version
 mdxr -v
 ```
+
+## mdxr check [path]
+
+Validate one document or every `.md`, `.markdown`, and `.mdx` document in a directory, without writing HTML. The default path is `.mdxr`.
+
+```sh
+mdxr check                            # validate .mdxr/
+mdxr check plan.mdx                   # validate one document
+mdxr check ./reports --format json    # collect structured diagnostics
+mdxr check ./reports --strict         # fail on warnings too
+mdxr check plan.mdx --render          # also validate project components and rendering
+cat plan.mdx | mdxr check -           # explicit stdin input
+```
+
+The default check parses documents without evaluating their JavaScript, project configuration, or React components. It checks component names, schema-backed attributes, required attributes, values, prohibited JavaScript, local resources, CodeFile line ranges, Include sections and cycles, citations, and cross references. An unknown attribute such as `sttaus="done"` produces a warning with a suggested spelling. Open-ended component schemas, including shadcn passthrough props, are not treated as closed attribute lists. `aria-*`, `data-*`, and common JSX attributes are allowed.
+
+Missing embedded files and ordinary local links are errors; missing file-reference chips are warnings because plans may refer to files that have not been created yet. External URLs and site-root URLs are not fetched or checked. Markdown link fragments are checked against local headings and explicit IDs. Independent diagnostics are collected from parseable documents, and checking continues after a malformed file. Directory traversal skips build/dependency directories and `.mdxr/history`, and does not follow symbolic links.
+
+`--render` additionally loads the document directory's `mdxr.config.*` and project components, then validates server rendering when static checks have no errors. This option executes trusted project configuration and component code; document JavaScript remains prohibited. It may use the renderer's build cache, but does not write an HTML output file.
+
+| Flag | Description |
+| --- | --- |
+| `--format <format>` | Diagnostic output: `text` (default) or `json` |
+| `--strict` | Return a failure exit code for warnings as well as errors |
+| `--render` | Load project components and additionally validate rendering |
+
+JSON output contains `ok`, `files`, `errors`, `warnings`, and a `diagnostics` array. Each diagnostic has `file`, `line`, `column`, `code`, `severity`, and `message`, plus `suggestion` when available. Errors produce exit code 1; warnings do so only with `--strict`.
 
 ## mdxr library [dir]
 
@@ -94,7 +121,13 @@ The watcher follows each opened document's render dependencies — a `theme` CSS
 
 The watcher records local MDX versions as files change. Use the version picker to render an earlier version, inspect its **Raw MDX**, or compare it with another version in **Diff**. History is stored under `.mdxr/history/`; capturing and viewing history is local and needs no API token.
 
-Choose **Export HTML** in the workspace to download one standalone review archive with the rendered document, conversation, comments, section review statuses, every saved MDX version, and their diffs. Images and stylesheets are embedded in the snapshot. Export reports an error if it cannot capture an external resource; the archive opens locally without the server.
+Choose **Export HTML**, select the contents, then choose **Download HTML**:
+
+- **Document only** preserves the document's current display and form values, without comments, review controls, conversations, or version records. It does not fetch conversation or history data.
+- **Document and review** includes current comments, section review statuses, and answers. Conversations, unsent drafts, comment handoff history, saved MDX versions, and diffs are excluded from both the visible appendix and embedded JSON.
+- **All records** is the default and preserves the complete archive: rendered document, conversation, comments, drafts, section reviews, every saved MDX version, and diffs.
+
+Images and stylesheets are embedded in every mode. Export reports an error if it cannot capture an external resource; the HTML opens locally without the server. Press Escape or choose **Cancel** to close the dialog without exporting.
 
 Pass `--agent` to enable chat in the directory's document workspaces. To message a Codex TUI session that is already running, pass its thread ID. By default, mdxr connects to the local Codex daemon socket and queues each message on that thread, leaving the TUI session running:
 

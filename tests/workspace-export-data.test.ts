@@ -149,10 +149,14 @@ describe("workspace export data endpoint", () => {
       agent?: ExportAgent;
       method?: string;
       origin?: string;
+      mode?: string;
     } = {}
   ): Promise<CapturedResponse> => {
     const { agent, history, method = "GET", origin } = options;
     const request = requestWith(method, origin);
+    if (options.mode !== undefined) {
+      request.url = `/__mdxr_export?mode=${options.mode}`;
+    }
     const { capture, response } = captureResponse(request);
     await handleWorkspaceExportRequest(
       request,
@@ -238,6 +242,50 @@ describe("workspace export data endpoint", () => {
     expect(crossOrigin.status).toBe(403);
     expect(wrongMethod.status).toBe(405);
     expect(unavailable.status).toBe(404);
+  });
+
+  it("does not read history or conversations for limited exports", async () => {
+    const history: DocumentHistory = {
+      capture: () => {
+        throw new Error("history must not be read");
+      },
+      diff: () => {
+        throw new Error("history must not be read");
+      },
+      list: () => {
+        throw new Error("history must not be read");
+      },
+      read: () => {
+        throw new Error("history must not be read");
+      },
+    };
+    const agent: ExportAgent = {
+      current: () => {
+        throw new Error("conversation must not be read");
+      },
+    };
+
+    for (const mode of ["document", "review"]) {
+      // oxlint-disable-next-line no-await-in-loop
+      const response = await requestExport({ agent, history, mode });
+      expect(response.status).toBe(200);
+      expect(JSON.parse(response.body)).toMatchObject({
+        conversation: null,
+        file: filePath,
+        latestId: "",
+        versions: [],
+      });
+    }
+    const withoutHistory = await requestExport({ mode: "review" });
+    expect(withoutHistory.status).toBe(200);
+  });
+
+  it("rejects invalid and repeated export modes", async () => {
+    const invalid = await requestExport({ mode: "unknown" });
+    const repeated = await requestExport({ mode: "review&mode=workspace" });
+
+    expect(invalid.status).toBe(400);
+    expect(repeated.status).toBe(400);
   });
 
   it("returns an error instead of a partial archive when a version cannot be read", async () => {

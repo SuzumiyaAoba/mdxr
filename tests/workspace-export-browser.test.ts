@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -313,6 +313,9 @@ describe("workspace HTML export", () => {
 
       const exportButton = page.getByRole("button", EXPORT_BUTTON);
       await exportButton.click();
+      await page
+        .getByRole("button", { exact: true, name: "Download HTML" })
+        .click();
       const error = page.getByRole("alert");
       await error.waitFor({ state: "visible" });
       const errorText = await error.textContent();
@@ -324,6 +327,9 @@ describe("workspace HTML export", () => {
 
       const downloadPromise = page.waitForEvent("download");
       await exportButton.click();
+      await page
+        .getByRole("button", { exact: true, name: "Download HTML" })
+        .click();
       const download = await downloadPromise;
       const archivePath = path.join(tempDir, download.suggestedFilename());
       await download.saveAs(archivePath);
@@ -471,6 +477,9 @@ describe("workspace HTML export", () => {
 
       const downloadPromise = page.waitForEvent("download");
       await page.getByRole("button", EXPORT_BUTTON).click();
+      await page
+        .getByRole("button", { exact: true, name: "Download HTML" })
+        .click();
       const download = await downloadPromise;
       const archivePath = path.join(tempDir, download.suggestedFilename());
       await download.saveAs(archivePath);
@@ -528,6 +537,118 @@ describe("workspace HTML export", () => {
       await offlineContext?.close();
       await page.close();
       await rm(tempDir, { force: true, recursive: true });
+    }
+  });
+
+  it.each(["Document only", "Document and review"])(
+    "exports %s without excluded records in visible HTML or embedded data",
+    async (choice) => {
+      const tempDir = await mkdtemp(
+        path.join(os.tmpdir(), "mdxr-export-mode-")
+      );
+      const { page, exportAttempts } = await openWorkspace(
+        browser,
+        html,
+        script,
+        360
+      );
+      try {
+        await addComment(page, "CURRENT_COMMENT_MARKER");
+        await page
+          .getByRole("button", { exact: true, name: "Close annotations" })
+          .click();
+        await toggleSectionReview(page);
+        await page
+          .locator('textarea[aria-label="Document note"]')
+          .fill("Edited document note");
+        await page.getByRole("button", EXPORT_BUTTON).click();
+        await page
+          .getByRole("radio", { name: new RegExp(choice, "u") })
+          .check();
+        const dialogBounds = await page.getByRole("dialog").boundingBox();
+        const downloadPromise = page.waitForEvent("download");
+        await page
+          .getByRole("button", { exact: true, name: "Download HTML" })
+          .click();
+        const download = await downloadPromise;
+        const output = path.join(tempDir, download.suggestedFilename());
+        await download.saveAs(output);
+        const snapshot = await readFile(output, "utf-8");
+
+        expect({
+          containsDocument: [
+            "This is the current review snapshot.",
+            "Edited document note",
+            OFFLINE_IMAGE,
+          ].every((marker) => snapshot.includes(marker)),
+          containsExcludedRecords: [
+            "Please preserve both document versions.",
+            "This is the original review snapshot.",
+            'id="chat"',
+            'id="history"',
+          ].some((marker) => snapshot.includes(marker)),
+          dialogFitsViewport:
+            dialogBounds !== null &&
+            dialogBounds.x >= 0 &&
+            dialogBounds.x + dialogBounds.width <= 360,
+        }).toStrictEqual({
+          containsDocument: true,
+          containsExcludedRecords: false,
+          dialogFitsViewport: true,
+        });
+        expect({
+          attempts: exportAttempts(),
+          comments: snapshot.includes("CURRENT_COMMENT_MARKER"),
+          embeddedData: snapshot.includes("mdxr-export-data"),
+          emptyHistory: snapshot.includes('"versions":[]'),
+          noConversation: snapshot.includes('"conversation":null'),
+          reviewControls: snapshot.includes("<mdxr-section-review"),
+          reviewedSection: snapshot.includes("Design — Reviewed"),
+        }).toStrictEqual(
+          choice === "Document only"
+            ? {
+                attempts: 0,
+                comments: false,
+                embeddedData: false,
+                emptyHistory: false,
+                noConversation: false,
+                reviewControls: false,
+                reviewedSection: false,
+              }
+            : {
+                attempts: 1,
+                comments: true,
+                embeddedData: true,
+                emptyHistory: true,
+                noConversation: true,
+                reviewControls: true,
+                reviewedSection: true,
+              }
+        );
+      } finally {
+        await page.close();
+        await rm(tempDir, { force: true, recursive: true });
+      }
+    }
+  );
+
+  it("can cancel the export dialog with Escape without starting an export", async () => {
+    const { page, exportAttempts } = await openWorkspace(browser, html, script);
+    try {
+      await page.getByRole("button", EXPORT_BUTTON).click();
+      await page
+        .getByRole("dialog", { name: "Export HTML" })
+        .waitFor({ state: "visible" });
+      await page.keyboard.press("Escape");
+      await page.getByRole("dialog").waitFor({ state: "hidden" });
+      expect(exportAttempts()).toBe(0);
+      await expect(
+        page
+          .getByRole("button", EXPORT_BUTTON)
+          .evaluate((button) => button === document.activeElement)
+      ).resolves.toBeTruthy();
+    } finally {
+      await page.close();
     }
   });
 

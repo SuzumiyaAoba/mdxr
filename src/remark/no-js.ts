@@ -17,24 +17,34 @@ const MESSAGE =
  * children. Extensibility happens through mdxr.config.ts, not through
  * executable markup inside the document.
  */
-export const remarkNoJs = () => (tree: Node, file: VFile) => {
-  visit(tree, JS_NODES, (node: Node) => {
-    file.fail(MESSAGE, node, "mdxr:no-js");
-  });
-  visit(tree, JSX_ELEMENTS, (node: Node) => {
-    if (!("attributes" in node) || !Array.isArray(node.attributes)) {
-      return;
-    }
-    for (const attr of node.attributes) {
-      // String-valued attributes are data; `{expr}` values and `{...x}`
-      // spreads are live JavaScript evaluated at render time.
-      if (
-        isRecord(attr) &&
-        (attr.type !== "mdxJsxAttribute" ||
-          (attr.value !== null && typeof attr.value !== "string"))
-      ) {
-        file.fail(MESSAGE, node, "mdxr:no-js");
+export const remarkNoJs =
+  (opts: { collect?: boolean } = {}) =>
+  (tree: Node, file: VFile) => {
+    const report = (node: Node): void => {
+      if (opts.collect === true) {
+        const message = file.message(MESSAGE, node, "mdxr:no-js");
+        message.fatal = true;
+        return;
       }
-    }
-  });
-};
+      file.fail(MESSAGE, node, "mdxr:no-js");
+    };
+    visit(tree, JS_NODES, (node: Node) => {
+      report(node);
+    });
+    visit(tree, JSX_ELEMENTS, (node: Node) => {
+      if (!("attributes" in node) || !Array.isArray(node.attributes)) {
+        return;
+      }
+      for (const attr of node.attributes) {
+        // String-valued attributes are data; `{expr}` values and `{...x}`
+        // spreads are live JavaScript evaluated at render time.
+        if (
+          isRecord(attr) &&
+          (attr.type !== "mdxJsxAttribute" ||
+            (attr.value !== null && typeof attr.value !== "string"))
+        ) {
+          report(node);
+        }
+      }
+    });
+  };

@@ -27,6 +27,7 @@ interface Reference {
   kind: string;
 }
 interface ReferenceState {
+  collect: boolean;
   references: Map<string, Reference>;
   sources: Map<string, Reference>;
   counts: Map<string, number>;
@@ -34,6 +35,21 @@ interface ReferenceState {
   citations: number;
   file: VFile;
 }
+const reportReferenceError = (
+  state: ReferenceState,
+  message: string,
+  node: MdxTarget
+): void => {
+  if (state.collect) {
+    const diagnostic = state.file.message(message, node, "mdxr:references");
+    diagnostic.fatal = true;
+    if (node.data?.mdxrSourceFile !== undefined) {
+      diagnostic.file = node.data.mdxrSourceFile;
+    }
+    return;
+  }
+  state.file.fail(message, node);
+};
 const PREFIXES: Record<string, string> = {
   DataTable: "Table",
   Decision: "Decision",
@@ -93,7 +109,8 @@ const registerReference = (node: MdxTarget, state: ReferenceState): void => {
     return;
   }
   if (state.references.has(id)) {
-    state.file.fail(`Duplicate reference id: ${id}`, node);
+    reportReferenceError(state, `Duplicate reference id: ${id}`, node);
+    return;
   }
   node.data = { ...node.data, mdxrReferenceId: id };
   set(node, "id", id);
@@ -116,12 +133,14 @@ const resolveCitation = (node: MdxTarget, state: ReferenceState): void => {
   const target = jsxAttr(node, "source") ?? "";
   const source = state.sources.get(target);
   if (!source) {
-    state.file.fail(`Unknown citation source: ${target}`, node);
+    reportReferenceError(state, `Unknown citation source: ${target}`, node);
+    return;
   }
   state.citations += 1;
   const id = `mdxr-citation-${state.citations}`;
   if (state.references.has(id)) {
-    state.file.fail(`Duplicate reference id: ${id}`, node);
+    reportReferenceError(state, `Duplicate reference id: ${id}`, node);
+    return;
   }
   node.data = { ...node.data, mdxrReferenceId: id };
   set(node, "id", id);
@@ -160,7 +179,8 @@ const resolveCrossReference = (
     (node.name === "TermRef" ? `term-${jsxAttr(node, "term") ?? ""}` : "");
   const reference = state.references.get(target);
   if (!reference) {
-    state.file.fail(`Unknown cross reference: ${target}`, node);
+    reportReferenceError(state, `Unknown cross reference: ${target}`, node);
+    return;
   }
   set(node, "href", `#${reference.id}`);
   set(
@@ -241,34 +261,37 @@ const resolveReference = (node: MdxTarget, state: ReferenceState): void => {
 };
 
 /** Two passes support forward references without changing older documents. */
-export const remarkReferences = () => (tree: Node, file: VFile) => {
-  const elements: MdxTarget[] = [];
-  visit(tree, (node) => {
-    if (isElement(node)) {
-      elements.push(node);
+export const remarkReferences =
+  (opts: { collect?: boolean } = {}) =>
+  (tree: Node, file: VFile) => {
+    const elements: MdxTarget[] = [];
+    visit(tree, (node) => {
+      if (isElement(node)) {
+        elements.push(node);
+      }
+    });
+    if (!elements.some((node) => REFERENCE_FEATURES.has(node.name ?? ""))) {
+      return;
     }
-  });
-  if (!elements.some((node) => REFERENCE_FEATURES.has(node.name ?? ""))) {
-    return;
-  }
-  const state: ReferenceState = {
-    backlinks: new Map(),
-    citations: 0,
-    counts: new Map(),
-    file,
-    references: new Map(),
-    sources: new Map(),
+    const state: ReferenceState = {
+      backlinks: new Map(),
+      citations: 0,
+      collect: opts.collect === true,
+      counts: new Map(),
+      file,
+      references: new Map(),
+      sources: new Map(),
+    };
+    for (const node of elements) {
+      registerReference(node, state);
+    }
+    for (const node of elements) {
+      resolveReference(node, state);
+    }
+    for (const [source, ids] of state.backlinks) {
+      const reference = state.sources.get(source);
+      if (reference) {
+        set(reference.node, "backlinks", ids.join(","));
+      }
+    }
   };
-  for (const node of elements) {
-    registerReference(node, state);
-  }
-  for (const node of elements) {
-    resolveReference(node, state);
-  }
-  for (const [source, ids] of state.backlinks) {
-    const reference = state.sources.get(source);
-    if (reference) {
-      set(reference.node, "backlinks", ids.join(","));
-    }
-  }
-};

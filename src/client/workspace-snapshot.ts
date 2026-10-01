@@ -222,6 +222,8 @@ export const captureWorkspaceDocument = async (options?: {
   appendix?: string;
   /** Override for the standalone page <title>. */
   title?: string;
+  /** Omit the reader's review controls from a document-only snapshot. */
+  includeReviews?: boolean;
 }): Promise<string> => {
   const root = document.querySelector("#mdxr-root");
   if (root === null) {
@@ -230,6 +232,13 @@ export const captureWorkspaceDocument = async (options?: {
   const container = document.createElement("div");
   const snapshot = cloneSnapshot(root);
   container.append(snapshot);
+  if (options?.includeReviews === false) {
+    for (const control of container.querySelectorAll(
+      "mdxr-section-review, [data-section-review-summary]"
+    )) {
+      control.remove();
+    }
+  }
   if (options?.appendix !== undefined && snapshot instanceof Element) {
     // Script elements survive insertAdjacentHTML as inert markup — they are
     // serialized into the snapshot but never executed on export.

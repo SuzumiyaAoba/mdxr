@@ -110,6 +110,72 @@ body.mdxr-workspace-enabled.mdxr-alternate-view
   opacity: 0.5;
   cursor: progress;
 }
+.mdxr-workspace-export-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #0006;
+}
+.mdxr-workspace-export-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 101;
+  transform: translate(-50%, -50%);
+  width: min(28rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 0.875rem;
+}
+.mdxr-workspace-export-dialog h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+.mdxr-workspace-export-dialog p,
+.mdxr-workspace-export-dialog label > span > span {
+  color: var(--muted-foreground);
+}
+.mdxr-workspace-export-dialog fieldset {
+  margin-block: 1rem;
+}
+.mdxr-workspace-export-dialog legend {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+.mdxr-workspace-export-dialog label {
+  display: flex;
+  align-items: start;
+  gap: 0.75rem;
+  padding-block: 0.5rem;
+  cursor: pointer;
+}
+.mdxr-workspace-export-dialog input {
+  margin-top: 0.25rem;
+}
+.mdxr-workspace-export-dialog label span {
+  display: block;
+}
+.mdxr-workspace-export-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+.mdxr-workspace-export-actions button {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  cursor: pointer;
+}
+.mdxr-workspace-export-actions button:last-child {
+  color: var(--primary-foreground);
+  background: var(--primary);
+}
 .mdxr-workspace-export-status {
   position: fixed;
   bottom: 1rem;

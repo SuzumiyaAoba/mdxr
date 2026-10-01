@@ -46,6 +46,22 @@ const levenshtein = (a: string, b: string): number => {
   return dp[a.length][b.length];
 };
 
+/** Closest known spelling, shared by render errors and static diagnostics. */
+export const suggestName = (
+  name: string,
+  names: string[]
+): string | undefined => {
+  const [nearest] = names
+    .map((candidate) => ({
+      distance: levenshtein(name.toLowerCase(), candidate.toLowerCase()),
+      name: candidate,
+    }))
+    .toSorted((left, right) => left.distance - right.distance);
+  return nearest !== undefined && nearest.distance <= 3
+    ? nearest.name
+    : undefined;
+};
+
 /**
  * MDX's "Expected component `<X>`" errors get a friendlier message: the
  * closest catalog name (edit distance ≤ 3) plus the full list, so the agent
@@ -64,13 +80,8 @@ export const enhanceRenderError = (
     return err;
   }
   const names = componentNames.filter((n) => /^[A-Z]/u.test(n));
-  const [nearest] = names
-    .map((n) => ({ d: levenshtein(name.toLowerCase(), n.toLowerCase()), n }))
-    .toSorted((x, y) => x.d - y.d);
-  const hint =
-    nearest !== undefined && nearest.d <= 3
-      ? ` Did you mean <${nearest.n}>?`
-      : "";
+  const nearest = suggestName(name, names);
+  const hint = nearest === undefined ? "" : ` Did you mean <${nearest}>?`;
   return new Error(
     `Unknown component <${name}>.${hint} Available: ${names.join(", ")}. Add custom components via mdxr.config.ts.`,
     { cause: err }

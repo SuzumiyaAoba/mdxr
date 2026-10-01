@@ -32,6 +32,7 @@ For example, when using `npx`, pin the update command to the **reported CLI vers
 4. When a standalone `.html` file is the deliverable itself (to save or share), render it: `npx @suzumiyaaoba/mdxr render "$doc"` (default output is the source path with `.html`, so `index.html` sits beside `index.mdx`). For self-contained documents, piping also works: `cat "$doc" | npx @suzumiyaaoba/mdxr render > "${doc%.*}.html"` (`mdxr render -` also reads stdin; `-o out.html` sets the path).
 5. On errors, the message includes `file:line:col` — fix and re-run. `npx @suzumiyaaoba/mdxr render "$doc" --format json` prints machine-readable errors.
 6. Plain-text deliverable: `npx @suzumiyaaoba/mdxr text "$doc"` renders the document to Markdown readable in a terminal — components become ASCII stand-ins (checkbox lists, bar charts, GFM tables); interactive-only widgets degrade to their text.
+7. Validate a saved document or a directory with `npx @suzumiyaaoba/mdxr check "$doc" --format json` (use `.mdxr/` to check all documents). Diagnostics include source locations, severity and spelling suggestions. Add `--strict` to fail on warnings. The default is static validation without executing project configuration or components; add `--render` to load project components and validate rendering too. No HTML output is written.
 
 ## Rules
 

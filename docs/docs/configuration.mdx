@@ -63,6 +63,8 @@ export const LinkCard = defineComponent(
 
 Each named export registers under its export name — `<LinkCard>` above — and a same-name export **overrides the built-in** (a warning is printed to stderr).
 
+`mdxr check --render` loads these components and validates their schemas before rendering. Unknown attributes produce warnings by default. When a wrapper accepts upstream props beyond its schema, set `allowUnknownAttributes: true` in its `defineComponent` metadata to allow those names while still validating the declared props. Built-in Wireframe adapters use this option; empty passthrough schemas also allow arbitrary attribute names.
+
 Components are ordinary React function components; Tailwind classes in your module are picked up by the render-time CSS build. Compose built-ins and the shadcn/ui set by importing from `@suzumiyaaoba/mdxr/components`:
 
 ```tsx

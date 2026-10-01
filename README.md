@@ -11,6 +11,7 @@ npx @suzumiyaaoba/mdxr render plan.mdx     # writes plan.html
 npx @suzumiyaaoba/mdxr serve               # serve .mdxr at http://localhost:3737
 npx @suzumiyaaoba/mdxr library             # browse and search .mdxr
 npx @suzumiyaaoba/mdxr catalog             # list available components
+npx @suzumiyaaoba/mdxr check               # validate all documents in .mdxr
 npx @suzumiyaaoba/mdxr --version           # print the package version
 npx @suzumiyaaoba/mdxr init                # install mdxr instructions for Codex and Claude
 ```
@@ -21,6 +22,20 @@ Or install it:
 npm install -g @suzumiyaaoba/mdxr          # global CLI
 npm install @suzumiyaaoba/mdxr             # library: import { render } from "@suzumiyaaoba/mdxr"
 ```
+
+### `mdxr check [path]`
+
+Validate one Markdown/MDX document or every document under a directory (defaults to `.mdxr`) without writing HTML. Checks include syntax, component names and attributes, local resources, Include cycles, citations, and cross references. Diagnostics include file, line, and column; errors exit with code 1, and checking continues after a malformed document.
+
+```sh
+mdxr check                           # validate .mdxr
+mdxr check ./reports --format json   # structured diagnostics for CI and agents
+mdxr check ./reports --strict        # fail on warnings too
+mdxr check plan.mdx --render          # also load project components and validate rendering
+cat plan.mdx | mdxr check -           # validate stdin
+```
+
+The default check does not execute document JavaScript, project configuration, or custom components. Use `--render` when checking trusted project components. See the [CLI reference](docs/docs/cli.mdx) for the diagnostic format and reference rules.
 
 ### `mdxr library [dir]`
 
@@ -70,7 +85,13 @@ Saved annotations remain in your browser for that document; they do not modify t
 
 Each document-level `##` section also has a **Not reviewed / Reviewed** toggle. Review status is saved locally per document and restored after reload; sections with changed content require review again. In **Pages** view, the sidebar shows section statuses and review progress. See [Section review status](https://suzumiyaaoba.com/mdxr/authoring#section-review-status).
 
-In the `mdxr serve` workspace, choose **Export HTML** to download one standalone review archive with the rendered document, chat, comments, section review statuses, every saved MDX version, and their diffs. Comment status, resolution time, revision, and reviewed version are included; links jump to matching versions in the archive. Images and stylesheets are embedded in the snapshot; if an external resource cannot be captured, export reports an error instead of omitting it. Open the file locally to review or share the captured state without running the server.
+In the `mdxr serve` workspace, choose **Export HTML**, select the contents, then **Download HTML**:
+
+- **Document only** preserves the displayed document and entered values, omitting review controls and records. It does not fetch chat or version history.
+- **Document and review** adds current comments, section review statuses, and answers. Chat, unsent drafts, comment handoff history, saved MDX versions, and diffs are excluded from both visible HTML and embedded JSON.
+- **All records** (the default) includes the document, chat, comments, drafts, section reviews, every saved MDX version, and their diffs. Resolved comments retain their resolution time and reviewed version, with links to matching archived versions.
+
+Images and stylesheets are embedded in every snapshot; if an external resource cannot be captured, export reports an error instead of omitting it. Open the file locally to review or share the captured state without running the server. Escape or **Cancel** closes the dialog without exporting.
 
 ### `mdxr text [file]`
 

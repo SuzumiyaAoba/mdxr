@@ -8,6 +8,8 @@ import packageJson from "../package.json" with { type: "json" };
 import { validateAgentOptions } from "./agent-options.js";
 import { mdxToAscii } from "./ascii/index.js";
 import { catalogEntries, formatCatalog, CONVENTIONS } from "./catalog.js";
+import { formatDiagnostic } from "./check-diagnostics.js";
+import { checkDocument, checkDocuments, checkResult } from "./check.js";
 import { loadConfig } from "./config.js";
 import { formatError, parseErrorFormat } from "./format-error.js";
 import { ensureDocsDirIgnored, installSkill } from "./init.js";
@@ -58,6 +60,52 @@ const fail = (err: unknown, json: boolean): never => {
 };
 
 const cli = cac("mdxr").version(packageJson.version);
+
+cli
+  .command(
+    "check [path]",
+    "Validate Markdown and MDX documents (default: .mdxr)"
+  )
+  .option("--format <format>", "Diagnostic output: text | json")
+  .option("--strict", "Treat warnings as failures")
+  .option("--render", "Also load project components and validate rendering")
+  .action(
+    async (
+      input: string | undefined,
+      opts: { format?: string; strict?: boolean; render?: boolean }
+    ) => {
+      const json = opts.format === "json";
+      try {
+        parseErrorFormat(opts.format);
+        const fromStdin =
+          input === "-" ||
+          (input === undefined && process.argv.slice(2).includes("-"));
+        if (fromStdin) {
+          requireStdinSource();
+        }
+        const result = fromStdin
+          ? checkResult(
+              ["<stdin>"],
+              await checkDocument(await readStdin(), "<stdin>", opts),
+              opts.strict
+            )
+          : await checkDocuments(input, opts);
+        if (json) {
+          console.log(JSON.stringify(result));
+        } else {
+          for (const diagnostic of result.diagnostics) {
+            console.log(formatDiagnostic(diagnostic));
+          }
+          console.log(
+            `mdxr: checked ${result.files.length} documents: ${result.errors} errors, ${result.warnings} warnings`
+          );
+        }
+        process.exitCode = result.ok ? 0 : 1;
+      } catch (error) {
+        fail(error, json);
+      }
+    }
+  );
 
 cli
   .command(

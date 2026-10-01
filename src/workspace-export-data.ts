@@ -9,6 +9,8 @@ import type {
 } from "./document-history.js";
 import { formatError } from "./format-error.js";
 import { isLocalOrigin, replyJson } from "./local-http.js";
+import { parseWorkspaceExportMode } from "./workspace-export-options.js";
+import type { WorkspaceExportMode } from "./workspace-export-options.js";
 
 export interface WorkspaceExportData {
   file: string;
@@ -28,9 +30,20 @@ interface AgentSession {
 /** Collect a complete, internally consistent archive of one served document. */
 export const createWorkspaceExportData = async (
   filePath: string,
-  history: DocumentHistory,
-  agent?: AgentSession
+  history: DocumentHistory | undefined,
+  agent?: AgentSession,
+  mode: WorkspaceExportMode = "workspace"
 ): Promise<WorkspaceExportData> => {
+  const metadata = {
+    exportedAt: new Date().toISOString(),
+    file: path.resolve(filePath),
+  };
+  if (mode !== "workspace") {
+    return { ...metadata, conversation: null, latestId: "", versions: [] };
+  }
+  if (history === undefined) {
+    throw new Error("Document history is unavailable");
+  }
   await history.capture("change");
   const { latestId, versions } = await history.list();
 
@@ -48,9 +61,8 @@ export const createWorkspaceExportData = async (
   );
 
   return {
+    ...metadata,
     conversation: agent === undefined ? null : await agent.current(),
-    exportedAt: new Date().toISOString(),
-    file: path.resolve(filePath),
     latestId,
     versions: exportedVersions,
   };
@@ -64,7 +76,7 @@ export const handleWorkspaceExportRequest = async (
   history: DocumentHistory | undefined,
   agent?: AgentSession
 ): Promise<void> => {
-  if (history === undefined || filePath === undefined) {
+  if (filePath === undefined) {
     replyJson(response, 404, { error: "Document history is unavailable" });
     return;
   }
@@ -76,11 +88,26 @@ export const handleWorkspaceExportRequest = async (
     replyJson(response, 405, { error: "Method not allowed" });
     return;
   }
+  let mode: WorkspaceExportMode;
+  try {
+    const url = new URL(request.url ?? "/__mdxr_export", "http://localhost");
+    if (url.searchParams.getAll("mode").length > 1) {
+      throw new Error("Specify only one export mode");
+    }
+    mode = parseWorkspaceExportMode(url.searchParams.get("mode"));
+  } catch (error) {
+    replyJson(response, 400, { error: formatError(error) });
+    return;
+  }
+  if (mode === "workspace" && history === undefined) {
+    replyJson(response, 404, { error: "Document history is unavailable" });
+    return;
+  }
   try {
     replyJson(
       response,
       200,
-      await createWorkspaceExportData(filePath, history, agent)
+      await createWorkspaceExportData(filePath, history, agent, mode)
     );
   } catch (error) {
     replyJson(response, 500, { error: formatError(error) });

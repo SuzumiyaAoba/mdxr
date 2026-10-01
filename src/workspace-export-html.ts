@@ -1,6 +1,7 @@
 import type { DocumentAnnotation } from "./annotations.js";
 import type { WorkspaceBrowserState } from "./client/workspace-export-state.js";
 import type { WorkspaceExportData } from "./workspace-export-data.js";
+import type { WorkspaceExportMode } from "./workspace-export-options.js";
 
 export const escapeExportHtml = (text: string): string =>
   text
@@ -50,7 +51,8 @@ ${anchor.image === "" ? "" : `<p>Image: ${escapeExportHtml(anchor.image)}</p>`}<
 
 const commentsHtml = (
   state: WorkspaceBrowserState,
-  versionsById: ReadonlyMap<string, WorkspaceExportData["versions"][number]>
+  versionsById: ReadonlyMap<string, WorkspaceExportData["versions"][number]>,
+  includeHistory: boolean
 ): string => {
   const detachedAnnotationIds = new Set(state.detachedAnnotationIds);
   const active = state.annotations.annotations
@@ -70,7 +72,7 @@ const commentsHtml = (
     .join("");
   const draft = state.annotationDraft;
   return `<h3>Current comments</h3>${active || "<p>No current comments.</p>"}
-<h3>Comment history</h3>${history || "<p>No comment history.</p>"}
+${includeHistory ? `<h3>Comment history</h3>${history || "<p>No comment history.</p>"}` : ""}
 ${draft === undefined ? "" : `<h3>Unsent comment draft</h3>${commentHtml({ ...draft, id: draft.id ?? "draft" }, versionsById)}`}`;
 };
 
@@ -119,14 +121,32 @@ const APPENDIX_CSS = `
  * markup lands inside #mdxr-root right after the document body, so everything
  * stays readable in the document's own styles without a wrapper page.
  */
-export const workspaceExportAppendix = (
+const reviewExport = (
+  workspace: WorkspaceExportData,
+  browser: WorkspaceBrowserState
+): { workspace: WorkspaceExportData; browser: WorkspaceBrowserState } => ({
+  browser: {
+    ...browser,
+    annotationDraft: undefined,
+    annotations: {
+      annotations: browser.annotations.annotations,
+      history: [],
+    },
+    chatDraft: "",
+  },
+  workspace: {
+    ...workspace,
+    conversation: null,
+    latestId: "",
+    versions: [],
+  },
+});
+
+const chatHtml = (
   workspace: WorkspaceExportData,
   browser: WorkspaceBrowserState
 ): string => {
   const { conversation } = workspace;
-  const versionsById = new Map(
-    workspace.versions.map((version) => [version.id, version] as const)
-  );
   const chat =
     conversation?.messages
       .map(
@@ -134,17 +154,39 @@ export const workspaceExportAppendix = (
           `<article><h4>${message.role === "user" ? "User" : "Assistant"}</h4>${pre(message.content)}</article>`
       )
       .join("") ?? "";
-  const json = JSON.stringify({ browser, version: 1, workspace }).replaceAll(
-    "<",
-    "\\u003c"
+  return `<section id="chat"><h3>Chat</h3>${conversation === null ? "" : `<p class="mdxr-export-muted">${escapeExportHtml(conversation.provider)} · ${escapeExportHtml(conversation.sessionId ?? "No session ID")}</p>${conversation.busy ? "<p>Agent was responding when this archive was exported.</p>" : ""}${conversation.error === undefined ? "" : pre(conversation.error)}`}${chat || "<p>No chat messages.</p>"}${browser.chatDraft === "" ? "" : `<h4>Unsent chat draft</h4>${pre(browser.chatDraft)}`}</section>`;
+};
+
+const reviewsHtml = (browser: WorkspaceBrowserState): string =>
+  `<section id="reviews"><h3>Reviews and answers</h3>${browser.sectionReviews.map((review) => `<p>${escapeExportHtml(review.title)} — ${review.reviewed ? "Reviewed" : "Not reviewed"}</p>`).join("") || "<p>No section reviews.</p>"}${browser.fields.map((field) => `<article><h4>${escapeExportHtml(field.label)}</h4>${pre(field.value)}</article>`).join("")}</section>`;
+
+export const workspaceExportAppendix = (
+  workspace: WorkspaceExportData,
+  browser: WorkspaceBrowserState,
+  mode: WorkspaceExportMode = "workspace"
+): string => {
+  if (mode === "document") {
+    return "";
+  }
+  const { workspace: archive, browser: state } =
+    mode === "review"
+      ? reviewExport(workspace, browser)
+      : { browser, workspace };
+  const versionsById = new Map(
+    archive.versions.map((version) => [version.id, version] as const)
   );
+  const json = JSON.stringify({
+    browser: state,
+    version: 1,
+    workspace: archive,
+  }).replaceAll("<", "\\u003c");
   return `<div class="mdxr-export" data-mdxr-export>
-<h2>Workspace archive</h2>
-<p class="mdxr-export-muted">Exported ${escapeExportHtml(workspace.exportedAt)} · ${escapeExportHtml(workspace.file)}</p>
-<section id="chat"><h3>Chat</h3>${conversation === null ? "" : `<p class="mdxr-export-muted">${escapeExportHtml(conversation.provider)} · ${escapeExportHtml(conversation.sessionId ?? "No session ID")}</p>${conversation.busy ? "<p>Agent was responding when this archive was exported.</p>" : ""}${conversation.error === undefined ? "" : pre(conversation.error)}`}${chat || "<p>No chat messages.</p>"}${browser.chatDraft === "" ? "" : `<h4>Unsent chat draft</h4>${pre(browser.chatDraft)}`}</section>
-<section id="comments"><h3>Comments</h3>${commentsHtml(browser, versionsById)}</section>
-<section id="reviews"><h3>Reviews and answers</h3>${browser.sectionReviews.map((review) => `<p>${escapeExportHtml(review.title)} — ${review.reviewed ? "Reviewed" : "Not reviewed"}</p>`).join("") || "<p>No section reviews.</p>"}${browser.fields.map((field) => `<article><h4>${escapeExportHtml(field.label)}</h4>${pre(field.value)}</article>`).join("")}</section>
-<section id="history"><h3>Version history and diffs</h3>${historyHtml(workspace)}</section>
+<h2>${mode === "workspace" ? "Workspace archive" : "Document review"}</h2>
+<p class="mdxr-export-muted">Exported ${escapeExportHtml(archive.exportedAt)} · ${escapeExportHtml(archive.file)}</p>
+${mode === "workspace" ? chatHtml(archive, state) : ""}
+<section id="comments"><h3>Comments</h3>${commentsHtml(state, versionsById, mode === "workspace")}</section>
+${reviewsHtml(state)}
+${mode === "workspace" ? `<section id="history"><h3>Version history and diffs</h3>${historyHtml(archive)}</section>` : ""}
 <script type="application/json" id="mdxr-export-data">${json}</script>
 <style>${APPENDIX_CSS}</style>
 </div>`;

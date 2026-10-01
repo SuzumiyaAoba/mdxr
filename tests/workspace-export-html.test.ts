@@ -82,6 +82,59 @@ const browserState: WorkspaceBrowserState = {
 };
 
 describe("workspace export comment status", () => {
+  it("omits chat, drafts and history from review HTML and its JSON payload", () => {
+    const workspace: WorkspaceExportData = {
+      ...exportedWorkspace,
+      conversation: {
+        busy: false,
+        messages: [{ content: "PRIVATE_CHAT_MARKER", role: "user" }],
+        provider: "codex",
+      },
+      versions: [
+        { ...exportedWorkspace.versions[0], source: "PRIVATE_MDX_MARKER" },
+      ],
+    };
+    const browser: WorkspaceBrowserState = {
+      ...browserState,
+      annotationDraft: { anchor, comment: "PRIVATE_COMMENT_DRAFT" },
+      annotations: {
+        ...browserState.annotations,
+        history: [
+          {
+            ...browserState.annotations.history[0],
+            markdown: "PRIVATE_HANDOFF_MARKER",
+          },
+        ],
+      },
+      chatDraft: "PRIVATE_CHAT_DRAFT",
+    };
+    const html = workspaceExportAppendix(workspace, browser, "review");
+
+    expect(html).toContain("Resolved safely.");
+    expect(html).toContain("Document review");
+    for (const marker of [
+      "PRIVATE_CHAT_MARKER",
+      "PRIVATE_MDX_MARKER",
+      "PRIVATE_COMMENT_DRAFT",
+      "PRIVATE_HANDOFF_MARKER",
+      "PRIVATE_CHAT_DRAFT",
+      'id="chat"',
+      'id="history"',
+    ]) {
+      expect(html).not.toContain(marker);
+    }
+    expect(workspace.conversation?.messages[0]?.content).toBe(
+      "PRIVATE_CHAT_MARKER"
+    );
+    expect(browser.chatDraft).toBe("PRIVATE_CHAT_DRAFT");
+  });
+
+  it("produces no review payload for document-only exports", () => {
+    expect(
+      workspaceExportAppendix(exportedWorkspace, browserState, "document")
+    ).toBe("");
+  });
+
   it("exports resolution details and links only to the matching saved version", () => {
     const html = workspaceExportAppendix(exportedWorkspace, browserState);
 

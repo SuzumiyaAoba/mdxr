@@ -63,6 +63,8 @@ export const LinkCard = defineComponent(
 
 各 named export は export 名で登録されます — 上記は `<LinkCard>` — 同名の export は**ビルトインを上書き**します（stderr に警告が出ます）。
 
+`mdxr check --render` はこれらのコンポーネントを読み込み、描画前にスキーマも検証します。未知の属性名は通常、警告になります。スキーマに記載した属性以外にも上流の props を受け付けるラッパーでは、`defineComponent` のメタ情報に `allowUnknownAttributes: true` を指定すると、宣言した属性の検証を維持しながら他の属性名も許可できます。ビルトインの Wireframe アダプターはこの指定を使い、空のスキーマも任意の属性名を許可します。
+
 コンポーネントは通常の React 関数コンポーネントです。モジュール内の Tailwind クラスはレンダリング時の CSS ビルドに拾われます。ビルトインや shadcn/ui セットは `@suzumiyaaoba/mdxr/components` からインポートして組み合わせられます:
 
 ```tsx

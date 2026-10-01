@@ -1,5 +1,6 @@
+import { Dialog } from "@base-ui/react/dialog";
 import { Download } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { collectWorkspaceBrowserState } from "./client/workspace-export-state.js";
 import { captureWorkspaceDocument } from "./client/workspace-snapshot.js";
@@ -7,6 +8,26 @@ import { isRecord } from "./guards.js";
 import { downloadText } from "./ui/data-download.js";
 import type { WorkspaceExportData } from "./workspace-export-data.js";
 import { workspaceExportAppendix } from "./workspace-export-html.js";
+import { WORKSPACE_EXPORT_MODES } from "./workspace-export-options.js";
+import type { WorkspaceExportMode } from "./workspace-export-options.js";
+
+const EXPORT_LABELS = {
+  document: {
+    description: "The document as currently displayed, without review records.",
+    label: "Document only",
+    suffix: "document",
+  },
+  review: {
+    description: "Document, current comments, section reviews and answers.",
+    label: "Document and review",
+    suffix: "review",
+  },
+  workspace: {
+    description: "Document, chat, comments, drafts and all saved versions.",
+    label: "All records",
+    suffix: "workspace",
+  },
+} as const;
 
 const isExportVersion = (value: unknown): boolean =>
   isRecord(value) &&
@@ -46,12 +67,15 @@ const isExportData = (value: unknown): value is WorkspaceExportData =>
   typeof value.exportedAt === "string" &&
   typeof value.latestId === "string" &&
   Array.isArray(value.versions) &&
-  value.versions.length > 0 &&
   value.versions.every(isExportVersion) &&
   isExportConversation(value.conversation);
 
-const loadExportData = async (): Promise<WorkspaceExportData> => {
-  const response = await fetch("/__mdxr_export", { cache: "no-store" });
+const loadExportData = async (
+  mode: WorkspaceExportMode
+): Promise<WorkspaceExportData> => {
+  const response = await fetch(`/__mdxr_export?mode=${mode}`, {
+    cache: "no-store",
+  });
   const data: unknown = await response.json();
   if (!response.ok) {
     throw new Error(
@@ -60,28 +84,55 @@ const loadExportData = async (): Promise<WorkspaceExportData> => {
         : "Could not export this workspace"
     );
   }
-  if (!isExportData(data)) {
+  if (
+    !isExportData(data) ||
+    (mode === "workspace" && data.versions.length === 0)
+  ) {
     throw new Error("The workspace export is incomplete. Please retry.");
   }
   return data;
 };
 
-const exportWorkspace = async (): Promise<void> => {
-  const state = collectWorkspaceBrowserState();
-  const workspace = await loadExportData();
+const displayedDocumentPath = (): string => {
+  try {
+    return decodeURIComponent(window.location.pathname);
+  } catch {
+    return window.location.pathname;
+  }
+};
+
+const exportWorkspace = async (mode: WorkspaceExportMode): Promise<void> => {
+  const workspace =
+    mode === "document" ? undefined : await loadExportData(mode);
+  const appendix =
+    workspace === undefined
+      ? undefined
+      : workspaceExportAppendix(
+          workspace,
+          collectWorkspaceBrowserState(),
+          mode
+        );
   // The appendix markup is built first, then captured inside the snapshot —
   // the export is the document itself with its archive appended, not a
   // wrapper page around it.
   const snapshot = await captureWorkspaceDocument({
-    appendix: workspaceExportAppendix(workspace, state),
-    title: `${document.title} — Workspace archive`,
+    appendix,
+    includeReviews: mode !== "document",
+    title:
+      mode === "workspace"
+        ? `${document.title} — Workspace archive`
+        : document.title,
   });
-  const basename = workspace.file.split(/[\\/]/u).at(-1) ?? "workspace";
-  const filename = `${basename.replace(/\.[^.]+$/u, "")}-workspace.html`;
+  const file = workspace?.file ?? displayedDocumentPath();
+  const basename = file.split(/[\\/]/u).at(-1) ?? "document";
+  const filename = `${basename.replace(/\.[^.]+$/u, "")}-${EXPORT_LABELS[mode].suffix}.html`;
   downloadText(snapshot, filename, "text/html;charset=utf-8");
 };
 
 export const WorkspaceExportButton = () => {
+  const modeId = useId();
+  const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<WorkspaceExportMode>("workspace");
   const [status, setStatus] = useState<"idle" | "exporting" | "done" | "error">(
     "idle"
   );
@@ -91,9 +142,10 @@ export const WorkspaceExportButton = () => {
       ? "Exporting workspace…"
       : "Workspace HTML downloaded.";
   const download = async (): Promise<void> => {
+    setOpen(false);
     setStatus("exporting");
     try {
-      await exportWorkspace();
+      await exportWorkspace(mode);
       setStatus("done");
     } catch (error) {
       setExportError(
@@ -106,18 +158,56 @@ export const WorkspaceExportButton = () => {
   };
   return (
     <>
-      <button
-        type="button"
-        className="mdxr-workspace-export"
-        aria-label="Export HTML"
-        title="Export document, chat, comments and history as one HTML"
-        disabled={status === "exporting"}
-        onClick={() => {
-          void download();
-        }}
-      >
-        <Download aria-hidden="true" size={15} />
-      </button>
+      <Dialog.Root open={open} onOpenChange={setOpen}>
+        <Dialog.Trigger
+          className="mdxr-workspace-export"
+          aria-label="Export HTML"
+          title="Choose what to include in the HTML export"
+          disabled={status === "exporting"}
+        >
+          <Download aria-hidden="true" size={15} />
+        </Dialog.Trigger>
+        <Dialog.Portal>
+          <Dialog.Backdrop className="mdxr-workspace-export-backdrop" />
+          <Dialog.Popup className="mdxr-workspace-export-dialog">
+            <Dialog.Title>Export HTML</Dialog.Title>
+            <Dialog.Description>
+              Choose the contents of the downloadable HTML file.
+            </Dialog.Description>
+            <fieldset>
+              <legend>Export contents</legend>
+              {WORKSPACE_EXPORT_MODES.map((option) => (
+                <label key={option} aria-label={EXPORT_LABELS[option].label}>
+                  <input
+                    checked={mode === option}
+                    name={modeId}
+                    onChange={() => {
+                      setMode(option);
+                    }}
+                    type="radio"
+                    value={option}
+                  />
+                  <span>
+                    <strong>{EXPORT_LABELS[option].label}</strong>
+                    <span>{EXPORT_LABELS[option].description}</span>
+                  </span>
+                </label>
+              ))}
+            </fieldset>
+            <div className="mdxr-workspace-export-actions">
+              <Dialog.Close>Cancel</Dialog.Close>
+              <button
+                onClick={() => {
+                  void download();
+                }}
+                type="button"
+              >
+                Download HTML
+              </button>
+            </div>
+          </Dialog.Popup>
+        </Dialog.Portal>
+      </Dialog.Root>
       {status !== "idle" && (
         <div
           className="mdxr-workspace-export-status"

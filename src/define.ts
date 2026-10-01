@@ -7,6 +7,8 @@ import { isRecord } from "./guards.js";
 
 /** Metadata attached to a component for `mdxr catalog` and prop validation. */
 export interface ComponentMeta {
+  /** Skip unknown-attribute warnings when the schema describes only part of an upstream API. */
+  allowUnknownAttributes?: boolean;
   description?: string;
   /** Valibot schema for props (MDX attributes arrive as strings; `children` is passed through). */
   schema?: GenericSchema;
@@ -72,7 +74,11 @@ export const parseProps = <S extends GenericSchema>(
 export const defineComponent = <
   S extends GenericSchema | undefined = undefined,
 >(
-  meta: { description?: string; schema?: S },
+  meta: {
+    allowUnknownAttributes?: boolean;
+    description?: string;
+    schema?: S;
+  },
   render: (props: PropsOf<S> & { children?: ReactNode }) => ReactElement | null
 ): MdxrComponent => {
   const Comp = (props: DocProps): ReactElement | null => {

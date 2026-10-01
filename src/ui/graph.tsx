@@ -20,7 +20,7 @@ import {
   smoothPath,
 } from "./graph-layout.js";
 import type { EdgeSpec, NodeSpec } from "./graph-specs.js";
-import { collectSpecs } from "./graph-specs.js";
+import { collectSpecs, GRAPH_COLOR_PROP } from "./graph-specs.js";
 import { GraphViewport } from "./graph-viewport.js";
 import { hasIcon, Icon } from "./icon.js";
 import { STATUS_ICON_CLS, STATUS_ICONS } from "./status-badge.js";
@@ -141,9 +141,11 @@ const StrokePath = ({ d }: { d: string }): ReactElement => (
 
 /** Routed edge: smoothed path plus its arrowhead, tinted via EDGE_COLORS. */
 const EdgePath = ({
+  color,
   e,
   edge,
 }: {
+  color?: string;
   e: EdgeSpec;
   edge: EdgeLabel;
 }): ReactElement | null => {
@@ -153,7 +155,7 @@ const EdgePath = ({
   }
   const cls = EDGE_COLORS[e.kind ?? "imports"] ?? EDGE_COLORS.imports;
   return (
-    <g className={cls}>
+    <g className={cls} style={{ color: e.color ?? color }}>
       <StrokePath d={smoothPath(pts)} />
       <StrokePath d={arrowPath(pts)} />
     </g>
@@ -204,12 +206,13 @@ const PlacedNode = ({
 export const Graph = defineComponent(
   {
     description:
-      "ノード/エッジのグラフ図 (dagre で静的レイアウト、JS 不要)。子に <Node id> と <Edge from to>。direction は down|right|up|left。path 付きノードはエディタリンクになる。fit=auto (既定) で幅に合わせて縮小、minScale=0.85 が下限。fit=scroll は原寸",
+      "ノード/エッジのグラフ図 (dagre で静的レイアウト、JS 不要)。子に <Node id> と <Edge from to>。direction は down|right|up|left。edgeColor は線の既定色、Edge の color で個別指定。path 付きノードはエディタリンクになる。fit=auto (既定) で幅に合わせて縮小、minScale=0.85 が下限。fit=scroll は原寸",
     schema: v.looseObject({
       direction: v.optional(
         v.picklist(["down", "right", "up", "left"]),
         "down"
       ),
+      edgeColor: GRAPH_COLOR_PROP,
       fit: v.optional(v.picklist(["auto", "scroll"]), "auto"),
       minScale: v.optional(
         v.pipe(FINITE_NUMBER, v.minValue(0.1), v.maxValue(1)),
@@ -218,7 +221,7 @@ export const Graph = defineComponent(
       title: v.optional(v.string()),
     }),
   },
-  ({ title, direction, fit, minScale, children }) => {
+  ({ title, direction, edgeColor, fit, minScale, children }) => {
     const { edges, nodes, rest } = collectSpecs(children);
 
     // Duplicate ids would stack at the same dagre position (and repeat a
@@ -264,7 +267,12 @@ export const Graph = defineComponent(
             width={width}
           >
             {liveEdges.map((e, i) => (
-              <EdgePath e={e} edge={g.edge(e.from, e.to, edgeKey(i))} key={i} />
+              <EdgePath
+                color={edgeColor}
+                e={e}
+                edge={g.edge(e.from, e.to, edgeKey(i))}
+                key={i}
+              />
             ))}
           </svg>
           {liveEdges.map((e, i) => (

@@ -28,8 +28,22 @@ export const NODE_SCHEMA = v.looseObject({
   status: STATUS_PROP,
 });
 
+const GRAPH_COLOR =
+  /^(?:#[\da-f]{3,4}|#[\da-f]{6}|#[\da-f]{8}|[a-z]+|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\([\da-z\s.,%+/-]+\)|var\(--[\w-]+\))$/iu;
+
+/** CSS colors and custom properties, excluding URL paints and declarations. */
+export const GRAPH_COLOR_PROP = v.optional(
+  v.pipe(
+    v.string(),
+    v.trim(),
+    v.regex(GRAPH_COLOR, "expected a CSS color such as '#0d9488' or 'teal'")
+  )
+);
+
 export const EDGE_SCHEMA = v.looseObject({
+  color: GRAPH_COLOR_PROP,
   from: v.string(),
+  id: v.optional(v.string()),
   kind: v.optional(v.picklist(DEP_KINDS)),
   label: v.optional(v.string()),
   to: v.string(),
@@ -41,7 +55,7 @@ export type EdgeSpec = v.InferOutput<typeof EDGE_SCHEMA>;
 export const Node = defineComponent(
   {
     description:
-      "Graph のノード。<Graph> の子として使う。id は必須、label/note/icon で表示を調整。path/lines で実ファイルへのエディタリンク、status でステータス点、external で外部依存スタイル",
+      "Graph/InteractiveGraph のノード。id は必須、label/note/icon で表示を調整。path/lines で実ファイルへのエディタリンク、status でステータス点、external で外部依存スタイル。InteractiveGraph では children が選択時の詳細説明になる",
     schema: NODE_SCHEMA,
   },
   // Standalone use (outside <Graph>): a small chip so misplaced nodes still render.
@@ -65,7 +79,7 @@ export const Node = defineComponent(
 export const Edge = defineComponent(
   {
     description:
-      "Graph のエッジ。<Graph> の子として使う。from/to は Node の id。kind は Dep と同じ imports|calls|extends|implements|reads|writes で色が付く。label でエッジ中央にチップ",
+      "Graph/InteractiveGraph のエッジ。from/to は Node の id。id は InteractiveGraph の GraphView から参照する名前。kind は imports|calls|extends|implements|reads|writes。label でエッジ中央にチップ。color は線と矢印の CSS 色で、図全体の edgeColor より優先",
     schema: EDGE_SCHEMA,
   },
   // Standalone use renders a plain `from → to` line.

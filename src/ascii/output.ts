@@ -316,17 +316,41 @@ export const outputRenderers: AsciiRegistry = {
   },
   Endpoints: { flow: endpoints },
   Graph: { flow: graph },
+  GraphGroup: {
+    flow: (node, ctx) => [
+      ...caption(attr(node, "label") ?? attr(node, "id")),
+      ...ctx.children(node),
+    ],
+  },
+  GraphView: {
+    flow: (node, ctx) => [
+      ...caption(attr(node, "label") ?? attr(node, "id")),
+      para([
+        txt(
+          `nodes: ${attr(node, "nodes") ?? ""}; edges: ${attr(node, "edges") ?? ""}`
+        ),
+      ]),
+      ...ctx.children(node),
+    ],
+  },
   Ins: {
     text: (n, ctx) => [html("<ins>"), ...ctx.inline(n), html("</ins>")],
   },
+  InteractiveGraph: {
+    flow: (node, ctx) => [
+      ...caption(attr(node, "title")),
+      ...ctx.children(node),
+    ],
+  },
   Json: { flow: json },
   Node: {
-    flow: (n) => [
+    flow: (n, ctx) => [
       para([
         icode(attr(n, "id") ?? ""),
         ...(nonEmpty(attr(n, "label")) ? [txt(` = ${attr(n, "label")}`)] : []),
         ...suffix([attr(n, "note"), attr(n, "status")]),
       ]),
+      ...ctx.children(n),
     ],
     text: (n) => [icode(attr(n, "id") ?? "")],
   },

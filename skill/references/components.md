@@ -70,6 +70,7 @@ This file is an index: each group lists what its components do and links to a de
 | ` ```diff ` / ` ```patch ` fence | Structured per-file diff cards — editor links, `+N −M` stats, hunk line numbers |
 | `<Comments>` / `<Comment>` | GitHub-style comment threads anchored to code/diff lines — `lines`/`side`/`file` anchors, MDX bodies — `:::comments` |
 | `<Graph>` / `<Node>` / `<Edge>` | Static node/edge diagram — dagre layout at render time, SVG edges, editor-linked nodes — `:::graph` |
+| `<InteractiveGraph>` / `<GraphGroup>` / `<GraphView>` | React Flow diagram with groups, path highlighting, and node details |
 | `<Tests>` / `<Test>` | Test-run report — status pills, auto counts and duration sum — `:::tests` |
 | `<Endpoints>` / `<Endpoint>` | API route list — method chips, `base` prefix, `auth`/`deprecated` — `:::endpoints` |
 | `<Json>` | Collapsible JSON tree on nested `<details>` — `value` attr or fenced child |

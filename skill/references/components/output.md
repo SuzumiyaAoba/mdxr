@@ -64,7 +64,7 @@ The replacement keeps semantics.
 
 Use `<Review>` for a summarized verdict report (severity tally + verdict pill); use `<Comments>` when the threads belong _on_ the code.
 
-### `<Graph title direction fit minScale>` / `<Node>` / `<Edge>` / `:::graph`
+### `<Graph title direction edgeColor fit minScale>` / `<Node>` / `<Edge>` / `:::graph`
 
 A static node/edge diagram — the "React Flow" shape without client JS: dagre computes the layout at render time and the output is absolute-positioned node cards over an SVG edge layer (printable, deterministic). Children are `<Node>` and `<Edge>` elements; anything else renders under the diagram.
 
@@ -74,7 +74,7 @@ A static node/edge diagram — the "React Flow" shape without client JS: dagre c
 
 `<Node>` props: `id` (required), `label` (display text, defaults to `id`), `note` (muted second line), `icon` (Iconify name), `path` + optional `lines`/`href` (file icon + editor link — something mermaid can't do), `status` (todo|doing|done|blocked → status icon), `external="true"` (dashed "outside the repo" styling).
 
-`<Edge>` props: `from` / `to` (required, node ids), `kind` (`imports` `calls` `extends` `implements` `reads` `writes` — same palette as `<Dep>`; edges without `kind` render neutral), `label` (chip at the path midpoint). Edges referencing unknown node ids are dropped.
+`<Edge>` props: `from` / `to` (required, node ids), `kind` (`imports` `calls` `extends` `implements` `reads` `writes` — same palette as `<Dep>`; edges without `kind` render neutral), `label` (chip at the path midpoint), `color` (CSS color for the line and arrowhead). Set `Graph edgeColor` for a shared default; an edge's `color` takes priority over that default and the `kind` palette. Colors accept hex, named colors, RGB/HSL and other color functions, or `var(--custom-property)`. Edges referencing unknown node ids are dropped.
 
 ```mdx
 <Graph title="mdx → html pipeline" direction="right">
@@ -87,6 +87,38 @@ A static node/edge diagram — the "React Flow" shape without client JS: dagre c
 ```
 
 When the nodes/edges don't need 2-D layout prefer `<Deps>` (a list); for sequence/state/ER diagrams prefer ` ```mermaid `.
+
+### `<InteractiveGraph>` / `<GraphGroup>` / `<GraphView>` — interactive architecture diagrams
+
+React Flow diagrams with automatic Dagre layout, groups, selectable node details, and named views that highlight paths while dimming unrelated nodes and edges. Use the existing `<Node>` and `<Edge>` components. Node children supply the detailed explanation; `path`/`lines`/`href` remain available in the detail panel.
+
+- `InteractiveGraph`: `title`, `direction="right"` (default; also down/up/left), `edgeColor` for the default line and arrowhead color, `height="520"` (300–1200), `defaultView="all"`, `viewsCollapsed="true"` to start with a compact pattern rail, `draggable="false"` to disable node movement, `minimap="true"` to show the optional minimap.
+- `GraphGroup`: a unique `id`, optional `label`, and child `<Node>` elements. Nested groups are not supported.
+- `GraphView`: a unique `id` other than the reserved `all`, optional `label`/`icon` for its vertical tab, and `nodes`/`edges` containing whitespace- or comma-separated IDs. Without an icon, compact tabs show their sequence number. Children explain the view. Explicit edge IDs highlight exactly those edges and their endpoints; a node-only view highlights edges between the listed nodes.
+- `Edge`: optional `id` lets a view reference it. `color` overrides the graph's `edgeColor` for that line and arrowhead; specified colors stay the same when switching views. Duplicate IDs and unknown references are document errors.
+
+```mdx
+<InteractiveGraph title="Document system" edgeColor="#64748b">
+  <GraphGroup id="app" label="Application">
+    <Node id="api" label="API" note="Document requests">
+      Accepts document changes.
+    </Node>
+    <Node id="worker" label="Worker">
+      Publishes live updates.
+    </Node>
+  </GraphGroup>
+  <Node id="db" label="Database">
+    Persists documents.
+  </Node>
+  <Edge id="save" from="api" to="db" label="save" color="#0d9488" />
+  <Edge id="publish" from="api" to="worker" color="#8b5cf6" />
+  <GraphView id="write" label="Write" icon="lucide:file-plus" edges="save">
+    Save a document.
+  </GraphView>
+</InteractiveGraph>
+```
+
+When views are defined, **表示する経路** appears as vertical tabs on the left of the canvas. Collapse the rail to icons; hover or keyboard focus temporarily reveals names without changing the path. The rail's toggle pins it open or folds it back. Up/Down and Home/End select tabs; switching paths or collapsing the rail preserves node positions. Click a node, or focus it with Tab and press Enter/Space, to read its details in a dismissible panel inside the canvas. Descriptions appear only for the selected view or node. The icon controls, touch pinch, and optional minimap navigate the canvas. Narrow screens start at a readable scale and support panning; **全体を表示** fits the entire graph. Node movement is local to the preview and is not saved to MDX; **配置を戻す** restores the authored layout. Nodes and edges render without hydration; the caption's native **図のテキスト表示** disclosure exposes descriptions and connections without JavaScript. `mdxr text` preserves groups, descriptions, edges, and views as text.
 
 ### `<Tests title tool>` / `<Test name status duration file>` / `:::tests`
 

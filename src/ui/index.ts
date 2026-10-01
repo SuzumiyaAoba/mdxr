@@ -101,6 +101,11 @@ import { Hypotheses, Hypothesis } from "./hypothesis.js";
 import { Icon } from "./icon.js";
 import { Incident } from "./incident.js";
 import { Del, Ins } from "./ins-del.js";
+import {
+  GraphGroup,
+  GraphView,
+  InteractiveGraph,
+} from "./interactive-graph.js";
 import { Reproduction, Logs, SymbolOutline } from "./investigation-reports.js";
 import { Json } from "./json.js";
 import { LineChart } from "./line-chart.js";
@@ -278,6 +283,11 @@ export { Gantt, Milestone, Task } from "./gantt.js";
 export { Gauge, GAUGE_TONES, Gauges } from "./gauges.js";
 export { Glossary, Term } from "./glossary.js";
 export { Edge, Graph, Node } from "./graph.js";
+export {
+  GraphGroup,
+  GraphView,
+  InteractiveGraph,
+} from "./interactive-graph.js";
 export { Cell, Grid } from "./grid.js";
 export { Hypotheses, Hypothesis, HYPOTHESIS_STATUSES } from "./hypothesis.js";
 export { hasIcon, Icon, normalizeIconName } from "./icon.js";
@@ -475,6 +485,8 @@ export const builtinComponents: ComponentMap = {
   Gauges,
   Glossary,
   Graph,
+  GraphGroup,
+  GraphView,
   Grid,
   Heatmap,
   Histogram,
@@ -487,6 +499,7 @@ export const builtinComponents: ComponentMap = {
   Incident,
   Include,
   Ins,
+  InteractiveGraph,
   IntervalPlot,
   Issue,
   JourneyMap,

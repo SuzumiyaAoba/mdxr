@@ -3,6 +3,7 @@ import type http from "node:http";
 import { renderAgentMarkdown } from "./agent-markdown.js";
 import type { createAgentSession } from "./agent-session.js";
 import { formatError } from "./format-error.js";
+import { isLocalOrigin, replyJson } from "./local-http.js";
 
 type AgentSession = ReturnType<typeof createAgentSession>;
 
@@ -14,32 +15,6 @@ const view = (conversation: Awaited<ReturnType<AgentSession["current"]>>) => ({
   })),
   sessionId: conversation.sessionId ?? null,
 });
-
-const reply = (
-  res: http.ServerResponse,
-  status: number,
-  body: unknown,
-  headers: http.OutgoingHttpHeaders = {}
-): void => {
-  res.writeHead(status, {
-    "cache-control": "no-store",
-    "content-type": "application/json; charset=utf-8",
-    "x-content-type-options": "nosniff",
-    ...headers,
-  });
-  res.end(JSON.stringify(body));
-};
-
-const sameOrigin = (req: http.IncomingMessage): boolean => {
-  const port = req.socket.localPort;
-  const host = req.headers.host ?? "";
-  const allowed = host === `localhost:${port}` || host === `127.0.0.1:${port}`;
-  return (
-    allowed &&
-    (req.headers.origin === undefined ||
-      req.headers.origin === `http://${host}`)
-  );
-};
 
 const readMessage = async (req: http.IncomingMessage): Promise<string> => {
   const contentType = req.headers["content-type"]
@@ -104,25 +79,30 @@ export const handleAgentRequest = async (
   let started = false;
   try {
     if (agent === undefined) {
-      reply(res, 404, { error: "Agent chat is disabled" });
+      replyJson(res, 404, { error: "Agent chat is disabled" });
       return;
     }
-    if (!sameOrigin(req)) {
-      reply(res, 403, { error: "Request origin is not allowed" });
+    if (!isLocalOrigin(req)) {
+      replyJson(res, 403, { error: "Request origin is not allowed" });
       return;
     }
     if (req.method === "GET") {
-      reply(res, 200, view(await agent.current()));
+      replyJson(res, 200, view(await agent.current()));
       return;
     }
     if (req.method !== "POST") {
-      reply(res, 405, { error: "Method not allowed" }, { allow: "GET, POST" });
+      replyJson(
+        res,
+        405,
+        { error: "Method not allowed" },
+        { allow: "GET, POST" }
+      );
       return;
     }
     const message = await readMessage(req);
     await beforeSend?.();
     started = true;
-    reply(res, 200, view(await agent.send(message)));
+    replyJson(res, 200, view(await agent.send(message)));
     notify();
   } catch (error) {
     if (started) {
@@ -132,6 +112,6 @@ export const handleAgentRequest = async (
       return;
     }
     const detail = formatError(error);
-    reply(res, errorStatus(detail), { error: detail });
+    replyJson(res, errorStatus(detail), { error: detail });
   }
 };

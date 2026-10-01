@@ -4,6 +4,7 @@ import path from "node:path";
 import { DocumentHistoryError } from "./document-history.js";
 import type { createDocumentHistory } from "./document-history.js";
 import { formatError } from "./format-error.js";
+import { isLocalOrigin, replyJson, replyText } from "./local-http.js";
 import { highlightMdxSource } from "./rehype/shiki.js";
 import { render } from "./render.js";
 
@@ -18,32 +19,6 @@ const parsePreviewTheme = (
     return undefined;
   }
   return value === "light" || value === "dark" ? value : null;
-};
-
-const replyJson = (
-  response: http.ServerResponse,
-  status: number,
-  body: unknown,
-  headers: http.OutgoingHttpHeaders = {}
-): void => {
-  response.writeHead(status, {
-    "cache-control": "no-store",
-    "content-type": "application/json; charset=utf-8",
-    "x-content-type-options": "nosniff",
-    ...headers,
-  });
-  response.end(JSON.stringify(body));
-};
-
-const sameOrigin = (request: http.IncomingMessage): boolean => {
-  const port = request.socket.localPort;
-  const host = request.headers.host ?? "";
-  const allowed = host === `localhost:${port}` || host === `127.0.0.1:${port}`;
-  return (
-    allowed &&
-    (request.headers.origin === undefined ||
-      request.headers.origin === `http://${host}`)
-  );
 };
 
 /** Reconstruct both sides from the same diff snapshot before highlighting. */
@@ -90,12 +65,7 @@ const replyPreview = async (
     initialTheme: theme ?? undefined,
     liveReload: false,
   });
-  response.writeHead(200, {
-    "cache-control": "no-store",
-    "content-type": "text/html; charset=utf-8",
-    "x-content-type-options": "nosniff",
-  });
-  response.end(html);
+  replyText(response, 200, html, "text/html; charset=utf-8");
 };
 
 const replyHistoryView = async (
@@ -142,7 +112,7 @@ export const handleDocumentHistoryRequest = async (
     replyJson(response, 404, { error: "Document history is unavailable" });
     return;
   }
-  if (!sameOrigin(request)) {
+  if (!isLocalOrigin(request)) {
     replyJson(response, 403, { error: "Request origin is not allowed" });
     return;
   }

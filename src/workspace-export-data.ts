@@ -8,6 +8,7 @@ import type {
   DocumentVersion,
 } from "./document-history.js";
 import { formatError } from "./format-error.js";
+import { isLocalOrigin, replyJson } from "./local-http.js";
 
 export interface WorkspaceExportData {
   file: string;
@@ -55,30 +56,6 @@ export const createWorkspaceExportData = async (
   };
 };
 
-const replyJson = (
-  response: http.ServerResponse,
-  status: number,
-  body: unknown
-): void => {
-  response.writeHead(status, {
-    "cache-control": "no-store",
-    "content-type": "application/json; charset=utf-8",
-    "x-content-type-options": "nosniff",
-  });
-  response.end(JSON.stringify(body));
-};
-
-const sameOrigin = (request: http.IncomingMessage): boolean => {
-  const port = request.socket.localPort;
-  const host = request.headers.host ?? "";
-  const allowed = host === `localhost:${port}` || host === `127.0.0.1:${port}`;
-  return (
-    allowed &&
-    (request.headers.origin === undefined ||
-      request.headers.origin === `http://${host}`)
-  );
-};
-
 /** Serve a complete archive to the local workspace export action. */
 export const handleWorkspaceExportRequest = async (
   request: http.IncomingMessage,
@@ -91,7 +68,7 @@ export const handleWorkspaceExportRequest = async (
     replyJson(response, 404, { error: "Document history is unavailable" });
     return;
   }
-  if (!sameOrigin(request)) {
+  if (!isLocalOrigin(request)) {
     replyJson(response, 403, { error: "Request origin is not allowed" });
     return;
   }

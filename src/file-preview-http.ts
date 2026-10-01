@@ -8,6 +8,7 @@ import type { FilePreviewData } from "./file-preview-data.js";
 import { formatError } from "./format-error.js";
 import { isRecord } from "./guards.js";
 import { langForPath } from "./langs.js";
+import { isLocalOrigin, replyJson } from "./local-http.js";
 import { IMAGE_MIME_TYPES } from "./rehype/linked-assets.js";
 import { highlightSource } from "./rehype/shiki.js";
 import { render } from "./render.js";
@@ -31,31 +32,6 @@ interface PreviewFile {
   canonical: string;
   id: string;
 }
-
-const replyJson = (
-  response: http.ServerResponse,
-  status: number,
-  body: unknown
-): void => {
-  response.writeHead(status, {
-    "cache-control": "no-store",
-    "content-type": "application/json; charset=utf-8",
-    "x-content-type-options": "nosniff",
-    ...(status === 405 ? { allow: "GET" } : {}),
-  });
-  response.end(JSON.stringify(body));
-};
-
-const sameOrigin = (request: http.IncomingMessage): boolean => {
-  const port = request.socket.localPort;
-  const host = request.headers.host ?? "";
-  return (
-    (host === `localhost:${port}` || host === `127.0.0.1:${port}`) &&
-    (request.headers.origin === undefined ||
-      request.headers.origin === `http://${host}`) &&
-    request.headers["sec-fetch-site"] !== "cross-site"
-  );
-};
 
 const readPreviewFile = async (
   file: PreviewFile,
@@ -166,12 +142,20 @@ export const createFilePreviews = () => {
       request: http.IncomingMessage,
       response: http.ServerResponse
     ): Promise<void> {
-      if (!sameOrigin(request)) {
+      if (
+        !isLocalOrigin(request) ||
+        request.headers["sec-fetch-site"] === "cross-site"
+      ) {
         replyJson(response, 403, { error: "Request origin is not allowed" });
         return;
       }
       if (request.method !== "GET") {
-        replyJson(response, 405, { error: "Method not allowed" });
+        replyJson(
+          response,
+          405,
+          { error: "Method not allowed" },
+          { allow: "GET" }
+        );
         return;
       }
       const params = new URL(request.url ?? "", "http://localhost")

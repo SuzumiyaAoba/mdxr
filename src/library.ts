@@ -6,6 +6,7 @@ import { formatError } from "./format-error.js";
 import { createLibraryIndex } from "./library-index.js";
 import { libraryHtml, libraryJs } from "./library-page.js";
 import type { LibrarySort } from "./library-types.js";
+import { isLocalOrigin, replyJson, replyText } from "./local-http.js";
 import { openInBrowser } from "./open.js";
 import { listenOnFreePort, serve } from "./serve.js";
 import type { ServeOptions } from "./serve.js";
@@ -113,30 +114,6 @@ const createPreviews = (
   };
 };
 
-const localRequest = (request: http.IncomingMessage): boolean => {
-  const port = request.socket.localPort;
-  const { host } = request.headers;
-  return (
-    (host === `localhost:${port}` || host === `127.0.0.1:${port}`) &&
-    (request.headers.origin === undefined ||
-      request.headers.origin === `http://${host}`)
-  );
-};
-
-const reply = (
-  response: http.ServerResponse,
-  status: number,
-  body: string,
-  type = "application/json; charset=utf-8"
-): void => {
-  response.writeHead(status, {
-    "cache-control": "no-store",
-    "content-type": type,
-    "x-content-type-options": "nosniff",
-  });
-  response.end(body);
-};
-
 const parseSort = (value: string | null): LibrarySort | undefined => {
   if (value === null) {
     return "relevance";
@@ -180,12 +157,12 @@ const openDocument = async (
   try {
     id = decodeURIComponent(pathname.slice(OPEN_PREFIX.length));
   } catch {
-    reply(response, 400, JSON.stringify({ error: "invalid-document" }));
+    replyJson(response, 400, { error: "invalid-document" });
     return;
   }
   const file = await index.resolve(id);
   if (file === undefined) {
-    reply(
+    replyText(
       response,
       404,
       "文書が見つかりません。一覧を更新してください。\nDocument not found. Refresh the library.",
@@ -212,23 +189,23 @@ const deleteDocument = async (
     ? pathname.slice(DELETE_PREFIX.length)
     : "";
   if (encodedId === "" || encodedId.includes("/")) {
-    reply(response, 400, JSON.stringify({ error: "invalid-document" }));
+    replyJson(response, 400, { error: "invalid-document" });
     return;
   }
   let id: string;
   try {
     id = decodeURIComponent(encodedId);
   } catch {
-    reply(response, 400, JSON.stringify({ error: "invalid-document" }));
+    replyJson(response, 400, { error: "invalid-document" });
     return;
   }
   const result = await index.remove(id);
   if (result.status === "invalid") {
-    reply(response, 400, JSON.stringify({ error: "invalid-document" }));
+    replyJson(response, 400, { error: "invalid-document" });
     return;
   }
   if (result.status === "not-found") {
-    reply(response, 404, JSON.stringify({ error: "not-found" }));
+    replyJson(response, 404, { error: "not-found" });
     return;
   }
   await previews.remove(result.filePath);
@@ -248,14 +225,14 @@ const handleDeleteRequest = async (
 ): Promise<void> => {
   if (request.method !== "DELETE") {
     response.setHeader("allow", "DELETE");
-    reply(response, 405, JSON.stringify({ error: "method-not-allowed" }));
+    replyJson(response, 405, { error: "method-not-allowed" });
     return;
   }
   if (
     request.headers[DELETE_ACTION_HEADER] !== "delete" ||
     request.headers["sec-fetch-site"] === "cross-site"
   ) {
-    reply(response, 403, JSON.stringify({ error: "forbidden" }));
+    replyJson(response, 403, { error: "forbidden" });
     return;
   }
   await deleteDocument(pathname, response, index, previews);
@@ -268,8 +245,8 @@ const handleLibraryRequest = async (
   previews: Previews,
   html: string
 ): Promise<void> => {
-  if (!localRequest(request)) {
-    reply(response, 403, JSON.stringify({ error: "forbidden" }));
+  if (!isLocalOrigin(request)) {
+    replyJson(response, 403, { error: "forbidden" });
     return;
   }
   const url = new URL(request.url ?? "/", "http://localhost");
@@ -280,25 +257,30 @@ const handleLibraryRequest = async (
   }
   if (request.method !== "GET") {
     response.setHeader("allow", "GET");
-    reply(response, 405, JSON.stringify({ error: "method-not-allowed" }));
+    replyJson(response, 405, { error: "method-not-allowed" });
     return;
   }
   if (url.pathname === "/") {
-    reply(response, 200, html, "text/html; charset=utf-8");
+    replyText(response, 200, html, "text/html; charset=utf-8");
     return;
   }
   if (url.pathname === "/__mdxr_library.js") {
-    reply(response, 200, await libraryJs(), "text/javascript; charset=utf-8");
+    replyText(
+      response,
+      200,
+      await libraryJs(),
+      "text/javascript; charset=utf-8"
+    );
     return;
   }
   if (request.headers["sec-fetch-site"] === "cross-site") {
-    reply(response, 403, JSON.stringify({ error: "forbidden" }));
+    replyJson(response, 403, { error: "forbidden" });
     return;
   }
   if (url.pathname === SEARCH_PATH) {
     const sort = parseSort(url.searchParams.get("sort"));
     if (sort === undefined) {
-      reply(response, 400, JSON.stringify({ error: "invalid-sort" }));
+      replyJson(response, 400, { error: "invalid-sort" });
       return;
     }
     const result = await index.search({
@@ -306,14 +288,14 @@ const handleLibraryRequest = async (
       sort,
       status: url.searchParams.get("status") ?? undefined,
     });
-    reply(response, 200, JSON.stringify(result));
+    replyJson(response, 200, result);
     return;
   }
   if (url.pathname.startsWith(OPEN_PREFIX)) {
     await openDocument(url.pathname, response, index, previews);
     return;
   }
-  reply(response, 404, JSON.stringify({ error: "not-found" }));
+  replyJson(response, 404, { error: "not-found" });
 };
 
 /** Browse a local directory without evaluating its documents during indexing. */
@@ -343,7 +325,7 @@ export const serveLibrary = async (
         await handleLibraryRequest(request, response, index, previews, html);
       } catch (error) {
         console.error(`mdxr: library: ${formatError(error)}`);
-        reply(response, 500, JSON.stringify({ error: "library-error" }));
+        replyJson(response, 500, { error: "library-error" });
       }
     })();
   });

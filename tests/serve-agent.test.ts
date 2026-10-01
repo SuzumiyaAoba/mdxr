@@ -305,6 +305,49 @@ describe("preview agent API", () => {
     expect(sendAgentMessage).not.toHaveBeenCalled();
   });
 
+  it.each(["/__mdxr_agent", "/__mdxr_history", "/__mdxr_export"])(
+    "preserves local origin validation and response headers for %s",
+    async (route) => {
+      const baseUrl = await startServer("codex");
+      const responses = await Promise.all([
+        fetch(`${baseUrl}${route}`),
+        fetch(`${baseUrl}${route}`, { headers: { origin: baseUrl } }),
+        fetch(`${baseUrl}${route}`, {
+          headers: { origin: "https://attacker.example" },
+        }),
+        fetch(`${baseUrl}${route}`, {
+          headers: { origin: `${baseUrl}/` },
+        }),
+      ]);
+      // fetch derives Host from the URL; use HTTP directly to test rebinding.
+      const request = http.request(`${baseUrl}${route}`, {
+        headers: { host: "attacker.example" },
+      });
+      const responseEvent = once(request, "response");
+      request.end();
+      const responseArgs: unknown[] = await responseEvent;
+      const [hostResponse] = responseArgs;
+      if (!(hostResponse instanceof http.IncomingMessage)) {
+        throw new TypeError("HTTP request did not return a response");
+      }
+      const responseEnd = once(hostResponse, "end");
+      hostResponse.resume();
+      await responseEnd;
+
+      expect({
+        hostStatus: hostResponse.statusCode,
+        statuses: responses.map((response) => response.status),
+      }).toStrictEqual({ hostStatus: 403, statuses: [200, 200, 403, 403] });
+      for (const response of responses) {
+        expect(response.headers.get("cache-control")).toBe("no-store");
+        expect(response.headers.get("content-type")).toBe(
+          "application/json; charset=utf-8"
+        );
+        expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+      }
+    }
+  );
+
   it("rejects malformed JSON and invalid message values", async () => {
     const baseUrl = await startServer("codex");
     const bodies = ["{", JSON.stringify({ message: 42 }), JSON.stringify({})];

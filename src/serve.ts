@@ -1,5 +1,4 @@
 import { once } from "node:events";
-import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
 
@@ -13,6 +12,7 @@ import { createDocumentHistory } from "./document-history.js";
 import { createFilePreviews } from "./file-preview-http.js";
 import { formatError } from "./format-error.js";
 import { openInBrowser } from "./open.js";
+import { createPreviewWatcher } from "./preview-watch.js";
 import type { RenderSourceOptions } from "./render.js";
 import { render, renderFile } from "./render.js";
 import { handleWorkspaceExportRequest } from "./workspace-export-data.js";
@@ -38,15 +38,6 @@ interface PreviewTarget {
   history?: ReturnType<typeof createDocumentHistory>;
   historyFile?: string;
 }
-
-/** Dependency/build output dirs — never worth a watch fd. */
-const SKIP_DIRS = new Set([
-  ".git",
-  ".mdxr-cache",
-  "dist",
-  "node_modules",
-  "storybook-static",
-]);
 
 /** Upper bound on consecutive EADDRINUSE retries before give-up. */
 const MAX_PORT_ATTEMPTS = 100;
@@ -115,117 +106,6 @@ const handleDocumentResponse = (
   }
   res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
   res.end(html);
-};
-
-/**
- * The set of directories being watched. `fs.watch` recursive mode exists only
- * on darwin/win32 — elsewhere `arm` puts one non-recursive watcher per
- * directory, which also survives atomic saves (rename-over kills a watch
- * aimed at the file itself).
- */
-const createWatchSet = () => {
-  const watchers: fs.FSWatcher[] = [];
-  const armed = new Set<string>();
-
-  const track = (w: fs.FSWatcher, dir?: string): void => {
-    watchers.push(w);
-    if (dir !== undefined) {
-      armed.add(dir);
-      // A deleted dir kills its watcher — un-arm on close so a recreated
-      // dir is picked up again by the next event's re-scan.
-      w.on("close", () => {
-        armed.delete(dir);
-      });
-    }
-    w.on("error", () => {
-      w.close();
-    });
-  };
-
-  /** One watcher on `dir` itself (no descent). */
-  const armFlat = (dir: string, onEvent: () => void): void => {
-    if (armed.has(dir) || SKIP_DIRS.has(path.basename(dir))) {
-      return;
-    }
-    try {
-      track(fs.watch(dir, onEvent), dir);
-    } catch {
-      // Directory gone or unwatched — skip.
-    }
-  };
-
-  /**
-   * Recursive fallback: a watcher on `dir` plus every directory under it.
-   * The `armed` check guards only the watcher install — the descent still
-   * runs on an already-armed root, so directories created mid-session get
-   * picked up on the next rebuild (armDeps re-arms the tree for this).
-   */
-  const arm = (dir: string, onEvent: () => void): void => {
-    if (
-      SKIP_DIRS.has(path.basename(dir)) ||
-      (path.basename(dir) === "history" &&
-        path.basename(path.dirname(dir)) === ".mdxr")
-    ) {
-      return;
-    }
-    if (!armed.has(dir)) {
-      try {
-        track(fs.watch(dir, onEvent), dir);
-      } catch {
-        // Watch failed (dir gone, fd limit) — children may still be
-        // watchable, so keep descending.
-      }
-    }
-    let ents: fs.Dirent[];
-    try {
-      ents = fs.readdirSync(dir, { withFileTypes: true });
-    } catch {
-      return;
-    }
-    for (const e of ents) {
-      if (e.isDirectory()) {
-        arm(path.join(dir, e.name), onEvent);
-      }
-    }
-  };
-
-  return {
-    arm,
-    armFlat,
-    close(): void {
-      for (const w of watchers) {
-        w.close();
-      }
-    },
-    get size(): number {
-      return watchers.length;
-    },
-    track,
-  };
-};
-
-const watchTarget = (
-  watch: ReturnType<typeof createWatchSet>,
-  target: PreviewTarget,
-  notify: (event?: string, filename?: string | null) => void
-): boolean => {
-  let recursiveWatch = false;
-  // fs.watch recursive mode exists only on darwin/win32; elsewhere `arm`
-  // installs the per-directory fallback.
-  try {
-    watch.track(fs.watch(target.watchDir, { recursive: true }, notify));
-    recursiveWatch = true;
-  } catch {
-    watch.arm(target.watchDir, notify);
-  }
-  if (watch.size === 0 && target.watchFile !== undefined) {
-    try {
-      watch.track(fs.watch(target.watchFile, notify));
-    } catch {
-      // Live reload just won't fire; the server still serves the document.
-    }
-  }
-  return recursiveWatch;
 };
 
 const broadcast = (
@@ -305,34 +185,9 @@ const servePreview = async (
     handleDocumentResponse(req, res, target, html);
   });
 
-  const watch = createWatchSet();
-  let recursiveWatch = false;
-  let timer: NodeJS.Timeout | undefined;
-
-  /**
-   * Dependency files (theme CSS, its nested imports) may live outside the
-   * watched document directory. Inside the watch dir the root watcher covers
-   * them; outside, a flat watcher on the file's own directory suffices —
-   * and avoids descending into a potentially huge ancestor tree. Also
-   * re-arms the tree so directories created mid-session are picked up.
-   */
-  const armDeps = (onEvent: () => void): void => {
-    if (!recursiveWatch) {
-      watch.arm(target.watchDir, onEvent);
-    }
-    for (const dep of target.deps?.() ?? []) {
-      const dir = path.dirname(dep);
-      const inside =
-        dir === target.watchDir ||
-        dir.startsWith(`${target.watchDir}${path.sep}`);
-      if (inside || dir.split(path.sep).includes("node_modules")) {
-        continue;
-      }
-      watch.armFlat(dir, onEvent);
-    }
-  };
-
-  const rebuild = async (onEvent: () => void): Promise<void> => {
+  const rebuild = async (
+    watcher: ReturnType<typeof createPreviewWatcher>
+  ): Promise<void> => {
     try {
       if (target.history !== undefined) {
         await target.history.capture(
@@ -349,7 +204,7 @@ const servePreview = async (
       html = errorPage(error);
     }
     if (!closed) {
-      armDeps(onEvent);
+      watcher.armDependencies(target.deps?.() ?? []);
     }
   };
 
@@ -358,7 +213,7 @@ const servePreview = async (
   // swallows its own errors, so the stored tail can never reject — nothing
   // awaits it, and an unhandled rejection would take the server down.
   let reloading: Promise<void> = Promise.resolve();
-  const reload = (onEvent: () => void): void => {
+  const reload = (watcher: ReturnType<typeof createPreviewWatcher>): void => {
     const prev = reloading;
     reloading = (async () => {
       await prev;
@@ -366,7 +221,7 @@ const servePreview = async (
         return;
       }
       try {
-        await rebuild(onEvent);
+        await rebuild(watcher);
         broadcast(clients, "reload");
       } catch {
         // Notified clients are best-effort; rebuild failures are already
@@ -375,31 +230,9 @@ const servePreview = async (
     })();
   };
 
-  const notify = (_event?: string, filename?: string | null): void => {
-    const parts = filename?.split(path.sep) ?? [];
-    const isHistoryWrite =
-      parts.includes("history") &&
-      (parts.includes(".mdxr") || path.basename(target.watchDir) === ".mdxr");
-    const isInternalMdxrWrite =
-      path.basename(target.watchDir) !== ".mdxr" && parts.includes(".mdxr");
-    if (
-      closed ||
-      parts.some((part) => SKIP_DIRS.has(part)) ||
-      isHistoryWrite ||
-      isInternalMdxrWrite ||
-      parts.some(
-        (part) => part === "sessions.json" || /^\.sessions-.*\.tmp$/u.test(part)
-      )
-    ) {
-      return;
-    }
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      reload(notify);
-    }, 80);
-  };
-
-  recursiveWatch = watchTarget(watch, target, notify);
+  const watcher = createPreviewWatcher(target, () => {
+    reload(watcher);
+  });
   const closeAgent = async (): Promise<void> => {
     try {
       await target.agent?.close();
@@ -409,13 +242,12 @@ const servePreview = async (
   };
   server.on("close", () => {
     closed = true;
-    clearTimeout(timer);
-    watch.close();
+    watcher.close();
     void closeAgent();
   });
 
   // Edits during startup must wait for the initial render too.
-  reloading = rebuild(notify);
+  reloading = rebuild(watcher);
   await reloading;
   // Bind loopback only — the startup log says localhost, and a preview
   // server has no auth: listening on 0.0.0.0 would expose the document
@@ -451,7 +283,7 @@ const openPreview = async (
 /**
  * Wraps a render fn with dependency tracking: `deps` reads the paths the
  * last render reported via `onDependencies` (theme CSS + its imports), so
- * `armDeps` can watch files outside the document's own directory.
+ * the watcher can track files outside the document's own directory.
  */
 const trackDeps = (
   renderDoc: (onDeps: (paths: string[]) => void) => Promise<string>

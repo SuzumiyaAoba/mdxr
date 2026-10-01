@@ -1,12 +1,13 @@
 import { once } from "node:events";
 import fs from "node:fs";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import type { Server } from "node:http";
 import os from "node:os";
 import path from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { isRecord } from "../src/guards.js";
 import type { renderFile } from "../src/render.js";
 import { render } from "../src/render.js";
 import { serveSource } from "../src/serve.js";
@@ -116,5 +117,81 @@ describe("preview watcher lifecycle", () => {
     await vi.advanceTimersByTimeAsync(0);
     expect(rendersDuringStartup).toBe(1);
     expect(render).toHaveBeenCalledTimes(2);
+  });
+
+  it("cancels a pending rebuild when the preview closes", async () => {
+    const watch = vi.spyOn(fs, "watch");
+    server = await serveSource("# Preview", 0, { dir });
+    const listener = watch.mock.calls[0]?.at(2);
+    if (typeof listener !== "function") {
+      throw new TypeError("recursive watcher was not installed");
+    }
+
+    vi.useFakeTimers();
+    listener("change", "document.mdx");
+    await vi.advanceTimersByTimeAsync(40);
+    server.close();
+    await once(server, "close");
+    await vi.advanceTimersByTimeAsync(100);
+
+    expect(render).toHaveBeenCalledOnce();
+  });
+
+  it("re-arms fallback directories and watches external dependencies only once", async () => {
+    const components = path.join(dir, "components");
+    const history = path.join(dir, ".mdxr", "history");
+    const modules = path.join(dir, "node_modules");
+    await Promise.all([
+      mkdir(components),
+      mkdir(history, { recursive: true }),
+      mkdir(modules),
+    ]);
+    const originalWatch = fs.watch.bind(fs);
+    const watch = vi.spyOn(fs, "watch").mockImplementation((...args) => {
+      const [, options] = args;
+      if (isRecord(options) && options.recursive === true) {
+        throw new Error("Recursive watching is unavailable");
+      }
+      return originalWatch(...args);
+    });
+    vi.mocked(render).mockImplementation(async (_source, opts) => {
+      opts?.onDependencies?.([
+        path.join(external, "theme.css"),
+        path.join(external, "tokens.css"),
+        path.join(components, "theme.css"),
+        path.join(external, "node_modules", "theme", "index.css"),
+      ]);
+      return await Promise.resolve("preview");
+    });
+
+    server = await serveSource("# Preview", 0, { dir });
+    const listener = watch.mock.calls.find(
+      ([directory, options]) =>
+        directory === dir && typeof options === "function"
+    )?.[1];
+    if (typeof listener !== "function") {
+      throw new TypeError("fallback directory watcher was not installed");
+    }
+
+    const added = path.join(dir, "added");
+    await mkdir(added);
+    vi.useFakeTimers();
+    listener("rename", "added");
+    await vi.advanceTimersByTimeAsync(100);
+
+    const flatDirectories = watch.mock.calls
+      .filter(([, options]) => typeof options === "function")
+      .map(([directory]) => directory);
+    expect(flatDirectories).toStrictEqual(
+      expect.arrayContaining([components, added])
+    );
+    expect(
+      flatDirectories.filter((directory) => directory === external)
+    ).toHaveLength(1);
+    expect(flatDirectories).not.toContain(history);
+    expect(flatDirectories).not.toContain(modules);
+    expect(flatDirectories).not.toContain(
+      path.join(external, "node_modules", "theme")
+    );
   });
 });

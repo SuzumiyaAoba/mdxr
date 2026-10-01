@@ -306,6 +306,9 @@ describe("createFilePreviews HTTP endpoint", () => {
     const hostStatus = await requestStatus(validUrl, {
       headers: { host: "attacker.example" },
     });
+    const crossSiteStatus = await requestStatus(validUrl, {
+      headers: { "sec-fetch-site": "cross-site" },
+    });
 
     const symlinkUrl = register(file("replaceable.txt"));
     await unlink(file("replaceable.txt"));
@@ -323,11 +326,12 @@ describe("createFilePreviews HTTP endpoint", () => {
         postStatus,
         originStatus,
         hostStatus,
+        crossSiteStatus,
         symlinkResponse.status,
       ],
       tamperedPathSource: tamperedPathBody.source,
     }).toStrictEqual({
-      statuses: [415, 413, 404, 404, 404, 200, 405, 403, 403, 403],
+      statuses: [415, 413, 404, 404, 404, 200, 405, 403, 403, 403, 403],
       tamperedPathSource: "const answer: number = 42;\n",
     });
   });

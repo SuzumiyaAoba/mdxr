@@ -32,7 +32,8 @@ const historyBody = async (
   return { latestId: body.latestId, versions: body.versions as unknown[] };
 };
 
-vi.mock(import("../src/render.js"), () => ({
+vi.mock(import("../src/render.js"), async (importOriginal) => ({
+  ...(await importOriginal()),
   render: vi.fn<typeof render>(),
   renderFile: vi.fn<typeof renderFile>(),
 }));
@@ -472,6 +473,45 @@ describe("preview agent API", () => {
       },
     });
     /* oxlint-enable typescript/no-unsafe-assignment */
+  });
+
+  it("serves escaped render errors and recovers on the next diagnostic recheck", async () => {
+    const baseUrl = await startServer();
+    vi.mocked(renderFile).mockRejectedValueOnce(
+      new Error("Broken <render> & source")
+    );
+
+    const failed = await fetch(`${baseUrl}/__mdxr_diagnostics`, {
+      method: "POST",
+    });
+    const failure: unknown = await failed.json();
+    expect({ data: failure, status: failed.status }).toMatchObject({
+      data: { diagnostics: [{ code: "mdxr:render", severity: "error" }] },
+      status: 200,
+    });
+    const errorResponse = await fetch(baseUrl);
+    const errorHtml = await errorResponse.text();
+    expect({
+      escaped: errorHtml.includes("Broken &lt;render> &amp; source"),
+      liveReload: errorHtml.includes("/__mdxr_events"),
+      workspace: errorHtml.includes("mdxr-workspace"),
+    }).toStrictEqual({ escaped: true, liveReload: true, workspace: true });
+
+    vi.mocked(renderFile).mockResolvedValueOnce("recovered preview");
+    const recovered = await fetch(`${baseUrl}/__mdxr_diagnostics`, {
+      method: "POST",
+    });
+    const recovery: unknown = await recovered.json();
+    expect({ data: recovery, status: recovered.status }).toMatchObject({
+      data: { diagnostics: [] },
+      status: 200,
+    });
+    const recoveredResponse = await fetch(baseUrl);
+    await expect(recoveredResponse.text()).resolves.toContain(
+      "recovered preview"
+    );
+    const history = await historyBody(await fetch(`${baseUrl}/__mdxr_history`));
+    expect(history.versions[0]).toMatchObject({ kind: "initial" });
   });
 
   it("validates and passes the requested theme for history previews", async () => {

@@ -2,62 +2,19 @@ import { once } from "node:events";
 import http from "node:http";
 import path from "node:path";
 
-import { handleAgentRequest } from "./agent-http.js";
 import { validateAgentOptions } from "./agent-options.js";
-import { injectAgentPreview } from "./agent-preview.js";
 import { createAgentSession } from "./agent-session.js";
 import type { AgentProvider } from "./agent-session.js";
-import { errorDiagnostic } from "./check-diagnostics.js";
-import type { ConfigOptions } from "./config.js";
-import { handleDocumentHistoryRequest } from "./document-history-http.js";
 import { createDocumentHistory } from "./document-history.js";
 import { createFilePreviews } from "./file-preview-http.js";
-import { formatError } from "./format-error.js";
 import { openInBrowser } from "./open.js";
-import {
-  diagnoseFile,
-  handleDiagnosticSourceRequest,
-  handleDiagnosticsRequest,
-} from "./preview-diagnostics.js";
-import type { PreviewDiagnosticData } from "./preview-diagnostics.js";
+import { diagnoseFile } from "./preview-diagnostics.js";
+import { createPreviewDocument } from "./preview-document.js";
+import type { PreviewTarget } from "./preview-document.js";
+import { createPreviewRequestHandler } from "./preview-http.js";
 import { createPreviewWatcher } from "./preview-watch.js";
 import type { RenderSourceOptions } from "./render.js";
 import { render, renderFile } from "./render.js";
-import { handleWorkspaceExportRequest } from "./workspace-export-data.js";
-import { workspaceJs } from "./workspace-js.js";
-
-const errorPage = (err: unknown): string =>
-  `<!doctype html><meta charset="utf-8"><body style="font-family:monospace;background:#1c1917;color:#fca5a5;padding:2rem"><h1>mdxr render error</h1><pre>${formatError(err).replaceAll("&", "&amp;").replaceAll("<", "&lt;")}</pre></body>`;
-
-interface PreviewTarget {
-  filePreviews: ReturnType<typeof createFilePreviews>;
-  /** Label shown in the startup log. */
-  label: string;
-  /** Re-render the document; errors are served as an error page. */
-  renderDoc: () => Promise<string>;
-  /** Dependency files the last render pulled in (theme CSS + its imports). */
-  deps?: () => string[];
-  /** Directory watched for changes (config, components, theme, sources). */
-  watchDir: string;
-  /** Non-recursive fallback watch target (the document file). */
-  watchFile?: string;
-  agent?: ReturnType<typeof createAgentSession>;
-  agentProvider?: AgentProvider;
-  history?: ReturnType<typeof createDocumentHistory>;
-  historyFile?: string;
-  configOptions?: ConfigOptions;
-  diagnose?: () => Promise<PreviewDiagnosticData>;
-  diagnosticDependencies?: () => string[];
-}
-
-const previewDependencies = (target: PreviewTarget): string[] => [
-  ...(target.deps?.() ?? []),
-  ...(target.diagnosticDependencies?.() ?? []),
-];
-const withWorkspace = (html: string, target: PreviewTarget): string =>
-  target.history === undefined
-    ? html
-    : injectAgentPreview(html, target.agentProvider);
 
 /** Upper bound on consecutive EADDRINUSE retries before give-up. */
 const MAX_PORT_ATTEMPTS = 100;
@@ -99,36 +56,6 @@ export const listenOnFreePort = async (
   }
 };
 
-const handleDocumentResponse = (
-  req: http.IncomingMessage,
-  res: http.ServerResponse,
-  target: PreviewTarget,
-  html: string
-): void => {
-  if (req.url?.startsWith("/__mdxr_history") === true) {
-    void handleDocumentHistoryRequest(
-      req,
-      res,
-      target.history,
-      target.historyFile,
-      target.configOptions
-    );
-    return;
-  }
-  if (req.url?.split("?")[0] === "/__mdxr_export") {
-    void handleWorkspaceExportRequest(
-      req,
-      res,
-      target.historyFile,
-      target.history,
-      target.agent
-    );
-    return;
-  }
-  res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
-  res.end(html);
-};
-
 const broadcast = (
   clients: Set<http.ServerResponse>,
   event: "agent" | "reload"
@@ -146,168 +73,80 @@ const servePreview = async (
   target: PreviewTarget,
   port: number
 ): Promise<http.Server> => {
-  let html = "";
   let closed = false;
-  let capturedInitialVersion = false;
-  let diagnostics: PreviewDiagnosticData = {
-    checkedAt: new Date().toISOString(),
-    diagnostics: [],
-    file: target.label,
-    source: "",
-  };
+  const document = createPreviewDocument(target);
   const clients = new Set<http.ServerResponse>();
   const notifyAgent = (): void => {
     broadcast(clients, "agent");
   };
   target.agent?.setOnUpdate(notifyAgent);
 
-  const rebuild = async (
-    watcher: ReturnType<typeof createPreviewWatcher>
-  ): Promise<void> => {
-    try {
-      if (target.diagnose !== undefined) {
-        diagnostics = await target.diagnose();
-      }
-      const rendered = await target.renderDoc();
-      html = withWorkspace(rendered, target);
-    } catch (error) {
-      if (
-        !diagnostics.diagnostics.some(({ severity }) => severity === "error")
-      ) {
-        diagnostics.diagnostics.push(
-          errorDiagnostic(
-            target.historyFile ?? target.label,
-            error,
-            "mdxr:render"
-          )
-        );
-      }
-      const page = `${errorPage(error).replace("</body>", "")}<script>new EventSource('/__mdxr_events').addEventListener('reload',()=>location.reload())</script>`;
-      html = withWorkspace(page, target);
-    }
-    if (target.history !== undefined) {
-      try {
-        await target.history.capture(
-          capturedInitialVersion ? "change" : "initial",
-          previewDependencies(target)
-        );
-        capturedInitialVersion = true;
-      } catch (error) {
-        diagnostics.diagnostics.push(
-          errorDiagnostic(
-            target.historyFile ?? target.label,
-            error,
-            "mdxr:history"
-          )
-        );
-      }
-    }
-    if (!closed) {
-      watcher.armDependencies(previewDependencies(target));
-    }
-  };
-
-  // Rebuilds chain onto each other: a change burst during a slow rebuild
-  // can't interleave two renders or serve an older result last. Every link
-  // swallows its own errors, so the stored tail can never reject — nothing
-  // awaits it, and an unhandled rejection would take the server down.
+  // Source edits and diagnostic rechecks share one queue so a slow rebuild
+  // cannot overwrite a newer result. Keep the stored tail fulfilled while
+  // returning each operation's failure to its caller.
   let reloading: Promise<void> = Promise.resolve();
-  const reload = (watcher: ReturnType<typeof createPreviewWatcher>): void => {
-    const prev = reloading;
-    reloading = (async () => {
-      await prev;
+  const rebuild = async (
+    watcher: ReturnType<typeof createPreviewWatcher>,
+    notify = false
+  ): Promise<void> => {
+    const previous = reloading;
+    const pending = (async () => {
+      await previous;
       if (closed) {
         return;
       }
-      try {
-        await rebuild(watcher);
+      await document.rebuild();
+      if (!closed) {
+        watcher.armDependencies(document.dependencies());
+      }
+      if (notify) {
         broadcast(clients, "reload");
-      } catch {
-        // Notified clients are best-effort; rebuild failures are already
-        // rendered into the error page by rebuild() itself.
       }
     })();
+    reloading = (async () => {
+      try {
+        await pending;
+      } catch {
+        // Keep later updates queued even if dependency watching fails.
+      }
+    })();
+    await pending;
   };
 
   const watcher = createPreviewWatcher(target, () => {
-    reload(watcher);
-  });
-  const server = http.createServer((req, res) => {
-    if (req.url?.split("?")[0] === "/__mdxr_diagnostics") {
-      void handleDiagnosticsRequest(
-        req,
-        res,
-        () => diagnostics,
-        async () => {
-          const previous = reloading;
-          reloading = (async () => {
-            await previous;
-            if (!closed) {
-              await rebuild(watcher);
-            }
-          })();
-          await reloading;
-        }
-      );
-      return;
-    }
-    if (req.url?.split("?")[0] === "/__mdxr_diagnostic_source") {
-      void handleDiagnosticSourceRequest(req, res, diagnostics);
-      return;
-    }
-    if (req.url?.split("?")[0] === "/__mdxr_file") {
-      void target.filePreviews.handle(req, res);
-      return;
-    }
-    if (req.url === "/__mdxr_workspace.js") {
-      if (target.history === undefined) {
-        res.writeHead(404);
-        res.end();
-        return;
+    void (async () => {
+      try {
+        await rebuild(watcher, true);
+      } catch {
+        // Render and history failures are already reported in diagnostics.
       }
-      void (async () => {
-        try {
-          const script = await workspaceJs();
-          res.writeHead(200, {
-            "cache-control": "no-store",
-            "content-type": "text/javascript; charset=utf-8",
-            "x-content-type-options": "nosniff",
-          });
-          res.end(script);
-        } catch (error) {
-          res.writeHead(500, { "content-type": "text/plain; charset=utf-8" });
-          res.end(formatError(error));
-        }
-      })();
-      return;
-    }
-    if (req.url === "/__mdxr_agent") {
-      void handleAgentRequest(req, res, target.agent, notifyAgent, async () => {
-        await target.history?.capture(
-          "before-instruction",
-          previewDependencies(target)
-        );
-      });
-      return;
-    }
-    if (req.url === "/__mdxr_events") {
-      res.writeHead(200, {
-        "cache-control": "no-cache",
-        connection: "keep-alive",
-        "content-type": "text/event-stream",
-      });
-      res.write("retry: 1000\n\n");
-      clients.add(res);
-      req.on("close", () => {
-        clients.delete(res);
-      });
-      res.on("error", () => {
-        clients.delete(res);
-      });
-      return;
-    }
-    handleDocumentResponse(req, res, target, html);
+    })();
   });
+  const server = http.createServer(
+    createPreviewRequestHandler({
+      document,
+      notifyAgent,
+      recheck: async () => {
+        await rebuild(watcher);
+      },
+      subscribe: (req, res) => {
+        res.writeHead(200, {
+          "cache-control": "no-cache",
+          connection: "keep-alive",
+          "content-type": "text/event-stream",
+        });
+        res.write("retry: 1000\n\n");
+        clients.add(res);
+        req.on("close", () => {
+          clients.delete(res);
+        });
+        res.on("error", () => {
+          clients.delete(res);
+        });
+      },
+      target,
+    })
+  );
   const closeAgent = async (): Promise<void> => {
     try {
       await target.agent?.close();
@@ -322,8 +161,7 @@ const servePreview = async (
   });
 
   // Edits during startup must wait for the initial render too.
-  reloading = rebuild(watcher);
-  await reloading;
+  await rebuild(watcher);
   // Bind loopback only — the startup log says localhost, and a preview
   // server has no auth: listening on 0.0.0.0 would expose the document
   // (and its file links) to the LAN.

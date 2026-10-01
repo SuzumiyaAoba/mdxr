@@ -119,6 +119,49 @@ describe("preview watcher lifecycle", () => {
     expect(render).toHaveBeenCalledTimes(2);
   });
 
+  it("queues source edits behind an in-flight diagnostic recheck", async () => {
+    const watch = vi.spyOn(fs, "watch");
+    server = await serveSource("# Preview", 0, { dir });
+    const listener = watch.mock.calls[0]?.at(2);
+    const address = server.address();
+    if (
+      typeof listener !== "function" ||
+      typeof address !== "object" ||
+      address === null
+    ) {
+      throw new Error("preview server or watcher was not started");
+    }
+    const baseUrl = `http://127.0.0.1:${address.port}`;
+    const completion = new EventTarget();
+    vi.mocked(render)
+      .mockImplementationOnce(async () => {
+        await once(completion, "finish");
+        return "rechecked preview";
+      })
+      .mockResolvedValueOnce("updated source preview");
+
+    const recheck = fetch(`${baseUrl}/__mdxr_diagnostics`, { method: "POST" });
+    try {
+      await vi.waitFor(() => {
+        expect(render).toHaveBeenCalledTimes(2);
+      });
+      vi.useFakeTimers();
+      listener("change", "document.mdx");
+      await vi.advanceTimersByTimeAsync(100);
+      expect(render).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+      completion.dispatchEvent(new Event("finish"));
+      await recheck;
+    }
+
+    await vi.waitFor(() => {
+      expect(render).toHaveBeenCalledTimes(3);
+    });
+    const response = await fetch(baseUrl);
+    await expect(response.text()).resolves.toBe("updated source preview");
+  });
+
   it("cancels a pending rebuild when the preview closes", async () => {
     const watch = vi.spyOn(fs, "watch");
     server = await serveSource("# Preview", 0, { dir });

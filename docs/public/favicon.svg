@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="mdxr-favicon-title">
+  <title id="mdxr-favicon-title">mdxr</title>
+  <rect width="128" height="128" rx="28" fill="#18181B"/>
+  <!-- the wordmark's "m" and sparkle, enlarged for small sizes -->
+  <path d="M8 60V37a9 9 0 0 1 18 0V60M26 37a9 9 0 0 1 18 0V60" transform="translate(18 11) scale(1.4)" fill="none" stroke="#FAFAFA" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M104 14q2.5 11.5 14 14q-11.5 2.5-14 14q-2.5-11.5-14-14q11.5-2.5 14-14Z" fill="#A78BFA"/>
+</svg>

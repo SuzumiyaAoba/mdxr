@@ -27,5 +27,9 @@ export default defineConfig({
     ],
   },
   lastModified: true,
+  logo: {
+    image: { alt: "mdxr", dark: "/logo-dark.svg", light: "/logo.svg" },
+    text: "",
+  },
   title: "mdxr",
 });

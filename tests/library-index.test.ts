@@ -2,7 +2,9 @@ import {
   lstat,
   mkdir,
   mkdtemp,
+  readFile,
   realpath,
+  rename,
   rm,
   stat,
   symlink,
@@ -54,7 +56,9 @@ describe("local document library index", () => {
     const index = await createLibraryIndex(root);
     const response = await index.search();
     const auth = response.results.find(({ id }) => id === "plans/auth.mdx");
-    const authStats = await stat(path.join(root, "plans", "auth.mdx"));
+    const authStats = await stat(path.join(root, "plans", "auth.mdx"), {
+      bigint: true,
+    });
     const expectedMtime = authStats.mtime;
 
     expect({
@@ -306,6 +310,33 @@ describe("local document library index", () => {
     await expect(index.resolve("safe.mdx")).resolves.toBeUndefined();
     const safeStats = await lstat(safeFile);
     expect(safeStats.isSymbolicLink()).toBeTruthy();
+  });
+
+  it("rejects resolving and deleting an indexed path whose parent becomes a symlink", async () => {
+    const libraryRoot = path.join(root, "library");
+    const notes = path.join(libraryRoot, "notes");
+    const retained = path.join(libraryRoot, "retained");
+    const outside = path.join(root, "outside");
+    await mkdir(notes, { recursive: true });
+    await mkdir(outside);
+    await writeFile(path.join(notes, "plan.mdx"), "# Indexed plan\n");
+    await writeFile(path.join(outside, "plan.mdx"), "# Outside plan\n");
+    const index = await createLibraryIndex(libraryRoot);
+    await index.search();
+
+    await rename(notes, retained);
+    await symlink(outside, notes);
+
+    await expect(index.resolve("notes/plan.mdx")).resolves.toBeUndefined();
+    await expect(index.remove("notes/plan.mdx")).resolves.toStrictEqual({
+      status: "invalid",
+    });
+    await expect(
+      readFile(path.join(outside, "plan.mdx"), "utf-8")
+    ).resolves.toBe("# Outside plan\n");
+    await expect(
+      readFile(path.join(retained, "plan.mdx"), "utf-8")
+    ).resolves.toBe("# Indexed plan\n");
   });
 
   it("rejects a missing or non-directory root", async () => {

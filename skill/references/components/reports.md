@@ -53,7 +53,7 @@ CI/verification status list — the "checks" tab of a PR. `Checks` counts `<Chec
 </Checks>
 ```
 
-For unit-test runs prefer `<Tests>` (pass/fail/skip/todo per assertion); `Checks` models pipeline stages (lint/build/deploy).
+For unit-test runs prefer `<Tests>` (pass/fail/running/skip/todo per assertion); `Checks` models pipeline stages (lint/build/deploy).
 
 ### `<Audit title tool>` / `<Vuln severity id package affected fix>` / `:::audit`
 

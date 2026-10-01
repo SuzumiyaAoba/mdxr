@@ -206,6 +206,21 @@ Use a join instead.
     expect(markdown).toContain("deprecated");
   });
 
+  it("renders running tests with progress glyphs and separate status counts", async () => {
+    const { markdown } = await render(`<Tests title="unit" tool="vitest">
+<Test name="parses" status="pass" duration="12ms" />
+<Test name="streams" status="running" />
+<Test name="waits" status="running" />
+</Tests>
+
+<Test name="standalone" status="running" />`);
+    expect(markdown).toContain("1 pass · 2 running");
+    expect(markdown).toContain("✓ parses");
+    expect(markdown).toContain("◐ streams");
+    expect(markdown).toContain("◐ waits");
+    expect(markdown).toContain("◐ standalone");
+  });
+
   it("renders diffs and terminals as fenced blocks", async () => {
     const src = `<Terminal cmd="pnpm test" exit="0">
 3 passed

@@ -16,7 +16,13 @@ import {
   TONE_TEXT,
 } from "./tones.js";
 
-export const TEST_STATUSES = ["pass", "fail", "skip", "todo"] as const;
+export const TEST_STATUSES = [
+  "pass",
+  "fail",
+  "running",
+  "skip",
+  "todo",
+] as const;
 export type TestStatus = (typeof TEST_STATUSES)[number];
 
 const isTestStatus = isOneOf(TEST_STATUSES);
@@ -32,6 +38,11 @@ const STYLES: Record<TestStatus, { cls: string; icon: string; label: string }> =
       cls: TONE_TEXT.emerald,
       icon: "lucide:circle-check",
       label: "passed",
+    },
+    running: {
+      cls: TONE_TEXT.sky,
+      icon: "lucide:loader-circle",
+      label: "running",
     },
     skip: {
       cls: TONE_TEXT.neutral,
@@ -81,7 +92,7 @@ export const formatDuration = (ms: number): string => {
 export const Test = defineComponent(
   {
     description:
-      "テスト結果1行。name は必須、status は pass|fail|skip|todo。duration に所要時間、file/lines で実ファイルへのエディタリンク。children は失敗時の詳細 (エラー出力など)",
+      "テスト結果1行。name は必須、status は pass|fail|running|skip|todo。running は実行中。duration に所要時間、file/lines で実ファイルへのエディタリンク。children は失敗時の詳細 (エラー出力など)",
     schema: v.looseObject({
       ...LINK_LINES_PROPS,
       duration: v.optional(NUMISH),

@@ -30,6 +30,7 @@ export const Suite: Story = {
       >
         AssertionError: expected body to contain &quot;Invalid props&quot;
       </Test>
+      <Test name="renders the full catalog" status="running" />
       <Test name="streams stdin" status="skip" />
       <Test name="todo: watch mode" status="todo" />
     </Tests>

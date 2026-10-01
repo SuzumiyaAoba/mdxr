@@ -1014,13 +1014,16 @@ describe(mdxToHtml, () => {
 
   it("renders Tests with per-status counts", async () => {
     const { body } = await render(
-      '<Tests title="unit" tool="vitest"><Test name="parses" status="pass" duration="12ms" /><Test name="renders" status="fail" duration="800ms">boom</Test><Test name="skips" status="skip" /></Tests>'
+      '<Tests title="unit" tool="vitest"><Test name="parses" status="pass" duration="12ms" /><Test name="renders" status="fail" duration="800ms">boom</Test><Test name="streams" status="running" /><Test name="waits" status="running" /><Test name="skips" status="skip" /><Test name="planned" status="todo" /></Tests>'
     );
     for (const s of [
       "parses",
       "1 passed",
       "1 failed",
+      "2 running",
       "1 skipped",
+      "1 todo",
+      "812ms",
       "vitest",
       "boom",
     ]) {
@@ -1028,11 +1031,17 @@ describe(mdxToHtml, () => {
     }
   });
 
+  it("renders a standalone running Test with an accessible status icon", async () => {
+    const { body } = await render('<Test name="streams" status="running" />');
+    expect(body).toContain("streams");
+    expect(body).toContain('aria-label="running"');
+  });
+
   it("accepts :::tests directives", async () => {
     const { body } = await render(
-      ':::tests\n<Test name="t" status="pass" />\n:::'
+      ':::tests\n<Test name="t" status="running" />\n:::'
     );
-    expect(body).toContain("1 passed");
+    expect(body).toContain("1 running");
   });
 
   it("renders Endpoints with method chips and a base prefix", async () => {

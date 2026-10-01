@@ -122,11 +122,12 @@ When views are defined, **表示する経路** appears as vertical tabs on the l
 
 ### `<Tests title tool>` / `<Test name status duration file>` / `:::tests`
 
-Structured test-run report. `Tests` renders a caption bar that counts `<Test>` children per status and sums parseable durations (`120ms`, `1.2s`, `2m`); `tool` adds a runner chip (`vitest`, `jest`, …). `Test` needs `name`; `status` is `pass` (default) / `fail` / `skip` / `todo`, `duration` shows right-aligned, `file`/`lines`/`href` link to the test file. Children render as an indented detail block — the failure output for `status="fail"`.
+Structured test-run report. `Tests` renders a caption bar that counts `<Test>` children per status and sums parseable durations (`120ms`, `1.2s`, `2m`); `tool` adds a runner chip (`vitest`, `jest`, …). `Test` needs `name`; `status` is `pass` (default) / `fail` / `running` / `skip` / `todo`, where `running` means the test is currently executing. `duration` shows right-aligned, `file`/`lines`/`href` link to the test file. Children render as an indented detail block — the failure output for `status="fail"`.
 
 ```mdx
 <Tests title="render.test.ts" tool="vitest">
   <Test name="renders markdown prose" status="pass" duration="12ms" />
+  <Test name="renders the full catalog" status="running" />
   <Test
     name="rejects invalid props"
     status="fail"

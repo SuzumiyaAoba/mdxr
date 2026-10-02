@@ -14,6 +14,7 @@ import { isRecord } from "../src/guards.js";
 import { parseReviewTransfer } from "../src/review-transfer.js";
 import type { ReviewTransfer } from "../src/review-transfer.js";
 import { serve } from "../src/serve.js";
+import { parseWidgetState } from "../src/widget-state.js";
 
 const SOURCE = `---
 id: workflow-document
@@ -247,6 +248,74 @@ describe("complete document workflows in the real preview", () => {
       await app.close();
     }
   });
+
+  it.each(["quota", "read"])(
+    "downloads subsequent answers and board moves after a storage %s failure",
+    async (failure) => {
+      const app = await fixture(browser);
+      try {
+        await app.page.waitForFunction(
+          () =>
+            document.querySelector<HTMLElement>("[data-ask-id]")?.dataset
+              .widgetIdentity !== undefined
+        );
+        await app.page
+          .getByLabel("Answer", { exact: true })
+          .fill("Saved answer");
+        const stored = await app.page.evaluate((mode) => {
+          const key = "doc:widgets:v1:workflow-document";
+          if (mode === "read") {
+            localStorage.setItem(key, "{broken");
+          } else {
+            const originalSetItem = localStorage.setItem.bind(localStorage);
+            Storage.prototype.setItem = (name, value) => {
+              if (name === key) {
+                throw new DOMException("Storage full", "QuotaExceededError");
+              }
+              originalSetItem(name, value);
+            };
+          }
+          return localStorage.getItem(key);
+        }, failure);
+        await app.page.getByLabel("Answer", { exact: true }).fill("First edit");
+        await app.page.locator("#doc-widget-status").waitFor();
+        await app.page
+          .getByLabel("Answer", { exact: true })
+          .fill("Final answer");
+        await app.page.getByLabel("Choice", { exact: true }).selectOption("b");
+        await app.page
+          .locator('[data-card-id="a"]')
+          .getByRole("button", { name: "Move to next lane" })
+          .click();
+
+        const downloadPromise = app.page.waitForEvent("download");
+        await app.page
+          .getByRole("button", { name: "Download retained answers" })
+          .click();
+        const download = await downloadPromise;
+        const output = path.join(app.outputDir, "answers.json");
+        await download.saveAs(output);
+        const { records } = parseWidgetState(await readFile(output, "utf-8"));
+        expect(
+          records.find(({ key }) => key.endsWith(":answer:0"))?.values
+        ).toStrictEqual([{ checked: false, value: "Final answer" }]);
+        expect(
+          records.find(({ key }) => key.endsWith(":choice:0"))?.values
+        ).toStrictEqual([{ checked: false, value: "b" }]);
+        expect(
+          records.find(({ kind }) => kind === "board")?.lanes
+        ).toContainEqual({ cards: ["a:0"], id: "done:0" });
+        await expect(
+          app.page.evaluate(() =>
+            localStorage.getItem("doc:widgets:v1:workflow-document")
+          )
+        ).resolves.toBe(stored);
+        expect(app.errors).toStrictEqual([]);
+      } finally {
+        await app.close();
+      }
+    }
+  );
 
   it("imports, saves and idempotently merges comments and section reviews with explicit document mapping", async () => {
     const app = await fixture(browser);

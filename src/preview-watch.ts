@@ -230,9 +230,16 @@ const isIgnoredChange = (
 ): boolean => {
   const { watchDir } = target;
   const parts = filename?.split(path.sep) ?? [];
-  const isHistoryWrite =
-    parts.includes("history") &&
-    (parts.includes(".mdxr") || path.basename(watchDir) === ".mdxr");
+  const absoluteParts = path.resolve(watchDir, filename ?? "").split(path.sep);
+  const isHistoryWrite = absoluteParts.some(
+    (part, index) => part === ".mdxr" && absoluteParts[index + 1] === "history"
+  );
+  const basename = absoluteParts.at(-1) ?? "";
+  const isSessionWrite =
+    absoluteParts.at(-2) === ".mdxr" &&
+    (basename === "sessions.json" ||
+      basename === ".sessions.lock" ||
+      SESSION_TEMP_FILE.test(basename));
   const isInternalMdxrWrite =
     target.includeMdxrDocuments !== true &&
     !tracked &&
@@ -242,12 +249,7 @@ const isIgnoredChange = (
     parts.some((part) => SKIP_DIRS.has(part)) ||
     isHistoryWrite ||
     isInternalMdxrWrite ||
-    parts.some(
-      (part) =>
-        part === "sessions.json" ||
-        part === ".sessions.lock" ||
-        SESSION_TEMP_FILE.test(part)
-    )
+    isSessionWrite
   );
 };
 
@@ -269,7 +271,7 @@ export const createPreviewWatcher = (
   let closed = false;
   let timer: NodeJS.Timeout | undefined;
   const notify: WatchListener = (
-    event,
+    _event,
     filename,
     directory = target.watchDir
   ): void => {
@@ -290,12 +292,12 @@ export const createPreviewWatcher = (
       return;
     }
     if (
-      event === "change" &&
       filename === path.basename(directory) &&
-      !fs.existsSync(eventPath ?? "")
+      !fs.existsSync(eventPath ?? "") &&
+      !fileState.hasChanged([path.resolve(directory), canonicalPath(directory)])
     ) {
-      // Darwin can report the watched directory's own metadata under its
-      // basename. Child edits have their own events; this is not a child.
+      // Darwin also reports delayed rename events for the watched directory
+      // under its basename. Compare the directory instead of a missing child.
       return;
     }
     if (!fileState.hasChanged(paths)) {

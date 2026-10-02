@@ -78,6 +78,7 @@ describe("preview watcher lifecycle", () => {
       }
       vi.useFakeTimers();
       listener("change", path.basename(dir));
+      listener("rename", path.basename(dir));
       listener("rename", "document.mdx");
       listener("rename", "part.md");
       await vi.advanceTimersByTimeAsync(100);
@@ -94,6 +95,17 @@ describe("preview watcher lifecycle", () => {
       listener("change", "part.md");
       await vi.advanceTimersByTimeAsync(100);
       expect(onChange).toHaveBeenCalledTimes(2);
+
+      // A real child with the directory's name must still trigger reloads.
+      const sameNameChild = path.join(dir, path.basename(dir));
+      await writeFile(sameNameChild, "Child content");
+      listener("rename", path.basename(dir));
+      await vi.advanceTimersByTimeAsync(100);
+      expect(onChange).toHaveBeenCalledTimes(3);
+      await rm(sameNameChild);
+      listener("rename", path.basename(dir));
+      await vi.advanceTimersByTimeAsync(100);
+      expect(onChange).toHaveBeenCalledTimes(4);
     } finally {
       watcher.close();
     }
@@ -331,4 +343,70 @@ describe("preview watcher lifecycle", () => {
       path.join(external, "node_modules", "theme")
     );
   });
+
+  it.each(["project", "library"])(
+    "watches authored history directories and session files from a %s root",
+    async (root) => {
+      const library = path.join(dir, ".mdxr");
+      const watchDir = root === "project" ? dir : library;
+      const authoredHistory = path.join(
+        library,
+        "report",
+        "history",
+        "part.md"
+      );
+      const authoredSessions = path.join(library, "report", "sessions.json");
+      const internalHistory = path.join(library, "history", "version.mdx");
+      const internalSessions = path.join(library, "sessions.json");
+      for (const file of [
+        authoredHistory,
+        authoredSessions,
+        internalHistory,
+        internalSessions,
+      ]) {
+        // oxlint-disable-next-line no-await-in-loop
+        await mkdir(path.dirname(file), { recursive: true });
+        // oxlint-disable-next-line no-await-in-loop
+        await writeFile(file, "Initial content");
+      }
+      const originalWatch = fs.watch.bind(fs);
+      const watch = vi
+        .spyOn(fs, "watch")
+        .mockImplementation((target) =>
+          originalWatch(target, vi.fn<fs.WatchListener<string>>())
+        );
+      const onChange = vi.fn<() => void>();
+      const watcher = createPreviewWatcher(
+        { includeMdxrDocuments: true, watchDir },
+        onChange
+      );
+      try {
+        const listener = watch.mock.calls[0]?.at(2);
+        if (typeof listener !== "function") {
+          throw new TypeError("recursive watcher was not installed");
+        }
+        watcher.armDependencies([authoredHistory, authoredSessions]);
+        vi.useFakeTimers();
+        for (const file of [internalHistory, internalSessions]) {
+          // oxlint-disable-next-line no-await-in-loop
+          await writeFile(file, "Internal change");
+          listener("change", path.relative(watchDir, file));
+        }
+        await vi.advanceTimersByTimeAsync(100);
+        expect(onChange).not.toHaveBeenCalled();
+
+        await writeFile(authoredHistory, "Updated document");
+        listener("change", path.relative(watchDir, authoredHistory));
+        await vi.advanceTimersByTimeAsync(100);
+        expect(onChange).toHaveBeenCalledOnce();
+
+        await writeFile(authoredSessions, "Updated code sample");
+        listener("change", path.relative(watchDir, authoredSessions));
+        await vi.advanceTimersByTimeAsync(100);
+        expect(onChange).toHaveBeenCalledTimes(2);
+      } finally {
+        watcher.close();
+      }
+    }
+  );
 });

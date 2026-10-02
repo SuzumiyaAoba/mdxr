@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { LIVE_RELOAD_JS, MERMAID_JS, THEME_JS } from "../src/assets/scripts.js";
 import { clientJs } from "../src/client-js.js";
-import { inlineScript } from "../src/html.js";
+import { inlineScript, inlineStyle } from "../src/html.js";
 
 type MediaChangeListener = (event: { matches: boolean }) => void;
 
@@ -243,4 +243,28 @@ describe(inlineScript, () => {
     expect(inlineScript("<!-- comment")).toContain("\\u003C!--");
     expect(inlineScript("a < b")).toBe("a < b");
   });
+
+  it.each(["</SCRIPT>", "</ScRiPt>", "</script>"])(
+    "preserves the value of a string containing %s",
+    (value) => {
+      const script = inlineScript(JSON.stringify(value));
+      expect(script).not.toMatch(/<\/script/iu);
+      expect(new vm.Script(script).runInNewContext()).toBe(value);
+    }
+  );
+});
+
+describe(inlineStyle, () => {
+  it.each(["</STYLE>", "</StYlE>", "</style>"])(
+    "preserves the content of a CSS string containing %s",
+    (value) => {
+      const css = `.label::after { content: ${JSON.stringify(value)}; }`;
+      const escaped = inlineStyle(css);
+      expect(escaped).not.toMatch(/<\/style/iu);
+      // Parsing both forms normalizes CSS escapes without changing the value.
+      expect(transformSync(escaped, { loader: "css" }).code).toBe(
+        transformSync(css, { loader: "css" }).code
+      );
+    }
+  );
 });

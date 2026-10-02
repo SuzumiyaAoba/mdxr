@@ -15,7 +15,7 @@ export const initWidgetAutosave = (): void => {
   }
   const key = documentStorageKey("doc:widgets:v1:", info);
   let records = new Map<string, WidgetRecord>();
-  let writable = true;
+  let storageError: string | undefined;
   const readRecords = (): Map<string, WidgetRecord> =>
     new Map(
       parseWidgetState(readDocumentStorage(localStorage, key)).records.map(
@@ -63,8 +63,9 @@ export const initWidgetAutosave = (): void => {
     try {
       records = readRecords();
     } catch {
-      writable = false;
-      notice("Saved answers could not be read. Existing data was retained.");
+      storageError =
+        "Saved answers could not be read. Existing data was retained.";
+      notice(storageError);
     }
     const current = createWidgets();
     for (const [recordKey, widget] of current) {
@@ -84,32 +85,40 @@ export const initWidgetAutosave = (): void => {
       );
     }
     const save = (event: Event): void => {
-      if (!writable || !(event.target instanceof Element)) {
+      const { target } = event;
+      if (!(target instanceof Element)) {
         return;
       }
-      try {
-        // Merge changes from other tabs before replacing the edited widget.
-        records = readRecords();
-      } catch {
-        writable = false;
-        notice("Saved answers could not be read. Existing data was retained.");
+      const edited = [...current.values()].filter(({ element }) =>
+        element.contains(target)
+      );
+      if (edited.length === 0) {
         return;
       }
-      for (const [recordKey, widget] of current) {
-        if (
-          widget.element === event.target ||
-          widget.element.contains(event.target)
-        ) {
-          const next = widget.record();
-          const previous = records.get(recordKey);
-          if (previous !== undefined && previous.signature !== next.signature) {
-            records.set(`retained:${recordKey}:${previous.signature}`, {
-              ...previous,
-              key: `retained:${recordKey}:${previous.signature}`,
-            });
-          }
-          records.set(recordKey, next);
+      if (storageError === undefined) {
+        try {
+          // Merge changes from other tabs before replacing the edited widget.
+          records = readRecords();
+        } catch {
+          storageError =
+            "Saved answers could not be read. Existing data was retained.";
         }
+      }
+      // Keep collecting edits for download even after storage becomes unavailable.
+      for (const widget of edited) {
+        const next = widget.record();
+        const previous = records.get(next.key);
+        if (previous !== undefined && previous.signature !== next.signature) {
+          records.set(`retained:${next.key}:${previous.signature}`, {
+            ...previous,
+            key: `retained:${next.key}:${previous.signature}`,
+          });
+        }
+        records.set(next.key, next);
+      }
+      if (storageError !== undefined) {
+        notice(storageError);
+        return;
       }
       try {
         localStorage.setItem(
@@ -117,10 +126,9 @@ export const initWidgetAutosave = (): void => {
           JSON.stringify({ records: [...records.values()], version: 1 })
         );
       } catch {
-        writable = false;
-        notice(
-          "Answers could not be saved. Download them before leaving this page."
-        );
+        storageError =
+          "Answers could not be saved. Download them before leaving this page.";
+        notice(storageError);
       }
     };
     for (const event of ["input", "change", "doc:boardchange"]) {

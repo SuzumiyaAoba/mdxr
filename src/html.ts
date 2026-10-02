@@ -20,7 +20,7 @@ import { sectionReviewHtml } from "./section-review-html.js";
  */
 export const inlineScript = (js: string): string =>
   js
-    .replaceAll(/<\/script/giu, "\\u003C/script")
+    .replaceAll(/<\/script/giu, (match) => `\\u003C${match.slice(1)}`)
     .replaceAll("<!--", "\\u003C!--");
 
 /**
@@ -29,7 +29,7 @@ export const inlineScript = (js: string): string =>
  * reads identically inside CSS strings/comments, so it's safe to emit.
  */
 export const inlineStyle = (css: string): string =>
-  css.replaceAll(/<\/style/giu, "<\\/style");
+  css.replaceAll(/<\/style/giu, (match) => `<\\${match.slice(1)}`);
 
 const ESCAPES: Record<string, string> = {
   '"': "&quot;",

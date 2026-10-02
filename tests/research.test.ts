@@ -19,7 +19,7 @@ describe("research reporting", () => {
         "Documented",
         "2026-09-25",
         "#manual",
-        'id="mdxr-citation-1"',
+        'id="doc-citation-1"',
         'id="claim"',
         "The runtime owns execution.",
       ];
@@ -27,8 +27,8 @@ describe("research reporting", () => {
         []
       );
     }
-    expect(body).toContain('href="#mdxr-citation-1"');
-    expect(body).toContain('href="#mdxr-citation-2"');
+    expect(body).toContain('href="#doc-citation-1"');
+    expect(body).toContain('href="#doc-citation-2"');
     expect(warnings).toStrictEqual([]);
   });
 

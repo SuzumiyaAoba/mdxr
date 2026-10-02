@@ -32,7 +32,7 @@ export const Toc = defineComponent(
       return null;
     }
     return (
-      <nav aria-label="Table of contents" className={`mdxr-toc ${PANEL_CLS}`}>
+      <nav aria-label="Table of contents" className={`doc-toc ${PANEL_CLS}`}>
         <details open={!closed(open)}>
           <summary
             className={`flex cursor-pointer items-center gap-1.5 ${SURFACE_CLS} px-4 py-2 text-xs font-semibold ${TEXT.muted} transition-colors select-none hover:bg-neutral-100 active:bg-neutral-200 dark:hover:bg-neutral-800/70 dark:active:bg-neutral-800`}
@@ -42,11 +42,11 @@ export const Toc = defineComponent(
               {nonEmpty(title) ? title : "Contents"}
             </span>
             <Icon
-              className="mdxr-chev h-3.5 w-3.5 opacity-50"
+              className="doc-chev h-3.5 w-3.5 opacity-50"
               name="lucide:chevron-right"
             />
           </summary>
-          <div className={`mdxr-toc-body border-t px-3 py-2.5 ${BORDER_CLS}`}>
+          <div className={`doc-toc-body border-t px-3 py-2.5 ${BORDER_CLS}`}>
             {children}
           </div>
         </details>

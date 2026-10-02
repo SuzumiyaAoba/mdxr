@@ -56,7 +56,7 @@ export const createPreviewRequestHandler =
   }: PreviewRequestOptions) =>
   (req: http.IncomingMessage, res: http.ServerResponse): void => {
     const pathname = req.url?.split("?", 1)[0];
-    if (pathname === "/__mdxr_diagnostics") {
+    if (pathname === "/__doc_diagnostics") {
       void handleDiagnosticsRequest(
         req,
         res,
@@ -65,19 +65,19 @@ export const createPreviewRequestHandler =
       );
       return;
     }
-    if (pathname === "/__mdxr_diagnostic_source") {
+    if (pathname === "/__doc_diagnostic_source") {
       void handleDiagnosticSourceRequest(req, res, document.diagnostics);
       return;
     }
-    if (pathname === "/__mdxr_file") {
+    if (pathname === "/__doc_file") {
       void target.filePreviews.handle(req, res);
       return;
     }
-    if (req.url === "/__mdxr_workspace.js") {
+    if (req.url === "/__doc_workspace.js") {
       void handleWorkspaceScriptRequest(res, target);
       return;
     }
-    if (req.url === "/__mdxr_agent") {
+    if (req.url === "/__doc_agent") {
       void handleAgentRequest(req, res, target.agent, notifyAgent, async () => {
         await target.history?.capture(
           "before-instruction",
@@ -86,11 +86,11 @@ export const createPreviewRequestHandler =
       });
       return;
     }
-    if (req.url === "/__mdxr_events") {
+    if (req.url === "/__doc_events") {
       subscribe(req, res);
       return;
     }
-    if (req.url?.startsWith("/__mdxr_history") === true) {
+    if (req.url?.startsWith("/__doc_history") === true) {
       void handleDocumentHistoryRequest(
         req,
         res,
@@ -100,7 +100,7 @@ export const createPreviewRequestHandler =
       );
       return;
     }
-    if (pathname === "/__mdxr_export") {
+    if (pathname === "/__doc_export") {
       void handleWorkspaceExportRequest(
         req,
         res,

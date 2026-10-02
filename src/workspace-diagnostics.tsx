@@ -9,7 +9,7 @@ import type { PreviewDiagnosticData } from "./preview-diagnostics.js";
 const readDiagnostics = async (
   method = "GET"
 ): Promise<PreviewDiagnosticData> => {
-  const response = await fetch("/__mdxr_diagnostics", {
+  const response = await fetch("/__doc_diagnostics", {
     cache: "no-store",
     method,
   });
@@ -35,7 +35,7 @@ const readDiagnostics = async (
 
 const readDiagnosticSource = async (file: string): Promise<string> => {
   const response = await fetch(
-    `/__mdxr_diagnostic_source?file=${encodeURIComponent(file)}`,
+    `/__doc_diagnostic_source?file=${encodeURIComponent(file)}`,
     { cache: "no-store" }
   );
   if (!response.ok) {
@@ -116,15 +116,15 @@ export const WorkspaceDiagnostics = () => {
   return (
     <Dialog.Root>
       <Dialog.Trigger
-        className="mdxr-workspace-export"
+        className="doc-workspace-export"
         aria-label="Validation diagnostics"
         title={`${errors} errors, ${warnings} warnings`}
       >
         Check {errors + warnings}
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Backdrop className="mdxr-workspace-export-backdrop" />
-        <Dialog.Popup className="mdxr-workspace-export-dialog mdxr-workspace-diagnostics">
+        <Dialog.Backdrop className="doc-workspace-export-backdrop" />
+        <Dialog.Popup className="doc-workspace-export-dialog doc-workspace-diagnostics">
           <Dialog.Title>Validation diagnostics</Dialog.Title>
           <Dialog.Description>
             {errors} errors, {warnings} warnings. Select a diagnostic to view

@@ -126,7 +126,7 @@ const NodeView = ({
         <FoldChev />
         {keyEl}
         <span className={TEXT.faint}>{openB}</span>
-        <span className={`mdxr-count ${COUNT_CHIP_CLS}`}>
+        <span className={`doc-count ${COUNT_CHIP_CLS}`}>
           {entries.length} {isArr ? "items" : "keys"}
         </span>
       </summary>
@@ -171,7 +171,7 @@ export const Json = defineComponent(
       throw new Error(`<Json> invalid JSON: ${msg}`, { cause: error });
     }
     return (
-      <Panel className="mdxr-json">
+      <Panel className="doc-json">
         {nonEmpty(title) ? (
           <CaptionBar className={CAPTION_TITLE_CLS}>
             <Icon className="h-3.5 w-3.5" name="lucide:braces" />

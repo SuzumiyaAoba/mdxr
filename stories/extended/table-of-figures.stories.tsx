@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import html from "virtual:mdxr-component/TableOfFigures";
+import html from "virtual:doc-component/TableOfFigures";
 
 import { TableOfFigures } from "../../src/ui/document-references.js";
 import { DocumentPreview } from "./document-preview.js";
@@ -10,6 +10,7 @@ const meta = {
     controls: {
       disable: true,
     },
+    docDocument: true,
     docs: {
       description: {
         component: TableOfFigures.__mdxr?.description,
@@ -22,7 +23,6 @@ const meta = {
       },
     },
     layout: "fullscreen",
-    mdxrDocument: true,
   },
   render: () => <DocumentPreview html={html} title="TableOfFigures example" />,
   title: "Components/TableOfFigures",

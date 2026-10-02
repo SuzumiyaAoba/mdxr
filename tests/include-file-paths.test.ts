@@ -163,7 +163,7 @@ describe("included inline file references", () => {
       editorUrl(undefined, codePath, "1")
     );
     expect(body).toContain("vscode://file/");
-    expect(body).not.toContain("data-mdxr-code-path");
+    expect(body).not.toContain("data-doc-code-path");
   });
 
   it.each([
@@ -193,7 +193,7 @@ describe("included inline file references", () => {
       );
       expect(Object.keys(fileLinks)).not.toContain("src/sample.ts\u00002");
       expect(body).toContain("src/sample.ts:2-4");
-      expect(body).not.toContain("data-mdxr-code-path");
+      expect(body).not.toContain("data-doc-code-path");
     }
   );
 

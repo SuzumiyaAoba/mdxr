@@ -4,7 +4,7 @@ export const closestEl = (el: Element, sel: string): HTMLElement | null => {
   return hit instanceof HTMLElement ? hit : null;
 };
 
-// Flashes a feedback state on a button: swaps to the .mdxr-copy-done icon /
+// Flashes a feedback state on a button: swaps to the .doc-copy-done icon /
 // label and tints it via .copied (success) or shakes it red via
 // .copy-failed. A repeat click restarts the pop (reflow) and the timer.
 export const flash = (
@@ -13,26 +13,26 @@ export const flash = (
   label?: string
 ): void => {
   const ex = b as HTMLElement & {
-    mdxrLabel?: null | string;
-    mdxrTimer?: ReturnType<typeof setTimeout>;
+    docLabel?: null | string;
+    docTimer?: ReturnType<typeof setTimeout>;
   };
-  clearTimeout(ex.mdxrTimer);
+  clearTimeout(ex.docTimer);
   if (label !== undefined) {
-    ex.mdxrLabel ??= b.getAttribute("aria-label");
+    ex.docLabel ??= b.getAttribute("aria-label");
     b.setAttribute("aria-label", label);
   }
   b.classList.remove("copied", "copy-failed");
   void b.offsetWidth;
   b.classList.add(cls);
-  ex.mdxrTimer = setTimeout(() => {
+  ex.docTimer = setTimeout(() => {
     b.classList.remove(cls);
-    if (ex.mdxrLabel !== undefined) {
-      if (ex.mdxrLabel === null) {
+    if (ex.docLabel !== undefined) {
+      if (ex.docLabel === null) {
         b.removeAttribute("aria-label");
       } else {
-        b.setAttribute("aria-label", ex.mdxrLabel);
+        b.setAttribute("aria-label", ex.docLabel);
       }
-      ex.mdxrLabel = undefined;
+      ex.docLabel = undefined;
     }
   }, 1600);
 };

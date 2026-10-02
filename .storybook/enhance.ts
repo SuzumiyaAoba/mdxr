@@ -25,10 +25,10 @@ const highlightCodeBlocks = async (root: ParentNode): Promise<void> => {
       // code.textContent (React removing our spans) gets re-processed while
       // untouched nodes are skipped.
       const text = (code.textContent ?? "").replace(/\n$/u, "");
-      if (code.dataset.mdxrHighlight === text) {
+      if (code.dataset.docHighlight === text) {
         return;
       }
-      code.dataset.mdxrHighlight = text;
+      code.dataset.docHighlight = text;
       const html = await highlightToHtml(lang, text);
       if (html === undefined) {
         code.classList.remove("shiki");

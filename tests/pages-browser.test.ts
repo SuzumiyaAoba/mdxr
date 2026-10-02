@@ -110,7 +110,7 @@ describe("document page navigation", () => {
       await route.fulfill({ body, contentType: "text/html" });
     });
     await page.addInitScript(() => {
-      localStorage.setItem("mdxr-view", "pages");
+      localStorage.setItem("doc-view", "pages");
     });
     await page.goto(`http://mdxr.test/host/${host}`);
     const startingScrollY = host === "top" ? 0 : 3000;
@@ -270,11 +270,11 @@ describe("document page navigation", () => {
   it("shows adjacent section buttons in Pages view and navigates both ways", async () => {
     const page = await openPage();
     try {
-      const navigation = page.locator("nav.mdxr-page-navigation");
-      const previous = navigation.locator("[data-mdxr-page-previous]");
-      const next = navigation.locator("[data-mdxr-page-next]");
-      const previousTitle = previous.locator("[data-mdxr-page-previous-title]");
-      const nextTitle = next.locator("[data-mdxr-page-next-title]");
+      const navigation = page.locator("nav.doc-page-navigation");
+      const previous = navigation.locator("[data-doc-page-previous]");
+      const next = navigation.locator("[data-doc-page-next]");
+      const previousTitle = previous.locator("[data-doc-page-previous-title]");
+      const nextTitle = next.locator("[data-doc-page-next-title]");
       expect({
         label: await navigation.getAttribute("aria-label"),
         visible: await navigation.isVisible(),
@@ -319,7 +319,7 @@ describe("document page navigation", () => {
       await page.keyboard.press("Enter");
       expect({
         focused: await page
-          .locator("#mdxr-content")
+          .locator("#doc-content")
           .evaluate((content) => document.activeElement === content),
         hash: new URL(page.url()).hash,
         next: await next.textContent(),
@@ -405,18 +405,18 @@ describe("document page navigation", () => {
     const page = await openPage(singleSection);
     try {
       await mode(page, "Pages").click();
-      const navigation = page.locator("nav.mdxr-page-navigation");
-      const next = navigation.locator("[data-mdxr-page-next]");
-      const previous = navigation.locator("[data-mdxr-page-previous]");
+      const navigation = page.locator("nav.doc-page-navigation");
+      const next = navigation.locator("[data-doc-page-next]");
+      const previous = navigation.locator("[data-doc-page-previous]");
       await expect(navigation.isVisible()).resolves.toBeTruthy();
       expect({
         next: await next.isVisible(),
         nextTitleHidden: await next
-          .locator("[data-mdxr-page-next-title]")
+          .locator("[data-doc-page-next-title]")
           .isHidden(),
         previous: await previous.isVisible(),
         previousTitleHidden: await previous
-          .locator("[data-mdxr-page-previous-title]")
+          .locator("[data-doc-page-previous-title]")
           .isHidden(),
       }).toStrictEqual({
         next: false,
@@ -444,7 +444,7 @@ describe("document page navigation", () => {
         await route.fulfill({ body: html, contentType: "text/html" });
       });
       await page.addInitScript(() => {
-        localStorage.setItem("mdxr-view", "pages");
+        localStorage.setItem("doc-view", "pages");
       });
       await page.goto("http://mdxr.test/#first-section");
       await page.getByRole("textbox", { name: "Draft" }).fill("Kept draft");
@@ -491,7 +491,7 @@ describe("document page navigation", () => {
       expect({
         focus: await page.locator(":focus").textContent(),
         label: await page
-          .locator("#mdxr-content")
+          .locator("#doc-content")
           .getAttribute("aria-labelledby"),
         selected: await page.locator(":focus").getAttribute("aria-selected"),
       }).toStrictEqual({
@@ -623,7 +623,7 @@ describe("document page navigation", () => {
         alpha: await page.getByText("Alpha text.").isVisible(),
         beta: await page.getByText("Beta text.").isVisible(),
         controls: await mode(page, "Pages").isVisible(),
-        navigation: await page.locator("nav.mdxr-page-navigation").isVisible(),
+        navigation: await page.locator("nav.doc-page-navigation").isVisible(),
         tabs: await sections(page).isVisible(),
       }).toStrictEqual({
         alpha: true,
@@ -637,7 +637,7 @@ describe("document page navigation", () => {
         page.getByText("Beta text.").isVisible()
       ).resolves.toBeFalsy();
       await expect(
-        page.locator("nav.mdxr-page-navigation").isVisible()
+        page.locator("nav.doc-page-navigation").isVisible()
       ).resolves.toBeTruthy();
     } finally {
       await page.close();
@@ -655,10 +655,10 @@ describe("document page navigation", () => {
       ).resolves.toBeTruthy();
       const layout = await page.evaluate(() => {
         const tabs = document
-          .querySelector("[data-mdxr-page-tabs]")
+          .querySelector("[data-doc-page-tabs]")
           ?.getBoundingClientRect();
         const content = document
-          .querySelector("#mdxr-content")
+          .querySelector("#doc-content")
           ?.getBoundingClientRect();
         return {
           contained: document.documentElement.scrollWidth <= innerWidth,
@@ -684,10 +684,10 @@ describe("document page navigation", () => {
         beta: await page.getByText("Beta text.").isVisible(),
         headinglessMode: await mode(headingless, "Pages").isVisible(),
         headinglessNavigation: await headingless
-          .locator("nav.mdxr-page-navigation")
+          .locator("nav.doc-page-navigation")
           .isVisible(),
         mode: await mode(page, "Pages").isVisible(),
-        navigation: await page.locator("nav.mdxr-page-navigation").isVisible(),
+        navigation: await page.locator("nav.doc-page-navigation").isVisible(),
       }).toStrictEqual({
         alpha: true,
         beta: true,
@@ -708,7 +708,7 @@ describe("document page navigation", () => {
       await mode(page, "Pages").click();
       await page
         .getByText("Beta text.")
-        .dispatchEvent("mdxr:reveal", { bubbles: true });
+        .dispatchEvent("doc:reveal", { bubbles: true });
       await expect(
         page.getByText("Beta text.").isVisible()
       ).resolves.toBeTruthy();
@@ -729,20 +729,20 @@ describe("document page navigation", () => {
       await sections(page).getByRole("tab", { name: "Beta" }).click();
       expect({
         nextTitle: await page
-          .locator("[data-mdxr-page-next-title]")
+          .locator("[data-doc-page-next-title]")
           .textContent(),
         nextTitleHidden: await page
-          .locator("[data-mdxr-page-next-title]")
+          .locator("[data-doc-page-next-title]")
           .isHidden(),
-        nextVisible: await page.locator("[data-mdxr-page-next]").isVisible(),
+        nextVisible: await page.locator("[data-doc-page-next]").isVisible(),
         previousTitle: await page
-          .locator("[data-mdxr-page-previous-title]")
+          .locator("[data-doc-page-previous-title]")
           .textContent(),
         previousTitleHidden: await page
-          .locator("[data-mdxr-page-previous-title]")
+          .locator("[data-doc-page-previous-title]")
           .isHidden(),
         previousVisible: await page
-          .locator("[data-mdxr-page-previous]")
+          .locator("[data-doc-page-previous]")
           .isVisible(),
       }).toStrictEqual({
         nextTitle: "",
@@ -759,20 +759,20 @@ describe("document page navigation", () => {
       expect(new URL(page.url()).hash).toBe("");
       expect({
         nextTitle: await page
-          .locator("[data-mdxr-page-next-title]")
+          .locator("[data-doc-page-next-title]")
           .textContent(),
         nextTitleHidden: await page
-          .locator("[data-mdxr-page-next-title]")
+          .locator("[data-doc-page-next-title]")
           .isHidden(),
-        nextVisible: await page.locator("[data-mdxr-page-next]").isVisible(),
+        nextVisible: await page.locator("[data-doc-page-next]").isVisible(),
         previousTitle: await page
-          .locator("[data-mdxr-page-previous-title]")
+          .locator("[data-doc-page-previous-title]")
           .textContent(),
         previousTitleHidden: await page
-          .locator("[data-mdxr-page-previous-title]")
+          .locator("[data-doc-page-previous-title]")
           .isHidden(),
         previousVisible: await page
-          .locator("[data-mdxr-page-previous]")
+          .locator("[data-doc-page-previous]")
           .isVisible(),
       }).toStrictEqual({
         nextTitle: "Beta",

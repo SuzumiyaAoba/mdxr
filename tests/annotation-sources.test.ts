@@ -17,7 +17,7 @@ describe("annotation source locations", () => {
       hydrate: false,
     });
     const rawDocument =
-      /<script type="application\/json" id="mdxr-annotation-document">(?<json>[\s\S]*?)<\/script>/u.exec(
+      /<script type="application\/json" id="doc-annotation-document">(?<json>[\s\S]*?)<\/script>/u.exec(
         html
       )?.groups?.json;
     if (rawDocument === undefined) {

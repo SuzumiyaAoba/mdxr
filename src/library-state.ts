@@ -243,7 +243,7 @@ export const useLibrarySearch = (): LibrarySearchState => {
 
     setLoading(true);
     setError(false);
-    const searchUrl = `/__mdxr_library/search?${parameters.toString()}`;
+    const searchUrl = `/__doc_library/search?${parameters.toString()}`;
     void performLibrarySearch(
       searchUrl,
       controller.signal,

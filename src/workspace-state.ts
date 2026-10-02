@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { readDocumentStorage } from "./client/storage.js";
 import {
   errorMessage,
   loadConversation,
@@ -16,7 +17,7 @@ export type ViewMode = "preview" | "source" | "diff";
 
 const readStored = (key: string, fallback: string): string => {
   try {
-    return sessionStorage.getItem(key) ?? fallback;
+    return readDocumentStorage(sessionStorage, key) ?? fallback;
   } catch {
     return fallback;
   }
@@ -32,32 +33,32 @@ const store = (key: string, value: string): void => {
 
 const useWorkspacePreferences = () => {
   const [view, setView] = useState<ViewMode>(() => {
-    const stored = readStored("mdxr:workspace:view", "preview");
+    const stored = readStored("doc:workspace:view", "preview");
     return stored === "source" || stored === "diff" ? stored : "preview";
   });
   const [selection, setSelection] = useState(() =>
-    readStored("mdxr:workspace:selection", "latest")
+    readStored("doc:workspace:selection", "latest")
   );
   const [chatOpen, setChatOpen] = useState(
-    () => readStored("mdxr:workspace:chat", "closed") === "open"
+    () => readStored("doc:workspace:chat", "closed") === "open"
   );
   const [diffLayout, setDiffLayout] = useState<"unified" | "split">(() =>
-    readStored("mdxr:workspace:diff-layout", "split") === "unified"
+    readStored("doc:workspace:diff-layout", "split") === "unified"
       ? "unified"
       : "split"
   );
   const [wordDiff, setWordDiff] = useState(
-    () => readStored("mdxr:workspace:word-diff", "true") !== "false"
+    () => readStored("doc:workspace:word-diff", "true") !== "false"
   );
   useEffect(() => {
-    store("mdxr:workspace:diff-layout", diffLayout);
-    store("mdxr:workspace:word-diff", String(wordDiff));
+    store("doc:workspace:diff-layout", diffLayout);
+    store("doc:workspace:word-diff", String(wordDiff));
   }, [diffLayout, wordDiff]);
 
   useEffect(() => {
-    store("mdxr:workspace:chat", chatOpen ? "open" : "closed");
-    store("mdxr:workspace:view", view);
-    store("mdxr:workspace:selection", selection);
+    store("doc:workspace:chat", chatOpen ? "open" : "closed");
+    store("doc:workspace:view", view);
+    store("doc:workspace:selection", selection);
   }, [chatOpen, selection, view]);
 
   return {
@@ -154,7 +155,7 @@ export const useWorkspace = ({
       await refreshConversation();
     };
     void refresh();
-    const events = new EventSource("/__mdxr_events");
+    const events = new EventSource("/__doc_events");
     events.addEventListener("agent", () => {
       void refresh();
     });

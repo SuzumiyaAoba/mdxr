@@ -81,7 +81,7 @@ export const remarkCodeFile = () => (tree: Node, file: VFile) => {
     target.lang = lang;
     // `"` inside a path would close the title="…" meta early — quote it as `'`.
     const title = rel.replaceAll('"', "'");
-    setHProperty(target, "data-mdxr-code-path", rel);
+    setHProperty(target, "data-doc-code-path", rel);
     target.meta = `title="${title}${titleSuffix}"`;
     target.value = content;
   });

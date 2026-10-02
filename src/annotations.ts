@@ -22,7 +22,7 @@ export interface AnnotationDocument {
 export interface AnnotationAnchor {
   kind: "text" | "figure";
   revision: string;
-  /** Child-element indexes from #mdxr-root; never an executable selector. */
+  /** Child-element indexes from #doc-root; never an executable selector. */
   path: number[];
   quote: string;
   heading: string;

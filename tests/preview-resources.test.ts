@@ -92,7 +92,7 @@ describe("preview configuration and resources", () => {
       await writeFile(path.join(dir, "doc.mdx"), "# Preview");
       const options = await configuration(mode);
       const url = baseUrl(await serveLibrary(dir, 0, options));
-      const response = await fetch(`${url}/__mdxr_library/open/doc.mdx`);
+      const response = await fetch(`${url}/__doc_library/open/doc.mdx`);
       const html = await response.text();
       const configured = html.includes("--preview-resource-marker:configured");
       expect(configured).toBeTruthy();
@@ -153,13 +153,13 @@ describe("preview configuration and resources", () => {
       '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>'
     );
     const url = baseUrl(await serve(file, 0));
-    const historyResponse = await fetch(`${url}/__mdxr_history`);
+    const historyResponse = await fetch(`${url}/__doc_history`);
     const history: unknown = await historyResponse.json();
     if (!isRecord(history) || typeof history.latestId !== "string") {
       throw new Error("Missing history version");
     }
     const response = await fetch(
-      `${url}/__mdxr_history?view=preview&id=${history.latestId}`
+      `${url}/__doc_history?view=preview&id=${history.latestId}`
     );
     const html = await response.text();
     const embedded = html.includes('src="data:image/svg+xml;base64,');

@@ -14,7 +14,7 @@ const DEVICES = {
 export const Wireframe = defineComponent(
   {
     description:
-      "Screen mockup built with wireframe-ui components. Responsive desktop/tablet/mobile frame; combine with existing mdxr layouts and shadcn controls.",
+      "Screen mockup built with wireframe-ui components. Responsive desktop/tablet/mobile frame; combine with existing document layouts and shadcn controls.",
     schema: v.looseObject({
       ...WIREFRAME_COMMON,
       device: v.optional(

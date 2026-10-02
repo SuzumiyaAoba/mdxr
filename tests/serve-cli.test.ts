@@ -84,8 +84,8 @@ describe("serve CLI input", () => {
     const url = await startCli([]);
     const response = await fetch(url);
 
-    await expect(response.text()).resolves.toContain('id="mdxr-library-root"');
-    const results = await fetch(`${url}/__mdxr_library/search`);
+    await expect(response.text()).resolves.toContain('id="doc-library-root"');
+    const results = await fetch(`${url}/__doc_library/search`);
     await expect(results.json()).resolves.toMatchObject({ total: 0 });
   });
 
@@ -100,7 +100,7 @@ describe("serve CLI input", () => {
       const html = await response.text();
 
       expect(html).toContain("Stdin preview marker.");
-      expect(html).not.toContain('id="mdxr-library-root"');
+      expect(html).not.toContain('id="doc-library-root"');
     }
   );
 
@@ -121,13 +121,13 @@ describe("serve CLI input", () => {
       await writeFile(path.join(directory, "document.mdx"), "# Shutdown\n");
       const libraryUrl = await startCli([directory, "--idle-timeout", "0"]);
       const opened = await fetch(
-        `${libraryUrl}/__mdxr_library/open/document.mdx`
+        `${libraryUrl}/__doc_library/open/document.mdx`
       );
       await opened.text();
       const previewUrl = new URL(opened.url).origin;
       const controller = new AbortController();
       try {
-        const events = await fetch(`${previewUrl}/__mdxr_events`, {
+        const events = await fetch(`${previewUrl}/__doc_events`, {
           signal: controller.signal,
         });
         expect(events.headers.get("content-type")).toBe("text/event-stream");
@@ -152,7 +152,7 @@ describe("serve CLI input", () => {
     );
     const controller = new AbortController();
     try {
-      const events = await fetch(`${url}/__mdxr_events`, {
+      const events = await fetch(`${url}/__doc_events`, {
         signal: controller.signal,
       });
       expect(events.status).toBe(200);

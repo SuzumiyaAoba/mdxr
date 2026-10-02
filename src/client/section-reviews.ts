@@ -3,6 +3,7 @@ import type { AnnotationDocument } from "../annotations.js";
 import { REVIEW_IMPORT_EVENT } from "../review-transfer.js";
 import { parseSectionReviews } from "../section-reviews.js";
 import { documentStorageKey } from "./document-identity.js";
+import { readDocumentStorage } from "./storage.js";
 import { WORKSPACE_EXPORT_STATE_EVENT } from "./workspace-export-state.js";
 
 interface ReviewControl {
@@ -37,9 +38,9 @@ const reviewControl = (
   if (button === null || label === null || status === null) {
     return undefined;
   }
-  const page = host.closest<HTMLElement>("[data-mdxr-page]");
+  const page = host.closest<HTMLElement>("[data-doc-page]");
   const tab = document.querySelector<HTMLElement>(
-    `#${CSS.escape(`mdxr-page-tab:${page?.dataset.mdxrPage}`)}`
+    `#${CSS.escape(`doc-page-tab:${page?.dataset.docPage}`)}`
   );
   const icon = shadow.querySelector("[data-section-review-icon]");
   if (icon !== null) {
@@ -68,11 +69,11 @@ class SectionReviews {
     template: HTMLTemplateElement,
     info: AnnotationDocument
   ) {
-    this.storageKey = documentStorageKey("mdxr:section-reviews:v1:", info);
+    this.storageKey = documentStorageKey("doc:section-reviews:v1:", info);
     this.summary = document.querySelector("[data-section-review-summary]");
     this.load();
     for (const host of root.querySelectorAll<HTMLElement>(
-      "mdxr-section-review"
+      "doc-section-review"
     )) {
       const control = reviewControl(host, template);
       if (control === undefined) {
@@ -126,9 +127,9 @@ class SectionReviews {
     }
     try {
       this.reviews = new Map(
-        parseSectionReviews(localStorage.getItem(this.storageKey)).map(
-          ({ id, revision }) => [id, revision]
-        )
+        parseSectionReviews(
+          readDocumentStorage(localStorage, this.storageKey)
+        ).map(({ id, revision }) => [id, revision])
       );
     } catch {
       // Preserve corrupt records instead of silently overwriting user data.
@@ -186,7 +187,7 @@ class SectionReviews {
         : "Mark as reviewed";
       control.label.textContent = label;
       if (control.tab !== null) {
-        control.tab.dataset.mdxrReviewed = String(reviewed);
+        control.tab.dataset.docReviewed = String(reviewed);
         control.tab.setAttribute("aria-description", label);
       }
     }
@@ -198,16 +199,16 @@ class SectionReviews {
 }
 
 export const initSectionReviews = (): SectionReviews | undefined => {
-  const root = document.querySelector<HTMLElement>("#mdxr-root");
-  const data = document.querySelector("#mdxr-annotation-document");
+  const root = document.querySelector<HTMLElement>("#doc-root");
+  const data = document.querySelector("#doc-annotation-document");
   const template = document.querySelector<HTMLTemplateElement>(
-    "#mdxr-section-review-template"
+    "#doc-section-review-template"
   );
   if (
     root === null ||
     data === null ||
     template === null ||
-    root.querySelector("mdxr-section-review") === null
+    root.querySelector("doc-section-review") === null
   ) {
     return undefined;
   }

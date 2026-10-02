@@ -57,7 +57,7 @@ const preview: Preview = {
       <>
         <ThemeSync dark={context.globals.theme === "dark"} />
         <DocumentEnhancements />
-        {context.parameters.mdxrDocument === true ? (
+        {context.parameters.docDocument === true ? (
           <Story />
         ) : (
           // Same chrome as the standalone document: <body> colors on the

@@ -661,7 +661,7 @@ const docComponent = async (code: string): Promise<AnyComponent> => {
 const uidAttrs = (html: string): string[] =>
   [
     ...html.matchAll(
-      /(?:id|name|for)="(?<attr>[^"]*mdxr-q[^"]*|[^"]*_R_[^"]*)"/gu
+      /(?:id|name|for)="(?<attr>[^"]*doc-q[^"]*|[^"]*_R_[^"]*)"/gu
     ),
   ].map((m) => m.groups?.attr ?? "");
 
@@ -715,7 +715,7 @@ describe("hydration vnode parity", () => {
     const doc = await docComponent(r.code);
     const headerProps = { title: "My Plan" };
     const pass = r.renderWithHeader(createElement(PlanHeader, headerProps));
-    const mainStart = html.indexOf('id="mdxr-root"');
+    const mainStart = html.indexOf('id="doc-root"');
     const open = html.indexOf(">", mainStart) + 1;
     const inner = html.slice(open, html.lastIndexOf("</main>"));
     expect(inner).toBe(pass.html);

@@ -94,9 +94,9 @@ describe("serve document directories", () => {
     server = await serveDocuments(undefined, 0);
     const url = serverUrl(server);
     const listing = await fetch(url);
-    const results = await fetch(`${url}/__mdxr_library/search`);
+    const results = await fetch(`${url}/__doc_library/search`);
 
-    await expect(listing.text()).resolves.toContain('id="mdxr-library-root"');
+    await expect(listing.text()).resolves.toContain('id="doc-library-root"');
     await expect(results.json()).resolves.toMatchObject({
       results: [],
       root: path.join(root, ".mdxr"),
@@ -112,7 +112,7 @@ describe("serve document directories", () => {
     await addDocument(".mdxr/20260930160000-other/index.mdx");
     server = await serveDocuments(".mdxr", 0, { open: selectedPath });
     const url = serverUrl(server);
-    const results = await fetch(`${url}/__mdxr_library/search`);
+    const results = await fetch(`${url}/__doc_library/search`);
     await expect(results.json()).resolves.toMatchObject({ total: 2 });
     expect(renderFile).not.toHaveBeenCalled();
     const openedUrl = vi.mocked(openInBrowser).mock.calls[0]?.[0];
@@ -141,14 +141,14 @@ describe("serve document directories", () => {
     const selected = await addDocument(".mdxr/first/index.mdx");
     await addDocument(".mdxr/second/index.mdx");
     server = await serveDocuments(selected, 0, { open: true });
-    const results = await fetch(`${serverUrl(server)}/__mdxr_library/search`);
+    const results = await fetch(`${serverUrl(server)}/__doc_library/search`);
 
     await expect(results.json()).resolves.toMatchObject({
       root: path.join(root, ".mdxr"),
       total: 2,
     });
     expect(openInBrowser).toHaveBeenCalledWith(
-      expect.stringMatching(/\/__mdxr_library\/open\/first%2Findex\.mdx$/u)
+      expect.stringMatching(/\/__doc_library\/open\/first%2Findex\.mdx$/u)
     );
   });
 
@@ -156,7 +156,7 @@ describe("serve document directories", () => {
     const selected = await addDocument("reports/plan.mdx");
     await addDocument("reports/notes.md");
     server = await serveDocuments(selected, 0);
-    const results = await fetch(`${serverUrl(server)}/__mdxr_library/search`);
+    const results = await fetch(`${serverUrl(server)}/__doc_library/search`);
 
     await expect(results.json()).resolves.toMatchObject({
       root: path.join(root, "reports"),
@@ -175,15 +175,12 @@ describe("serve document directories", () => {
     });
     expect(createAgentSession).not.toHaveBeenCalled();
     const url = serverUrl(server);
-    const openUrl = `${url}/__mdxr_library/open/first%2Findex.mdx`;
+    const openUrl = `${url}/__doc_library/open/first%2Findex.mdx`;
     const opened = await fetch(openUrl, { redirect: "manual" });
     const repeated = await fetch(openUrl, { redirect: "manual" });
-    const second = await fetch(
-      `${url}/__mdxr_library/open/second%2Findex.mdx`,
-      {
-        redirect: "manual",
-      }
-    );
+    const second = await fetch(`${url}/__doc_library/open/second%2Findex.mdx`, {
+      redirect: "manual",
+    });
     const location = opened.headers.get("location");
     if (location === null) {
       throw new Error("Agent workspace did not open");
@@ -202,7 +199,7 @@ describe("serve document directories", () => {
     );
     const preview = await fetch(location);
     await expect(preview.text()).resolves.toContain(
-      'data-mdxr-agent data-agent-provider="codex"'
+      'data-doc-agent data-agent-provider="codex"'
     );
   });
 
@@ -221,11 +218,11 @@ describe("serve document directories", () => {
     const url = serverUrl(server);
     const controller = new AbortController();
     try {
-      const listing = await fetch(`${url}/__mdxr_events`, {
+      const listing = await fetch(`${url}/__doc_events`, {
         signal: controller.signal,
       });
       expect(listing.headers.get("content-type")).toBe("text/event-stream");
-      const openUrl = `${url}/__mdxr_library/open/first%2Findex.mdx`;
+      const openUrl = `${url}/__doc_library/open/first%2Findex.mdx`;
       const first = await fetch(openUrl);
       await first.text();
       await vi.waitFor(() => {
@@ -248,12 +245,12 @@ describe("serve document directories", () => {
       idleTimeout: 0.1,
     });
     const url = serverUrl(server);
-    const preview = await fetch(`${url}/__mdxr_library/open/first%2Findex.mdx`);
+    const preview = await fetch(`${url}/__doc_library/open/first%2Findex.mdx`);
     await preview.text();
     const controller = new AbortController();
     try {
       const events = await fetch(
-        `${new URL(preview.url).origin}/__mdxr_events`,
+        `${new URL(preview.url).origin}/__doc_events`,
         {
           signal: controller.signal,
         }

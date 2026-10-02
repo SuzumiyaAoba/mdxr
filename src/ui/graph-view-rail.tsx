@@ -77,7 +77,7 @@ const GraphViewTab = ({
     aria-controls={`${graphId}-canvas`}
     aria-label={option.label}
     aria-selected={selected}
-    className="mdxr-graph-view-tab"
+    className="doc-graph-view-tab"
     id={`${graphId}-view-${option.id}`}
     onClick={() => {
       onChange(option.id);
@@ -86,14 +86,14 @@ const GraphViewTab = ({
     tabIndex={selected ? 0 : -1}
     type="button"
   >
-    <span className="mdxr-graph-view-tab-icon">
+    <span className="doc-graph-view-tab-icon">
       {hasIcon(option.icon) ? (
         <Icon className="h-3.5 w-3.5" name={option.icon} />
       ) : (
         <span className="font-mono text-[0.65rem]">{index}</span>
       )}
     </span>
-    <span className="mdxr-graph-view-tab-label">{option.label}</span>
+    <span className="doc-graph-view-tab-label">{option.label}</span>
   </button>
 );
 
@@ -126,7 +126,7 @@ export const GraphViewRail = ({
   }
   return (
     <div
-      className="mdxr-graph-view-rail"
+      className="doc-graph-view-rail"
       data-mode={mode}
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) {
@@ -149,12 +149,12 @@ export const GraphViewRail = ({
         }
       }}
     >
-      <div className="mdxr-graph-view-rail-inner">
-        <div className="mdxr-graph-view-rail-heading">パターン</div>
+      <div className="doc-graph-view-rail-inner">
+        <div className="doc-graph-view-rail-heading">パターン</div>
         <div
           aria-label="表示する経路"
           aria-orientation="vertical"
-          className="mdxr-graph-view-tabs"
+          className="doc-graph-view-tabs"
           onKeyDown={navigateTabs}
           role="tablist"
           tabIndex={-1}
@@ -177,7 +177,7 @@ export const GraphViewRail = ({
               ? "パターン一覧を折りたたむ"
               : "パターン一覧を展開"
           }
-          className="mdxr-graph-view-toggle"
+          className="doc-graph-view-toggle"
           onClick={() => {
             setMode(toggleExpanded);
           }}
@@ -185,7 +185,7 @@ export const GraphViewRail = ({
           type="button"
         >
           <Icon className="h-3.5 w-3.5" name="lucide:panel-left" />
-          <span className="mdxr-graph-view-tab-label">
+          <span className="doc-graph-view-tab-label">
             {mode === "expanded" ? "折りたたむ" : "展開を固定"}
           </span>
         </button>

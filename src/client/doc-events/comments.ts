@@ -2,7 +2,7 @@ import { jsxAttr, mdText } from "./serialization.js";
 import { closestEl, copyWithFeedback } from "./shared.js";
 
 /* ---- Comments: line anchors, reply form, markdown copy -------------------
- * <Comments> markup carries the hooks: [data-mdxr-comment] cards inside
+ * <Comments> markup carries the hooks: [data-doc-comment] cards inside
  * [data-comment-strip] threads, a [data-comment-add] "+" on every code/diff
  * row, [data-thread-tools] holding each thread's Reply affordance, and
  * [data-comments-copy] on the block's tools row. The strip/card/form markup
@@ -108,7 +108,7 @@ const closeCommentForm = (form: HTMLElement): void => {
   ) {
     return;
   }
-  if (strip.querySelector("[data-mdxr-comment]") === null) {
+  if (strip.querySelector("[data-doc-comment]") === null) {
     const add =
       strip.previousElementSibling?.querySelector("[data-comment-add]");
     strip.remove();
@@ -145,7 +145,7 @@ const fillSlot = (
   }
 };
 
-// Build a [data-mdxr-comment] card off the `card` template: header slots
+// Build a [data-doc-comment] card off the `card` template: header slots
 // filled from the anchor + author, body split into <p> paragraphs, and the
 // data-comment-* attributes the markdown serializer reads.
 const buildCommentCard = (
@@ -313,7 +313,7 @@ const commentsMarkdown = (root: HTMLElement): string => {
       ""
     );
   }
-  for (const c of root.querySelectorAll("[data-mdxr-comment]")) {
+  for (const c of root.querySelectorAll("[data-doc-comment]")) {
     // The card skeleton must not serialize as a phantom comment.
     if (
       !(c instanceof HTMLElement) ||

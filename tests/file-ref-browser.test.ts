@@ -36,7 +36,7 @@ const portOf = (server: Server): number => {
 };
 
 const disableLiveReload = async (page: Page): Promise<void> => {
-  await page.route("**/__mdxr_events", async (route) => {
+  await page.route("**/__doc_events", async (route) => {
     await route.fulfill({
       body: "retry: 60000\n\n",
       contentType: "text/event-stream",
@@ -92,7 +92,7 @@ describe("FileRef browser preview", () => {
       });
       await page.goto(url);
       const trigger = page
-        .locator("[data-mdxr-file-preview]")
+        .locator("[data-doc-file-preview]")
         .filter({ hasText: "sample.ts" });
       await expect(trigger.getAttribute("href")).resolves.toMatch(
         /^vscode:\/\/file\/.+sample\.ts:2$/u
@@ -104,7 +104,7 @@ describe("FileRef browser preview", () => {
       await source.waitFor();
       const sourceState = await source.evaluate((element) => ({
         hasSyntaxHighlight:
-          element.querySelector(".mdxr-workspace-syntax") !== null,
+          element.querySelector(".doc-workspace-syntax") !== null,
         highlightedLines: Array.from(
           element.querySelectorAll<HTMLElement>("[data-line].highlighted"),
           (line) => line.dataset.line
@@ -194,7 +194,7 @@ describe("FileRef browser preview", () => {
       await disableLiveReload(page);
       await page.goto(url);
       const imageTrigger = page
-        .locator("[data-mdxr-file-preview]")
+        .locator("[data-doc-file-preview]")
         .filter({ hasText: "pixel.png" });
       await imageTrigger.click();
       const dialog = page.getByRole("dialog");
@@ -216,7 +216,7 @@ describe("FileRef browser preview", () => {
       await dialog.getByRole("button", { name: "Close" }).click();
       await dialog.waitFor({ state: "hidden" });
       await page
-        .locator("[data-mdxr-file-preview]")
+        .locator("[data-doc-file-preview]")
         .filter({ hasText: "guide.md" })
         .click();
       const rendered = dialog.frameLocator('iframe[title="Rendered guide.md"]');
@@ -238,7 +238,7 @@ describe("FileRef browser preview", () => {
         const source = element.querySelector('[aria-label="Source code"]');
         return {
           hasSyntaxHighlight:
-            source?.querySelector(".mdxr-workspace-syntax") !== null,
+            source?.querySelector(".doc-workspace-syntax") !== null,
           includesRawDirective:
             source?.textContent?.includes(":::note") ?? false,
           selectedTab: element.querySelector(
@@ -261,7 +261,7 @@ describe("FileRef browser preview", () => {
     const previewRequests: string[] = [];
     try {
       page.on("request", (request) => {
-        if (request.url().includes("/__mdxr_file")) {
+        if (request.url().includes("/__doc_file")) {
           previewRequests.push(request.url());
         }
       });
@@ -300,7 +300,7 @@ describe("FileRef browser preview", () => {
         defaultPrevented:
           document.documentElement.dataset.fileRefDefaultPrevented,
         hasPreviewUrl:
-          document.querySelector("[data-mdxr-file-preview]") !== null,
+          document.querySelector("[data-doc-file-preview]") !== null,
         modalOpen: document.querySelector('[role="dialog"]') !== null,
       }));
       expect({

@@ -50,7 +50,7 @@ describe(serveSource, () => {
       const res = await fetch(`http://127.0.0.1:${address.port}/`);
       const html = await res.text();
       expect(html).toContain('role="switch"');
-      expect(html).toContain("/__mdxr_events");
+      expect(html).toContain("/__doc_events");
       expect(html.includes("hydrateRoot")).toBeFalsy();
     } finally {
       server.closeAllConnections();

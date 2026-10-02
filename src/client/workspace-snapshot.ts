@@ -82,11 +82,11 @@ const copyElementState = (node: Element, clone: Element): void => {
     clone.removeAttribute("srcset");
     clone.removeAttribute("loading");
   }
-  if (clone.matches("[data-mdxr-page]")) {
+  if (clone.matches("[data-doc-page]")) {
     clone.removeAttribute("hidden");
     clone.removeAttribute("inert");
   }
-  if (clone.matches("#mdxr-prelude")) {
+  if (clone.matches("#doc-prelude")) {
     clone.removeAttribute("hidden");
   }
 };
@@ -227,7 +227,7 @@ export const captureWorkspaceDocument = async (options?: {
   includeReviews?: boolean;
   includeRelated?: boolean;
 }): Promise<string> => {
-  const root = document.querySelector("#mdxr-root");
+  const root = document.querySelector("#doc-root");
   if (root === null) {
     throw new Error("Document is not available for export");
   }
@@ -244,7 +244,7 @@ export const captureWorkspaceDocument = async (options?: {
   }
   if (options?.includeReviews === false) {
     for (const control of container.querySelectorAll(
-      "mdxr-section-review, [data-section-review-summary]"
+      "doc-section-review, [data-section-review-summary]"
     )) {
       control.remove();
     }
@@ -276,5 +276,5 @@ export const captureWorkspaceDocument = async (options?: {
     : "";
   const safeCss = css.join("\n").replaceAll(/<\/style/giu, "<\\/style");
   const title = options?.title ?? document.title;
-  return `<!doctype html><html lang="${escapeExportHtml(document.documentElement.lang || "en")}" class="${theme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; media-src data:; font-src data:; style-src 'unsafe-inline';"><title>${escapeExportHtml(title)}</title><style>${safeCss}\n*,*::before,*::after{animation:none!important;transition:none!important}#mdxr-root{padding-top:2rem!important}[data-mdxr-page]{display:contents!important}</style></head><body class="${escapeExportHtml(document.body.className.replaceAll(/\bmdxr-[\w-]+\b/gu, ""))}">${container.innerHTML}</body></html>`;
+  return `<!doctype html><html lang="${escapeExportHtml(document.documentElement.lang || "en")}" class="${theme}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; media-src data:; font-src data:; style-src 'unsafe-inline';"><title>${escapeExportHtml(title)}</title><style>${safeCss}\n*,*::before,*::after{animation:none!important;transition:none!important}#doc-root{padding-top:2rem!important}[data-doc-page]{display:contents!important}</style></head><body class="${escapeExportHtml(document.body.className.replaceAll(/\bdoc-[\w-]+\b/gu, ""))}">${container.innerHTML}</body></html>`;
 };

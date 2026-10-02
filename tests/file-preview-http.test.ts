@@ -288,10 +288,10 @@ describe("createFilePreviews HTTP endpoint", () => {
     const deletedResponse = await fetch(deletedUrl);
 
     const validUrl = register(file("source.ts"));
-    const invalidId = new URL("/__mdxr_file", baseUrl);
+    const invalidId = new URL("/__doc_file", baseUrl);
     invalidId.searchParams.set("id", "../../etc/passwd");
     const invalidIdResponse = await fetch(invalidId);
-    const pathInjection = new URL("/__mdxr_file", baseUrl);
+    const pathInjection = new URL("/__doc_file", baseUrl);
     pathInjection.searchParams.set("path", "/etc/passwd");
     const pathInjectionResponse = await fetch(pathInjection);
     const tamperedPath = new URL(validUrl);

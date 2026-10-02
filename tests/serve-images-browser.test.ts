@@ -78,7 +78,7 @@ describe("local images in live previews", () => {
     const page = await browser.newPage();
     try {
       await page.goto(
-        `${serverUrl(server)}/__mdxr_library/open/${encodeURIComponent(id)}`
+        `${serverUrl(server)}/__doc_library/open/${encodeURIComponent(id)}`
       );
       expect(decodeURIComponent(new URL(page.url()).pathname)).toBe(`/${id}`);
       for (const alt of ["Markdown image", "Figure image"]) {

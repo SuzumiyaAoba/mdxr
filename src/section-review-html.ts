@@ -1,6 +1,6 @@
 /** Shadow DOM keeps review controls independent of MDX hydration and selection. */
 export const sectionReviewHtml = (icon: (name: string) => string): string => `
-<template id="mdxr-section-review-template">
+<template id="doc-section-review-template">
   <style>
     :host {
       display: block;
@@ -27,17 +27,17 @@ export const sectionReviewHtml = (icon: (name: string) => string): string => `
       outline-offset: 3px;
     }
     button[aria-pressed="true"] {
-      color: var(--mdxr-review-success, #047857);
+      color: var(--doc-review-success, #047857);
       border-color: currentColor;
     }
     svg { display: block; width: 1rem; height: 1rem; }
-    .mdxr-review-done { display: none; }
-    button[aria-pressed="true"] .mdxr-review-done { display: block; }
-    button[aria-pressed="true"] .mdxr-review-pending { display: none; }
+    .doc-review-done { display: none; }
+    button[aria-pressed="true"] .doc-review-done { display: block; }
+    button[aria-pressed="true"] .doc-review-pending { display: none; }
     [role="status"] { display: inline-block; margin-inline-start: 0.5rem; }
     [role="status"]:empty { display: none; }
     @media print { :host { display: none; } }
   </style>
-  <button type="button" aria-pressed="false"><span data-section-review-icon aria-hidden="true"><span class="mdxr-review-pending">${icon("circle")}</span><span class="mdxr-review-done">${icon("circle-check")}</span></span><span data-section-review-label>Not reviewed</span></button>
+  <button type="button" aria-pressed="false"><span data-section-review-icon aria-hidden="true"><span class="doc-review-pending">${icon("circle")}</span><span class="doc-review-done">${icon("circle-check")}</span></span><span data-section-review-label>Not reviewed</span></button>
   <span id="save-status" role="status" title="Review status will be lost after reloading or closing this page."></span>
 </template>`;

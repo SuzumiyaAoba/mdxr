@@ -470,7 +470,7 @@ export const PrintLayout = defineComponent(
   ({ columns, keepTogether, title, children }) => (
     <section
       aria-label={title}
-      className={`mdxr-print-layout ${columns === "2" ? "print:columns-2 print:gap-8" : ""} ${attrTrue(keepTogether) ? "print:break-inside-avoid" : ""}`}
+      className={`doc-print-layout ${columns === "2" ? "print:columns-2 print:gap-8" : ""} ${attrTrue(keepTogether) ? "print:break-inside-avoid" : ""}`}
     >
       {children}
     </section>

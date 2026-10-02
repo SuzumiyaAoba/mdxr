@@ -58,14 +58,14 @@ export const libraryHtml = async (): Promise<string> => {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <meta name="referrer" content="no-referrer">
-<title>mdxr · 文書ライブラリ / Document library</title>
+<title>文書ライブラリ / Document library</title>
 <script>${inlineScript(THEME_JS)}</script>
 <script>${inlineScript(LIVE_RELOAD_JS)}</script>
 <style>${inlineStyle(css)}</style>
-<script src="/__mdxr_library.js" defer></script>
+<script src="/__doc_library.js" defer></script>
 </head>
 <body>
-<div id="mdxr-library-root"></div>
+<div id="doc-library-root"></div>
 <noscript>文書ライブラリを使うには JavaScript を有効にしてください。Enable JavaScript to browse the document library.</noscript>
 </body>
 </html>`;

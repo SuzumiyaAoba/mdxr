@@ -182,7 +182,7 @@ export const Include = defineComponent(
 export const DocumentLink = defineComponent(
   {
     description:
-      "Open a local Markdown/MDX file in a new tab rendered with the mdxr theme and project components; optional label and heading section.",
+      "Open a local Markdown/MDX file in a new tab rendered with the document theme and project components; optional label and heading section.",
     schema: v.looseObject({
       document: v.optional(v.string()),
       label: v.optional(v.string()),
@@ -193,7 +193,7 @@ export const DocumentLink = defineComponent(
   ({ document, label, path, section }) => (
     <a
       className="text-sky-700 underline dark:text-sky-300"
-      data-mdxr-document={document}
+      data-doc-document={document}
       href={safeHref(section === undefined ? path : `${path}#${section}`)}
       rel="noopener noreferrer"
       target="_blank"

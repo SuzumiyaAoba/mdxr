@@ -29,7 +29,7 @@ export interface PreviewTarget {
 }
 
 const errorPage = (error: unknown): string =>
-  `<!doctype html><meta charset="utf-8"><body style="font-family:monospace;background:#1c1917;color:#fca5a5;padding:2rem"><h1>mdxr render error</h1><pre>${formatError(error).replaceAll("&", "&amp;").replaceAll("<", "&lt;")}</pre></body>`;
+  `<!doctype html><meta charset="utf-8"><body style="font-family:monospace;background:#1c1917;color:#fca5a5;padding:2rem"><h1>Document render error</h1><pre>${formatError(error).replaceAll("&", "&amp;").replaceAll("<", "&lt;")}</pre></body>`;
 
 const withWorkspace = (html: string, target: PreviewTarget): string =>
   target.history === undefined
@@ -78,7 +78,7 @@ export const createPreviewDocument = (target: PreviewTarget) => {
             )
           );
         }
-        const page = `${errorPage(error)}<script>new EventSource('/__mdxr_events').addEventListener('reload',()=>location.reload())</script>`;
+        const page = `${errorPage(error)}<script>new EventSource('/__doc_events').addEventListener('reload',()=>location.reload())</script>`;
         html = withWorkspace(page, target);
       }
       if (target.history !== undefined) {

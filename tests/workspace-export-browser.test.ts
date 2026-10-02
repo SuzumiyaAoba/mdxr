@@ -39,7 +39,7 @@ The quote to comment on is export snapshot marker.
 <textarea aria-label="Document note" defaultValue="Initial note" />
 `;
 const MALICIOUS_TEXT =
-  '</script><img src=x onerror="window.__mdxrExportPwned=true">';
+  '</script><img src=x onerror="window.__docExportPwned=true">';
 const COMMENT_TEXT = `Review safely: ${MALICIOUS_TEXT}`;
 const CLIPBOARD_WRITE = Promise.resolve();
 const CHAT_MESSAGES = [
@@ -107,11 +107,11 @@ const openWorkspace = async (
   await page.route("http://mdxr.test/**", async (route) => {
     const request = route.request();
     const url = new URL(request.url());
-    if (url.pathname === "/__mdxr_workspace.js") {
+    if (url.pathname === "/__doc_workspace.js") {
       await route.fulfill({ body: script, contentType: "text/javascript" });
       return;
     }
-    if (url.pathname === "/__mdxr_events") {
+    if (url.pathname === "/__doc_events") {
       await route.fulfill({
         body: "retry: 60000\nevent: agent\ndata: {}\n\n",
         headers: {
@@ -121,7 +121,7 @@ const openWorkspace = async (
       });
       return;
     }
-    if (url.pathname === "/__mdxr_agent") {
+    if (url.pathname === "/__doc_agent") {
       await route.fulfill({
         body: responseJson({
           busy: false,
@@ -133,7 +133,7 @@ const openWorkspace = async (
       });
       return;
     }
-    if (url.pathname === "/__mdxr_history") {
+    if (url.pathname === "/__doc_history") {
       const view = url.searchParams.get("view");
       if (view === "source") {
         const id = url.searchParams.get("id");
@@ -163,7 +163,7 @@ const openWorkspace = async (
       });
       return;
     }
-    if (url.pathname === "/__mdxr_export") {
+    if (url.pathname === "/__doc_export") {
       attempts += 1;
       const body = exportResponse(attempts);
       const status =
@@ -187,14 +187,14 @@ const openWorkspace = async (
     await route.fulfill({ body: html, contentType: "text/html" });
   });
   await page.goto("http://mdxr.test/review");
-  await page.locator(".mdxr-workspace-tabs").waitFor({ state: "visible" });
+  await page.locator(".doc-workspace-tabs").waitFor({ state: "visible" });
   await page.getByRole("button", EXPORT_BUTTON).waitFor({ state: "visible" });
   return { exportAttempts: () => attempts, page };
 };
 
 const selectText = async (page: Page, quote: string): Promise<void> => {
   await page.evaluate((selectedText) => {
-    const root = document.querySelector("#mdxr-root");
+    const root = document.querySelector("#doc-root");
     if (root === null) {
       throw new Error("Document root is missing");
     }
@@ -239,7 +239,7 @@ const disableAnnotationStorageAndStubClipboard = async (
     Object.defineProperty(storage, "setItem", {
       configurable: true,
       value: (key: string, value: string) => {
-        if (key.startsWith("mdxr:annotations:")) {
+        if (key.startsWith("doc:annotations:")) {
           throw new Error("Browser storage unavailable for this test");
         }
         originalSetItem(key, value);
@@ -257,7 +257,7 @@ const disableAnnotationStorageAndStubClipboard = async (
 };
 
 const toggleSectionReview = async (page: Page): Promise<void> => {
-  const firstReview = page.locator("mdxr-section-review").first();
+  const firstReview = page.locator("doc-section-review").first();
   await firstReview.waitFor({ state: "attached" });
   await firstReview.evaluate((element) => {
     const button = element.shadowRoot?.querySelector("button");
@@ -349,7 +349,7 @@ describe("workspace HTML export", () => {
       const archivePage = await offlineContext.newPage();
       await archivePage.goto(pathToFileURL(archivePath).href);
       const sectionIds = await archivePage
-        .locator(".mdxr-export")
+        .locator(".doc-export")
         .evaluate((exportRoot) =>
           Array.from(
             exportRoot.querySelectorAll(":scope > section"),
@@ -357,7 +357,7 @@ describe("workspace HTML export", () => {
           )
         );
       const appendixInsideRoot =
-        (await archivePage.locator("#mdxr-root > .mdxr-export").count()) === 1;
+        (await archivePage.locator("#doc-root > .doc-export").count()) === 1;
       const iframeCount = await archivePage.locator("iframe").count();
       const snapshotNote = await archivePage
         .locator('textarea[aria-label="Document note"]')
@@ -368,7 +368,7 @@ describe("workspace HTML export", () => {
       const archiveTitle = await archivePage.title();
       const archiveText = await archivePage.locator("main").textContent();
       const exportDataText = await archivePage
-        .locator("script#mdxr-export-data[type='application/json']")
+        .locator("script#doc-export-data[type='application/json']")
         .textContent();
       const scriptCount = await archivePage.locator("body script").count();
       const activeInjectedImages = await archivePage
@@ -494,7 +494,7 @@ describe("workspace HTML export", () => {
       await archivePage.goto(pathToFileURL(archivePath).href);
       const archiveText = await archivePage.locator("#comments").textContent();
       const exportDataText = await archivePage
-        .locator("script#mdxr-export-data[type='application/json']")
+        .locator("script#doc-export-data[type='application/json']")
         .textContent();
       if (exportDataText === null) {
         throw new Error("Export data is missing from the archive");
@@ -601,10 +601,10 @@ describe("workspace HTML export", () => {
         expect({
           attempts: exportAttempts(),
           comments: snapshot.includes("CURRENT_COMMENT_MARKER"),
-          embeddedData: snapshot.includes("mdxr-export-data"),
+          embeddedData: snapshot.includes("doc-export-data"),
           emptyHistory: snapshot.includes('"versions":[]'),
           noConversation: snapshot.includes('"conversation":null'),
-          reviewControls: snapshot.includes("<mdxr-section-review"),
+          reviewControls: snapshot.includes("<doc-section-review"),
           reviewedSection: snapshot.includes("Design — Reviewed"),
         }).toStrictEqual(
           choice === "Document only"

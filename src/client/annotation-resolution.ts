@@ -8,8 +8,8 @@ import { isRecord } from "../guards.js";
 
 /** A static HTML document can record a revision without a local version store. */
 const hasDocumentHistory = (): boolean =>
-  document.querySelector("#mdxr-workspace-root") !== null ||
-  window.location.pathname === "/__mdxr_history";
+  document.querySelector("#doc-workspace-root") !== null ||
+  window.location.pathname === "/__doc_history";
 
 /** Bind the decision to the rendered source, even if a newer version exists. */
 export const resolveAnnotationVersion = async (
@@ -22,7 +22,7 @@ export const resolveAnnotationVersion = async (
   if (!hasDocumentHistory()) {
     return resolution;
   }
-  const response = await fetch("/__mdxr_history", { cache: "no-store" });
+  const response = await fetch("/__doc_history", { cache: "no-store" });
   if (!response.ok) {
     throw new Error("Document history is unavailable");
   }

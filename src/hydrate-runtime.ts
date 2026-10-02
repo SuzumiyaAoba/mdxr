@@ -37,14 +37,14 @@ export interface MountSpec {
 /**
  * Rebuild the exact vnode tree SSR produced — `DocContext.Provider` wrapping
  * the Plan header + the compiled MDX module — and `hydrateRoot` it onto
- * `<main id="mdxr-root">`. `fileLink` is replayed from the recorded SSR
+ * `<main id="doc-root">`. `fileLink` is replayed from the recorded SSR
  * answers, so components see identical data without filesystem access.
  */
 export const mountDocument = (spec: MountSpec): void => {
   if (spec.userModule !== undefined) {
     mergeUserComponents(spec.userModule, spec.components);
   }
-  const root = document.querySelector("#mdxr-root");
+  const root = document.querySelector("#doc-root");
   if (root === null) {
     return;
   }

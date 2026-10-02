@@ -73,7 +73,7 @@ const isExportData = (value: unknown): value is WorkspaceExportData =>
 const loadExportData = async (
   mode: WorkspaceExportMode
 ): Promise<WorkspaceExportData> => {
-  const response = await fetch(`/__mdxr_export?mode=${mode}`, {
+  const response = await fetch(`/__doc_export?mode=${mode}`, {
     cache: "no-store",
   });
   const data: unknown = await response.json();
@@ -165,7 +165,7 @@ export const WorkspaceExportButton = () => {
     <>
       <Dialog.Root open={open} onOpenChange={setOpen}>
         <Dialog.Trigger
-          className="mdxr-workspace-export"
+          className="doc-workspace-export"
           aria-label="Export HTML"
           title="Choose what to include in the HTML export"
           disabled={status === "exporting"}
@@ -173,8 +173,8 @@ export const WorkspaceExportButton = () => {
           <Download aria-hidden="true" size={15} />
         </Dialog.Trigger>
         <Dialog.Portal>
-          <Dialog.Backdrop className="mdxr-workspace-export-backdrop" />
-          <Dialog.Popup className="mdxr-workspace-export-dialog">
+          <Dialog.Backdrop className="doc-workspace-export-backdrop" />
+          <Dialog.Popup className="doc-workspace-export-dialog">
             <Dialog.Title>Export HTML</Dialog.Title>
             <Dialog.Description>
               Choose the contents of the downloadable HTML file.
@@ -209,7 +209,7 @@ export const WorkspaceExportButton = () => {
               />{" "}
               Include related documents for offline reading
             </label>
-            <div className="mdxr-workspace-export-actions">
+            <div className="doc-workspace-export-actions">
               <Dialog.Close>Cancel</Dialog.Close>
               <button
                 onClick={() => {
@@ -225,7 +225,7 @@ export const WorkspaceExportButton = () => {
       </Dialog.Root>
       {status !== "idle" && (
         <div
-          className="mdxr-workspace-export-status"
+          className="doc-workspace-export-status"
           role={status === "error" ? "alert" : "status"}
         >
           {status === "error" ? exportError : statusMessage}

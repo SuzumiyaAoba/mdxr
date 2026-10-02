@@ -10,7 +10,7 @@ const isLinkedEntry = (
 const linkedEntries = (
   page: Document
 ): Record<string, { html: string; path: string }> => {
-  const raw = page.querySelector("#mdxr-linked-documents")?.textContent;
+  const raw = page.querySelector("#doc-linked-documents")?.textContent;
   if (raw === undefined || raw === null) {
     return {};
   }
@@ -81,15 +81,15 @@ const rewriteLinks = (
   destinations: Map<string, string>
 ): void => {
   for (const anchor of root.querySelectorAll<HTMLAnchorElement>(
-    "a[data-mdxr-document]"
+    "a[data-doc-document]"
   )) {
-    const destination = destinations.get(anchor.dataset.mdxrDocument ?? "");
+    const destination = destinations.get(anchor.dataset.docDocument ?? "");
     if (destination === undefined) {
       throw new Error("A related document could not be resolved");
     }
     anchor.setAttribute("href", `#${destination}`);
     anchor.removeAttribute("target");
-    delete anchor.dataset.mdxrDocument;
+    delete anchor.dataset.docDocument;
   }
 };
 const createRelatedSection = (
@@ -101,7 +101,7 @@ const createRelatedSection = (
 ): { section: HTMLElement; child: Element } => {
   const section = document.createElement("section");
   section.id = destination;
-  section.dataset.mdxrRelated = sourcePath;
+  section.dataset.docRelated = sourcePath;
   const heading = document.createElement("h2");
   heading.textContent = page.title || sourcePath;
   const child = clone(body);
@@ -117,8 +117,8 @@ const createRelatedSection = (
 const namespaceStyles = (section: Element, destination: string): void => {
   for (const style of section.querySelectorAll("style")) {
     style.textContent = (style.textContent ?? "").replaceAll(
-      "#mdxr-root",
-      `#${destination}-mdxr-root`
+      "#doc-root",
+      `#${destination}-doc-root`
     );
   }
 };
@@ -155,15 +155,15 @@ export const appendRelatedSnapshots = async (
     const destinations = new Map<string, string>();
     for (const [id, entry] of Object.entries(entries)) {
       const parsed = new DOMParser().parseFromString(entry.html, "text/html");
-      const body = parsed.querySelector("#mdxr-root");
+      const body = parsed.querySelector("#doc-root");
       if (body === null) {
         throw new Error(`Related document has no content: ${entry.path}`);
       }
       const childBase = new URL(entry.path, base).href;
-      const identity = `${childBase}:${parsed.querySelector("#mdxr-annotation-document")?.textContent ?? body.innerHTML}`;
+      const identity = `${childBase}:${parsed.querySelector("#doc-annotation-document")?.textContent ?? body.innerHTML}`;
       let destination = seen.get(identity);
       if (destination === undefined) {
-        destination = `mdxr-related-${seen.size + 1}`;
+        destination = `doc-related-${seen.size + 1}`;
         seen.set(identity, destination);
         const { section, child } = createRelatedSection(
           body,

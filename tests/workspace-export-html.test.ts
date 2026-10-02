@@ -23,7 +23,7 @@ const anchor: AnnotationAnchor = {
 
 const versionId = 'version"/<&';
 const versionAnchorId =
-  "mdxr-version-00007600006500007200007300006900006f00006e00002200002f00003c000026";
+  "doc-version-00007600006500007200007300006900006f00006e00002200002f00003c000026";
 const resolvedComment: DocumentAnnotation = {
   anchor,
   comment: "Resolved safely.",
@@ -149,7 +149,7 @@ describe("workspace export comment status", () => {
     ]).toStrictEqual([true, true, true, true, true, true, true]);
 
     const payload =
-      /<script type="application\/json" id="mdxr-export-data">(?<data>[^<]*)<\/script>/u.exec(
+      /<script type="application\/json" id="doc-export-data">(?<data>[^<]*)<\/script>/u.exec(
         html
       )?.groups?.data;
     if (payload === undefined) {

@@ -14,13 +14,13 @@ export const DiagramViewport = ({
   className?: string;
   canvasClassName?: string;
 }): ReactElement => (
-  <div className={`mdxr-diagram ${className ?? ""}`} data-mdxr-diagram>
-    <div className="mdxr-diagram-tools">
-      <span className="mdxr-diagram-hint">
+  <div className={`doc-diagram ${className ?? ""}`} data-doc-diagram>
+    <div className="doc-diagram-tools">
+      <span className="doc-diagram-hint">
         Drag to pan · Ctrl/⌘ + scroll to zoom
       </span>
       <fieldset
-        className="mdxr-diagram-actions"
+        className="doc-diagram-actions"
         aria-label={`${title} zoom controls`}
       >
         <button
@@ -58,7 +58,7 @@ export const DiagramViewport = ({
       </fieldset>
     </div>
     <section
-      className={`mdxr-diagram-canvas ${canvasClassName ?? ""}`}
+      className={`doc-diagram-canvas ${canvasClassName ?? ""}`}
       aria-label={`${title}. Use + and − to zoom, arrow keys to pan, and 0 to reset.`}
       // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- The diagram viewport supports keyboard zoom and pan.
       tabIndex={0}

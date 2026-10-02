@@ -20,11 +20,11 @@ export interface LibraryOptions extends Pick<
   open?: boolean | string;
 }
 
-const SEARCH_PATH = "/__mdxr_library/search";
-const OPEN_PREFIX = "/__mdxr_library/open/";
-const DELETE_BASE = "/__mdxr_library/document";
+const SEARCH_PATH = "/__doc_library/search";
+const OPEN_PREFIX = "/__doc_library/open/";
+const DELETE_BASE = "/__doc_library/document";
 const DELETE_PREFIX = `${DELETE_BASE}/`;
-const DELETE_ACTION_HEADER = "x-mdxr-library-action";
+const DELETE_ACTION_HEADER = "x-doc-library-action";
 
 interface PreviewEntry {
   generation: number;
@@ -277,7 +277,7 @@ const handleLibraryRequest = async (
     replyText(response, 200, html, "text/html; charset=utf-8");
     return;
   }
-  if (url.pathname === "/__mdxr_library.js") {
+  if (url.pathname === "/__doc_library.js") {
     replyText(
       response,
       200,
@@ -290,7 +290,7 @@ const handleLibraryRequest = async (
     replyJson(response, 403, { error: "forbidden" });
     return;
   }
-  if (url.pathname === "/__mdxr_events") {
+  if (url.pathname === "/__doc_events") {
     response.writeHead(200, {
       "cache-control": "no-cache",
       connection: "keep-alive",

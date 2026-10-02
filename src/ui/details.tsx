@@ -22,14 +22,14 @@ export const Details = defineComponent(
     const isOpen = attrTrue(open);
     return (
       <details
-        className={`mdxr-details my-6 rounded-lg border ${BORDER_CLS}`}
+        className={`doc-details my-6 rounded-lg border ${BORDER_CLS}`}
         open={isOpen}
       >
         <summary
           className={`flex cursor-pointer items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium ${TEXT.chip} transition-colors select-none hover:bg-neutral-50 active:bg-neutral-100 dark:hover:bg-neutral-900 dark:active:bg-neutral-800`}
         >
           <Icon
-            className={`mdxr-chev h-4 w-4 shrink-0 ${TEXT.faint}`}
+            className={`doc-chev h-4 w-4 shrink-0 ${TEXT.faint}`}
             name="lucide:chevron-right"
           />
           {summary ?? "Details"}

@@ -74,7 +74,7 @@ export const Choice = defineComponent(
     }
     return (
       <label
-        className={`mdxr-choice flex cursor-pointer items-start gap-2.5 rounded-lg border ${CHIP_BORDER_CLS} px-3 py-2 text-sm transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/60`}
+        className={`doc-choice flex cursor-pointer items-start gap-2.5 rounded-lg border ${CHIP_BORDER_CLS} px-3 py-2 text-sm transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/60`}
       >
         <input
           className="sr-only"
@@ -85,17 +85,17 @@ export const Choice = defineComponent(
         />
         <span
           aria-hidden
-          className={`mdxr-mark ${mode === "radio" ? "mdxr-mark-radio" : "mdxr-mark-box"}`}
+          className={`doc-mark ${mode === "radio" ? "doc-mark-radio" : "doc-mark-box"}`}
         >
           {mode === "radio" ? null : (
             <Icon className="h-3 w-3" name="lucide:check" />
           )}
         </span>
-        <span className="mdxr-choice-text min-w-0 flex-1 leading-snug">
+        <span className="doc-choice-text min-w-0 flex-1 leading-snug">
           {children}
           {nonEmpty(description) ? (
             <span
-              className={`mdxr-choice-desc mt-0.5 block text-xs ${TEXT.muted}`}
+              className={`doc-choice-desc mt-0.5 block text-xs ${TEXT.muted}`}
             >
               {description}
             </span>
@@ -115,7 +115,7 @@ interface QuestionChrome {
   id: string;
   labelEl: ReactNode;
   qAttrs: {
-    readonly "data-mdxr-q": "";
+    readonly "data-doc-q": "";
     readonly "data-q-label": string;
     readonly "data-q-name": string;
     readonly "data-q-type": QuestionType;
@@ -139,7 +139,7 @@ const ChoiceField = ({
 }): ReactElement => (
   // <legend> sits at the fieldset's top edge regardless of the
   // fieldset's padding-top, so the top padding lives on the legend.
-  <fieldset className="mdxr-q m-0 px-4 pb-3.5" {...chrome.qAttrs}>
+  <fieldset className="doc-q m-0 px-4 pb-3.5" {...chrome.qAttrs}>
     <legend className="p-0 pt-4.5 text-sm font-medium">{chrome.labelEl}</legend>
     {chrome.descEl}
     <div className="mt-2 space-y-1.5">
@@ -157,7 +157,7 @@ const ToggleField = ({
   chrome: QuestionChrome;
   name: string;
 }): ReactElement => (
-  <div className="mdxr-q px-4 py-3.5" {...chrome.qAttrs}>
+  <div className="doc-q px-4 py-3.5" {...chrome.qAttrs}>
     <label
       className="flex cursor-pointer items-center justify-between gap-3"
       htmlFor={chrome.id}
@@ -174,7 +174,7 @@ const ToggleField = ({
         type="checkbox"
         value="yes"
       />
-      <span aria-hidden className="mdxr-switch" />
+      <span aria-hidden className="doc-switch" />
     </label>
   </div>
 );
@@ -187,7 +187,7 @@ const FieldFrame = ({
   children?: ReactNode;
   chrome: QuestionChrome;
 }): ReactElement => (
-  <div className="mdxr-q px-4 py-3.5" {...chrome.qAttrs}>
+  <div className="doc-q px-4 py-3.5" {...chrome.qAttrs}>
     <label className="text-sm font-medium" htmlFor={chrome.id}>
       {chrome.labelEl}
     </label>
@@ -335,7 +335,7 @@ export const Question = defineComponent(
           {description}
         </p>
       ) : null,
-      id: `mdxr-q${uid}`,
+      id: `doc-q${uid}`,
       labelEl: (
         <>
           {labelText}
@@ -345,7 +345,7 @@ export const Question = defineComponent(
         </>
       ),
       qAttrs: {
-        "data-mdxr-q": "",
+        "data-doc-q": "",
         "data-q-label": labelText,
         "data-q-name": name,
         "data-q-type": t,

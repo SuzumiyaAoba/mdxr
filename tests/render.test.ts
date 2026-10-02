@@ -758,17 +758,17 @@ describe(mdxToHtml, () => {
 
   it("renders <Toc> as a collapsible outline", async () => {
     const { body } = await render("<Toc />\n\n## Alpha\n");
-    expect(body).toContain("mdxr-toc");
+    expect(body).toContain("doc-toc");
     expect(body).toContain("<details");
     expect(body).toContain("<summary");
-    expect(body).toContain("mdxr-toc-body");
+    expect(body).toContain("doc-toc-body");
   });
 
   it("renders <Details> as a native collapsible", async () => {
     const { body } = await render(
       '<Details summary="Why">because</Details>\n\n<Details open summary="Open">shown</Details>'
     );
-    expect(body).toContain('class="mdxr-details');
+    expect(body).toContain('class="doc-details');
     expect(body).toContain("<summary");
     expect(body).toContain(">because<");
     expect(body).toContain("open");
@@ -796,7 +796,7 @@ describe(mdxToHtml, () => {
     expect(body).toContain("<textarea");
     expect(body).toContain("<select");
     expect(body).toContain("<option");
-    expect(body).toContain("mdxr-switch");
+    expect(body).toContain("doc-switch");
   });
 
   it("wires the Copy answers button for the client handler", async () => {
@@ -956,7 +956,7 @@ describe(mdxToHtml, () => {
       "```diff\n--- a/src/a.ts\n+++ b/src/a.ts\n@@ -1,3 +1,3 @@\n-const x = 1\n+const x = 2\n const y = 3\n```"
     );
     // Token spans carry the dual-theme vars; the rows keep their diff cards.
-    expect(body).toContain("mdxr-diff-hl");
+    expect(body).toContain("doc-diff-hl");
     expect(body).toContain("--shiki-light");
     expect(body).toContain("src/a.ts");
     expect(body).toContain("const");
@@ -966,7 +966,7 @@ describe(mdxToHtml, () => {
     const { body } = await render(
       '```diff title="src/a.py"\n+x = 1\n-y = 2\n```'
     );
-    expect(body).toContain("mdxr-diff-hl");
+    expect(body).toContain("doc-diff-hl");
     expect(body).toContain("--shiki-light");
   });
 
@@ -975,7 +975,7 @@ describe(mdxToHtml, () => {
       "```diff\n--- a/x.qqq\n+++ b/x.qqq\n@@ -1 +1 @@\n-a\n+b\n```"
     );
     expect(body).toContain("+1");
-    expect(body).not.toContain("mdxr-diff-hl");
+    expect(body).not.toContain("doc-diff-hl");
   });
 
   it("marks new and deleted files in diffs", async () => {
@@ -1058,7 +1058,7 @@ describe(mdxToHtml, () => {
       '<Json title="cfg" value=\'{"a":1,"b":[true,null],"c":{"d":"x"}}\' />'
     );
     for (const s of [
-      "mdxr-json",
+      "doc-json",
       "<details",
       'open=""',
       "&quot;a&quot;",
@@ -1074,7 +1074,7 @@ describe(mdxToHtml, () => {
     const { body } = await render(
       '<Json open="false">\n\n```json\n{"k": [1, 2]}\n```\n\n</Json>'
     );
-    expect(body).toContain("mdxr-json");
+    expect(body).toContain("doc-json");
     expect(body).toContain("&quot;k&quot;");
     expect(body).not.toContain('open=""');
   });

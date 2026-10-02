@@ -16,8 +16,8 @@ const LibraryApp = () => {
   return (
     <>
       <LibraryControls copy={copy} handleLanguageChange={toggleLanguage} />
-      <main aria-label={copy.title} className="mdxr-library">
-        <div className="mdxr-library__shell">
+      <main aria-label={copy.title} className="doc-library">
+        <div className="doc-library__shell">
           <LibraryToolbar
             copy={copy}
             handleCompositionEnd={state.onCompositionEnd}
@@ -61,7 +61,7 @@ const LibraryApp = () => {
   );
 };
 
-const root = document.querySelector<HTMLElement>("#mdxr-library-root");
+const root = document.querySelector<HTMLElement>("#doc-library-root");
 if (root !== null) {
   createRoot(root).render(<LibraryApp />);
 }

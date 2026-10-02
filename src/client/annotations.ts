@@ -33,6 +33,7 @@ import {
 import type { AnnotationView } from "./annotation-view.js";
 import { writeClipboard } from "./doc-events.js";
 import { documentStorageKey } from "./document-identity.js";
+import { readDocumentStorage } from "./storage.js";
 import { WORKSPACE_EXPORT_STATE_EVENT } from "./workspace-export-state.js";
 
 interface Draft {
@@ -75,7 +76,7 @@ class AnnotationController {
     this.info = info;
     this.view = annotationView(host, info.file, info.revision);
     const revealSendButton = (): boolean => {
-      if (document.querySelector("[data-mdxr-agent]") === null) {
+      if (document.querySelector("[data-doc-agent]") === null) {
         return false;
       }
       this.view.send.hidden = false;
@@ -101,7 +102,7 @@ class AnnotationController {
         { once: true }
       );
     }
-    this.storageKey = documentStorageKey("mdxr:annotations:v1:", info);
+    this.storageKey = documentStorageKey("doc:annotations:v1:", info);
     this.load();
     this.bindEvents();
     document.addEventListener(REVIEW_IMPORT_EVENT, (event) => {
@@ -131,7 +132,9 @@ class AnnotationController {
 
   private load(): void {
     try {
-      const saved = parseAnnotationStore(localStorage.getItem(this.storageKey));
+      const saved = parseAnnotationStore(
+        readDocumentStorage(localStorage, this.storageKey)
+      );
       this.annotations = saved.annotations;
       this.history = saved.history;
     } catch {
@@ -240,7 +243,7 @@ class AnnotationController {
   private open(open: boolean): void {
     this.view.panel.hidden = !open;
     this.view.toggle.setAttribute("aria-expanded", String(open));
-    document.body.classList.toggle("mdxr-annotations-open", open);
+    document.body.classList.toggle("doc-annotations-open", open);
     if (!open) {
       this.pick(false);
       this.view.toggle.focus({ preventScroll: true });
@@ -412,7 +415,7 @@ class AnnotationController {
   }
 
   private showTarget(target: ResolvedAnnotation): void {
-    target.element.dispatchEvent(new Event("mdxr:reveal", { bubbles: true }));
+    target.element.dispatchEvent(new Event("doc:reveal", { bubbles: true }));
     for (
       let parent: Element | null = target.element;
       parent !== null && parent !== this.root;
@@ -665,7 +668,7 @@ class AnnotationController {
     this.refresh();
     this.status(this.view.labels.sending, "info");
     try {
-      const response = await fetch("/__mdxr_agent", {
+      const response = await fetch("/__doc_agent", {
         body: JSON.stringify({ message: batch.markdown }),
         headers: { "content-type": "application/json" },
         method: "POST",
@@ -865,7 +868,7 @@ class AnnotationController {
     window.addEventListener("resize", () => {
       this.schedule();
     });
-    document.addEventListener("mdxr:pagechange", () => {
+    document.addEventListener("doc:pagechange", () => {
       this.schedule();
     });
     window.addEventListener("storage", (event) => {
@@ -896,9 +899,9 @@ class AnnotationController {
 }
 
 export const initAnnotations = (): AnnotationController | undefined => {
-  const root = document.querySelector<HTMLElement>("#mdxr-root");
-  const host = document.querySelector<HTMLElement>("#mdxr-annotations");
-  const data = document.querySelector("#mdxr-annotation-document");
+  const root = document.querySelector<HTMLElement>("#doc-root");
+  const host = document.querySelector<HTMLElement>("#doc-annotations");
+  const data = document.querySelector("#doc-annotation-document");
   if (root === null || host === null || data === null) {
     return undefined;
   }

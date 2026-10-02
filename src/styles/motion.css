@@ -1,31 +1,31 @@
 :root {
-  --mdxr-motion-duration: 180ms;
-  --mdxr-motion-easing: cubic-bezier(0.22, 1, 0.36, 1);
+  --doc-motion-duration: 180ms;
+  --doc-motion-easing: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Keep tab state changes calm across both Base UI and rendered MDX tabs. */
 :where(
   [data-slot="tabs-trigger"],
   [data-slot="wireframe-tabs-trigger"],
-  #mdxr-root [role="tablist"] [role="tab"]
+  #doc-root [role="tablist"] [role="tab"]
 ) {
   transition:
-    color var(--mdxr-motion-duration) var(--mdxr-motion-easing),
-    background-color var(--mdxr-motion-duration) var(--mdxr-motion-easing),
-    border-color var(--mdxr-motion-duration) var(--mdxr-motion-easing),
-    box-shadow var(--mdxr-motion-duration) var(--mdxr-motion-easing);
+    color var(--doc-motion-duration) var(--doc-motion-easing),
+    background-color var(--doc-motion-duration) var(--doc-motion-easing),
+    border-color var(--doc-motion-duration) var(--doc-motion-easing),
+    box-shadow var(--doc-motion-duration) var(--doc-motion-easing);
 }
 
 :where(
   [data-slot="tabs-content"]:not([hidden]),
   [data-slot="wireframe-tabs-content"]:not([hidden]),
-  .mdxr-tab-panel:not(.hidden)
+  .doc-tab-panel:not(.hidden)
 ) {
-  animation: mdxr-tab-panel-enter var(--mdxr-motion-duration)
-    var(--mdxr-motion-easing) backwards;
+  animation: doc-tab-panel-enter var(--doc-motion-duration)
+    var(--doc-motion-easing) backwards;
 }
 
-@keyframes mdxr-tab-panel-enter {
+@keyframes doc-tab-panel-enter {
   from {
     opacity: 0;
     transform: translateY(0.3rem);
@@ -66,8 +66,8 @@
   [data-slot="wireframe-sheet-overlay"],
   [data-slot="wireframe-sheet-content"]
 ) {
-  animation-duration: var(--mdxr-motion-duration);
-  animation-timing-function: var(--mdxr-motion-easing);
+  animation-duration: var(--doc-motion-duration);
+  animation-timing-function: var(--doc-motion-easing);
 }
 
 :where(
@@ -75,18 +75,18 @@
   [data-slot="sheet-content"],
   [data-slot="wireframe-sheet-content"]
 ) {
-  transition-duration: var(--mdxr-motion-duration);
-  transition-timing-function: var(--mdxr-motion-easing);
+  transition-duration: var(--doc-motion-duration);
+  transition-timing-function: var(--doc-motion-easing);
 }
 
 @media (prefers-reduced-motion: reduce), print {
   :where(
     [data-slot="tabs-content"],
     [data-slot="wireframe-tabs-content"],
-    .mdxr-tab-panel,
+    .doc-tab-panel,
     [data-slot="tabs-trigger"],
     [data-slot="wireframe-tabs-trigger"],
-    #mdxr-root [role="tablist"] [role="tab"],
+    #doc-root [role="tablist"] [role="tab"],
     [data-slot="dialog-overlay"],
     [data-slot="dialog-content"],
     [data-slot="alert-dialog-overlay"],

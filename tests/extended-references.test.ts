@@ -15,8 +15,8 @@ describe("document references", () => {
     for (const value of [
       'href="#plot"',
       "Figure 1: Latency",
-      'href="#mdxr-citation-1"',
-      'id="mdxr-citation-1"',
+      'href="#doc-citation-1"',
+      'id="doc-citation-1"',
     ]) {
       expect(body).toContain(value);
     }

@@ -34,10 +34,10 @@ Second section content.
 Duplicate heading, different content.
 `;
 
-const STORAGE_KEY = "mdxr:section-reviews:v1:/project/review.mdx";
+const STORAGE_KEY = "doc:section-reviews:v1:/project/review.mdx";
 const review = (page: Page, id: string) =>
   page
-    .locator(`mdxr-section-review[data-section-id="${id}"]`)
+    .locator(`doc-section-review[data-section-id="${id}"]`)
     .getByRole("button");
 const mode = (page: Page, name: string) =>
   page
@@ -93,7 +93,7 @@ describe("section review interactions", () => {
     const { page } = await open();
     try {
       expect({
-        controls: await page.locator("mdxr-section-review").count(),
+        controls: await page.locator("doc-section-review").count(),
         first: await review(page, "design-details").getAttribute(
           "aria-pressed"
         ),
@@ -268,7 +268,7 @@ describe("section review interactions", () => {
         }, unavailable);
         await page.reload();
         await expect(
-          page.locator("mdxr-section-review").getByRole("status").count()
+          page.locator("doc-section-review").getByRole("status").count()
         ).resolves.toBe(0);
         await review(page, "design-details").click();
         await expect(
@@ -276,12 +276,12 @@ describe("section review interactions", () => {
         ).resolves.toBe("true");
         await expect(
           page
-            .locator('mdxr-section-review[data-section-id="design-details"]')
+            .locator('doc-section-review[data-section-id="design-details"]')
             .getByRole("status")
             .textContent()
         ).resolves.toBe("Not saved");
         await expect(
-          page.locator("mdxr-section-review").getByRole("status").count()
+          page.locator("doc-section-review").getByRole("status").count()
         ).resolves.toBe(1);
         await review(page, "日本語-code").click();
         await expect(
@@ -347,13 +347,13 @@ describe("section review interactions", () => {
     try {
       await page.setContent(plain);
       await expect(
-        page.locator("mdxr-section-review").getByRole("button").count()
+        page.locator("doc-section-review").getByRole("button").count()
       ).resolves.toBe(0);
       await expect(
         page.getByText("Alpha text.").isVisible()
       ).resolves.toBeTruthy();
       await expect(
-        headingless.page.locator("mdxr-section-review").count()
+        headingless.page.locator("doc-section-review").count()
       ).resolves.toBe(0);
     } finally {
       await page.close();

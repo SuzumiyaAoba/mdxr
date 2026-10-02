@@ -1,4 +1,4 @@
-.mdxr-annotations {
+.doc-annotations {
   --annotation-bg: var(--popover, #fff);
   --annotation-subtle: var(--muted, #f5f5f5);
   --annotation-text: var(--foreground, #171717);
@@ -16,23 +16,23 @@
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
-.dark .mdxr-annotations {
+.dark .doc-annotations {
   --annotation-accent: #fcd34d;
   --annotation-danger: #f87171;
   --annotation-info: #38bdf8;
   --annotation-success: #34d399;
   --annotation-confirm-icon: #047857;
 }
-.mdxr-annotations [hidden] {
+.doc-annotations [hidden] {
   display: none !important;
 }
-.mdxr-annotations svg {
+.doc-annotations svg {
   display: block;
   width: 15px;
   height: 15px;
   flex-shrink: 0;
 }
-.mdxr-annotations button {
+.doc-annotations button {
   --annotation-button-bg: transparent;
   --annotation-button-hover: var(--annotation-subtle);
   --annotation-button-text: var(--annotation-muted);
@@ -58,25 +58,25 @@
     color 120ms,
     opacity 120ms;
 }
-.mdxr-annotations button:enabled:hover {
+.doc-annotations button:enabled:hover {
   background: var(--annotation-button-hover);
   color: var(--annotation-button-hover-text);
 }
-.mdxr-annotations button:disabled {
+.doc-annotations button:disabled {
   opacity: 0.3;
   cursor: not-allowed;
 }
-.mdxr-annotations :is(button, select):focus-visible {
+.doc-annotations :is(button, select):focus-visible {
   outline: 2px solid var(--annotation-accent);
   outline-offset: 3px;
 }
-.mdxr-annotations .mdxr-annotation-icon-button {
+.doc-annotations .doc-annotation-icon-button {
   width: 28px;
   min-height: 28px;
   padding: 5px;
 }
-.mdxr-annotations .mdxr-annotation-submit,
-.mdxr-annotations .mdxr-annotation-selection {
+.doc-annotations .doc-annotation-submit,
+.doc-annotations .doc-annotation-selection {
   --annotation-button-bg: var(--annotation-primary);
   --annotation-button-hover: color-mix(
     in srgb,
@@ -86,16 +86,16 @@
   --annotation-button-text: var(--annotation-primary-text);
   --annotation-button-hover-text: var(--annotation-primary-text);
 }
-.mdxr-annotations .mdxr-annotation-submit {
+.doc-annotations .doc-annotation-submit {
   width: 34px;
   height: 34px;
   padding: 8px;
   border-radius: 50%;
 }
-.mdxr-annotation-submit > svg {
+.doc-annotation-submit > svg {
   color: var(--annotation-confirm-icon);
 }
-.mdxr-annotations .mdxr-annotation-toggle {
+.doc-annotations .doc-annotation-toggle {
   --annotation-button-text: var(--annotation-text);
   position: fixed;
   top: 0.75rem;
@@ -111,7 +111,7 @@
   font: 11px var(--font-mono, ui-monospace, monospace);
   font-variant-numeric: tabular-nums;
 }
-#mdxr-annotation-panel {
+#doc-annotation-panel {
   position: fixed;
   z-index: 49;
   top: 3.5rem;
@@ -125,32 +125,32 @@
   border-radius: 12px;
   background: var(--annotation-bg);
   box-shadow: 0 12px 48px -12px #00000030;
-  animation: mdxr-annotation-enter 160ms ease-out;
+  animation: doc-annotation-enter 160ms ease-out;
 }
-.mdxr-annotation-header {
+.doc-annotation-header {
   display: flex;
   align-items: flex-start;
   gap: 4px;
   flex-shrink: 0;
   padding: 24px 20px 18px 24px;
 }
-.mdxr-annotation-heading {
+.doc-annotation-heading {
   flex: 1;
   min-width: 0;
 }
-.mdxr-annotation-title-row {
+.doc-annotation-title-row {
   display: flex;
   align-items: baseline;
   gap: 10px;
 }
-.mdxr-annotation-header h2 {
+.doc-annotation-header h2 {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
   letter-spacing: -0.025em;
   line-height: 1.5;
 }
-.mdxr-annotation-document {
+.doc-annotation-document {
   margin: 5px 0 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -158,7 +158,7 @@
   color: var(--annotation-muted);
   font-size: 11px;
 }
-.mdxr-annotations [data-annotation-pick][aria-pressed="true"] {
+.doc-annotations [data-annotation-pick][aria-pressed="true"] {
   --annotation-button-text: var(--annotation-text);
   --annotation-button-bg: var(--annotation-subtle);
 }
@@ -167,7 +167,7 @@
 [data-annotation-action="go"] > svg {
   color: var(--annotation-info);
 }
-.mdxr-annotation-scroll {
+.doc-annotation-scroll {
   flex: 0 1 auto;
   min-height: 0;
   padding: 8px 24px;
@@ -175,15 +175,15 @@
   overscroll-behavior: contain;
   scrollbar-width: thin;
 }
-.mdxr-annotation-scroll::-webkit-scrollbar {
+.doc-annotation-scroll::-webkit-scrollbar {
   display: block;
   width: 4px;
 }
-.mdxr-annotation-scroll::-webkit-scrollbar-thumb {
+.doc-annotation-scroll::-webkit-scrollbar-thumb {
   background: var(--annotation-subtle);
   border-radius: 999px;
 }
-.mdxr-annotations :is(textarea, select) {
+.doc-annotations :is(textarea, select) {
   width: 100%;
   min-width: 0;
   border: 0;
@@ -193,7 +193,7 @@
   color: var(--annotation-text);
   font: inherit;
 }
-.mdxr-annotations textarea {
+.doc-annotations textarea {
   display: block;
   min-height: 120px;
   padding: 12px 0;
@@ -201,32 +201,32 @@
   font-size: 14px;
   line-height: 1.8;
 }
-.mdxr-annotations textarea::placeholder {
+.doc-annotations textarea::placeholder {
   color: var(--annotation-muted);
   opacity: 0.7;
 }
-.mdxr-annotations textarea:focus-visible {
+.doc-annotations textarea:focus-visible {
   outline: none;
   box-shadow: 0 1px 0
     color-mix(in srgb, var(--annotation-text) 25%, transparent);
 }
-.mdxr-annotation-picker {
+.doc-annotation-picker {
   display: flex;
   align-items: center;
   gap: 10px;
   margin: 0 0 28px;
 }
-.mdxr-annotation-picker select {
+.doc-annotation-picker select {
   padding: 8px 4px;
   border-radius: 4px;
   background: var(--annotation-subtle);
 }
-.mdxr-annotation-filter {
+.doc-annotation-filter {
   display: flex;
   justify-content: flex-end;
   margin: 0 0 18px;
 }
-.mdxr-annotation-filter select {
+.doc-annotation-filter select {
   max-width: 100%;
   padding: 6px 28px 6px 9px;
   border: 1px solid color-mix(in srgb, var(--annotation-muted) 22%, transparent);
@@ -236,11 +236,11 @@
   font: inherit;
   font-size: 11px;
 }
-.mdxr-annotation-composer {
+.doc-annotation-composer {
   margin: 0 0 32px;
   padding: 0;
 }
-.mdxr-annotations blockquote {
+.doc-annotations blockquote {
   margin: 0;
   color: var(--annotation-text);
   white-space: pre-wrap;
@@ -251,60 +251,60 @@
   max-height: 144px;
   overflow: auto;
 }
-.mdxr-annotation-composer blockquote {
+.doc-annotation-composer blockquote {
   margin-bottom: 18px;
 }
-.mdxr-annotation-composer blockquote::before {
+.doc-annotation-composer blockquote::before {
   content: "“";
 }
-.mdxr-annotation-composer blockquote::after {
+.doc-annotation-composer blockquote::after {
   content: "”";
 }
-.mdxr-annotation-composer-footer {
+.doc-annotation-composer-footer {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
   margin-top: 10px;
 }
-.mdxr-annotation-actions {
+.doc-annotation-actions {
   display: flex;
   align-items: center;
   gap: 2px;
   margin-left: auto;
 }
-.mdxr-annotations .mdxr-annotation-selection {
+.doc-annotations .doc-annotation-selection {
   position: fixed;
   z-index: 60;
   box-shadow: 0 4px 14px #0003;
 }
-.mdxr-annotation-empty {
+.doc-annotation-empty {
   margin: 0;
   padding: 44px 0 48px;
   color: var(--annotation-muted);
   text-align: center;
   font-size: 13px;
 }
-.mdxr-annotation-list {
+.doc-annotation-list {
   list-style: none;
   padding: 0;
   margin: 0;
   display: grid;
   gap: 32px;
 }
-.mdxr-annotation-history {
+.doc-annotation-history {
   margin-top: 24px;
 }
-.mdxr-annotation-scroll:has(.mdxr-annotation-history:not([hidden]))
-  .mdxr-annotation-empty:not([hidden]) {
+.doc-annotation-scroll:has(.doc-annotation-history:not([hidden]))
+  .doc-annotation-empty:not([hidden]) {
   padding: 12px 0 4px;
   text-align: left;
 }
-.mdxr-annotation-scroll:has(.mdxr-annotation-history:not([hidden]))
-  .mdxr-annotation-history {
+.doc-annotation-scroll:has(.doc-annotation-history:not([hidden]))
+  .doc-annotation-history {
   margin-top: 16px;
 }
-.mdxr-annotation-history > summary {
+.doc-annotation-history > summary {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -317,12 +317,12 @@
   list-style: none;
   cursor: pointer;
 }
-.mdxr-annotation-history > summary::-webkit-details-marker,
-.mdxr-annotation-history-summary::-webkit-details-marker {
+.doc-annotation-history > summary::-webkit-details-marker,
+.doc-annotation-history-summary::-webkit-details-marker {
   display: none;
 }
-.mdxr-annotation-history > summary::before,
-.mdxr-annotation-history-summary::before {
+.doc-annotation-history > summary::before,
+.doc-annotation-history-summary::before {
   width: 6px;
   height: 6px;
   flex: none;
@@ -332,32 +332,31 @@
   transform: rotate(-45deg);
   transition: transform 120ms ease;
 }
-.mdxr-annotation-history[open] > summary::before,
-.mdxr-annotation-history-batch[open]
-  > .mdxr-annotation-history-summary::before {
+.doc-annotation-history[open] > summary::before,
+.doc-annotation-history-batch[open] > .doc-annotation-history-summary::before {
   transform: rotate(45deg);
 }
-.mdxr-annotation-history summary:focus-visible {
+.doc-annotation-history summary:focus-visible {
   outline: 2px solid var(--annotation-accent);
   outline-offset: 2px;
 }
-.mdxr-annotation-history > summary > span {
+.doc-annotation-history > summary > span {
   margin-left: auto;
   color: var(--annotation-muted);
   font: 10px var(--font-mono, ui-monospace, monospace);
   font-variant-numeric: tabular-nums;
 }
-.mdxr-annotation-history-list {
+.doc-annotation-history-list {
   display: grid;
   gap: 6px;
   margin-top: 8px;
 }
-.mdxr-annotation-history-batch {
+.doc-annotation-history-batch {
   min-width: 0;
   border-radius: 7px;
   background: var(--annotation-subtle);
 }
-.mdxr-annotation-history-summary {
+.doc-annotation-history-summary {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -368,50 +367,50 @@
   list-style: none;
   cursor: pointer;
 }
-.mdxr-annotation-history-summary time {
+.doc-annotation-history-summary time {
   font-variant-numeric: tabular-nums;
 }
-.mdxr-annotation-history-action {
+.doc-annotation-history-action {
   color: var(--annotation-text);
   font-size: 11px;
   font-weight: 600;
 }
-.mdxr-annotation-history-batch-count {
+.doc-annotation-history-batch-count {
   margin-left: auto;
   white-space: nowrap;
 }
-.mdxr-annotation-history-content {
+.doc-annotation-history-content {
   display: grid;
   gap: 8px;
   padding: 0 8px 8px;
 }
-.mdxr-annotation-history-entry {
+.doc-annotation-history-entry {
   min-width: 0;
   padding: 8px;
   border-radius: 5px;
   background: var(--annotation-bg);
 }
-.mdxr-annotation-history-quote {
+.doc-annotation-history-quote {
   max-height: 5rem;
   margin-bottom: 6px !important;
   overflow: auto;
   font-size: 12px !important;
   font-weight: 500 !important;
 }
-.mdxr-annotation-history-comment {
+.doc-annotation-history-comment {
   margin: 0;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   font-size: 12px;
   line-height: 1.65;
 }
-.mdxr-annotation-history-location {
+.doc-annotation-history-location {
   margin: 7px 0 0;
   overflow-wrap: anywhere;
   color: var(--annotation-muted);
   font: 10px/1.5 var(--font-mono, ui-monospace, monospace);
 }
-.mdxr-annotation-card {
+.doc-annotation-card {
   display: grid;
   grid-template-columns: 18px minmax(0, 1fr);
   gap: 12px;
@@ -421,29 +420,29 @@
   background: transparent;
   box-shadow: none;
 }
-.mdxr-annotation-number {
+.doc-annotation-number {
   padding-top: 3px;
   color: var(--annotation-muted);
   font: 10px var(--font-mono, ui-monospace, monospace);
   line-height: 1.7;
   font-variant-numeric: tabular-nums;
 }
-.mdxr-annotation-card[data-editing] .mdxr-annotation-number {
+.doc-annotation-card[data-editing] .doc-annotation-number {
   color: var(--annotation-accent);
 }
-.mdxr-annotation-reference {
+.doc-annotation-reference {
   display: flex;
   align-items: flex-start;
   gap: 7px;
 }
-.mdxr-annotation-reference blockquote {
+.doc-annotation-reference blockquote {
   flex: 1;
   min-width: 0;
 }
-.mdxr-annotation-reference > button {
+.doc-annotation-reference > button {
   margin: -2px -8px 0 0;
 }
-.mdxr-annotation-status {
+.doc-annotation-status {
   flex: none;
   margin-top: 3px;
   padding: 2px 7px;
@@ -454,29 +453,29 @@
   line-height: 1.4;
   white-space: nowrap;
 }
-.mdxr-annotation-status[data-status="resolved"] {
+.doc-annotation-status[data-status="resolved"] {
   color: var(--annotation-success);
   background: color-mix(in srgb, var(--annotation-success) 12%, transparent);
 }
-.mdxr-annotation-kind {
+.doc-annotation-kind {
   margin-top: 5px;
   color: var(--annotation-accent);
 }
-.mdxr-annotation-card[data-kind="figure"] .mdxr-annotation-kind {
+.doc-annotation-card[data-kind="figure"] .doc-annotation-kind {
   color: var(--annotation-info);
 }
-.mdxr-annotation-kind svg {
+.doc-annotation-kind svg {
   width: 14px;
   height: 14px;
 }
-.mdxr-annotation-card .mdxr-annotation-comment-body {
+.doc-annotation-card .doc-annotation-comment-body {
   margin: 14px 0 8px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   font-size: 14px;
   line-height: 1.8;
 }
-.mdxr-annotation-resolution {
+.doc-annotation-resolution {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -485,31 +484,31 @@
   color: var(--annotation-muted);
   font-size: 10px;
 }
-.mdxr-annotation-resolution time {
+.doc-annotation-resolution time {
   font-variant-numeric: tabular-nums;
 }
-.mdxr-annotation-resolution > span {
+.doc-annotation-resolution > span {
   overflow-wrap: anywhere;
 }
-.mdxr-annotation-resolution a {
+.doc-annotation-resolution a {
   color: var(--annotation-info);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
-.mdxr-annotation-updated-warning {
+.doc-annotation-updated-warning {
   flex-basis: 100%;
   margin: 0;
   color: var(--annotation-accent);
   font-size: 11px;
   line-height: 1.55;
 }
-.mdxr-annotation-card-footer {
+.doc-annotation-card-footer {
   display: flex;
   align-items: center;
   gap: 8px;
   min-height: 28px;
 }
-.mdxr-annotation-location {
+.doc-annotation-location {
   display: block;
   min-width: 0;
   overflow: hidden;
@@ -531,7 +530,7 @@
 [data-annotation-action="delete"] > svg {
   color: var(--annotation-danger);
 }
-.mdxr-annotation-detached {
+.doc-annotation-detached {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -539,11 +538,11 @@
   color: var(--annotation-accent);
   font-size: 11px;
 }
-.mdxr-annotation-detached svg {
+.doc-annotation-detached svg {
   width: 12px;
   height: 12px;
 }
-.mdxr-annotation-footer {
+.doc-annotation-footer {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -552,17 +551,17 @@
   overflow: auto;
   padding: 18px 20px 20px 24px;
 }
-.mdxr-annotation-footer-actions {
+.doc-annotation-footer-actions {
   display: flex;
   gap: 8px;
 }
-.mdxr-annotation-footer > button {
+.doc-annotation-footer > button {
   --annotation-button-text: var(--annotation-text);
 }
-.mdxr-annotation-footer-actions > button {
+.doc-annotation-footer-actions > button {
   --annotation-button-text: var(--annotation-text);
 }
-.mdxr-annotation-footer-actions [data-annotation-send] {
+.doc-annotation-footer-actions [data-annotation-send] {
   --annotation-button-bg: var(--annotation-primary);
   --annotation-button-hover: color-mix(
     in srgb,
@@ -572,17 +571,17 @@
   --annotation-button-text: var(--annotation-primary-text);
   --annotation-button-hover-text: var(--annotation-primary-text);
 }
-.mdxr-annotation-copy-done {
+.doc-annotation-copy-done {
   display: none;
   color: var(--annotation-success);
 }
-[data-annotation-copy][data-state="copied"] .mdxr-annotation-copy-done {
+[data-annotation-copy][data-state="copied"] .doc-annotation-copy-done {
   display: inline-flex;
 }
-[data-annotation-copy][data-state="copied"] .mdxr-annotation-copy-idle {
+[data-annotation-copy][data-state="copied"] .doc-annotation-copy-idle {
   display: none;
 }
-.mdxr-annotation-save-status {
+.doc-annotation-save-status {
   align-self: stretch;
   color: var(--annotation-accent);
   margin-top: 10px;
@@ -600,25 +599,25 @@
   font-family: var(--font-mono, ui-monospace, monospace);
   font-size: 11px;
 }
-.mdxr-annotation-overlays {
+.doc-annotation-overlays {
   position: fixed;
   inset: 0;
   z-index: 40;
   pointer-events: none;
   overflow: hidden;
 }
-.mdxr-annotation-outline {
+.doc-annotation-outline {
   position: absolute;
   border: 2px solid #eab308;
   border-radius: 5px;
   background: #eab3080d;
 }
-.mdxr-annotation-outline[data-active] {
+.doc-annotation-outline[data-active] {
   border-color: #0ea5e9;
   background: #0ea5e914;
 }
-.mdxr-annotation-sr-only,
-.mdxr-annotation-save-status:not([data-state="warning"]) {
+.doc-annotation-sr-only,
+.doc-annotation-save-status:not([data-state="warning"]) {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -629,7 +628,7 @@
   white-space: nowrap;
   border: 0;
 }
-@keyframes mdxr-annotation-enter {
+@keyframes doc-annotation-enter {
   from {
     opacity: 0;
     transform: translateY(-4px);
@@ -640,15 +639,15 @@
   }
 }
 @media (min-width: 1000px) {
-  body.mdxr-annotations-open {
+  body.doc-annotations-open {
     padding-right: 400px;
   }
 }
 @media (max-width: 999px) {
-  body:has(#mdxr-annotations) #mdxr-root {
+  body:has(#doc-annotations) #doc-root {
     padding-top: 4.5rem;
   }
-  #mdxr-annotation-panel {
+  #doc-annotation-panel {
     top: auto;
     left: 8px;
     right: 8px;
@@ -657,48 +656,48 @@
     height: min(62dvh, 640px);
     max-height: calc(100dvh - 4rem);
   }
-  #mdxr-annotation-panel:has([data-annotation-form]:not([hidden])) {
+  #doc-annotation-panel:has([data-annotation-form]:not([hidden])) {
     height: min(76dvh, 720px);
   }
-  body.mdxr-annotations-open {
+  body.doc-annotations-open {
     padding-bottom: 65dvh;
   }
-  .mdxr-annotation-header {
+  .doc-annotation-header {
     padding: 20px 16px 14px 20px;
   }
-  .mdxr-annotation-scroll {
+  .doc-annotation-scroll {
     flex: 1 1 auto;
     padding: 8px 20px;
   }
-  .mdxr-annotation-footer {
+  .doc-annotation-footer {
     padding: 12px 16px 14px 20px;
   }
-  .mdxr-annotation-composer-footer {
+  .doc-annotation-composer-footer {
     position: sticky;
     bottom: 0;
     padding-block: 8px;
     background: var(--annotation-bg);
   }
-  .mdxr-annotations :is(textarea, select) {
+  .doc-annotations :is(textarea, select) {
     font-size: 16px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  #mdxr-annotation-panel {
+  #doc-annotation-panel {
     animation: none;
   }
-  .mdxr-annotations button {
+  .doc-annotations button {
     transition: none;
   }
-  .mdxr-annotation-history summary::before {
+  .doc-annotation-history summary::before {
     transition: none;
   }
 }
 @media print {
-  .mdxr-annotations {
+  .doc-annotations {
     display: none !important;
   }
-  body.mdxr-annotations-open {
+  body.doc-annotations-open {
     padding: 0;
   }
 }

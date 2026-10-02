@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import documents from "virtual:mdxr-ascii";
+import documents from "virtual:doc-ascii";
 
 const names = Object.keys(documents).toSorted();
 

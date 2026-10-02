@@ -93,7 +93,7 @@ const defaultAnswer = (q: QuestionEl): string => {
 };
 
 // Every <Question> under <Ask>, matching the client's
-// querySelectorAll("[data-mdxr-q]") reach — descend through element children
+// querySelectorAll("[data-doc-q]") reach — descend through element children
 // (a Question's own children are choices, never questions).
 const collectQuestions = (node: ReactNode, out: QuestionEl[]): void => {
   for (const c of flattenChildren(node)) {
@@ -147,7 +147,7 @@ export const Ask = defineComponent(
   },
   ({ id, title, description, children }) => (
     <section
-      className={`mdxr-ask ${PANEL_CLS}`}
+      className={`doc-ask ${PANEL_CLS}`}
       data-ask
       data-ask-id={id}
       data-ask-title={nonEmpty(title) ? title : undefined}

@@ -34,7 +34,7 @@ export interface InteractiveNodeData extends Record<string, unknown> {
 
 export type InteractiveFlowNode = Node<
   InteractiveNodeData,
-  "mdxr-node" | "mdxr-group"
+  "doc-node" | "doc-group"
 >;
 
 interface InteractiveEdgeData extends Record<string, unknown> {
@@ -125,7 +125,7 @@ export const interactiveGraphModel = (
         y: (placed.y ?? 0) - (placed.height ?? 0) / 2,
       },
       selectable: false,
-      type: "mdxr-group",
+      type: "doc-group",
       width: placed.width ?? 0,
       zIndex: -1,
     };
@@ -165,7 +165,7 @@ export const interactiveGraphModel = (
         x: (placed.x ?? 0) - width / 2 - (parent?.position.x ?? 0),
         y: (placed.y ?? 0) - height / 2 - (parent?.position.y ?? 0),
       },
-      type: "mdxr-node",
+      type: "doc-node",
       width,
     };
   });
@@ -175,7 +175,7 @@ export const interactiveGraphModel = (
     id: edge.id ?? `edge-${index}`,
     label: edge.label,
     markerEnd: {
-      color: "var(--mdxr-graph-edge)",
+      color: "var(--doc-graph-edge)",
       type: MarkerType.ArrowClosed,
     },
     selectable: false,

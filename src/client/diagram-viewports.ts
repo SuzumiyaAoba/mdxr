@@ -44,7 +44,7 @@ class DiagramView {
 
   private paint(): void {
     this.canvas.style.setProperty(
-      "--mdxr-diagram-transform",
+      "--doc-diagram-transform",
       `translate(${this.x}px, ${this.y}px) scale(${this.scale})`
     );
     const output = this.root.querySelector("[data-diagram-scale]");
@@ -253,8 +253,8 @@ const viewOf = (target: EventTarget | null): DiagramView | undefined => {
   if (!(target instanceof Element)) {
     return undefined;
   }
-  const root = target.closest<HTMLElement>("[data-mdxr-diagram]");
-  const canvas = root?.querySelector<HTMLElement>(".mdxr-diagram-canvas");
+  const root = target.closest<HTMLElement>("[data-doc-diagram]");
+  const canvas = root?.querySelector<HTMLElement>(".doc-diagram-canvas");
   if (
     root === null ||
     canvas === undefined ||
@@ -277,7 +277,7 @@ export const initDiagramViewports = (): void => {
     return;
   }
   initialized.add(document);
-  document.body.classList.add("mdxr-diagrams-ready");
+  document.body.classList.add("doc-diagrams-ready");
   let active: DiagramView | undefined;
 
   document.addEventListener(

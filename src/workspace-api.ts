@@ -69,7 +69,7 @@ const fetchJson = async (url: string, init?: RequestInit): Promise<unknown> => {
 };
 
 export const loadHistory = async (): Promise<HistoryList> => {
-  const value = await fetchJson("/__mdxr_history");
+  const value = await fetchJson("/__doc_history");
   if (
     !isRecord(value) ||
     typeof value.latestId !== "string" ||
@@ -82,7 +82,7 @@ export const loadHistory = async (): Promise<HistoryList> => {
 };
 
 export const loadConversation = async (): Promise<ConversationData> => {
-  const value = await fetchJson("/__mdxr_agent");
+  const value = await fetchJson("/__doc_agent");
   if (
     !isRecord(value) ||
     (value.provider !== "codex" && value.provider !== "claude") ||
@@ -103,7 +103,7 @@ export const loadConversation = async (): Promise<ConversationData> => {
 
 export const loadSource = async (id: string): Promise<SourceData> => {
   const value = await fetchJson(
-    `/__mdxr_history?view=source&id=${encodeURIComponent(id)}`
+    `/__doc_history?view=source&id=${encodeURIComponent(id)}`
   );
   if (!isRecord(value) || typeof value.source !== "string") {
     throw new Error("Could not read this MDX version");
@@ -116,7 +116,7 @@ export const loadSource = async (id: string): Promise<SourceData> => {
 
 export const loadDiff = async (from: string, to: string): Promise<DiffData> => {
   const value = await fetchJson(
-    `/__mdxr_history?view=diff&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
+    `/__doc_history?view=diff&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
   );
   if (
     !isRecord(value) ||
@@ -153,7 +153,7 @@ export const sendInstruction = async (
   update: InstructionUpdates
 ): Promise<void> => {
   try {
-    const response = await fetchJson("/__mdxr_agent", {
+    const response = await fetchJson("/__doc_agent", {
       body: JSON.stringify({ message }),
       headers: { "content-type": "application/json" },
       method: "POST",

@@ -18,7 +18,7 @@ const buildClientJs = async (): Promise<string> => {
       contents: 'import "./client/entry.js";',
       loader: "js",
       resolveDir: path.join(pkgRoot, "src"),
-      sourcefile: "mdxr-client.js",
+      sourcefile: "doc-client.js",
     },
     target: "es2022",
     write: false,

@@ -162,7 +162,7 @@ const shikiStyle = (style: string): Record<string, string> => {
 };
 
 /** Row text, or its language-highlighted tokens when rehypeShiki found a
- * grammar for the file (span vars are themed by the `.mdxr-diff-hl` rules). */
+ * grammar for the file (span vars are themed by the `.doc-diff-hl` rules). */
 const RowContent = ({
   row,
   toks,
@@ -175,7 +175,7 @@ const RowContent = ({
   }
   return toks.map((tok, i) => (
     <span
-      className="mdxr-diff-hl"
+      className="doc-diff-hl"
       key={i}
       style={tok.s === undefined ? undefined : shikiStyle(tok.s)}
     >
@@ -223,7 +223,7 @@ const DiffRows = ({
       return (
         <Fragment key={i}>
           <div
-            className={`mdxr-drow grid grid-cols-[2.5rem_2.5rem_1.25rem_minmax(0,1fr)] ${ROW_CLS[row.kind]}`}
+            className={`doc-drow grid grid-cols-[2.5rem_2.5rem_1.25rem_minmax(0,1fr)] ${ROW_CLS[row.kind]}`}
             data-comment-row=""
           >
             {anchor === undefined ? null : (

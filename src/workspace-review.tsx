@@ -14,7 +14,7 @@ import { downloadText } from "./ui/data-download.js";
 
 const documentInfo = (): (AnnotationDocument & { id: string }) | undefined => {
   const info = parseAnnotationDocument(
-    document.querySelector("#mdxr-annotation-document")?.textContent ?? "{}"
+    document.querySelector("#doc-annotation-document")?.textContent ?? "{}"
   );
   return info === undefined ? undefined : { ...info, id: info.id ?? info.file };
 };
@@ -62,7 +62,7 @@ export const WorkspaceReviewButton = () => {
           title: info.title,
         },
         exportedAt: new Date().toISOString(),
-        format: "mdxr-review",
+        format: "doc-review",
         sections: state.sectionReviews
           .filter(({ reviewed }) => reviewed)
           .map(({ id, revision, title }) => ({ id, revision, title })),
@@ -70,7 +70,7 @@ export const WorkspaceReviewButton = () => {
       };
       downloadText(
         JSON.stringify(data, null, 2),
-        "mdxr-review.json",
+        "doc-review.json",
         "application/json"
       );
       setMessage("Review JSON downloaded.");
@@ -118,15 +118,15 @@ export const WorkspaceReviewButton = () => {
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger
         type="button"
-        className="mdxr-workspace-export"
+        className="doc-workspace-export"
         aria-label="Save or import review"
         title="Save or import review"
       >
         Review
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Backdrop className="mdxr-workspace-export-backdrop" />
-        <Dialog.Popup className="mdxr-workspace-export-dialog">
+        <Dialog.Backdrop className="doc-workspace-export-backdrop" />
+        <Dialog.Popup className="doc-workspace-export-dialog">
           <Dialog.Title>Save or import review</Dialog.Title>
           <Dialog.Description>
             Transfer comments and reviewed sections as versioned JSON.

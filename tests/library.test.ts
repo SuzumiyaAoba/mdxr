@@ -19,9 +19,9 @@ import { THEME_JS } from "../src/assets/scripts.js";
 import { inlineScript } from "../src/html.js";
 import { serveLibrary } from "../src/library.js";
 
-const SEARCH_PATH = "/__mdxr_library/search";
-const DELETE_PREFIX = "/__mdxr_library/document/";
-const DELETE_HEADERS = { "X-MDXR-Library-Action": "delete" };
+const SEARCH_PATH = "/__doc_library/search";
+const DELETE_PREFIX = "/__doc_library/document/";
+const DELETE_HEADERS = { "X-Doc-Library-Action": "delete" };
 const roots: string[] = [];
 const servers: Server[] = [];
 
@@ -68,7 +68,7 @@ describe("document library HTTP", () => {
     );
     expect({
       hasCharset: shell.headers.get("content-type")?.includes("charset=utf-8"),
-      hasLibraryRoot: shellHtml.includes('id="mdxr-library-root"'),
+      hasLibraryRoot: shellHtml.includes('id="doc-library-root"'),
       themeScriptInHead:
         themeScriptIndex !== -1 &&
         themeScriptIndex < shellHtml.indexOf("</head>"),
@@ -103,7 +103,7 @@ describe("document library HTTP", () => {
       path.join(root, name),
       "# 日本語のプレビュー\n\n本文です。"
     );
-    const openUrl = `${url}/__mdxr_library/open/${encodeURIComponent(name)}`;
+    const openUrl = `${url}/__doc_library/open/${encodeURIComponent(name)}`;
     const opened = await fetch(openUrl, { redirect: "manual" });
     const location = opened.headers.get("location");
     expect(location).toMatch(/^http:\/\/localhost:\d+\//u);
@@ -116,7 +116,7 @@ describe("document library HTTP", () => {
 
     const preview = await fetch(location ?? "");
     const html = await preview.text();
-    expect(html).toMatch(/日本語のプレビュー[\s\S]*mdxr-workspace-root/u);
+    expect(html).toMatch(/日本語のプレビュー[\s\S]*doc-workspace-root/u);
     await rm(path.join(root, name));
     const missing = await fetch(openUrl, { redirect: "manual" });
     expect(missing.status).toBe(404);
@@ -126,7 +126,7 @@ describe("document library HTTP", () => {
     const { root, url } = await makeLibrary();
     const name = "preview.mdx";
     await writeFile(path.join(root, name), "# Preview\n");
-    const openUrl = `${url}/__mdxr_library/open/${encodeURIComponent(name)}`;
+    const openUrl = `${url}/__doc_library/open/${encodeURIComponent(name)}`;
     const opened = await fetch(openUrl, { redirect: "manual" });
     const location = opened.headers.get("location");
     if (location === null) {
@@ -252,11 +252,9 @@ describe("document library HTTP", () => {
     await writeFile(path.join(root, "valid.mdx"), "# Valid");
     await symlink(path.join(root, "valid.mdx"), path.join(root, "link.mdx"));
     const responses = await Promise.all([
-      fetch(
-        `${url}/__mdxr_library/open/${encodeURIComponent("../secret.mdx")}`
-      ),
-      fetch(`${url}/__mdxr_library/open/link.mdx`),
-      fetch(`${url}/__mdxr_library/open/%ZZ`),
+      fetch(`${url}/__doc_library/open/${encodeURIComponent("../secret.mdx")}`),
+      fetch(`${url}/__doc_library/open/link.mdx`),
+      fetch(`${url}/__doc_library/open/%ZZ`),
       fetch(`${url}${SEARCH_PATH}?sort=unexpected`),
       fetch(`${url}${SEARCH_PATH}`, { method: "POST" }),
       fetch(`${url}${SEARCH_PATH}`, {

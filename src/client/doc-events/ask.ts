@@ -13,13 +13,13 @@ const choiceText = (f: Element): string => {
     return t === "" ? f.value : t;
   }
   const fallback = f instanceof HTMLInputElement ? f.value : "";
-  const body = f.closest("label")?.querySelector(".mdxr-choice-text");
+  const body = f.closest("label")?.querySelector(".doc-choice-text");
   if (!(body instanceof HTMLElement)) {
     return fallback;
   }
   let t = "";
   for (const n of body.childNodes) {
-    if (n instanceof HTMLElement && n.classList.contains("mdxr-choice-desc")) {
+    if (n instanceof HTMLElement && n.classList.contains("doc-choice-desc")) {
       continue;
     }
     t += n.textContent ?? "";
@@ -85,7 +85,7 @@ const answerOf = (q: HTMLElement): string =>
 // The line format is shared with SSR via ask-sheet.ts.
 const askMarkdown = (box: HTMLElement): string => {
   const entries: SheetEntry[] = [];
-  for (const q of box.querySelectorAll("[data-mdxr-q]")) {
+  for (const q of box.querySelectorAll("[data-doc-q]")) {
     if (!(q instanceof HTMLElement)) {
       continue;
     }

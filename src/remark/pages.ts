@@ -51,9 +51,9 @@ export const remarkDocumentPages =
           : "Overview";
         page = {
           attributes: jsxAttrs({
-            "data-mdxr-page": String(index),
-            "data-mdxr-page-title": title,
-            id: `mdxr-page:${index}`,
+            "data-doc-page": String(index),
+            "data-doc-page-title": title,
+            id: `doc-page:${index}`,
           }),
           children: [],
           name: "div",

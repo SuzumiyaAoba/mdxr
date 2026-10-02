@@ -61,7 +61,7 @@ export const FileRef = defineComponent(
             type="button"
             aria-haspopup="dialog"
             className={`cursor-pointer ${labelClass}`}
-            data-mdxr-file-preview={preview}
+            data-doc-file-preview={preview}
             onClick={openPreview}
           >
             {label}
@@ -70,7 +70,7 @@ export const FileRef = defineComponent(
           <a
             aria-haspopup="dialog"
             className={labelClass}
-            data-mdxr-file-preview={preview}
+            data-doc-file-preview={preview}
             href={link}
             onClick={openPreview}
           >

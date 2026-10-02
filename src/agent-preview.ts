@@ -15,8 +15,8 @@ export const injectAgentPreview = (
   const agentAttributes =
     provider === undefined
       ? ""
-      : ` data-mdxr-agent data-agent-provider="${provider}"`;
-  const workspace = `<style>${inlineStyle(css)}</style><div id="mdxr-workspace-root"${agentAttributes}></div><script src="/__mdxr_workspace.js" defer></script>`;
+      : ` data-doc-agent data-agent-provider="${provider}"`;
+  const workspace = `<style>${inlineStyle(css)}</style><div id="doc-workspace-root"${agentAttributes}></div><script src="/__doc_workspace.js" defer></script>`;
   return html.includes("</body>")
     ? html.replace("</body>", `${workspace}</body>`)
     : `${html}${workspace}`;

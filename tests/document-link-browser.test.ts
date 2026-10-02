@@ -133,7 +133,7 @@ Target reached.
       try {
         const page = await context.newPage();
         await page.goto(pathToFileURL(htmlPath).href);
-        const rootLink = page.locator("a[data-mdxr-document]");
+        const rootLink = page.locator("a[data-doc-document]");
 
         await rootLink.focus();
         const childPromise = page.waitForEvent("popup");

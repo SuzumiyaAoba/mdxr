@@ -13,7 +13,7 @@ import { DATA_BUTTON, DATA_PROPS } from "./data-props.js";
 import { DataPanel } from "./data-view.js";
 
 const selections = new Map<string, string>();
-const eventName = "mdxr-tab-selection";
+const eventName = "doc-tab-selection";
 const subscribe = (listener: () => void): (() => void) => {
   window.addEventListener(eventName, listener);
   return () => {
@@ -137,7 +137,7 @@ const TabView = ({
         ({ key: entryKey, value: entry }, index) => (
           <div
             key={entryKey}
-            className={`mdxr-tab-panel px-3 ${hydrated && active !== index ? "hidden print:block" : ""}`}
+            className={`doc-tab-panel px-3 ${hydrated && active !== index ? "hidden print:block" : ""}`}
             role="tabpanel"
             id={`${id}-panel-${index}`}
             aria-labelledby={`${id}-tab-${index}`}

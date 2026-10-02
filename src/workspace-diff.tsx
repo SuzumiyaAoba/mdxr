@@ -29,7 +29,7 @@ const lineNumber = (number: number | null, side: "old" | "new") => (
   <td
     aria-label={number === null ? undefined : `${side} line ${number}`}
     aria-hidden={number === null ? true : undefined}
-    className="mdxr-workspace-diff-number"
+    className="doc-workspace-diff-number"
     data-side={side}
   >
     {number ?? ""}
@@ -49,7 +49,7 @@ const SplitCell = ({
     return (
       <td
         aria-hidden="true"
-        className="mdxr-workspace-diff-cell"
+        className="doc-workspace-diff-cell"
         data-empty="true"
         data-side={side}
       />
@@ -60,17 +60,15 @@ const SplitCell = ({
   const syntaxLine = syntax?.[line.lineNumber - 1];
   return (
     <td
-      className="mdxr-workspace-diff-cell"
+      className="doc-workspace-diff-cell"
       data-kind={line.kind}
       data-side={side}
     >
-      <span className="mdxr-workspace-diff-cell__number">
-        {line.lineNumber}
-      </span>
-      <span aria-hidden="true" className="mdxr-workspace-diff-cell__marker">
+      <span className="doc-workspace-diff-cell__number">{line.lineNumber}</span>
+      <span aria-hidden="true" className="doc-workspace-diff-cell__marker">
         {marker}
       </span>
-      <span className="mdxr-workspace-diff-cell__text">
+      <span className="doc-workspace-diff-cell__text">
         <WorkspaceCode
           text={line.text}
           syntax={syntaxLine}
@@ -89,21 +87,21 @@ const SplitDiff = ({ lines, wordDiff, syntax }: WorkspaceDiffProps) => {
   return (
     <table
       aria-label="Side-by-side diff"
-      className="mdxr-workspace-diff-view"
+      className="doc-workspace-diff-view"
       data-layout="split"
       data-word-diff={wordDiff}
     >
-      <thead className="mdxr-workspace-diff-header">
+      <thead className="doc-workspace-diff-header">
         <tr>
           <th
-            className="mdxr-workspace-diff-header__cell"
+            className="doc-workspace-diff-header__cell"
             data-side="old"
             scope="col"
           >
             Before
           </th>
           <th
-            className="mdxr-workspace-diff-header__cell"
+            className="doc-workspace-diff-header__cell"
             data-side="new"
             scope="col"
           >
@@ -113,7 +111,7 @@ const SplitDiff = ({ lines, wordDiff, syntax }: WorkspaceDiffProps) => {
       </thead>
       <tbody>
         {rows.map((row) => (
-          <tr className="mdxr-workspace-diff-row" key={row.key}>
+          <tr className="doc-workspace-diff-row" key={row.key}>
             <SplitCell line={row.oldLine} side="old" syntax={syntax?.before} />
             <SplitCell line={row.newLine} side="new" syntax={syntax?.after} />
           </tr>
@@ -131,7 +129,7 @@ const UnifiedDiff = ({ lines, wordDiff, syntax }: WorkspaceDiffProps) => {
   return (
     <table
       aria-label="Unified diff"
-      className="mdxr-workspace-diff-view"
+      className="doc-workspace-diff-view"
       data-layout="unified"
       data-word-diff={wordDiff}
     >
@@ -148,7 +146,7 @@ const UnifiedDiff = ({ lines, wordDiff, syntax }: WorkspaceDiffProps) => {
               : syntaxSource?.[syntaxLineNumber - 1];
           return (
             <tr
-              className="mdxr-workspace-diff-row"
+              className="doc-workspace-diff-row"
               data-kind={row.type}
               key={row.key}
             >
@@ -156,12 +154,12 @@ const UnifiedDiff = ({ lines, wordDiff, syntax }: WorkspaceDiffProps) => {
               {lineNumber(row.newNumber, "new")}
               <td
                 aria-hidden="true"
-                className="mdxr-workspace-diff-marker"
+                className="doc-workspace-diff-marker"
                 data-kind={row.type}
               >
                 {marker}
               </td>
-              <td className="mdxr-workspace-diff-text" data-kind={row.type}>
+              <td className="doc-workspace-diff-text" data-kind={row.type}>
                 <WorkspaceCode
                   text={row.text}
                   syntax={syntaxLine}

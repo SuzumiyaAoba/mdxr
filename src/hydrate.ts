@@ -1,7 +1,7 @@
 /**
  * Hydration bundle assembly: generates the inlined client script that
  * rebuilds the exact vnode tree SSR produced and `hydrateRoot`s it onto
- * `<main id="mdxr-root">`. Implementation details live in `src/hydrate/`:
+ * `<main id="doc-root">`. Implementation details live in `src/hydrate/`:
  * `export-index` (export surface scanning), `import-scan` (user-module
  * import analysis), `runtime-module` (virtual package module codegen), and
  * `plugins` (esbuild plugins for shared packages, the doc module, icons).
@@ -42,7 +42,7 @@ export interface HydrateSpec {
 /**
  * Build the inlined client script: it rebuilds the exact vnode tree SSR
  * produced — `DocContext.Provider` wrapping the Plan header + the compiled
- * MDX module — and `hydrateRoot`s it onto `<main id="mdxr-root">`.
+ * MDX module — and `hydrateRoot`s it onto `<main id="doc-root">`.
  * `fileLink` is replayed from the recorded SSR answers, so components see
  * identical data without filesystem access.
  */
@@ -63,7 +63,7 @@ export const buildHydrateScript = async (
         `hydration: no module provides catalog export "${exported}"`
       );
     }
-    const local = `__mdxr_c${seq}`;
+    const local = `__doc_c${seq}`;
     seq += 1;
     imports.push(
       `import { ${exported} as ${local} } from ${JSON.stringify(mod)};`
@@ -92,23 +92,23 @@ export const buildHydrateScript = async (
   const userImport =
     spec.componentsPath === undefined
       ? ""
-      : `import * as __mdxrUser from ${JSON.stringify(spec.componentsPath)};`;
+      : `import * as __docUser from ${JSON.stringify(spec.componentsPath)};`;
 
   // Mount/merge details live in hydrate-runtime (a real, type-checked module
   // bundled by esbuild); the generated entry only binds names and data.
   const entry = `${imports.join("\n")}
 ${userImport}
-import __mdxrDoc from "mdxr:doc";
+import __docDoc from "mdxr:doc";
 ${mountDocument}({
   components: { ${entries.join(", ")} },
-  doc: __mdxrDoc,
+  doc: __docDoc,
   fileLinks: ${JSON.stringify(spec.fileLinks)},
   filePreviews: ${JSON.stringify(spec.filePreviews)},
   filePreviewEnabled: ${JSON.stringify(spec.filePreviewEnabled)},
   headerProps: ${JSON.stringify(spec.header)},
   now: ${JSON.stringify(spec.now)},
   planHeader: ${planHeader},
-  userModule: ${spec.componentsPath === undefined ? "undefined" : "__mdxrUser"},
+  userModule: ${spec.componentsPath === undefined ? "undefined" : "__docUser"},
 });
 `;
 
@@ -120,6 +120,10 @@ ${mountDocument}({
     jsx: "automatic",
     jsxImportSource: "react",
     logLevel: "silent",
+    // Catalog metadata stays on the server's public component API; its
+    // private property name need not be exposed in the browser bundle.
+    // oxlint-disable-next-line require-unicode-regexp -- esbuild's Go regexp engine forbids `u`
+    mangleProps: /^__mdxr$/,
     metafile: true,
     minify: true,
     platform: "browser",
@@ -133,7 +137,7 @@ ${mountDocument}({
       contents: entry,
       loader: "js",
       resolveDir: pkgRoot,
-      sourcefile: "mdxr-hydrate.js",
+      sourcefile: "doc-hydrate.js",
     },
     target: "es2022",
     write: false,

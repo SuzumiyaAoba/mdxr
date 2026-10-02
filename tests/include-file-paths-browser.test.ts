@@ -60,7 +60,7 @@ describe("included code header links in a browser", () => {
         await page.setContent(
           html.replace(
             "<head>",
-            '<head><script>document.addEventListener("mdxr:hydrated", () => { document.documentElement.dataset.auditHydrated = "true"; });</script>'
+            '<head><script>document.addEventListener("doc:hydrated", () => { document.documentElement.dataset.auditHydrated = "true"; });</script>'
           )
         );
         if (hydrate) {
@@ -69,7 +69,7 @@ describe("included code header links in a browser", () => {
           );
         }
         const link = page
-          .locator("#mdxr-root a")
+          .locator("#doc-root a")
           .filter({ hasText: "src/sample.ts:2-4" });
         await expect(link.getAttribute("href")).resolves.toBe(
           editorUrl(

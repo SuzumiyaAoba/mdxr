@@ -26,7 +26,7 @@ export const PANEL_CLS = `not-prose my-6 overflow-hidden rounded-lg border ${BOR
 
 export const Panel = (props: {
   children?: ReactNode;
-  /** Extra classes (e.g. `mdxr-json`) merged after the panel shape. */
+  /** Extra classes (e.g. `doc-json`) merged after the panel shape. */
   className?: string;
 }): ReactElement => (
   <figure className={`${PANEL_CLS} ${props.className ?? ""}`}>
@@ -64,7 +64,7 @@ export const ListRow = (props: {
 );
 
 /**
- * Click-to-copy button. The `mdxr-copy`/`mdxr-copy-idle`/`mdxr-copy-done`
+ * Click-to-copy button. The `doc-copy`/`doc-copy-idle`/`doc-copy-done`
  * classes are client-JS hooks (assets.ts toggles `.copied` on the button) —
  * rename them and copy stops working.
  */
@@ -80,16 +80,16 @@ export const CopyButton = (props: {
 }): ReactElement => (
   <button
     aria-label={props.title}
-    className={`mdxr-copy cursor-pointer ${props.className ?? "opacity-60"}`}
+    className={`doc-copy cursor-pointer ${props.className ?? "opacity-60"}`}
     data-copy={props.copy}
     title={props.title}
     type="button"
   >
-    <span className="mdxr-copy-idle inline-flex">
+    <span className="doc-copy-idle inline-flex">
       <Icon className="h-3.5 w-3.5" name="lucide:copy" />
     </span>
     <span
-      className={`mdxr-copy-done hidden items-center ${props.doneClassName ?? TONE_TEXT.emerald}`}
+      className={`doc-copy-done hidden items-center ${props.doneClassName ?? TONE_TEXT.emerald}`}
     >
       <Icon className="h-3.5 w-3.5" name="lucide:check" />
     </span>
@@ -105,7 +105,7 @@ export const ACTION_BUTTON_CLS = `inline-flex cursor-pointer items-center rounde
 
 /**
  * Idle/done label pair inside a labeled action button. The
- * `mdxr-copy-idle`/`mdxr-copy-done` classes are client-JS hooks — the
+ * `doc-copy-idle`/`doc-copy-done` classes are client-JS hooks — the
  * document script toggles `.copied` on the parent button to swap them.
  */
 export const CopyFeedback = (props: {
@@ -117,12 +117,12 @@ export const CopyFeedback = (props: {
   label: string;
 }): ReactElement => (
   <>
-    <span className="mdxr-copy-idle inline-flex items-center gap-1.5">
+    <span className="doc-copy-idle inline-flex items-center gap-1.5">
       <Icon className="h-3.5 w-3.5" name={props.icon} />
       {props.label}
     </span>
     <span
-      className={`mdxr-copy-done hidden items-center gap-1.5 ${TONE_TEXT.emerald}`}
+      className={`doc-copy-done hidden items-center gap-1.5 ${TONE_TEXT.emerald}`}
     >
       <Icon className="h-3.5 w-3.5" name="lucide:check" />
       {props.done}
@@ -220,14 +220,14 @@ export const RowLabel = (props: {
 
 /**
  * Rotating disclosure chevron for tree-line `<details>` (Tree, Json).
- * `mdxr-chev` is the CSS hook that spins it open — keep the name.
+ * `doc-chev` is the CSS hook that spins it open — keep the name.
  */
 export const FoldChev = (props: {
   /** Non-conflicting extras, e.g. group-hover colors. */
   className?: string;
 }): ReactElement => (
   <Icon
-    className={`mdxr-chev h-3 w-3 shrink-0 self-center ${TEXT.faint} ${props.className ?? ""}`}
+    className={`doc-chev h-3 w-3 shrink-0 self-center ${TEXT.faint} ${props.className ?? ""}`}
     name="lucide:chevron-right"
   />
 );
@@ -373,7 +373,7 @@ export const CountedList = (props: {
 /**
  * Hover "+" on a code/diff row (`<Comments>`) — opens the comment form
  * under that line. `data-comment-add` carries the line number, `data-side`/
- * `data-file` the diff anchor; `.mdxr-add` positions and reveals the
+ * `data-file` the diff anchor; `.doc-add` positions and reveals the
  * button (BASE_CSS). All are client-JS hooks — rename them and adding
  * comments stops working.
  */
@@ -384,7 +384,7 @@ export const AddCommentButton = (props: {
 }): ReactElement => (
   <button
     aria-label={`Add a comment on line ${props.line}`}
-    className="mdxr-add"
+    className="doc-add"
     data-comment-add={props.line}
     data-file={props.file}
     data-side={props.side === "old" ? "old" : undefined}
@@ -434,7 +434,7 @@ export const CommentStrip = (props: {
     data-strip-side={props.anchor?.side === "old" ? "old" : undefined}
   >
     {props.children}
-    <div className="mdxr-thread-tools" data-thread-tools="">
+    <div className="doc-thread-tools" data-thread-tools="">
       <CommentReplyButton />
     </div>
   </div>

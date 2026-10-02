@@ -19,22 +19,22 @@ export const GraphViewport = ({
   minScale: number;
   title?: string;
 }): ReactElement => (
-  <div className="mdxr-graph-view" data-fit={fit}>
+  <div className="doc-graph-view" data-fit={fit}>
     {fit === "auto" ? (
       <label
-        className={`mdxr-graph-tools flex cursor-pointer items-center justify-end gap-2 px-3 py-2 text-xs ${TEXT.muted}`}
+        className={`doc-graph-tools flex cursor-pointer items-center justify-end gap-2 px-3 py-2 text-xs ${TEXT.muted}`}
       >
-        <input className="mdxr-graph-actual" type="checkbox" />
+        <input className="doc-graph-actual" type="checkbox" />
         Actual size
       </label>
     ) : null}
     <DiagramViewport
       title={title ?? "Graph"}
-      canvasClassName={`mdxr-graph-scroll overflow-x-auto p-3 ${SUNKEN_CLS}`}
+      canvasClassName={`doc-graph-scroll overflow-x-auto p-3 ${SUNKEN_CLS}`}
     >
       <svg
         aria-label={title ?? "Graph"}
-        className="mdxr-graph-image"
+        className="doc-graph-image"
         width={width}
         height={height}
         viewBox={`0 0 ${width} ${height}`}

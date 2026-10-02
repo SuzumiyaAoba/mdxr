@@ -38,10 +38,10 @@ export const LibraryControls = ({
     light: copy.themeLight,
   };
   return (
-    <div className="mdxr-library__controls">
+    <div className="doc-library__controls">
       <button
         aria-label={copy.languageLabel}
-        className="mdxr-library__language"
+        className="doc-library__language"
         onClick={handleLanguageChange}
         type="button"
       >
@@ -50,9 +50,9 @@ export const LibraryControls = ({
       </button>
       <button
         aria-label={copy.themeLabel(themeLabels[mode])}
-        className="mdxr-library__theme"
-        data-mdxr-theme=""
-        data-mdxr-theme-react=""
+        className="doc-library__theme"
+        data-doc-theme=""
+        data-doc-theme-react=""
         data-mode={mode}
         onClick={cycle}
         title={copy.themeLabel(themeLabels[mode])}
@@ -98,14 +98,14 @@ export const LibraryToolbar = ({
   status,
   statuses,
 }: LibraryToolbarProps) => (
-  <section aria-label={copy.search} className="mdxr-library__toolbar">
-    <label className="mdxr-library__search">
-      <span className="mdxr-library__sr-only">{copy.search}</span>
-      <span className="mdxr-library__search-field">
+  <section aria-label={copy.search} className="doc-library__toolbar">
+    <label className="doc-library__search">
+      <span className="doc-library__sr-only">{copy.search}</span>
+      <span className="doc-library__search-field">
         <Search aria-hidden="true" size={18} />
         <input
           aria-label={copy.search}
-          aria-describedby="mdxr-library-search-hint"
+          aria-describedby="doc-library-search-hint"
           autoComplete="off"
           onCompositionEnd={(event) => {
             handleCompositionEnd(event.currentTarget.value);
@@ -119,13 +119,13 @@ export const LibraryToolbar = ({
         />
       </span>
     </label>
-    <p className="mdxr-library__sr-only" id="mdxr-library-search-hint">
+    <p className="doc-library__sr-only" id="doc-library-search-hint">
       {copy.searchHint}
     </p>
-    <div className="mdxr-library__filters">
-      <label className="mdxr-library__filter">
-        <span className="mdxr-library__control-label">{copy.status}</span>
-        <span className="mdxr-library__select">
+    <div className="doc-library__filters">
+      <label className="doc-library__filter">
+        <span className="doc-library__control-label">{copy.status}</span>
+        <span className="doc-library__select">
           <select
             aria-label={copy.status}
             onChange={(event) => {
@@ -144,9 +144,9 @@ export const LibraryToolbar = ({
         </span>
       </label>
 
-      <label className="mdxr-library__filter">
-        <span className="mdxr-library__control-label">{copy.sort}</span>
-        <span className="mdxr-library__select">
+      <label className="doc-library__filter">
+        <span className="doc-library__control-label">{copy.sort}</span>
+        <span className="doc-library__select">
           <select
             aria-label={copy.sort}
             onChange={(event) => {
@@ -169,14 +169,14 @@ export const LibraryToolbar = ({
 
       <button
         aria-label={loading ? copy.refreshing : copy.refresh}
-        className="mdxr-library__refresh"
+        className="doc-library__refresh"
         disabled={loading}
         onClick={handleRefresh}
         type="button"
       >
         <RefreshCw
           aria-hidden="true"
-          className={loading ? "mdxr-library__refresh-icon--spinning" : ""}
+          className={loading ? "doc-library__refresh-icon--spinning" : ""}
           size={17}
         />
         <span>{loading ? copy.refreshing : copy.refresh}</span>

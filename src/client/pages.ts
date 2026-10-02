@@ -1,3 +1,5 @@
+import { readDocumentStorage } from "./storage.js";
+
 interface DocumentPage {
   element: HTMLElement;
   tab: HTMLButtonElement;
@@ -14,7 +16,7 @@ const updatePageButton = (
   }
   button.hidden = page === undefined;
   const title = button.querySelector<HTMLElement>(
-    "[data-mdxr-page-previous-title], [data-mdxr-page-next-title]"
+    "[data-doc-page-previous-title], [data-doc-page-next-title]"
   );
   if (title !== null) {
     title.textContent = page?.title ?? "";
@@ -24,7 +26,7 @@ const updatePageButton = (
 
 const scrollToTarget = (target: HTMLElement): void => {
   // Page wrappers use display:contents in continuous view and have no box.
-  const visible = Object.hasOwn(target.dataset, "mdxrPage")
+  const visible = Object.hasOwn(target.dataset, "docPage")
     ? (target.firstElementChild ?? target)
     : target;
   const scrollMargin =
@@ -51,7 +53,7 @@ const hashTarget = (hash: string): HTMLElement | null => {
 
 const storedView = (): boolean => {
   try {
-    return localStorage.getItem("mdxr-view") === "pages";
+    return readDocumentStorage(localStorage, "doc-view") === "pages";
   } catch {
     return false;
   }
@@ -59,22 +61,22 @@ const storedView = (): boolean => {
 
 const storeView = (paged: boolean): void => {
   try {
-    localStorage.setItem("mdxr-view", paged ? "pages" : "document");
+    localStorage.setItem("doc-view", paged ? "pages" : "document");
   } catch {
     // file:// and private contexts may disable storage; switching still works.
   }
 };
 
 const pageTabs = (root: HTMLElement, tabs: HTMLElement): DocumentPage[] =>
-  [...root.querySelectorAll<HTMLElement>("[data-mdxr-page]")].map(
+  [...root.querySelectorAll<HTMLElement>("[data-doc-page]")].map(
     (element, index) => {
-      const title = element.dataset.mdxrPageTitle ?? `Section ${index + 1}`;
+      const title = element.dataset.docPageTitle ?? `Section ${index + 1}`;
       const tab = document.createElement("button");
       tab.type = "button";
-      tab.id = `mdxr-page-tab:${index}`;
+      tab.id = `doc-page-tab:${index}`;
       tab.textContent = title;
       tab.setAttribute("role", "tab");
-      tab.setAttribute("aria-controls", "mdxr-content");
+      tab.setAttribute("aria-controls", "doc-content");
       tabs.append(tab);
       return {
         element,
@@ -107,9 +109,9 @@ class PageNavigation {
     this.content = content;
     this.controls = controls;
     this.sidebar = sidebar;
-    this.navigation = content.querySelector(".mdxr-page-navigation");
-    this.previous = content.querySelector("[data-mdxr-page-previous]");
-    this.next = content.querySelector("[data-mdxr-page-next]");
+    this.navigation = content.querySelector(".doc-page-navigation");
+    this.previous = content.querySelector("[data-doc-page-previous]");
+    this.next = content.querySelector("[data-doc-page-next]");
     this.pages = pageTabs(root, tabs);
     document.head.append(this.visibility);
     this.bindEvents();
@@ -135,7 +137,7 @@ class PageNavigation {
     // Keep all DOM owned by React untouched, including attributes. The rule
     // only applies on screen, so printing always includes the whole document.
     this.visibility.textContent = this.paged
-      ? `@media screen { #mdxr-root [data-mdxr-page]:not([data-mdxr-page="${index}"]) { display: none; } }`
+      ? `@media screen { #doc-root [data-doc-page]:not([data-doc-page="${index}"]) { display: none; } }`
       : "";
     for (const [i, item] of this.pages.entries()) {
       item.tab.setAttribute("aria-selected", String(i === index));
@@ -146,12 +148,12 @@ class PageNavigation {
     if (this.paged) {
       this.content.setAttribute("aria-labelledby", page.tab.id);
     }
-    document.dispatchEvent(new Event("mdxr:pagechange"));
+    document.dispatchEvent(new Event("doc:pagechange"));
   }
 
   private setView(paged: boolean): void {
     this.paged = paged;
-    document.body.dataset.mdxrView = paged ? "pages" : "document";
+    document.body.dataset.docView = paged ? "pages" : "document";
     this.sidebar.hidden = !paged;
     if (this.navigation !== null) {
       this.navigation.hidden = !paged;
@@ -159,7 +161,7 @@ class PageNavigation {
     for (const button of this.controls.querySelectorAll("button")) {
       button.setAttribute(
         "aria-pressed",
-        String(button.dataset.mdxrView === document.body.dataset.mdxrView)
+        String(button.dataset.docView === document.body.dataset.docView)
       );
     }
     if (paged) {
@@ -279,7 +281,7 @@ class PageNavigation {
     });
     for (const button of this.controls.querySelectorAll("button")) {
       button.addEventListener("click", () => {
-        this.switchView(button.dataset.mdxrView === "pages");
+        this.switchView(button.dataset.docView === "pages");
       });
     }
     for (const [index, page] of this.pages.entries()) {
@@ -308,7 +310,7 @@ class PageNavigation {
     window.addEventListener("hashchange", () => {
       this.revealHash();
     });
-    document.addEventListener("mdxr:reveal", (event) => {
+    document.addEventListener("doc:reveal", (event) => {
       if (event.target instanceof Element) {
         this.reveal(event.target);
       }
@@ -317,18 +319,18 @@ class PageNavigation {
 }
 
 export const initPages = (): PageNavigation | undefined => {
-  const root = document.querySelector<HTMLElement>("#mdxr-root");
-  const content = document.querySelector<HTMLElement>("#mdxr-content");
-  const controls = document.querySelector<HTMLElement>(".mdxr-view-controls");
-  const sidebar = document.querySelector<HTMLElement>(".mdxr-pages");
-  const tabs = document.querySelector<HTMLElement>("[data-mdxr-page-tabs]");
+  const root = document.querySelector<HTMLElement>("#doc-root");
+  const content = document.querySelector<HTMLElement>("#doc-content");
+  const controls = document.querySelector<HTMLElement>(".doc-view-controls");
+  const sidebar = document.querySelector<HTMLElement>(".doc-pages");
+  const tabs = document.querySelector<HTMLElement>("[data-doc-page-tabs]");
   if (
     root === null ||
     content === null ||
     controls === null ||
     sidebar === null ||
     tabs === null ||
-    root.querySelector("[data-mdxr-page]") === null
+    root.querySelector("[data-doc-page]") === null
   ) {
     return undefined;
   }

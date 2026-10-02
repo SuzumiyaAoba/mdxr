@@ -137,7 +137,7 @@ describe("preview agent API", () => {
     const disabledUrl = await startServer();
     const disabledResponse = await fetch(`${disabledUrl}/`);
     const disabledHtml = await disabledResponse.text();
-    expect(disabledHtml).not.toContain("data-mdxr-agent");
+    expect(disabledHtml).not.toContain("data-doc-agent");
     await closeServer();
 
     const enabledUrl = await startServer(
@@ -147,7 +147,7 @@ describe("preview agent API", () => {
     );
     const enabledResponse = await fetch(`${enabledUrl}/`);
     const enabledHtml = await enabledResponse.text();
-    expect(enabledHtml).toContain("data-mdxr-agent");
+    expect(enabledHtml).toContain("data-doc-agent");
     expect(createAgentSessionMock).toHaveBeenCalledWith(
       filePath,
       "codex",
@@ -201,7 +201,7 @@ describe("preview agent API", () => {
 
   it("returns the selected provider and an empty session on GET", async () => {
     const baseUrl = await startServer("codex");
-    const response = await fetch(`${baseUrl}/__mdxr_agent`);
+    const response = await fetch(`${baseUrl}/__doc_agent`);
 
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("application/json");
@@ -216,7 +216,7 @@ describe("preview agent API", () => {
   it("returns the agent answer and updated conversation on POST", async () => {
     const baseUrl = await startServer("codex");
     const message = "# What changed?\n\n**A bold note.**";
-    const response = await fetch(`${baseUrl}/__mdxr_agent`, {
+    const response = await fetch(`${baseUrl}/__doc_agent`, {
       body: JSON.stringify({ message }),
       headers: { "content-type": "application/json" },
       method: "POST",
@@ -242,7 +242,7 @@ describe("preview agent API", () => {
   it("accepts case-insensitive JSON media types and preserves message whitespace", async () => {
     const baseUrl = await startServer("codex");
     const message = "  Keep this indentation.\n  And these trailing spaces.  ";
-    const response = await fetch(`${baseUrl}/__mdxr_agent`, {
+    const response = await fetch(`${baseUrl}/__doc_agent`, {
       body: JSON.stringify({ message }),
       headers: { "content-type": "Application/JSON; charset=UTF-8" },
       method: "POST",
@@ -254,7 +254,7 @@ describe("preview agent API", () => {
 
   it("rejects a JSON-like but unsupported media type", async () => {
     const baseUrl = await startServer("codex");
-    const response = await fetch(`${baseUrl}/__mdxr_agent`, {
+    const response = await fetch(`${baseUrl}/__doc_agent`, {
       body: JSON.stringify({ message: "Do this" }),
       headers: { "content-type": "application/jsonp" },
       method: "POST",
@@ -267,8 +267,8 @@ describe("preview agent API", () => {
   it("advertises allowed methods when an API route receives an unsupported method", async () => {
     const baseUrl = await startServer("codex");
     const [agentResponse, historyResponse] = await Promise.all([
-      fetch(`${baseUrl}/__mdxr_agent`, { method: "PUT" }),
-      fetch(`${baseUrl}/__mdxr_history`, { method: "PUT" }),
+      fetch(`${baseUrl}/__doc_agent`, { method: "PUT" }),
+      fetch(`${baseUrl}/__doc_history`, { method: "PUT" }),
     ]);
 
     expect({
@@ -286,7 +286,7 @@ describe("preview agent API", () => {
 
   it("does not expose the agent API unless a provider is selected", async () => {
     const baseUrl = await startServer();
-    const response = await fetch(`${baseUrl}/__mdxr_agent`);
+    const response = await fetch(`${baseUrl}/__doc_agent`);
 
     expect(response.status).toBe(404);
     expect(createAgentSessionMock).not.toHaveBeenCalled();
@@ -294,7 +294,7 @@ describe("preview agent API", () => {
 
   it("rejects cross-origin messages before starting an agent turn", async () => {
     const baseUrl = await startServer("codex");
-    const response = await fetch(`${baseUrl}/__mdxr_agent`, {
+    const response = await fetch(`${baseUrl}/__doc_agent`, {
       body: JSON.stringify({ message: "Do this" }),
       headers: {
         "content-type": "application/json",
@@ -308,12 +308,12 @@ describe("preview agent API", () => {
   });
 
   it.each([
-    "/__mdxr_agent",
-    "/__mdxr_history",
-    "/__mdxr_export",
-    "/__mdxr_export?mode=document",
-    "/__mdxr_export?mode=review",
-    "/__mdxr_export?mode=workspace",
+    "/__doc_agent",
+    "/__doc_history",
+    "/__doc_export",
+    "/__doc_export?mode=document",
+    "/__doc_export?mode=review",
+    "/__doc_export?mode=workspace",
   ])(
     "preserves local origin validation and response headers for %s",
     async (route) => {
@@ -371,7 +371,7 @@ describe("preview agent API", () => {
           transfer.dispatchEvent(new Event("chunk"));
         });
       });
-      const request = http.request(`${baseUrl}/__mdxr_agent`, {
+      const request = http.request(`${baseUrl}/__doc_agent`, {
         headers: { "content-type": "application/json" },
         method: "POST",
       });
@@ -398,7 +398,7 @@ describe("preview agent API", () => {
 
   it("returns HTTP 413 for oversized messages without resetting the connection", async () => {
     const baseUrl = await startServer("codex");
-    const response = await fetch(`${baseUrl}/__mdxr_agent`, {
+    const response = await fetch(`${baseUrl}/__doc_agent`, {
       body: JSON.stringify({ message: "a".repeat(65_537) }),
       headers: { "content-type": "application/json" },
       method: "POST",
@@ -413,7 +413,7 @@ describe("preview agent API", () => {
 
   it("returns HTTP 413 before an oversized request has finished uploading", async () => {
     const baseUrl = await startServer("codex");
-    const request = http.request(`${baseUrl}/__mdxr_agent`, {
+    const request = http.request(`${baseUrl}/__doc_agent`, {
       headers: { "content-type": "application/json" },
       method: "POST",
     });
@@ -444,7 +444,7 @@ describe("preview agent API", () => {
     const responses = await Promise.all(
       bodies.map(
         async (body) =>
-          await fetch(`${baseUrl}/__mdxr_agent`, {
+          await fetch(`${baseUrl}/__doc_agent`, {
             body,
             headers: { "content-type": "application/json" },
             method: "POST",
@@ -490,7 +490,7 @@ describe("preview agent API", () => {
   it("keeps local MDX versions and serves source and diff views", async () => {
     const watch = vi.spyOn(fs, "watch");
     const baseUrl = await startServer();
-    const initialResponse = await fetch(`${baseUrl}/__mdxr_history`);
+    const initialResponse = await fetch(`${baseUrl}/__doc_history`);
     const initial = await historyBody(initialResponse);
     expect(initial.versions).toHaveLength(1);
     expect(initial.versions[0]).toMatchObject({ kind: "initial" });
@@ -504,14 +504,14 @@ describe("preview agent API", () => {
 
     let latestId = "";
     await vi.waitFor(async () => {
-      const response = await fetch(`${baseUrl}/__mdxr_history`);
+      const response = await fetch(`${baseUrl}/__doc_history`);
       const body = await historyBody(response);
       expect(body.versions).toHaveLength(2);
       ({ latestId } = body);
     });
 
     const sourceResponse = await fetch(
-      `${baseUrl}/__mdxr_history?view=source&id=${latestId}`
+      `${baseUrl}/__doc_history?view=source&id=${latestId}`
     );
     /* oxlint-disable typescript/no-unsafe-assignment -- Vitest asymmetric matchers are typed as any. */
     await expect(sourceResponse.json()).resolves.toMatchObject({
@@ -530,7 +530,7 @@ describe("preview agent API", () => {
     });
     /* oxlint-enable typescript/no-unsafe-assignment */
     const diffResponse = await fetch(
-      `${baseUrl}/__mdxr_history?view=diff&from=${initial.latestId}&to=${latestId}`
+      `${baseUrl}/__doc_history?view=diff&from=${initial.latestId}&to=${latestId}`
     );
     /* oxlint-disable typescript/no-unsafe-assignment -- Vitest asymmetric matchers are typed as any. */
     await expect(diffResponse.json()).resolves.toMatchObject({
@@ -563,7 +563,7 @@ describe("preview agent API", () => {
       new Error("Broken <render> & source")
     );
 
-    const failed = await fetch(`${baseUrl}/__mdxr_diagnostics`, {
+    const failed = await fetch(`${baseUrl}/__doc_diagnostics`, {
       method: "POST",
     });
     const failure: unknown = await failed.json();
@@ -575,12 +575,12 @@ describe("preview agent API", () => {
     const errorHtml = await errorResponse.text();
     expect({
       escaped: errorHtml.includes("Broken &lt;render> &amp; source"),
-      liveReload: errorHtml.includes("/__mdxr_events"),
-      workspace: errorHtml.includes("mdxr-workspace"),
+      liveReload: errorHtml.includes("/__doc_events"),
+      workspace: errorHtml.includes("doc-workspace"),
     }).toStrictEqual({ escaped: true, liveReload: true, workspace: true });
 
     vi.mocked(renderFile).mockResolvedValueOnce("recovered preview");
-    const recovered = await fetch(`${baseUrl}/__mdxr_diagnostics`, {
+    const recovered = await fetch(`${baseUrl}/__doc_diagnostics`, {
       method: "POST",
     });
     const recovery: unknown = await recovered.json();
@@ -592,18 +592,18 @@ describe("preview agent API", () => {
     await expect(recoveredResponse.text()).resolves.toContain(
       "recovered preview"
     );
-    const history = await historyBody(await fetch(`${baseUrl}/__mdxr_history`));
+    const history = await historyBody(await fetch(`${baseUrl}/__doc_history`));
     expect(history.versions[0]).toMatchObject({ kind: "initial" });
   });
 
   it("validates and passes the requested theme for history previews", async () => {
     const baseUrl = await startServer();
-    const history = await historyBody(await fetch(`${baseUrl}/__mdxr_history`));
+    const history = await historyBody(await fetch(`${baseUrl}/__doc_history`));
 
     const themePreviews = await Promise.all(
       (["dark", "light"] as const).map(async (theme) => {
         const response = await fetch(
-          `${baseUrl}/__mdxr_history?view=preview&id=${history.latestId}&theme=${theme}`
+          `${baseUrl}/__doc_history?view=preview&id=${history.latestId}&theme=${theme}`
         );
         return {
           body: await response.text(),
@@ -646,7 +646,7 @@ describe("preview agent API", () => {
     ]);
 
     const defaultThemeResponse = await fetch(
-      `${baseUrl}/__mdxr_history?view=preview&id=${history.latestId}`
+      `${baseUrl}/__doc_history?view=preview&id=${history.latestId}`
     );
     expect(defaultThemeResponse.status).toBe(200);
     expect(vi.mocked(render)).toHaveBeenLastCalledWith("# Agent preview\n", {
@@ -658,7 +658,7 @@ describe("preview agent API", () => {
     });
 
     const invalidThemeResponse = await fetch(
-      `${baseUrl}/__mdxr_history?view=preview&id=${history.latestId}&theme=auto`
+      `${baseUrl}/__doc_history?view=preview&id=${history.latestId}&theme=auto`
     );
     expect({
       body: await invalidThemeResponse.text(),
@@ -673,7 +673,7 @@ describe("preview agent API", () => {
 
   it("records the pre-instruction MDX version before forwarding a message", async () => {
     const baseUrl = await startServer("codex");
-    const response = await fetch(`${baseUrl}/__mdxr_agent`, {
+    const response = await fetch(`${baseUrl}/__doc_agent`, {
       body: JSON.stringify({ message: "Revise this document" }),
       headers: { "content-type": "application/json" },
       method: "POST",
@@ -681,7 +681,7 @@ describe("preview agent API", () => {
     expect(response.status).toBe(200);
     expect(sendAgentMessage).toHaveBeenCalledOnce();
 
-    const historyResponse = await fetch(`${baseUrl}/__mdxr_history`);
+    const historyResponse = await fetch(`${baseUrl}/__doc_history`);
     const history = await historyBody(historyResponse);
     expect(history.versions).toMatchObject([
       { kind: "initial" },

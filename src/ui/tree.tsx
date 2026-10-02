@@ -259,7 +259,7 @@ export const Tree = defineComponent(
   },
   ({ root, open, children }) => (
     <div
-      className={`mdxr-tree not-prose my-6 overflow-x-auto rounded-lg border ${SUNKEN_CLS} px-4 py-3 font-mono text-sm ${BORDER_CLS}`}
+      className={`doc-tree not-prose my-6 overflow-x-auto rounded-lg border ${SUNKEN_CLS} px-4 py-3 font-mono text-sm ${BORDER_CLS}`}
     >
       {nonEmpty(root) ? (
         <div className="mb-1.5 flex items-center gap-1.5 font-semibold">

@@ -35,7 +35,7 @@ describe("workspace code rendering", () => {
 
     expect(visibleText(html)).toBe(text);
     expect(html).toContain(
-      'class="mdxr-workspace-syntax mdxr-workspace-diff-word"'
+      'class="doc-workspace-syntax doc-workspace-diff-word"'
     );
     expect(html).toContain('data-kind="add"');
     expect(html).toContain("--shiki-light:#404040");

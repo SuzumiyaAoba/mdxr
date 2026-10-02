@@ -164,14 +164,14 @@ export const Ranking = defineComponent(
                 className={`${DATA_BUTTON} flex-1 text-left`}
                 aria-label={`Drag ${display(original[index]?.label ?? original[index]?.name)}`}
                 onDragStart={(event) => {
-                  event.dataTransfer.setData("text/mdxr-rank", String(rank));
+                  event.dataTransfer.setData("text/doc-rank", String(rank));
                 }}
                 onDragOver={(event) => {
                   event.preventDefault();
                 }}
                 onDrop={(event) => {
                   event.preventDefault();
-                  const from = event.dataTransfer.getData("text/mdxr-rank");
+                  const from = event.dataTransfer.getData("text/doc-rank");
                   if (/^\d+$/u.test(from)) {
                     move(Number(from), rank);
                   }
@@ -509,7 +509,7 @@ export const AnswerSheet = defineComponent(
     const ref = useRef<HTMLDivElement>(null);
     const [importError, setImportError] = useState("");
     const questions = (): HTMLElement[] => [
-      ...(ref.current?.querySelectorAll<HTMLElement>("[data-mdxr-q]") ?? []),
+      ...(ref.current?.querySelectorAll<HTMLElement>("[data-doc-q]") ?? []),
     ];
     const importAnswers = async (file: File): Promise<void> => {
       try {
@@ -650,7 +650,7 @@ export const DocumentSearch = defineComponent(
         return;
       }
       const matches: SearchResult[] = [];
-      const root = document.querySelector("#mdxr-root") ?? document.body;
+      const root = document.querySelector("#doc-root") ?? document.body;
       for (const [index, element] of [
         ...root.querySelectorAll("h1,h2,h3,h4,h5,h6,p,pre,td"),
       ].entries()) {
@@ -662,7 +662,7 @@ export const DocumentSearch = defineComponent(
         if (found === -1) {
           continue;
         }
-        element.id ||= `mdxr-search-${index}`;
+        element.id ||= `doc-search-${index}`;
         matches.push({
           excerpt: content.slice(
             Math.max(0, found - 40),

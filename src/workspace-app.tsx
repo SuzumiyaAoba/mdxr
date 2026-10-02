@@ -62,8 +62,8 @@ const Workspace = ({ provider }: { provider?: "codex" | "claude" }) => {
   };
   return (
     <>
-      <header aria-label="Document tools" className="mdxr-workspace-controls">
-        <nav className="mdxr-workspace-tabs" aria-label="Document view">
+      <header aria-label="Document tools" className="doc-workspace-controls">
+        <nav className="doc-workspace-tabs" aria-label="Document view">
           {tabs.map(({ id, label, icon: Icon }) => (
             <button
               aria-label={label}
@@ -88,24 +88,24 @@ const Workspace = ({ provider }: { provider?: "codex" | "claude" }) => {
       {provider !== undefined && (
         <button
           aria-label={chatOpen ? "Close agent chat" : "Open agent chat"}
-          className="mdxr-workspace-agent"
+          className="doc-workspace-agent"
           data-active={chatOpen}
           aria-expanded={chatOpen}
-          aria-controls="mdxr-workspace-chat"
+          aria-controls="doc-workspace-chat"
           onClick={() => {
             setChatOpen((open) => !open);
           }}
           title={chatOpen ? "Close agent chat" : "Open agent chat"}
           type="button"
         >
-          <span className="mdxr-workspace-agent-icons" aria-hidden="true">
+          <span className="doc-workspace-agent-icons" aria-hidden="true">
             <MessageCircle
-              className="mdxr-workspace-agent-open"
+              className="doc-workspace-agent-open"
               size={18}
               strokeWidth={1.75}
             />
             <X
-              className="mdxr-workspace-agent-close"
+              className="doc-workspace-agent-close"
               size={18}
               strokeWidth={1.75}
             />
@@ -146,7 +146,7 @@ const Workspace = ({ provider }: { provider?: "codex" | "claude" }) => {
           onClose={() => {
             setChatOpen(false);
             document
-              .querySelector<HTMLButtonElement>(".mdxr-workspace-agent")
+              .querySelector<HTMLButtonElement>(".doc-workspace-agent")
               ?.focus();
           }}
           onSend={send}
@@ -156,7 +156,7 @@ const Workspace = ({ provider }: { provider?: "codex" | "claude" }) => {
   );
 };
 
-const root = document.querySelector<HTMLElement>("#mdxr-workspace-root");
+const root = document.querySelector<HTMLElement>("#doc-workspace-root");
 if (root !== null) {
   const provider = root.dataset.agentProvider;
   createRoot(root).render(

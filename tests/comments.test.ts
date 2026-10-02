@@ -165,7 +165,7 @@ describe("Comments", () => {
 
   it("carries the comment's <Comment> attributes on the card for export", async () => {
     const { body } = await render(CODE_DOC);
-    expect(body).toContain('data-mdxr-comment=""');
+    expect(body).toContain('data-doc-comment=""');
     expect(body).toContain('data-comment-lines="2"');
     expect(body).toContain('data-comment-author="@devin"');
     expect(body).toContain('data-comment-severity="medium"');

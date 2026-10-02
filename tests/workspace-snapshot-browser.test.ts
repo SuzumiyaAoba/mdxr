@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 declare global {
   interface Window {
-    mdxrWorkspaceSnapshot?: {
+    docWorkspaceSnapshot?: {
       captureWorkspaceDocument: () => Promise<string>;
     };
   }
@@ -17,7 +17,7 @@ const ORIGIN = "http://snapshot.test";
 const SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><view id="icon" viewBox="0 0 10 10"/><g id="pattern"><rect width="10" height="10" fill="#0f766e"/></g></svg>`;
 const NESTED_DOCUMENT = `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="/frame.css"><style>.inline-icon{background-image:url('/frame.svg#pattern')}</style></head><body><p>Nested iframe body is visible.</p><img id="nested-icon" alt="Nested SVG icon" src="/sprite.svg#icon"><div class="inline-icon">Inline style</div><script>window.__snapshotScriptRan=true</script></body></html>`;
 
-const FIXTURE_HTML = `<!doctype html><html lang="en"><head><meta charset="utf-8"></head><body><main id="mdxr-root"><h1>Snapshot fixture</h1><img id="main-icon" alt="Main SVG icon" src="/sprite.svg#icon"><iframe title="Nested snapshot" sandbox="allow-scripts"></iframe><textarea id="draft"></textarea><input id="upload" type="file" value=""></main></body></html>`;
+const FIXTURE_HTML = `<!doctype html><html lang="en"><head><meta charset="utf-8"></head><body><main id="doc-root"><h1>Snapshot fixture</h1><img id="main-icon" alt="Main SVG icon" src="/sprite.svg#icon"><iframe title="Nested snapshot" sandbox="allow-scripts"></iframe><textarea id="draft"></textarea><input id="upload" type="file" value=""></main></body></html>`;
 
 const openSnapshotPage = async (
   browser: Browser,
@@ -70,7 +70,7 @@ const openSnapshotPage = async (
 
 const captureSnapshot = async (page: Page): Promise<string> => {
   const snapshotHtml = await page.evaluate(async () => {
-    const snapshot = window.mdxrWorkspaceSnapshot;
+    const snapshot = window.docWorkspaceSnapshot;
     if (snapshot === undefined) {
       throw new Error("Snapshot bundle is unavailable");
     }
@@ -91,7 +91,7 @@ describe("workspace document snapshot browser behavior", () => {
         path.join(process.cwd(), "src/client/workspace-snapshot.ts"),
       ],
       format: "iife",
-      globalName: "mdxrWorkspaceSnapshot",
+      globalName: "docWorkspaceSnapshot",
       platform: "browser",
       target: "es2022",
       write: false,
@@ -208,7 +208,7 @@ describe("workspace document snapshot browser behavior", () => {
     const page = await openSnapshotPage(browser, bundle, true);
     try {
       const errorMessage = await page.evaluate(async () => {
-        const snapshot = window.mdxrWorkspaceSnapshot;
+        const snapshot = window.docWorkspaceSnapshot;
         if (snapshot === undefined) {
           throw new Error("Snapshot bundle is unavailable");
         }

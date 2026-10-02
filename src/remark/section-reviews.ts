@@ -31,7 +31,7 @@ const sectionRevision = (
 export const remarkSectionReviews = () => (tree: Node) => {
   const definitions = referenceDefinitions(tree);
   visit(tree, "mdxJsxFlowElement", (node: Node) => {
-    if (!isFlowElement(node) || jsxAttr(node, "data-mdxr-page") === undefined) {
+    if (!isFlowElement(node) || jsxAttr(node, "data-doc-page") === undefined) {
       return;
     }
     const [heading] = node.children ?? [];
@@ -51,16 +51,16 @@ export const remarkSectionReviews = () => (tree: Node) => {
       attributes: jsxAttrs({
         "data-section-id": properties.id,
         "data-section-revision": sectionRevision(node.children, definitions),
-        "data-section-title": jsxAttr(node, "data-mdxr-page-title"),
+        "data-section-title": jsxAttr(node, "data-doc-page-title"),
       }),
       children: [],
-      name: "mdxr-section-review",
+      name: "doc-section-review",
       type: "mdxJsxFlowElement",
     };
     // The empty host belongs to React; the browser owns its shadow tree.
     // This also works for plain Markdown and --no-hydrate output.
     const headingRow = {
-      attributes: jsxAttrs({ className: "mdxr-section-heading" }),
+      attributes: jsxAttrs({ className: "doc-section-heading" }),
       children: [heading, control],
       name: "div",
       type: "mdxJsxFlowElement",

@@ -2,8 +2,11 @@ import { parseAnnotationStore } from "./annotations.js";
 import type { AnnotationStore } from "./annotations.js";
 import { isRecord } from "./guards.js";
 
+// Accept previously downloaded review files without branding new bundles.
+const LEGACY_REVIEW_FORMAT = ["md", "xr-review"].join("");
+
 export interface ReviewTransfer {
-  format: "mdxr-review";
+  format: "doc-review";
   version: 1;
   document: { id: string; file: string; revision: string; title: string };
   exportedAt: string;
@@ -31,7 +34,7 @@ export const parseReviewTransfer = (raw: string): ReviewTransfer => {
   const value: unknown = JSON.parse(raw);
   if (
     !isRecord(value) ||
-    value.format !== "mdxr-review" ||
+    (value.format !== "doc-review" && value.format !== LEGACY_REVIEW_FORMAT) ||
     value.version !== 1 ||
     !isReviewDocument(value.document) ||
     typeof value.exportedAt !== "string" ||
@@ -53,7 +56,7 @@ export const parseReviewTransfer = (raw: string): ReviewTransfer => {
     annotations,
     document: value.document,
     exportedAt: value.exportedAt,
-    format: "mdxr-review",
+    format: "doc-review",
     sections,
     version: 1,
   };
@@ -88,10 +91,10 @@ export const mergeReviews = (
   return { added, conflicts, store: { annotations, history } };
 };
 
-export const REVIEW_IMPORT_EVENT = "mdxr:import-review" as const;
+export const REVIEW_IMPORT_EVENT = "doc:import-review" as const;
 declare global {
   interface DocumentEventMap {
-    "mdxr:import-review": CustomEvent<{
+    "doc:import-review": CustomEvent<{
       annotations: AnnotationStore;
       sections: ReviewTransfer["sections"];
       errors: string[];

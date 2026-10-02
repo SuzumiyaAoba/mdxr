@@ -23,7 +23,7 @@ describe("graph viewport", () => {
         viewport: { height: 900, width: 900 },
       });
       await page.setContent(await render(GRAPH, { hydrate: false }));
-      const image = page.locator(".mdxr-graph-image");
+      const image = page.locator(".doc-graph-image");
       const intrinsic = Number(await image.getAttribute("width"));
       const fitted = await image.boundingBox();
       expect(fitted?.width).toBeLessThan(intrinsic);
@@ -52,7 +52,7 @@ describe("graph viewport", () => {
         viewport: { height: 844, width: 390 },
       });
       await page.setContent(await render(GRAPH, { hydrate: false }));
-      const image = page.locator(".mdxr-graph-image");
+      const image = page.locator(".doc-graph-image");
       const intrinsic = Number(await image.getAttribute("width"));
       const mobile = await image.boundingBox();
       expect(mobile?.width).toBeGreaterThanOrEqual(intrinsic * 0.5);
@@ -65,12 +65,10 @@ describe("graph viewport", () => {
       await expect(control.isVisible()).resolves.toBeFalsy();
       const printed = await image.boundingBox();
       expect(printed?.width).toBeLessThan(390);
-      const bounds = await page
-        .locator(".mdxr-graph-scroll")
-        .evaluate((el) => ({
-          content: el.scrollWidth,
-          viewport: el.clientWidth,
-        }));
+      const bounds = await page.locator(".doc-graph-scroll").evaluate((el) => ({
+        content: el.scrollWidth,
+        viewport: el.clientWidth,
+      }));
       expect(bounds.content).toBeLessThanOrEqual(bounds.viewport + 1);
     } finally {
       await browser.close();

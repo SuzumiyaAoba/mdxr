@@ -92,13 +92,13 @@ interface LibraryThemeSnapshot {
 const readLibraryTheme = async (page: Page): Promise<LibraryThemeSnapshot> => {
   const snapshot = await page.evaluate(() => {
     const button = document.querySelector<HTMLButtonElement>(
-      "button[data-mdxr-theme]"
+      "button[data-doc-theme]"
     );
     const { body } = document;
     let localStorageAvailable = true;
     let storedTheme: string | null = null;
     try {
-      storedTheme = window.localStorage.getItem("mdxr-theme");
+      storedTheme = window.localStorage.getItem("doc-theme");
     } catch {
       localStorageAvailable = false;
     }
@@ -173,14 +173,14 @@ const openLibraryPage = async (
     });
   } else if (options.initialTheme !== undefined) {
     await page.addInitScript((theme) => {
-      window.localStorage.setItem("mdxr-theme", theme);
+      window.localStorage.setItem("doc-theme", theme);
     }, options.initialTheme);
   }
   const requests: SearchRequest[] = [];
   const deleteRequests: DeleteRequest[] = [];
   await page.context().route(`${ORIGIN}/**`, async (route) => {
     const url = new URL(route.request().url());
-    if (url.pathname === "/__mdxr_library/search") {
+    if (url.pathname === "/__doc_library/search") {
       const request = {
         q: url.searchParams.get("q") ?? "",
         sort: url.searchParams.get("sort") ?? "",
@@ -195,13 +195,13 @@ const openLibraryPage = async (
       });
       return;
     }
-    if (url.pathname.startsWith("/__mdxr_library/document/")) {
+    if (url.pathname.startsWith("/__doc_library/document/")) {
       const id = decodeURIComponent(
-        url.pathname.slice("/__mdxr_library/document/".length)
+        url.pathname.slice("/__doc_library/document/".length)
       );
       const requestHeaders = route.request().headers();
       deleteRequests.push({
-        action: requestHeaders["x-mdxr-library-action"],
+        action: requestHeaders["x-doc-library-action"],
         id,
         method: route.request().method(),
         url: route.request().url(),
@@ -214,14 +214,14 @@ const openLibraryPage = async (
       });
       return;
     }
-    if (url.pathname === "/__mdxr_library.js") {
+    if (url.pathname === "/__doc_library.js") {
       await route.fulfill({
         body: bundle,
         contentType: "text/javascript; charset=utf-8",
       });
       return;
     }
-    if (url.pathname.startsWith("/__mdxr_library/open/")) {
+    if (url.pathname.startsWith("/__doc_library/open/")) {
       await route.fulfill({
         body: "<!doctype html><html><body><h1>Opened document</h1></body></html>",
         contentType: "text/html",
@@ -235,7 +235,7 @@ const openLibraryPage = async (
     });
   });
   await page.goto(ORIGIN);
-  await page.locator("#mdxr-library-root").waitFor({ state: "attached" });
+  await page.locator("#doc-library-root").waitFor({ state: "attached" });
   return { deleteRequests, page, requests };
 };
 
@@ -280,7 +280,7 @@ describe("document library browser UI", () => {
       await japaneseMain.waitFor({ state: "visible" });
       expect({
         deleteLabel: await page
-          .locator(".mdxr-library__card")
+          .locator(".doc-library__card")
           .getByRole("button", {
             exact: true,
             name: `${DOCUMENT_TITLE}を削除`,
@@ -290,16 +290,16 @@ describe("document library browser UI", () => {
         documentTitle: await page.title(),
         mainLandmarkCount: await japaneseMain.count(),
         themeLabel: await page
-          .locator("button[data-mdxr-theme]")
+          .locator("button[data-doc-theme]")
           .getAttribute("aria-label"),
         titleHeadingCount: await japaneseHeading.count(),
         translatedStatus: await page
-          .locator('.mdxr-library__status[data-status="doing"]')
+          .locator('.doc-library__status[data-status="doing"]')
           .isVisible(),
       }).toStrictEqual({
         deleteLabel: `${DOCUMENT_TITLE}を削除`,
         documentLanguage: "ja",
-        documentTitle: "mdxr · 文書ライブラリ",
+        documentTitle: "文書ライブラリ",
         mainLandmarkCount: 1,
         themeLabel: "テーマを切り替え（現在：自動）",
         titleHeadingCount: 0,
@@ -314,7 +314,7 @@ describe("document library browser UI", () => {
       await page.waitForFunction(() => document.documentElement.lang === "en");
       expect({
         deleteLabel: await page
-          .locator(".mdxr-library__card")
+          .locator(".doc-library__card")
           .getByRole("button", {
             exact: true,
             name: `Delete ${DOCUMENT_TITLE}`,
@@ -325,16 +325,16 @@ describe("document library browser UI", () => {
         doingOptionCount: await page.locator('option[value="doing"]').count(),
         mainLandmarkCount: await englishMain.count(),
         storedLanguage: await page.evaluate(() =>
-          localStorage.getItem("mdxr:library:language")
+          localStorage.getItem("doc:library:language")
         ),
         themeLabel: await page
-          .locator("button[data-mdxr-theme]")
+          .locator("button[data-doc-theme]")
           .getAttribute("aria-label"),
         titleHeadingCount: await page.locator("h1").count(),
       }).toStrictEqual({
         deleteLabel: `Delete ${DOCUMENT_TITLE}`,
         documentLanguage: "en",
-        documentTitle: "mdxr · Document library",
+        documentTitle: "Document library",
         doingOptionCount: 1,
         mainLandmarkCount: 1,
         storedLanguage: "en",
@@ -358,7 +358,7 @@ describe("document library browser UI", () => {
       initialTheme: "dark",
     });
     try {
-      const themeButton = page.locator("button[data-mdxr-theme]");
+      const themeButton = page.locator("button[data-doc-theme]");
       await page.getByRole("main", { name: "文書ライブラリ" }).waitFor();
       await themeButton.waitFor({ state: "visible" });
 
@@ -368,7 +368,7 @@ describe("document library browser UI", () => {
       await page.getByRole("main", { name: "文書ライブラリ" }).waitFor();
       await page.waitForFunction(
         () =>
-          document.querySelector<HTMLButtonElement>("button[data-mdxr-theme]")
+          document.querySelector<HTMLButtonElement>("button[data-doc-theme]")
             ?.dataset.mode === "dark"
       );
       const restoredDark = await readLibraryTheme(page);
@@ -392,7 +392,7 @@ describe("document library browser UI", () => {
       await themeButton.click();
       await page.waitForFunction(
         () =>
-          document.querySelector<HTMLButtonElement>("button[data-mdxr-theme]")
+          document.querySelector<HTMLButtonElement>("button[data-doc-theme]")
             ?.dataset.mode === "auto" &&
           !document.documentElement.classList.contains("dark")
       );
@@ -440,7 +440,7 @@ describe("document library browser UI", () => {
       await themeButton.click();
       await page.waitForFunction(
         () =>
-          document.querySelector<HTMLButtonElement>("button[data-mdxr-theme]")
+          document.querySelector<HTMLButtonElement>("button[data-doc-theme]")
             ?.dataset.mode === "light"
       );
       const explicitLight = await readLibraryTheme(page);
@@ -450,7 +450,7 @@ describe("document library browser UI", () => {
       await themeButton.click();
       await page.waitForFunction(
         () =>
-          document.querySelector<HTMLButtonElement>("button[data-mdxr-theme]")
+          document.querySelector<HTMLButtonElement>("button[data-doc-theme]")
             ?.dataset.mode === "dark" &&
           document.documentElement.classList.contains("dark")
       );
@@ -459,7 +459,7 @@ describe("document library browser UI", () => {
       await page.getByRole("main", { name: "文書ライブラリ" }).waitFor();
       await page.waitForFunction(
         () =>
-          document.querySelector<HTMLButtonElement>("button[data-mdxr-theme]")
+          document.querySelector<HTMLButtonElement>("button[data-doc-theme]")
             ?.dataset.mode === "dark"
       );
       const darkAfterReload = await readLibraryTheme(page);
@@ -508,20 +508,20 @@ describe("document library browser UI", () => {
       pageErrors.push(error.message);
     });
     try {
-      const themeButton = page.locator("button[data-mdxr-theme]");
+      const themeButton = page.locator("button[data-doc-theme]");
       await page.getByRole("main", { name: "文書ライブラリ" }).waitFor();
       await themeButton.waitFor({ state: "visible" });
 
       await themeButton.click();
       await page.waitForFunction(
         () =>
-          document.querySelector<HTMLButtonElement>("button[data-mdxr-theme]")
+          document.querySelector<HTMLButtonElement>("button[data-doc-theme]")
             ?.dataset.mode === "light"
       );
       await themeButton.click();
       await page.waitForFunction(
         () =>
-          document.querySelector<HTMLButtonElement>("button[data-mdxr-theme]")
+          document.querySelector<HTMLButtonElement>("button[data-doc-theme]")
             ?.dataset.mode === "dark" &&
           document.documentElement.classList.contains("dark")
       );
@@ -549,7 +549,7 @@ describe("document library browser UI", () => {
       const completedSearch = page.waitForRequest((request) => {
         const url = new URL(request.url());
         return (
-          url.pathname === "/__mdxr_library/search" &&
+          url.pathname === "/__doc_library/search" &&
           url.searchParams.get("q") === "認証計画"
         );
       });
@@ -609,7 +609,7 @@ describe("document library browser UI", () => {
         excerpt: await marks.nth(1).textContent(),
         title: await marks.first().textContent(),
         unsafeElements: await page
-          .locator(".mdxr-library__card h2 script")
+          .locator(".doc-library__card h2 script")
           .count(),
       }).toStrictEqual({
         count: 2,
@@ -625,7 +625,7 @@ describe("document library browser UI", () => {
         rel: await link.getAttribute("rel"),
         target: await link.getAttribute("target"),
       }).toStrictEqual({
-        href: `/__mdxr_library/open/${encodedId}`,
+        href: `/__doc_library/open/${encodedId}`,
         rel: "noopener noreferrer",
         target: "_blank",
       });
@@ -647,7 +647,7 @@ describe("document library browser UI", () => {
     const { page, deleteRequests } = await openLibraryPage(browser, bundle);
     try {
       const deleteLabel = `${DOCUMENT_TITLE}を削除`;
-      const row = page.locator(".mdxr-library__card");
+      const row = page.locator(".doc-library__card");
       const deleteButton = row.getByRole("button", {
         exact: true,
         name: deleteLabel,
@@ -716,7 +716,7 @@ describe("document library browser UI", () => {
     );
     try {
       await page.getByRole("link", { name: /Auth plan/u }).waitFor();
-      const row = page.locator(".mdxr-library__card");
+      const row = page.locator(".doc-library__card");
       await row
         .getByRole("button", {
           exact: true,
@@ -756,7 +756,7 @@ describe("document library browser UI", () => {
           action: "delete",
           id: DOCUMENT_ID,
           method: "DELETE",
-          path: `/__mdxr_library/document/${encodeURIComponent(DOCUMENT_ID)}`,
+          path: `/__doc_library/document/${encodeURIComponent(DOCUMENT_ID)}`,
         },
         requestCount: 1,
         retainedDocumentVisible: true,
@@ -786,7 +786,7 @@ describe("document library browser UI", () => {
     );
     try {
       await page.getByRole("link", { name: /Auth plan/u }).waitFor();
-      const row = page.locator(".mdxr-library__card");
+      const row = page.locator(".doc-library__card");
       await row
         .getByRole("button", {
           exact: true,
@@ -861,7 +861,7 @@ describe("document library browser UI", () => {
       const filteredSearch = page.waitForRequest((request) => {
         const url = new URL(request.url());
         return (
-          url.pathname === "/__mdxr_library/search" &&
+          url.pathname === "/__doc_library/search" &&
           url.searchParams.get("status") === "done" &&
           url.searchParams.get("sort") === "title"
         );
@@ -875,14 +875,14 @@ describe("document library browser UI", () => {
         status: new URL(request.url()).searchParams.get("status"),
       }).toStrictEqual({ q: "", sort: "title", status: "done" });
       await page
-        .locator(".mdxr-library__empty")
+        .locator(".doc-library__empty")
         .filter({ hasText: "条件に一致する文書がありません。" })
         .waitFor({ state: "visible" });
 
       const allSearch = page.waitForRequest((candidateRequest) => {
         const url = new URL(candidateRequest.url());
         return (
-          url.pathname === "/__mdxr_library/search" &&
+          url.pathname === "/__doc_library/search" &&
           url.searchParams.get("status") === null &&
           url.searchParams.get("sort") === "relevance"
         );
@@ -907,7 +907,7 @@ describe("document library browser UI", () => {
           'main[aria-label="文書ライブラリ"]'
         );
         const controls = document.querySelector<HTMLElement>(
-          ".mdxr-library__controls"
+          ".doc-library__controls"
         );
         const controlsBounds = controls?.getBoundingClientRect();
         return {
@@ -921,10 +921,10 @@ describe("document library browser UI", () => {
             : "missing",
           controlsWidth: controlsBounds?.width ?? 0,
           floatingButtonCount: controls?.querySelectorAll("button").length ?? 0,
-          headingCount: document.querySelectorAll("#mdxr-library-root h1")
+          headingCount: document.querySelectorAll("#doc-library-root h1")
             .length,
           mainLabel: main?.getAttribute("aria-label") ?? null,
-          topBarCount: document.querySelectorAll("#mdxr-library-root header")
+          topBarCount: document.querySelectorAll("#doc-library-root header")
             .length,
         };
       });
@@ -940,14 +940,14 @@ describe("document library browser UI", () => {
 
       await page.setViewportSize({ height: 844, width: 390 });
       const layout = await page.evaluate(() => {
-        const root = document.querySelector<HTMLElement>("#mdxr-library-root");
-        const list = document.querySelector<HTMLElement>(".mdxr-library__list");
-        const card = document.querySelector<HTMLElement>(".mdxr-library__card");
+        const root = document.querySelector<HTMLElement>("#doc-library-root");
+        const list = document.querySelector<HTMLElement>(".doc-library__list");
+        const card = document.querySelector<HTMLElement>(".doc-library__card");
         const controls = document.querySelector<HTMLElement>(
-          ".mdxr-library__controls"
+          ".doc-library__controls"
         );
         const search = document.querySelector<HTMLElement>(
-          ".mdxr-library__search-field"
+          ".doc-library__search-field"
         );
         const rootBounds = root?.getBoundingClientRect();
         const cardBounds = card?.getBoundingClientRect();

@@ -97,10 +97,10 @@ const VERSIONS = [
 ] as const;
 
 const TOOL_SELECTORS = [
-  ".mdxr-view-controls",
-  ".mdxr-workspace-tabs",
-  ".mdxr-theme",
-  ".mdxr-annotation-toggle",
+  ".doc-view-controls",
+  ".doc-workspace-tabs",
+  ".doc-theme",
+  ".doc-annotation-toggle",
 ] as const;
 
 const responseJson = (body: unknown): string => JSON.stringify(body);
@@ -124,14 +124,14 @@ const openWorkspacePage = async (
   await page.route("http://mdxr.test/**", async (route) => {
     const request = route.request();
     const url = new URL(request.url());
-    if (url.pathname === "/__mdxr_workspace.js") {
+    if (url.pathname === "/__doc_workspace.js") {
       await route.fulfill({
         body: workspaceScript,
         contentType: "text/javascript",
       });
       return;
     }
-    if (url.pathname === "/__mdxr_events") {
+    if (url.pathname === "/__doc_events") {
       await route.fulfill({
         body: "retry: 60000\nevent: agent\ndata: {}\n\n",
         headers: {
@@ -141,7 +141,7 @@ const openWorkspacePage = async (
       });
       return;
     }
-    if (url.pathname === "/__mdxr_agent") {
+    if (url.pathname === "/__doc_agent") {
       let message = "";
       if (request.method() === "POST") {
         const body: unknown = request.postDataJSON();
@@ -182,7 +182,7 @@ const openWorkspacePage = async (
       });
       return;
     }
-    if (url.pathname === "/__mdxr_history") {
+    if (url.pathname === "/__doc_history") {
       const view = url.searchParams.get("view");
       if (view === "source") {
         const id = url.searchParams.get("id");
@@ -215,7 +215,7 @@ const openWorkspacePage = async (
         const isDark = url.searchParams.get("theme") === "dark";
         const theme = isDark ? "dark" : "light";
         await route.fulfill({
-          body: `<!doctype html><html${isDark ? ' class="dark"' : ""} style="color-scheme: ${theme}"><head><style>html.dark { background-color: rgb(12, 34, 56); } html:not(.dark) { background-color: rgb(230, 240, 250); }</style></head><body><main>Historical version ${url.searchParams.get("id")}</main><script>window.__mdxrHistoricalPreviewScriptRan = true;</script></body></html>`,
+          body: `<!doctype html><html${isDark ? ' class="dark"' : ""} style="color-scheme: ${theme}"><head><style>html.dark { background-color: rgb(12, 34, 56); } html:not(.dark) { background-color: rgb(230, 240, 250); }</style></head><body><main>Historical version ${url.searchParams.get("id")}</main><script>window.__docHistoricalPreviewScriptRan = true;</script></body></html>`,
           contentType: "text/html",
         });
         return;
@@ -229,8 +229,8 @@ const openWorkspacePage = async (
     await route.fulfill({ body: content, contentType: "text/html" });
   });
   await page.goto("http://mdxr.test/review");
-  await page.locator(".mdxr-workspace-tabs").waitFor({ state: "visible" });
-  await page.locator(".mdxr-view-controls").waitFor({ state: "visible" });
+  await page.locator(".doc-workspace-tabs").waitFor({ state: "visible" });
+  await page.locator(".doc-view-controls").waitFor({ state: "visible" });
   return page;
 };
 
@@ -243,7 +243,7 @@ const observeChatStyleAttribute = async (
       // MutationObserver exposes callbacks, so bridge its result to Playwright.
       // oxlint-disable-next-line promise/avoid-new
       await new Promise<boolean>((resolve) => {
-        const panelSelector = "[data-mdxr-agent-panel]";
+        const panelSelector = "[data-doc-agent-panel]";
         const observation: {
           observer?: MutationObserver;
           timeoutId?: number;
@@ -315,7 +315,7 @@ const readToolRects = async (page: Page) =>
 const readSourceSyntaxState = async (page: Page) =>
   await page.evaluate(() => {
     const rows = [
-      ...document.querySelectorAll<HTMLElement>(".mdxr-workspace-code-row"),
+      ...document.querySelectorAll<HTMLElement>(".doc-workspace-code-row"),
     ];
     const jsxRow = rows.find((row) =>
       row.textContent?.includes(
@@ -326,7 +326,7 @@ const readSourceSyntaxState = async (page: Page) =>
       row.textContent?.includes('const reviewState = "after";')
     );
     const codeTokens = [
-      ...(codeRow?.querySelectorAll<HTMLElement>(".mdxr-workspace-syntax") ??
+      ...(codeRow?.querySelectorAll<HTMLElement>(".doc-workspace-syntax") ??
         []),
     ];
     const dualThemeToken = codeTokens.find(
@@ -344,7 +344,7 @@ const readSourceSyntaxState = async (page: Page) =>
       codeSyntaxCount: codeTokens.length,
       hasDualThemeToken: dualThemeToken !== undefined,
       jsxSyntaxCount:
-        jsxRow?.querySelectorAll(".mdxr-workspace-syntax").length ?? 0,
+        jsxRow?.querySelectorAll(".doc-workspace-syntax").length ?? 0,
     };
   });
 
@@ -384,7 +384,7 @@ describe("agent workspace browser UI", () => {
         const centers = rects.map(({ top, height }) => top + height / 2);
         const spread = Math.max(...centers) - Math.min(...centers);
         const headerBorderBottomWidth = await page
-          .locator(".mdxr-workspace-controls")
+          .locator(".doc-workspace-controls")
           .evaluate((element) => getComputedStyle(element).borderBottomWidth);
         expect({
           aligned: spread <= 1,
@@ -466,21 +466,21 @@ describe("agent workspace browser UI", () => {
       await secondSection.click();
 
       await page.getByRole("button", { exact: true, name: "Diff" }).click();
-      await page.locator(".mdxr-workspace-diff-view").waitFor({
+      await page.locator(".doc-workspace-diff-view").waitFor({
         state: "visible",
       });
-      const sidebarHiddenInDiff = await page.locator(".mdxr-pages").isHidden();
+      const sidebarHiddenInDiff = await page.locator(".doc-pages").isHidden();
 
       await page.getByRole("button", { exact: true, name: "Preview" }).click();
       const restoredPages = await page.evaluate(() => ({
         selectedSection: document
           .querySelector<HTMLElement>(
-            '.mdxr-pages [role="tab"][aria-selected="true"]'
+            '.doc-pages [role="tab"][aria-selected="true"]'
           )
           ?.textContent?.trim(),
         sidebarVisible:
-          document.querySelector<HTMLElement>(".mdxr-pages")?.hidden === false,
-        view: document.body.dataset.mdxrView,
+          document.querySelector<HTMLElement>(".doc-pages")?.hidden === false,
+        view: document.body.dataset.docView,
       }));
       expect({
         restoredPages,
@@ -510,7 +510,7 @@ describe("agent workspace browser UI", () => {
     );
     const page = await openWorkspacePage(browser, noPagesHtml, workspaceScript);
     try {
-      const controls = page.locator(".mdxr-view-controls");
+      const controls = page.locator(".doc-view-controls");
       await controls.waitFor({ state: "visible" });
       const pagesButton = controls.getByRole("button", {
         exact: true,
@@ -539,25 +539,25 @@ describe("agent workspace browser UI", () => {
     const page = await openWorkspacePage(browser, html, workspaceScript);
     try {
       await page.getByRole("button", { exact: true, name: "Diff" }).click();
-      const diff = page.locator(".mdxr-workspace-diff-view");
+      const diff = page.locator(".doc-workspace-diff-view");
       await diff.waitFor({ state: "visible" });
       const initialDiff = await page.evaluate(() => {
         const table = document.querySelector<HTMLElement>(
-          ".mdxr-workspace-diff-view"
+          ".doc-workspace-diff-view"
         );
         return {
           addedWords: document.querySelectorAll(
-            '.mdxr-workspace-diff-word[data-kind="add"]'
+            '.doc-workspace-diff-word[data-kind="add"]'
           ).length,
           headers: Array.from(
             document.querySelectorAll(
-              '.mdxr-workspace-diff-view[data-layout="split"] thead th'
+              '.doc-workspace-diff-view[data-layout="split"] thead th'
             ),
             (header) => header.textContent?.trim()
           ),
           layout: table?.dataset.layout,
           removedWords: document.querySelectorAll(
-            '.mdxr-workspace-diff-word[data-kind="remove"]'
+            '.doc-workspace-diff-word[data-kind="remove"]'
           ).length,
           wordDiff: table?.dataset.wordDiff,
         };
@@ -585,13 +585,13 @@ describe("agent workspace browser UI", () => {
         fullPage: true,
         path: ".mdxr/workspace-diff-390.png",
       });
-      const mobileDiff = page.locator(".mdxr-workspace-diff-view");
+      const mobileDiff = page.locator(".doc-workspace-diff-view");
       await mobileDiff.evaluate((element) => {
         element.scrollLeft = element.scrollWidth;
       });
       const mobileScroll = await page.evaluate(() => {
         const container = document.querySelector<HTMLElement>(
-          ".mdxr-workspace-diff-view"
+          ".doc-workspace-diff-view"
         );
         const afterHeader = container?.querySelector<HTMLElement>(
           'thead th[data-side="new"]'
@@ -628,7 +628,7 @@ describe("agent workspace browser UI", () => {
         tableReachedEnd: true,
       });
 
-      const theme = page.locator(".mdxr-theme");
+      const theme = page.locator(".doc-theme");
       await theme.click();
       await theme.click();
       const darkMode = await theme.getAttribute("data-mode");
@@ -642,18 +642,16 @@ describe("agent workspace browser UI", () => {
       await wordDiff.uncheck();
       const wordDiffOff = await page.evaluate(() => {
         const table = document.querySelector<HTMLElement>(
-          ".mdxr-workspace-diff-view"
+          ".doc-workspace-diff-view"
         );
         return {
           layout: table?.dataset.layout,
-          marks: document.querySelectorAll(".mdxr-workspace-diff-word").length,
+          marks: document.querySelectorAll(".doc-workspace-diff-word").length,
           wordDiff: table?.dataset.wordDiff,
         };
       });
       await wordDiff.check();
-      const wordDiffOn = await page
-        .locator(".mdxr-workspace-diff-word")
-        .count();
+      const wordDiffOn = await page.locator(".doc-workspace-diff-word").count();
       const hasWordDiffOn = wordDiffOn > 0;
       expect({ darkMode, hasWordDiffOn, wordDiffOff }).toStrictEqual({
         darkMode: "dark",
@@ -669,18 +667,18 @@ describe("agent workspace browser UI", () => {
     const page = await openWorkspacePage(browser, html, workspaceScript);
     try {
       await page.getByRole("button", { exact: true, name: "MDX" }).click();
-      await page.locator(".mdxr-workspace-code").waitFor({ state: "visible" });
+      await page.locator(".doc-workspace-code").waitFor({ state: "visible" });
       await page
-        .locator('.mdxr-workspace-code-row:has-text("const reviewState")')
+        .locator('.doc-workspace-code-row:has-text("const reviewState")')
         .waitFor({ state: "visible" });
       const sourceLight = await readSourceSyntaxState(page);
 
-      const theme = page.locator(".mdxr-theme");
+      const theme = page.locator(".doc-theme");
       await theme.click();
       await theme.click();
       await page.waitForFunction(
         () =>
-          document.querySelector<HTMLElement>(".mdxr-theme")?.dataset.mode ===
+          document.querySelector<HTMLElement>(".doc-theme")?.dataset.mode ===
           "dark"
       );
       const sourceDark = await readSourceSyntaxState(page);
@@ -689,25 +687,25 @@ describe("agent workspace browser UI", () => {
       await theme.click();
       await page.waitForFunction(
         () =>
-          document.querySelector<HTMLElement>(".mdxr-theme")?.dataset.mode ===
+          document.querySelector<HTMLElement>(".doc-theme")?.dataset.mode ===
           "light"
       );
 
       await page.getByRole("button", { exact: true, name: "Diff" }).click();
       await page
-        .locator('.mdxr-workspace-diff-view[data-layout="split"]')
+        .locator('.doc-workspace-diff-view[data-layout="split"]')
         .waitFor({ state: "visible" });
       const splitState = await page.evaluate(() => {
         const oldCode = [
           ...document.querySelectorAll<HTMLElement>(
-            '.mdxr-workspace-diff-cell[data-side="old"][data-kind="remove"]'
+            '.doc-workspace-diff-cell[data-side="old"][data-kind="remove"]'
           ),
         ].find((cell) =>
           cell.textContent?.includes('const reviewState = "before";')
         );
         const newCode = [
           ...document.querySelectorAll<HTMLElement>(
-            '.mdxr-workspace-diff-cell[data-side="new"][data-kind="add"]'
+            '.doc-workspace-diff-cell[data-side="new"][data-kind="add"]'
           ),
         ].find((cell) =>
           cell.textContent?.includes('const reviewState = "after";')
@@ -715,16 +713,16 @@ describe("agent workspace browser UI", () => {
         return {
           afterHasSyntaxAndWordDiff: Boolean(
             newCode?.querySelector(
-              ".mdxr-workspace-syntax.mdxr-workspace-diff-word"
+              ".doc-workspace-syntax.doc-workspace-diff-word"
             )
           ),
           beforeHasSyntaxAndWordDiff: Boolean(
             oldCode?.querySelector(
-              ".mdxr-workspace-syntax.mdxr-workspace-diff-word"
+              ".doc-workspace-syntax.doc-workspace-diff-word"
             )
           ),
           layout: document.querySelector<HTMLElement>(
-            ".mdxr-workspace-diff-view"
+            ".doc-workspace-diff-view"
           )?.dataset.layout,
         };
       });
@@ -733,14 +731,14 @@ describe("agent workspace browser UI", () => {
       const unifiedState = await page.evaluate(() => {
         const oldCode = [
           ...document.querySelectorAll<HTMLElement>(
-            '.mdxr-workspace-diff-text[data-kind="remove"]'
+            '.doc-workspace-diff-text[data-kind="remove"]'
           ),
         ].find((line) =>
           line.textContent?.includes('const reviewState = "before";')
         );
         const newCode = [
           ...document.querySelectorAll<HTMLElement>(
-            '.mdxr-workspace-diff-text[data-kind="add"]'
+            '.doc-workspace-diff-text[data-kind="add"]'
           ),
         ].find((line) =>
           line.textContent?.includes('const reviewState = "after";')
@@ -748,16 +746,16 @@ describe("agent workspace browser UI", () => {
         return {
           afterHasSyntaxAndWordDiff: Boolean(
             newCode?.querySelector(
-              ".mdxr-workspace-syntax.mdxr-workspace-diff-word"
+              ".doc-workspace-syntax.doc-workspace-diff-word"
             )
           ),
           beforeHasSyntaxAndWordDiff: Boolean(
             oldCode?.querySelector(
-              ".mdxr-workspace-syntax.mdxr-workspace-diff-word"
+              ".doc-workspace-syntax.doc-workspace-diff-word"
             )
           ),
           layout: document.querySelector<HTMLElement>(
-            ".mdxr-workspace-diff-view"
+            ".doc-workspace-diff-view"
           )?.dataset.layout,
         };
       });
@@ -766,14 +764,14 @@ describe("agent workspace browser UI", () => {
       const wordDiffOff = await page.evaluate(() => {
         const codeLine = [
           ...document.querySelectorAll<HTMLElement>(
-            '.mdxr-workspace-diff-text[data-kind="add"]'
+            '.doc-workspace-diff-text[data-kind="add"]'
           ),
         ].find((line) =>
           line.textContent?.includes('const reviewState = "after";')
         );
         return {
-          hasSyntax: Boolean(codeLine?.querySelector(".mdxr-workspace-syntax")),
-          wordMarks: document.querySelectorAll(".mdxr-workspace-diff-word")
+          hasSyntax: Boolean(codeLine?.querySelector(".doc-workspace-syntax")),
+          wordMarks: document.querySelectorAll(".doc-workspace-diff-word")
             .length,
         };
       });
@@ -812,7 +810,7 @@ describe("agent workspace browser UI", () => {
 
   it("keeps historical previews in sync with explicit and system themes", async () => {
     const page = await openWorkspacePage(browser, html, workspaceScript);
-    const previewSelector = ".mdxr-workspace-history-preview iframe";
+    const previewSelector = ".doc-workspace-history-preview iframe";
     const iframe = page.locator(previewSelector);
     const readPreviewTheme = async () =>
       await page
@@ -822,7 +820,7 @@ describe("agent workspace browser UI", () => {
           backgroundColor: getComputedStyle(element).backgroundColor,
           colorScheme: getComputedStyle(element).colorScheme,
           isDark: element.classList.contains("dark"),
-          scriptRan: Reflect.has(window, "__mdxrHistoricalPreviewScriptRan"),
+          scriptRan: Reflect.has(window, "__docHistoricalPreviewScriptRan"),
           version: element.querySelector("main")?.textContent,
         }));
     const expectPreviewTheme = async (
@@ -864,7 +862,7 @@ describe("agent workspace browser UI", () => {
       const versionSelect = page.getByRole("combobox", {
         name: "Document version",
       });
-      await page.locator('#mdxr-version-select option[value="v1"]').waitFor({
+      await page.locator('#doc-version-select option[value="v1"]').waitFor({
         state: "attached",
       });
       await versionSelect.selectOption("v1");
@@ -874,7 +872,7 @@ describe("agent workspace browser UI", () => {
         .poll(async () => await iframe.getAttribute("sandbox"))
         .toBe("");
 
-      const themeButton = page.locator(".mdxr-theme");
+      const themeButton = page.locator(".doc-theme");
       await themeButton.click();
       await expect
         .poll(async () => await themeButton.getAttribute("data-mode"))
@@ -930,50 +928,50 @@ describe("agent workspace browser UI", () => {
       });
       const emptyDiff = await page.evaluate(() => ({
         compareId: document.querySelector<HTMLSelectElement>(
-          ".mdxr-workspace-compare select"
+          ".doc-workspace-compare select"
         )?.value,
         noChanges: document
-          .querySelector(".mdxr-workspace-notice")
+          .querySelector(".doc-workspace-notice")
           ?.textContent?.includes("No changes"),
       }));
       expect(emptyDiff).toStrictEqual({ compareId: "v2", noChanges: true });
 
       await page.getByRole("button", { exact: true, name: "Preview" }).click();
-      const theme = page.locator(".mdxr-theme");
+      const theme = page.locator(".doc-theme");
       await theme.click();
-      await page.locator(".mdxr-annotation-toggle").click();
-      const panel = page.locator("#mdxr-annotation-panel");
+      await page.locator(".doc-annotation-toggle").click();
+      const panel = page.locator("#doc-annotation-panel");
       await panel.waitFor({ state: "visible" });
 
       await page.getByRole("button", { exact: true, name: "MDX" }).click();
-      await page.locator(".mdxr-workspace-code").waitFor({ state: "visible" });
+      await page.locator(".doc-workspace-code").waitFor({ state: "visible" });
       const sourceState = await page.evaluate(() => {
         const annotations =
-          document.querySelector<HTMLElement>(".mdxr-annotations");
+          document.querySelector<HTMLElement>(".doc-annotations");
         return {
           annotationsHidden:
             annotations !== null &&
             getComputedStyle(annotations).display === "none",
           hasSource: document
-            .querySelector(".mdxr-workspace-code")
+            .querySelector(".doc-workspace-code")
             ?.textContent?.includes("fast amber fox"),
         };
       });
 
       await page.getByRole("button", { exact: true, name: "Preview" }).click();
-      const agentToggle = page.locator(".mdxr-workspace-agent");
+      const agentToggle = page.locator(".doc-workspace-agent");
       await agentToggle.click();
-      await page.locator(".mdxr-workspace-chat").waitFor({ state: "visible" });
+      await page.locator(".doc-workspace-chat").waitFor({ state: "visible" });
       await agentToggle.click();
-      await page.locator(".mdxr-workspace-chat").waitFor({ state: "hidden" });
+      await page.locator(".doc-workspace-chat").waitFor({ state: "hidden" });
       const chromeState = await page.evaluate(() => ({
-        agentClosed: document.querySelector(".mdxr-workspace-chat") === null,
+        agentClosed: document.querySelector(".doc-workspace-chat") === null,
         annotationExpanded:
           document
-            .querySelector(".mdxr-annotation-toggle")
+            .querySelector(".doc-annotation-toggle")
             ?.getAttribute("aria-expanded") === "true",
         themeMode:
-          document.querySelector<HTMLElement>(".mdxr-theme")?.dataset.mode,
+          document.querySelector<HTMLElement>(".doc-theme")?.dataset.mode,
       }));
       expect({ chromeState, sourceState }).toStrictEqual({
         chromeState: {
@@ -990,8 +988,8 @@ describe("agent workspace browser UI", () => {
 
   it("animates chat transitions, settles rapid toggles, and restores focus", async () => {
     const page = await openWorkspacePage(browser, html, workspaceScript);
-    const agentToggle = page.locator(".mdxr-workspace-agent");
-    const chat = page.locator(".mdxr-workspace-chat");
+    const agentToggle = page.locator(".doc-workspace-agent");
+    const chat = page.locator(".doc-workspace-chat");
     try {
       const openingStyleObserved = observeChatStyleAttribute(
         page,
@@ -1050,7 +1048,7 @@ describe("agent workspace browser UI", () => {
             await page.evaluate(
               () =>
                 document.activeElement?.classList.contains(
-                  "mdxr-workspace-agent"
+                  "doc-workspace-agent"
                 ) ?? false
             )
         )
@@ -1059,7 +1057,7 @@ describe("agent workspace browser UI", () => {
 
       await page.evaluate(() => {
         const toggle = document.querySelector<HTMLButtonElement>(
-          ".mdxr-workspace-agent"
+          ".doc-workspace-agent"
         );
         if (toggle === null) {
           throw new Error("Missing agent chat toggle");
@@ -1079,8 +1077,8 @@ describe("agent workspace browser UI", () => {
 
   it("removes chat transitions and closes promptly with reduced motion", async () => {
     const page = await openWorkspacePage(browser, html, workspaceScript);
-    const agentToggle = page.locator(".mdxr-workspace-agent");
-    const chat = page.locator(".mdxr-workspace-chat");
+    const agentToggle = page.locator(".doc-workspace-agent");
+    const chat = page.locator(".doc-workspace-chat");
     try {
       await page.emulateMedia({ reducedMotion: "reduce" });
       await expect(
@@ -1113,9 +1111,8 @@ describe("agent workspace browser UI", () => {
       await expect(
         page.evaluate(
           () =>
-            document.activeElement?.classList.contains(
-              "mdxr-workspace-agent"
-            ) ?? false
+            document.activeElement?.classList.contains("doc-workspace-agent") ??
+            false
         )
       ).resolves.toBeTruthy();
     } finally {
@@ -1169,16 +1166,16 @@ describe("agent workspace browser UI", () => {
       }
     );
     try {
-      const theme = page.locator(".mdxr-theme");
+      const theme = page.locator(".doc-theme");
       await theme.click();
       await page.waitForFunction(
         () =>
-          document.querySelector<HTMLElement>(".mdxr-theme")?.dataset.mode ===
+          document.querySelector<HTMLElement>(".doc-theme")?.dataset.mode ===
           "light"
       );
-      const agentToggle = page.locator(".mdxr-workspace-agent");
+      const agentToggle = page.locator(".doc-workspace-agent");
       await agentToggle.click();
-      const chat = page.locator(".mdxr-workspace-chat");
+      const chat = page.locator(".doc-workspace-chat");
       await chat.waitFor({ state: "visible" });
       const composer = page.getByRole("textbox", { name: "Message to agent" });
       const sendButton = page.getByRole("button", { name: "Send message" });
@@ -1196,7 +1193,7 @@ describe("agent workspace browser UI", () => {
       };
       const postRequest = page.waitForRequest(
         (request) =>
-          request.url().includes("/__mdxr_agent") && request.method() === "POST"
+          request.url().includes("/__doc_agent") && request.method() === "POST"
       );
       await sendButton.click();
       await postRequest;
@@ -1214,7 +1211,7 @@ describe("agent workspace browser UI", () => {
         sendDisabled: await sendButton.isDisabled(),
       };
       await page
-        .locator('.mdxr-workspace-message[data-role="assistant"] table')
+        .locator('.doc-workspace-message[data-role="assistant"] table')
         .waitFor({ state: "visible" });
       await page.waitForFunction(
         () =>
@@ -1224,13 +1221,13 @@ describe("agent workspace browser UI", () => {
       );
       const renderedResponse = await page.evaluate(() => {
         const userMessage = document.querySelector<HTMLElement>(
-          '.mdxr-workspace-message[data-role="user"]'
+          '.doc-workspace-message[data-role="user"]'
         );
         const assistantMessage = document.querySelector<HTMLElement>(
-          '.mdxr-workspace-message[data-role="assistant"]'
+          '.doc-workspace-message[data-role="assistant"]'
         );
         const body = document.querySelector<HTMLElement>(
-          ".mdxr-workspace-chat-body"
+          ".doc-workspace-chat-body"
         );
         return {
           assistantCode: Boolean(assistantMessage?.querySelector("pre code")),
@@ -1251,7 +1248,7 @@ describe("agent workspace browser UI", () => {
       });
       const desktopLayout = await page.evaluate(() => {
         const panel = document.querySelector<HTMLElement>(
-          ".mdxr-workspace-chat"
+          ".doc-workspace-chat"
         );
         if (panel === null) {
           throw new Error("Missing agent chat panel");
@@ -1270,13 +1267,13 @@ describe("agent workspace browser UI", () => {
       await theme.click();
       await page.waitForFunction(
         () =>
-          document.querySelector<HTMLElement>(".mdxr-theme")?.dataset.mode ===
+          document.querySelector<HTMLElement>(".doc-theme")?.dataset.mode ===
           "dark"
       );
       await page.setViewportSize({ height: 844, width: 390 });
       const mobileLayout = await page.evaluate(() => {
         const panel = document.querySelector<HTMLElement>(
-          ".mdxr-workspace-chat"
+          ".doc-workspace-chat"
         );
         if (panel === null) {
           throw new Error("Missing agent chat panel");
@@ -1290,7 +1287,7 @@ describe("agent workspace browser UI", () => {
             rect.bottom <= window.innerHeight,
           pageFits: document.documentElement.scrollWidth <= window.innerWidth,
           theme:
-            document.querySelector<HTMLElement>(".mdxr-theme")?.dataset.mode,
+            document.querySelector<HTMLElement>(".doc-theme")?.dataset.mode,
           width: window.innerWidth,
         };
       });
@@ -1343,7 +1340,7 @@ describe("agent workspace browser UI", () => {
       })
     );
     try {
-      await page.locator(".mdxr-workspace-agent").click();
+      await page.locator(".doc-workspace-agent").click();
       const composer = page.getByRole("textbox", { name: "Message to agent" });
       const sendButton = page.getByRole("button", { name: "Send message" });
       await composer.fill("Keep this draft if sending fails.");

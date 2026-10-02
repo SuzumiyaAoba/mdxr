@@ -58,7 +58,7 @@ const runThemeScript = (
   const root = new FakeThemeElement();
   const button = new FakeThemeElement();
   const reactButton = new FakeThemeElement();
-  reactButton.dataset.mdxrThemeReact = "";
+  reactButton.dataset.docThemeReact = "";
   reactButton.dataset.mode = "auto";
   reactButton.setAttribute("aria-label", "テーマを切り替え");
   const mediaListeners = new Set<MediaChangeListener>();
@@ -124,7 +124,7 @@ describe(clientJs, () => {
     // The delegated behaviors the markup depends on.
     expect(js).toContain("data-copy");
     expect(js).toContain("data-ask");
-    expect(js).toContain("data-mdxr-theme");
+    expect(js).toContain("data-doc-theme");
   });
 
   it("wires the board interactions (drag, move, copy)", async () => {
@@ -148,7 +148,7 @@ describe(clientJs, () => {
       "data-comment-submit",
       "data-comment-cancel",
       "data-comment-tpl",
-      "data-mdxr-comment",
+      "data-doc-comment",
       "data-comments-copy",
       // The fence payload is read via dataset — the property name survives.
       "commentsCode",
@@ -178,7 +178,7 @@ describe("inline script snippets", () => {
       buttonMode: button.dataset.mode,
       colorScheme: root.style.colorScheme,
       darkClass: root.classList.contains("dark"),
-      htmlMode: root.dataset.mdxrThemeMode,
+      htmlMode: root.dataset.docThemeMode,
       reactLabel: reactButton.attributes.get("aria-label"),
       reactMode: reactButton.dataset.mode,
     }).toStrictEqual({
@@ -199,7 +199,7 @@ describe("inline script snippets", () => {
     expect({
       colorScheme: root.style.colorScheme,
       darkClass: root.classList.contains("dark"),
-      htmlMode: root.dataset.mdxrThemeMode,
+      htmlMode: root.dataset.docThemeMode,
     }).toStrictEqual({
       colorScheme: "dark",
       darkClass: true,
@@ -209,7 +209,7 @@ describe("inline script snippets", () => {
 
   it("keeps an explicit mode when storage is unavailable", () => {
     const { root, triggerSystemChange } = runThemeScript(null, true, false);
-    root.dataset.mdxrThemeMode = "dark";
+    root.dataset.docThemeMode = "dark";
     root.classList.toggle("dark", true);
     root.style.colorScheme = "dark";
     triggerSystemChange(false);
@@ -217,7 +217,7 @@ describe("inline script snippets", () => {
     expect({
       colorScheme: root.style.colorScheme,
       darkClass: root.classList.contains("dark"),
-      htmlMode: root.dataset.mdxrThemeMode,
+      htmlMode: root.dataset.docThemeMode,
     }).toStrictEqual({
       colorScheme: "dark",
       darkClass: true,

@@ -164,7 +164,7 @@ const CommentCard = ({
 }): ReactElement => {
   const link = useFileLink(path, lines, href);
   const name = nonEmpty(author) ? author.replace(/^@+/u, "") : undefined;
-  // data-mdxr-comment marks the card for the markdown serializer; each
+  // data-doc-comment marks the card for the markdown serializer; each
   // data-comment-* attr maps back to a <Comment> attribute (doc-events.ts).
   return (
     <div
@@ -177,7 +177,7 @@ const CommentCard = ({
       data-comment-side={side === "old" ? "old" : undefined}
       data-comment-text={text}
       data-comment-title={title}
-      data-mdxr-comment=""
+      data-doc-comment=""
     >
       <Avatar author={author} />
       <article
@@ -346,7 +346,7 @@ const AnnotatedCode = ({
         >
           {lines.map((el, i) => (
             <Fragment key={i}>
-              <div className="mdxr-cline" data-comment-row="">
+              <div className="doc-cline" data-comment-row="">
                 <AddCommentButton line={i + 1} />
                 {el}
               </div>
@@ -388,7 +388,7 @@ const FORM_SUBMIT_CLS = `inline-flex cursor-pointer items-center rounded-md bord
 const CommentTemplates = ({ bleed }: { bleed: boolean }): ReactElement => (
   <>
     <div hidden inert data-comment-tpl="card">
-      <div className="flex gap-2.5" data-mdxr-comment="">
+      <div className="flex gap-2.5" data-doc-comment="">
         <span
           aria-hidden
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-neutral-500 dark:bg-neutral-700 dark:text-neutral-400"
@@ -464,7 +464,7 @@ const CommentTemplates = ({ bleed }: { bleed: boolean }): ReactElement => (
     </div>
     <div hidden inert data-comment-tpl="strip">
       <div className={commentStripCls(bleed)} data-comment-strip="">
-        <div className="mdxr-thread-tools" data-thread-tools="">
+        <div className="doc-thread-tools" data-thread-tools="">
           <CommentReplyButton />
         </div>
       </div>

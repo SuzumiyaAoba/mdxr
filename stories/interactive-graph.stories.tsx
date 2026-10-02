@@ -10,7 +10,7 @@ import {
 
 const meta = {
   component: InteractiveGraph,
-  parameters: { layout: "fullscreen", mdxrDocument: true },
+  parameters: { docDocument: true, layout: "fullscreen" },
   title: "Components/InteractiveGraph",
 } satisfies Meta<typeof InteractiveGraph>;
 
@@ -160,7 +160,7 @@ export const Architecture: Story = {
     await userEvent.click(live);
     await expect(live).toHaveAttribute("aria-selected", "true");
     await expect(
-      canvasElement.querySelectorAll(".mdxr-graph-node-card[data-dimmed]")
+      canvasElement.querySelectorAll(".doc-graph-node-card[data-dimmed]")
     ).toHaveLength(3);
     await userEvent.click(canvas.getByRole("button", { name: "Database" }));
     await expect(
@@ -174,7 +174,7 @@ export const Architecture: Story = {
     ).not.toBeInTheDocument();
     await userEvent.click(views.getByRole("tab", { name: "全体" }));
     await expect(
-      canvasElement.querySelectorAll(".mdxr-graph-node-card[data-dimmed]")
+      canvasElement.querySelectorAll(".doc-graph-node-card[data-dimmed]")
     ).toHaveLength(0);
   },
   render: () => (

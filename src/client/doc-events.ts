@@ -21,7 +21,7 @@ const cycleTheme = (): void => {
   const mode = cycleThemeMode();
   applyThemeMode(mode);
   const title = `Theme: ${mode}`;
-  for (const b of document.querySelectorAll("[data-mdxr-theme]")) {
+  for (const b of document.querySelectorAll("[data-doc-theme]")) {
     if (!(b instanceof HTMLElement)) {
       continue;
     }
@@ -47,7 +47,7 @@ const handleDocClick = (el: Element): void => {
   if (handleAskClick(el)) {
     return;
   }
-  const themeBtn = closestEl(el, "[data-mdxr-theme]");
+  const themeBtn = closestEl(el, "[data-doc-theme]");
   if (themeBtn !== null) {
     cycleTheme();
   }
@@ -57,13 +57,13 @@ const handleDocClick = (el: Element): void => {
  * Delegated handler for the document's interactive bits. On `input`/`change`
  * inside an `[data-ask]` block it rewrites the block's `[data-ask-output]`
  * Markdown answer sheet (`- **label**: answer` lines under `# title`, built
- * from `data-q-label`/`data-q-type` on each `[data-mdxr-q]` wrapper). On
+ * from `data-q-label`/`data-q-type` on each `[data-doc-q]` wrapper). On
  * `click`: `[data-copy]` copies a fixed string; `[data-ask-copy]` copies the
  * sheet; `[data-ask-save]` downloads it as a `.md` file; `[data-board-move]`
  * shifts a card a lane over; `[data-board-copy]` copies the board's current
  * `<Board>` markup; `[data-comment-*]` covers add/reply/cancel/submit and
  * `[data-comments-copy]` the block's `<Comments>` markup;
- * `[data-mdxr-theme]` cycles the document theme auto → light → dark
+ * `[data-doc-theme]` cycles the document theme auto → light → dark
  * (persisted to localStorage, so THEME_JS can restore it before first
  * paint). The `drag*` types drive the board's card drag & drop, `keydown`
  * the comment form's submit/cancel shortcuts. `entry.ts` registers this on

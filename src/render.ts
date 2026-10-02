@@ -313,7 +313,7 @@ const renderDocument = async (
     .replaceAll("&amp;", "&")
     .trim();
   const title =
-    fmTitle ?? (nonEmpty(h1Text) ? h1Text : undefined) ?? "mdxr document";
+    fmTitle ?? (nonEmpty(h1Text) ? h1Text : undefined) ?? "Document";
 
   const headerProps = frontmatterHeader(fmStr, usedComponents.includes("Plan"));
   // The header must be part of the body's vnode tree, not concatenated HTML:

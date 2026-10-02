@@ -146,8 +146,8 @@ describe("wireframe-ui document components", () => {
     const { css } = await buildCss([{ content: body, extension: "html" }]);
     expect(css).toContain("@container wireframe");
     expect(css).toContain("prefers-reduced-motion:reduce");
-    expect(css).toContain("mdxr-wireframe-shimmer");
-    expect(css).toContain("mdxr-wireframe-typing");
+    expect(css).toContain("doc-wireframe-shimmer");
+    expect(css).toContain("doc-wireframe-typing");
   });
 
   it("retains screen labels, placeholder content, fields, and links in Markdown output", async () => {

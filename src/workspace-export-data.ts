@@ -90,7 +90,7 @@ export const handleWorkspaceExportRequest = async (
   }
   let mode: WorkspaceExportMode;
   try {
-    const url = new URL(request.url ?? "/__mdxr_export", "http://localhost");
+    const url = new URL(request.url ?? "/__doc_export", "http://localhost");
     if (url.searchParams.getAll("mode").length > 1) {
       throw new Error("Specify only one export mode");
     }

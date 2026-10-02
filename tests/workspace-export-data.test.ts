@@ -155,7 +155,7 @@ describe("workspace export data endpoint", () => {
     const { agent, history, method = "GET", origin } = options;
     const request = requestWith(method, origin);
     if (options.mode !== undefined) {
-      request.url = `/__mdxr_export?mode=${options.mode}`;
+      request.url = `/__doc_export?mode=${options.mode}`;
     }
     const { capture, response } = captureResponse(request);
     await handleWorkspaceExportRequest(

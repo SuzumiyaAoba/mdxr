@@ -102,7 +102,7 @@ const registerReference = (node: MdxTarget, state: ReferenceState): void => {
     id ??= `term-${jsxAttr(node, "name") ?? ""}`;
   }
   if ((id === undefined || id === "") && numbered) {
-    id = `mdxr-${name.toLowerCase()}-${count}`;
+    id = `doc-${name.toLowerCase()}-${count}`;
   }
   if (id === undefined || id === "") {
     return;
@@ -136,7 +136,7 @@ const resolveCitation = (node: MdxTarget, state: ReferenceState): void => {
     return;
   }
   state.citations += 1;
-  const id = `mdxr-citation-${state.citations}`;
+  const id = `doc-citation-${state.citations}`;
   if (state.references.has(id)) {
     reportReferenceError(state, `Duplicate reference id: ${id}`, node);
     return;

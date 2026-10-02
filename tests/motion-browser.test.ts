@@ -79,8 +79,8 @@ describe("document motion preferences", () => {
         const copy = page
           .getByRole("button", { name: "Copy install command" })
           .first();
-        const previous = copied ? ".mdxr-copy-idle" : ".mdxr-copy-done";
-        const showing = copied ? ".mdxr-copy-done" : ".mdxr-copy-idle";
+        const previous = copied ? ".doc-copy-idle" : ".doc-copy-done";
+        const showing = copied ? ".doc-copy-done" : ".doc-copy-idle";
         const hidden = previous;
         if (!copied) {
           await copy.evaluate((element) => {

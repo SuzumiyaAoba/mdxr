@@ -148,7 +148,7 @@ describe("complete document workflows in the real preview", () => {
       await app.page
         .getByText("Gamma", { exact: true })
         .waitFor({ state: "attached" });
-      await app.page.locator("#mdxr-widget-status").waitFor();
+      await app.page.locator("#doc-widget-status").waitFor();
       await expect(
         app.page.getByLabel("Choice", { exact: true }).inputValue()
       ).resolves.toBe("a");
@@ -156,7 +156,7 @@ describe("complete document workflows in the real preview", () => {
         app.page.getByLabel("Answer", { exact: true }).inputValue()
       ).resolves.toBe("Saved answer");
       await expect(
-        app.page.locator("#mdxr-widget-status").textContent()
+        app.page.locator("#doc-widget-status").textContent()
       ).resolves.toContain("original records are retained");
       expect(app.errors).toStrictEqual([]);
     } finally {
@@ -222,7 +222,7 @@ describe("complete document workflows in the real preview", () => {
       await app.page.getByLabel("Answer", { exact: true }).fill("Saved answer");
       const storageKey = await app.page.evaluate(() => {
         const key = Object.keys(localStorage).find((candidate) =>
-          candidate.startsWith("mdxr:widgets:v1:")
+          candidate.startsWith("doc:widgets:v1:")
         );
         if (key === undefined) {
           throw new Error("Missing saved widget state");
@@ -238,7 +238,7 @@ describe("complete document workflows in the real preview", () => {
         app.page.evaluate((key) => localStorage.getItem(key), storageKey)
       ).resolves.toBe("{broken");
       await expect(
-        app.page.locator("#mdxr-widget-status").textContent()
+        app.page.locator("#doc-widget-status").textContent()
       ).resolves.toContain(
         "Saved answers could not be read. Existing data was retained."
       );
@@ -252,14 +252,14 @@ describe("complete document workflows in the real preview", () => {
     const app = await fixture(browser);
     try {
       const info = parseAnnotationDocument(
-        (await app.page.locator("#mdxr-annotation-document").textContent()) ??
+        (await app.page.locator("#doc-annotation-document").textContent()) ??
           "{}"
       );
       if (info === undefined) {
         throw new Error("Missing document metadata");
       }
       const section = await app.page
-        .locator("mdxr-section-review")
+        .locator("doc-section-review")
         .first()
         .evaluate((element) => ({
           id: element.dataset.sectionId ?? "",
@@ -295,7 +295,7 @@ describe("complete document workflows in the real preview", () => {
           title: "Review",
         },
         exportedAt: new Date().toISOString(),
-        format: "mdxr-review",
+        format: "doc-review",
         sections: [section],
         version: 1,
       };
@@ -368,7 +368,7 @@ describe("complete document workflows in the real preview", () => {
           )
       ).resolves.toBeGreaterThan(0);
       const forbidden = await fetch(
-        `${serverUrl(app.server)}__mdxr_diagnostic_source?file=${encodeURIComponent("/etc/passwd")}`
+        `${serverUrl(app.server)}__doc_diagnostic_source?file=${encodeURIComponent("/etc/passwd")}`
       );
       expect(forbidden.status).toBe(404);
       expect(app.errors).toStrictEqual([]);
@@ -384,7 +384,7 @@ describe("complete document workflows in the real preview", () => {
       { "part.md": "DEPENDENCY_FIRST" }
     );
     try {
-      const response = await fetch(`${serverUrl(app.server)}__mdxr_history`);
+      const response = await fetch(`${serverUrl(app.server)}__doc_history`);
       const history: unknown = await response.json();
       if (!isRecord(history) || typeof history.latestId !== "string") {
         throw new Error("Missing latest version");
@@ -443,7 +443,7 @@ describe("complete document workflows in the real preview", () => {
       );
       let closed = false;
       try {
-        await app.page.locator("a[data-mdxr-document]").first().waitFor();
+        await app.page.locator("a[data-doc-document]").first().waitFor();
         if (openLink) {
           await app.page
             .getByRole("link", { name: /^Child document/u })
@@ -484,10 +484,10 @@ describe("complete document workflows in the real preview", () => {
           const page = await offline.newPage();
           await page.goto(pathToFileURL(output).href);
           await expect(
-            page.locator("[data-mdxr-related]").count()
+            page.locator("[data-doc-related]").count()
           ).resolves.toBe(2);
           await page.getByRole("link", { name: /^Child document/u }).click();
-          expect(page.url()).toContain("#mdxr-related-");
+          expect(page.url()).toContain("#doc-related-");
           await page.getByRole("link", { name: /^Nested document/u }).click();
           await expect(page.locator("body").textContent()).resolves.toContain(
             "NESTED_OFFLINE_MARKER"

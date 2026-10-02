@@ -148,18 +148,16 @@ export const WorkspaceChat = ({
     <Collapsible.Root open={open}>
       <Collapsible.Panel
         render={<aside />}
-        className="mdxr-workspace-chat"
+        className="doc-workspace-chat"
         aria-label="Agent chat"
-        id="mdxr-workspace-chat"
-        data-mdxr-agent-panel
+        id="doc-workspace-chat"
+        data-doc-agent-panel
         inert={!open}
       >
-        <div className="mdxr-workspace-chat-header">
-          <div className="mdxr-workspace-chat-title">
+        <div className="doc-workspace-chat-header">
+          <div className="doc-workspace-chat-title">
             <h2>Agent</h2>
-            <span className="mdxr-workspace-chat-provider">
-              {providerLabel}
-            </span>
+            <span className="doc-workspace-chat-provider">{providerLabel}</span>
           </div>
           <button
             aria-label="Close chat"
@@ -174,24 +172,24 @@ export const WorkspaceChat = ({
           aria-label="Conversation messages"
           aria-live="polite"
           aria-relevant="additions"
-          className="mdxr-workspace-chat-body"
+          className="doc-workspace-chat-body"
         >
-          <ConversationContent className="mdxr-workspace-conversation-content">
+          <ConversationContent className="doc-workspace-conversation-content">
             {conversation === undefined &&
               (chatError === undefined || chatError === "") && (
-                <output className="mdxr-workspace-loading">
+                <output className="doc-workspace-loading">
                   Loading conversation…
                 </output>
               )}
             {conversation?.messages.length === 0 && (
-              <div className="mdxr-workspace-empty">
+              <div className="doc-workspace-empty">
                 <strong>What would you like to change?</strong>
                 <p>Ask for an edit, or send feedback from Annotate.</p>
               </div>
             )}
             {messages.map((message, index) => (
               <div
-                className="mdxr-workspace-message"
+                className="doc-workspace-message"
                 data-role={message.role}
                 key={messageKeys[index]}
               >
@@ -200,9 +198,9 @@ export const WorkspaceChat = ({
                 </span>
                 <Message
                   from={message.role}
-                  className="mdxr-workspace-message-frame"
+                  className="doc-workspace-message-frame"
                 >
-                  <MessageContent className="mdxr-workspace-message-content">
+                  <MessageContent className="doc-workspace-message-content">
                     {message.html === undefined ? (
                       <span className="whitespace-pre-wrap">
                         {message.content}
@@ -215,36 +213,33 @@ export const WorkspaceChat = ({
               </div>
             ))}
             {isBusy && (
-              <output className="mdxr-workspace-pending" aria-live="polite">
-                <span aria-hidden="true" className="mdxr-workspace-pulse" />
+              <output className="doc-workspace-pending" aria-live="polite">
+                <span aria-hidden="true" className="doc-workspace-pulse" />
                 {sending ? "Sending…" : `Waiting for ${providerLabel}…`}
               </output>
             )}
           </ConversationContent>
         </Conversation>
-        <div className="mdxr-workspace-chat-footer">
+        <div className="doc-workspace-chat-footer">
           {chatError !== undefined && chatError !== "" && (
-            <p className="mdxr-workspace-error" role="alert">
+            <p className="doc-workspace-error" role="alert">
               {chatError}
             </p>
           )}
           <PromptInput
             aria-label="Message composer"
-            className="mdxr-workspace-composer"
+            className="doc-workspace-composer"
             disabled={isBusy}
             onSubmit={onSend}
           >
             <PromptInputTextarea
-              aria-describedby="mdxr-workspace-chat-hint"
+              aria-describedby="doc-workspace-chat-hint"
               aria-label="Message to agent"
-              className="mdxr-workspace-composer-input"
+              className="doc-workspace-composer-input"
               placeholder="Describe a change…"
             />
-            <PromptInputFooter className="mdxr-workspace-composer-footer">
-              <span
-                className="mdxr-workspace-hint"
-                id="mdxr-workspace-chat-hint"
-              >
+            <PromptInputFooter className="doc-workspace-composer-footer">
+              <span className="doc-workspace-hint" id="doc-workspace-chat-hint">
                 <span>
                   <kbd>Enter</kbd> to send
                 </span>
@@ -253,7 +248,7 @@ export const WorkspaceChat = ({
                 </span>
               </span>
               <PromptInputSubmit
-                className="mdxr-workspace-send"
+                className="doc-workspace-send"
                 disabled={isBusy}
                 title="Send message"
               >

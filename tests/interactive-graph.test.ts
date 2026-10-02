@@ -21,7 +21,7 @@ describe("InteractiveGraph", () => {
   it("renders grouped nodes and connected edges without JavaScript", async () => {
     const { body } = await renderDoc(GRAPH);
     expect(body).toContain("react-flow__edge-path");
-    expect(body).toContain("mdxr-graph-group-card");
+    expect(body).toContain("doc-graph-group-card");
     expect(body).toContain("Accepts document changes.");
     expect(body).toContain("https://example.com/api");
     const browser = await chromium.launch();
@@ -131,12 +131,12 @@ describe("InteractiveGraph", () => {
       const views = page.getByRole("tablist", { name: "表示する経路" });
       await views.getByRole("tab", { name: "Write" }).click();
       await page.waitForFunction(
-        () => document.querySelectorAll(".mdxr-graph-edge-dimmed").length === 1
+        () => document.querySelectorAll(".doc-graph-edge-dimmed").length === 1
       );
       await expect(edgeColors()).resolves.toStrictEqual(expected);
       await views.getByRole("tab", { name: "全体" }).click();
       await page.waitForFunction(
-        () => document.querySelector(".mdxr-graph-edge-dimmed") === null
+        () => document.querySelector(".doc-graph-edge-dimmed") === null
       );
       await expect(edgeColors()).resolves.toStrictEqual(expected);
       expect({
@@ -162,13 +162,13 @@ describe("InteractiveGraph", () => {
       });
       page.setDefaultTimeout(5000);
       await page.setContent(html);
-      const rail = page.locator(".mdxr-graph-view-rail");
+      const rail = page.locator(".doc-graph-view-rail");
       const views = page.getByRole("tablist", { name: "表示する経路" });
       const all = views.getByRole("tab", { name: "全体" });
       const live = views.getByRole("tab", { name: "Live" });
       const label = live.getByText("Live", { exact: true });
       await expect(label.isVisible()).resolves.toBeFalsy();
-      const canvas = page.locator(".mdxr-graph-canvas");
+      const canvas = page.locator(".doc-graph-canvas");
       const canvasBefore = await canvas.boundingBox();
       await rail.hover();
       await label.waitFor({ state: "visible" });
@@ -194,7 +194,7 @@ describe("InteractiveGraph", () => {
       await page.waitForFunction(
         () =>
           document
-            .querySelector('.mdxr-graph-view-tab[aria-selected="true"]')
+            .querySelector('.doc-graph-view-tab[aria-selected="true"]')
             ?.getAttribute("aria-label") === "Live"
       );
       expect({
@@ -227,17 +227,15 @@ describe("InteractiveGraph", () => {
       await page.waitForFunction(
         () =>
           document
-            .querySelector('.mdxr-graph-view-tab[aria-selected="true"]')
+            .querySelector('.doc-graph-view-tab[aria-selected="true"]')
             ?.getAttribute("aria-label") === "Write"
       );
       await expect(
         page.evaluate(() => ({
           edges: [
-            ...document.querySelectorAll<HTMLElement>(
-              ".mdxr-graph-edge-dimmed"
-            ),
+            ...document.querySelectorAll<HTMLElement>(".doc-graph-edge-dimmed"),
           ].map((edge) => edge.dataset.id),
-          nodes: document.querySelectorAll(".mdxr-graph-node-card[data-dimmed]")
+          nodes: document.querySelectorAll(".doc-graph-node-card[data-dimmed]")
             .length,
         }))
       ).resolves.toStrictEqual({ edges: ["publish"], nodes: 1 });
@@ -247,7 +245,7 @@ describe("InteractiveGraph", () => {
       const details = page.getByRole("region", { name: "ノードの詳細" });
       await page.waitForFunction(() =>
         document
-          .querySelector(".mdxr-graph-details")
+          .querySelector(".doc-graph-details")
           ?.textContent?.includes("Accepts document changes.")
       );
       const [bodyVisible, href] = await Promise.all([
@@ -261,7 +259,7 @@ describe("InteractiveGraph", () => {
       await details.getByRole("button", { name: "詳細を閉じる" }).focus();
       await page.keyboard.press("Escape");
       await page.waitForFunction(
-        () => document.querySelector(".mdxr-graph-details") === null
+        () => document.querySelector(".doc-graph-details") === null
       );
       await expect(
         api.evaluate((element) => element === document.activeElement)

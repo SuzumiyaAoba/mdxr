@@ -18,7 +18,7 @@ interface DependencyManifest {
 }
 const readDependencies = async (id: string): Promise<DependencyManifest> => {
   const response = await fetch(
-    `/__mdxr_history?view=dependencies&id=${encodeURIComponent(id)}`,
+    `/__doc_history?view=dependencies&id=${encodeURIComponent(id)}`,
     { cache: "no-store" }
   );
   const value: unknown = await response.json();
@@ -64,15 +64,15 @@ export const WorkspaceDependencies = ({ id }: { id?: string }) => {
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger
-        className="mdxr-workspace-export"
+        className="doc-workspace-export"
         aria-label="Dependency manifest"
         title="Dependency manifest"
       >
         <Layers aria-hidden="true" size={15} />
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Backdrop className="mdxr-workspace-export-backdrop" />
-        <Dialog.Popup className="mdxr-workspace-export-dialog mdxr-workspace-dependencies">
+        <Dialog.Backdrop className="doc-workspace-export-backdrop" />
+        <Dialog.Popup className="doc-workspace-export-dialog doc-workspace-dependencies">
           <Dialog.Title>
             Dependency manifest ({manifest?.changes.length ?? 0})
           </Dialog.Title>

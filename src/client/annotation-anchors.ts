@@ -5,7 +5,7 @@ const CONTROLS =
   "button,input,textarea,select,[contenteditable]:not([contenteditable='false']),[hidden],[inert]";
 const BLOCKS = "p,li,blockquote,pre,h1,h2,h3,h4,h5,h6,td,th,figcaption";
 const FIGURES =
-  "figure,img,svg[role='img'],svg[aria-label],.mermaid,[data-mdxr-figure]";
+  "figure,img,svg[role='img'],svg[aria-label],.mermaid,[data-doc-figure]";
 const CONTEXT_LENGTH = 48;
 
 const elementOf = (node: Node): Element | null =>

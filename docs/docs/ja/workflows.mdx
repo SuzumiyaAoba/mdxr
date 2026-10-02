@@ -32,7 +32,7 @@ mdxr check .mdxr --watch --render --project .
 
 ## レビューを保存・取り込む
 
-**Review** → **Download review JSON** で、コメント、対象の引用・位置、解決履歴、フィードバック履歴、確認済みセクションを、バージョン付きの `mdxr-review` JSONに保存します。**Import review JSON** では、追加件数・競合・変更済みセクションを確認してから統合します。
+**Review** → **Download review JSON** で、コメント、対象の引用・位置、解決履歴、フィードバック履歴、確認済みセクションを、バージョン付きの `doc-review` JSONに保存します。**Import review JSON** では、追加件数・競合・変更済みセクションを確認してから統合します。
 
 同じJSONを繰り返し取り込んでもレコードは重複しません。競合時は手元のレコードを維持し、**Use imported records for conflicts** を選んだ場合だけ取り込む側を採用します。文書IDが異なる場合は **Map reviews … to this document** で現在の文書への対応付けを明示してください。コメントは引用と前後の文脈から再照合し、対象が見つからないものも切り離されたコメントとして残します。変更済みのセクションは確認済みになりません。形式不正や未対応バージョンはエラーとして知らせます。
 

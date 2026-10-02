@@ -1,4 +1,5 @@
 import type { AnnotationDocument } from "../annotations.js";
+import { readDocumentStorage } from "./storage.js";
 
 /** Copy legacy path-based records once, retaining the original for recovery. */
 export const documentStorageKey = (
@@ -8,11 +9,11 @@ export const documentStorageKey = (
   const previous = `${prefix}${info.file}`;
   const key = `${prefix}${info.id ?? info.file}`;
   try {
-    const legacy = localStorage.getItem(previous);
+    const legacy = readDocumentStorage(localStorage, previous);
     if (
       key !== previous &&
       legacy !== null &&
-      localStorage.getItem(key) === null
+      readDocumentStorage(localStorage, key) === null
     ) {
       localStorage.setItem(key, legacy);
     }

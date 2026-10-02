@@ -196,7 +196,7 @@ export const createFilePreviews = (configOptions: ConfigOptions = {}) => {
           paths.set(filePath, file);
           files.set(file.id, file);
         }
-        return `/__mdxr_file?id=${file.id}`;
+        return `/__doc_file?id=${file.id}`;
       } catch {
         return undefined;
       }

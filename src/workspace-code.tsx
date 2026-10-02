@@ -97,8 +97,8 @@ export const WorkspaceCode = ({ text, syntax, words }: WorkspaceCodeProps) => {
     }
 
     const className = [
-      hasSyntax ? "mdxr-workspace-syntax" : undefined,
-      wordKind === undefined ? undefined : "mdxr-workspace-diff-word",
+      hasSyntax ? "doc-workspace-syntax" : undefined,
+      wordKind === undefined ? undefined : "doc-workspace-diff-word",
     ]
       .filter((value) => value !== undefined)
       .join(" ");

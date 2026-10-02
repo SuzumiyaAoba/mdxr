@@ -200,7 +200,7 @@ const rebase = (node: Node, origin: string, root: string): void => {
     if (filename !== undefined) {
       setHProperty(
         node,
-        "data-mdxr-code-path",
+        "data-doc-code-path",
         rebasePath(splitPathLines(filename).path, origin, root)
       );
     }
@@ -286,7 +286,7 @@ const linkDocument = (
   file.data.linkedDocuments ??= [];
   const documents = file.data.linkedDocuments;
   const section = jsxAttr(target, "section");
-  const id = `mdxr-document-${documents.length + 1}`;
+  const id = `doc-document-${documents.length + 1}`;
   documents.push({ ancestors: chain, id, path: abs, section });
   target.attributes = jsxAttrs({
     document: id,
@@ -314,7 +314,7 @@ export const remarkInclude =
       if (existing !== undefined) {
         return existing;
       }
-      const namespace = `mdxr-include-${createHash("sha256").update(origin).digest("hex").slice(0, 12)}-`;
+      const namespace = `doc-include-${createHash("sha256").update(origin).digest("hex").slice(0, 12)}-`;
       namespaces.set(origin, namespace);
       return namespace;
     };

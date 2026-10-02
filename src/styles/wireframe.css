@@ -1,7 +1,7 @@
 /* Adapted from wireframe-ui (MIT). See src/wireframe-ui.LICENSE.md. */
 @import "./wireframe-upstream.css";
 @layer components {
-  .mdxr-wireframe-shimmer {
+  .doc-wireframe-shimmer {
     background-image: linear-gradient(
       90deg,
       transparent,
@@ -9,14 +9,14 @@
       transparent
     );
     background-size: 200% 100%;
-    animation: mdxr-wireframe-shimmer 2s linear infinite;
+    animation: doc-wireframe-shimmer 2s linear infinite;
   }
 
-  .mdxr-wireframe-typing {
-    animation: mdxr-wireframe-typing 3s ease-in-out infinite;
+  .doc-wireframe-typing {
+    animation: doc-wireframe-typing 3s ease-in-out infinite;
   }
 
-  @keyframes mdxr-wireframe-shimmer {
+  @keyframes doc-wireframe-shimmer {
     from {
       background-position: -200% 0;
     }
@@ -25,7 +25,7 @@
     }
   }
 
-  @keyframes mdxr-wireframe-typing {
+  @keyframes doc-wireframe-typing {
     0%,
     100% {
       clip-path: inset(0 100% 0 0);
@@ -36,8 +36,8 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .mdxr-wireframe-shimmer,
-    .mdxr-wireframe-typing {
+    .doc-wireframe-shimmer,
+    .doc-wireframe-typing {
       animation: none;
     }
   }

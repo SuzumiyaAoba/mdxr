@@ -1,7 +1,9 @@
+import { readDocumentStorage, removeDocumentStorage } from "./storage.js";
+
 export type ThemeMode = "auto" | "dark" | "light";
 
-const STORAGE_KEY = "mdxr-theme";
-const THEME_CHANGE_EVENT = "mdxr-theme-change";
+const STORAGE_KEY = "doc-theme";
+const THEME_CHANGE_EVENT = "doc-theme-change";
 const NEXT_THEME_MODE: Record<ThemeMode, ThemeMode> = {
   auto: "light",
   dark: "auto",
@@ -16,7 +18,7 @@ const isThemeMode = (
 
 const readStoredThemeMode = (): ThemeMode | undefined => {
   try {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
+    const stored = readDocumentStorage(window.localStorage, STORAGE_KEY);
     return isThemeMode(stored) ? stored : undefined;
   } catch {
     return undefined;
@@ -29,7 +31,7 @@ export const getThemeMode = (): ThemeMode =>
 export const setThemeMode = (mode: ThemeMode): void => {
   try {
     if (mode === "auto") {
-      window.localStorage.removeItem(STORAGE_KEY);
+      removeDocumentStorage(window.localStorage, STORAGE_KEY);
     } else {
       window.localStorage.setItem(STORAGE_KEY, mode);
     }
@@ -55,7 +57,7 @@ export const applyThemeMode = (
     mode === "dark" ||
     (mode === "auto" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches);
-  root.dataset.mdxrThemeMode = mode;
+  root.dataset.docThemeMode = mode;
   root.classList.toggle("dark", dark);
   root.style.colorScheme = dark ? "dark" : "light";
 };

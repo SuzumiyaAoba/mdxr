@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 
+import { readDocumentStorage } from "./client/storage.js";
+
 export type LibraryLanguage = "ja" | "en";
 export type LibraryCopy = (typeof labels)["en"] | (typeof labels)["ja"];
 
-const LANGUAGE_STORAGE_KEY = "mdxr:library:language";
+const LANGUAGE_STORAGE_KEY = "doc:library:language";
 
 const labels = {
   en: {
@@ -118,7 +120,10 @@ const countFormatters: Record<LibraryLanguage, Intl.NumberFormat> = {
 
 const initialLanguage = (): LibraryLanguage => {
   try {
-    const stored = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    const stored = readDocumentStorage(
+      window.localStorage,
+      LANGUAGE_STORAGE_KEY
+    );
     if (stored === "ja" || stored === "en") {
       return stored;
     }
@@ -163,8 +168,7 @@ export const useLibraryLanguage = (): LibraryLanguageState => {
 
   useEffect(() => {
     document.documentElement.lang = language;
-    document.title =
-      language === "ja" ? "mdxr · 文書ライブラリ" : "mdxr · Document library";
+    document.title = language === "ja" ? "文書ライブラリ" : "Document library";
     try {
       window.localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
     } catch {

@@ -13,7 +13,7 @@ import { closestEl, copyWithFeedback } from "./shared.js";
 // unrelated drags (files, text selections) keep their native behavior.
 let draggedCard: HTMLElement | null = null;
 
-const DROP_HINTS = ["mdxr-drop-before", "mdxr-drop-end", "mdxr-drop-lane"];
+const DROP_HINTS = ["doc-drop-before", "doc-drop-end", "doc-drop-lane"];
 
 // A board's own lanes — a Board nested in a card's children belongs to the
 // inner board, so `closest` on each candidate does the assignment.
@@ -47,7 +47,7 @@ const syncBoard = (board: HTMLElement): void => {
   const lanes = lanesOf(board);
   for (const [i, lane] of lanes.entries()) {
     const cards = cardsOf(lane);
-    const badge = lane.querySelector(":scope > header .mdxr-lane-count");
+    const badge = lane.querySelector(":scope > header .doc-lane-count");
     if (badge !== null) {
       badge.textContent = String(cards.length);
     }
@@ -84,7 +84,7 @@ const moveCard = (card: HTMLElement, dir: number): void => {
   target?.querySelector(":scope > [data-board-cards]")?.append(card);
   if (target !== undefined) {
     syncBoard(board);
-    board.dispatchEvent(new Event("mdxr:boardchange", { bubbles: true }));
+    board.dispatchEvent(new Event("doc:boardchange", { bubbles: true }));
   }
 };
 
@@ -176,10 +176,10 @@ const dragStart = (e: Event, el: Element): boolean => {
   }
   // Defer so the drag image keeps the card's normal look. Re-check the
   // active drag: a same-frame drop/dragend would otherwise leave a stale
-  // mdxr-drag class behind after dragFinish already ran.
+  // doc-drag class behind after dragFinish already ran.
   requestAnimationFrame(() => {
     if (draggedCard === card) {
-      card.classList.add("mdxr-drag");
+      card.classList.add("doc-drag");
     }
   });
   return true;
@@ -191,7 +191,7 @@ const dragFinish = (home: HTMLElement | null): void => {
   if (draggedCard === null) {
     return;
   }
-  draggedCard.classList.remove("mdxr-drag");
+  draggedCard.classList.remove("doc-drag");
   if (home !== null) {
     clearDropHints(home);
   }
@@ -224,11 +224,11 @@ const dragOver = (e: Event, el: Element): boolean => {
     e instanceof DragEvent ? e.clientY : 0
   );
   clearDropHints(target.home);
-  target.lane.classList.add("mdxr-drop-lane");
+  target.lane.classList.add("doc-drop-lane");
   if (before === null) {
-    box.classList.add("mdxr-drop-end");
+    box.classList.add("doc-drop-end");
   } else {
-    before.classList.add("mdxr-drop-before");
+    before.classList.add("doc-drop-before");
   }
   return true;
 };
@@ -259,7 +259,7 @@ const drop = (e: Event, el: Element): boolean => {
   }
   dragFinish(target.home);
   syncBoard(target.home);
-  target.home.dispatchEvent(new Event("mdxr:boardchange", { bubbles: true }));
+  target.home.dispatchEvent(new Event("doc:boardchange", { bubbles: true }));
   return true;
 };
 

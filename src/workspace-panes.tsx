@@ -30,14 +30,14 @@ const formatVersion = (version: Version): string => {
 };
 
 const SourceCode = ({ source, syntax }: SourceData) => (
-  <section className="mdxr-workspace-code" aria-label="MDX source code">
+  <section className="doc-workspace-code" aria-label="MDX source code">
     <pre>
       {source.split("\n").map((text, index) => (
-        <div className="mdxr-workspace-code-row" key={`line-${index + 1}`}>
-          <span aria-hidden="true" className="mdxr-workspace-code-number">
+        <div className="doc-workspace-code-row" key={`line-${index + 1}`}>
+          <span aria-hidden="true" className="doc-workspace-code-number">
             {index + 1}
           </span>
-          <code className="mdxr-workspace-code-text">
+          <code className="doc-workspace-code-text">
             <WorkspaceCode text={text} syntax={syntax?.[index]} />
           </code>
         </div>
@@ -55,12 +55,12 @@ const VersionSelect = ({
   selection: string;
   onChange: (id: string) => void;
 }) => (
-  <div className="mdxr-workspace-version">
+  <div className="doc-workspace-version">
     <History aria-hidden="true" size={14} />
-    <label htmlFor="mdxr-version-select">Version</label>
+    <label htmlFor="doc-version-select">Version</label>
     <select
       aria-label="Document version"
-      id="mdxr-version-select"
+      id="doc-version-select"
       onChange={(event) => {
         onChange(event.target.value);
       }}
@@ -101,8 +101,8 @@ const DiffControls = ({
   onLayout,
   onWordDiff,
 }: DiffControlsProps) => (
-  <div className="mdxr-workspace-diff-toolbar">
-    <label className="mdxr-workspace-compare">
+  <div className="doc-workspace-diff-toolbar">
+    <label className="doc-workspace-compare">
       Compare with
       <select
         onChange={(event) => {
@@ -120,15 +120,15 @@ const DiffControls = ({
     </label>
     {showStats && (additions > 0 || removals > 0) && (
       <span
-        className="mdxr-workspace-diff-stats"
+        className="doc-workspace-diff-stats"
         aria-label={`${additions} lines added, ${removals} lines removed`}
       >
         <span data-kind="add">+{additions}</span>
         <span data-kind="remove">−{removals}</span>
       </span>
     )}
-    <div className="mdxr-workspace-diff-options">
-      <fieldset className="mdxr-workspace-segmented" aria-label="Diff layout">
+    <div className="doc-workspace-diff-options">
+      <fieldset className="doc-workspace-segmented" aria-label="Diff layout">
         <button
           type="button"
           aria-pressed={diffLayout === "unified"}
@@ -148,7 +148,7 @@ const DiffControls = ({
           Side-by-Side
         </button>
       </fieldset>
-      <label className="mdxr-workspace-word-toggle">
+      <label className="doc-workspace-word-toggle">
         <input
           type="checkbox"
           checked={wordDiff}
@@ -189,13 +189,13 @@ const ViewContent = ({
 }: ViewContentProps) => {
   if (viewError !== "") {
     return (
-      <p className="mdxr-workspace-notice" role="alert">
+      <p className="doc-workspace-notice" role="alert">
         {viewError}
       </p>
     );
   } else if (loading) {
     return (
-      <output className="mdxr-workspace-notice">
+      <output className="doc-workspace-notice">
         Loading {view === "source" ? "source" : "changes"}…
       </output>
     );
@@ -203,7 +203,7 @@ const ViewContent = ({
     return <SourceCode {...source} />;
   } else if (additions === 0 && removals === 0) {
     return (
-      <div className="mdxr-workspace-notice">
+      <div className="doc-workspace-notice">
         <GitCompareArrows aria-hidden="true" size={24} />
         <strong>No changes</strong>
         <p>
@@ -238,10 +238,10 @@ export const HistoricalPreview = ({
   }
   return (
     <section
-      className="mdxr-workspace-pane mdxr-workspace-history-preview"
+      className="doc-workspace-pane doc-workspace-history-preview"
       aria-label="Historical document preview"
     >
-      <div className="mdxr-workspace-pane-header">
+      <div className="doc-workspace-pane-header">
         <h1>Preview</h1>
         <VersionSelect
           versions={history?.versions ?? []}
@@ -250,10 +250,10 @@ export const HistoricalPreview = ({
         />
       </div>
       <iframe
-        className="mdxr-workspace-iframe"
+        className="doc-workspace-iframe"
         key={currentId}
         sandbox=""
-        src={`/__mdxr_history?view=preview&id=${encodeURIComponent(currentId)}&theme=${theme}`}
+        src={`/__doc_history?view=preview&id=${encodeURIComponent(currentId)}&theme=${theme}`}
         title={`Document version ${currentVersion === undefined ? currentId : formatVersion(currentVersion)}`}
       />
     </section>
@@ -290,15 +290,15 @@ export const DocumentPane = ({
   return (
     <section
       key={view}
-      className="mdxr-workspace-pane"
+      className="doc-workspace-pane"
       aria-label={view === "source" ? "Raw MDX" : "Version differences"}
     >
       <div
         className={
-          view === "source" ? "mdxr-workspace-source" : "mdxr-workspace-diff"
+          view === "source" ? "doc-workspace-source" : "doc-workspace-diff"
         }
       >
-        <div className="mdxr-workspace-pane-header">
+        <div className="doc-workspace-pane-header">
           <div>
             <h1>{view === "source" ? "Raw MDX" : "Changes"}</h1>
             <p>

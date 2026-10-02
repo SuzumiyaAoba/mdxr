@@ -70,7 +70,7 @@ const highlight = (
 };
 
 const documentHref = (document: LibraryResult): string =>
-  `/__mdxr_library/open/${encodeURIComponent(document.id)}`;
+  `/__doc_library/open/${encodeURIComponent(document.id)}`;
 
 const LibraryWarningList = ({
   copy,
@@ -81,13 +81,13 @@ const LibraryWarningList = ({
   language: LibraryLanguage;
   warnings: LibraryWarning[];
 }) => (
-  <details className="mdxr-library__warnings">
+  <details className="doc-library__warnings">
     <summary>
       <CircleAlert aria-hidden="true" size={15} />
       <span>{copy.warning(formatCount(warnings.length, language))}</span>
       <ChevronDown
         aria-hidden="true"
-        className="mdxr-library__warning-chevron"
+        className="doc-library__warning-chevron"
         size={14}
       />
     </summary>
@@ -115,12 +115,12 @@ const LibraryDocumentCard = ({
   handleDelete: (document: LibraryResult) => void;
   language: LibraryLanguage;
 }) => (
-  <article className="mdxr-library__card">
-    <div aria-hidden="true" className="mdxr-library__file-icon">
+  <article className="doc-library__card">
+    <div aria-hidden="true" className="doc-library__file-icon">
       <FileText size={19} strokeWidth={1.5} />
     </div>
-    <div className="mdxr-library__document">
-      <div className="mdxr-library__document-heading">
+    <div className="doc-library__document">
+      <div className="doc-library__document-heading">
         <h2>
           <a
             href={documentHref(document)}
@@ -128,17 +128,17 @@ const LibraryDocumentCard = ({
             target="_blank"
           >
             {highlight(document.title || document.path, document.titleMatches)}
-            <span className="mdxr-library__sr-only">{` (${copy.openNewTab})`}</span>
+            <span className="doc-library__sr-only">{` (${copy.openNewTab})`}</span>
             <ArrowUpRight
               aria-hidden="true"
-              className="mdxr-library__external"
+              className="doc-library__external"
               size={15}
             />
           </a>
         </h2>
         {document.status !== "" && (
           <span
-            className={`mdxr-library__status ${statusTones[document.status] ?? TONE.neutral}`}
+            className={`doc-library__status ${statusTones[document.status] ?? TONE.neutral}`}
             data-status={document.status}
           >
             {displayStatus(document.status, language)}
@@ -150,7 +150,7 @@ const LibraryDocumentCard = ({
           href={documentHref(document)}
           target="_blank"
           rel="noopener noreferrer"
-          className="mdxr-library__diagnostics"
+          className="doc-library__diagnostics"
         >
           {
             document.diagnostics?.filter(({ severity }) => severity === "error")
@@ -166,12 +166,12 @@ const LibraryDocumentCard = ({
         </a>
       )}
       {document.excerpt !== "" && (
-        <p className="mdxr-library__excerpt">
+        <p className="doc-library__excerpt">
           {highlight(document.excerpt, document.excerptMatches)}
         </p>
       )}
-      <div className="mdxr-library__document-meta">
-        <p className="mdxr-library__path" title={document.path}>
+      <div className="doc-library__document-meta">
+        <p className="doc-library__path" title={document.path}>
           {document.path}
         </p>
         <time
@@ -179,14 +179,14 @@ const LibraryDocumentCard = ({
           title={`${copy.updated} ${formatDate(document.updatedAt, language)}`}
         >
           <Clock3 aria-hidden="true" size={12} />
-          <span className="mdxr-library__sr-only">{copy.updated} </span>
+          <span className="doc-library__sr-only">{copy.updated} </span>
           {formatDate(document.updatedAt, language)}
         </time>
       </div>
     </div>
     <button
       aria-label={copy.deleteLabel(document.title)}
-      className="mdxr-library__delete"
+      className="doc-library__delete"
       onClick={() => {
         handleDelete(document);
       }}
@@ -215,7 +215,7 @@ const LibraryResultsHeading = ({
   onlyIssues: boolean;
   onIssuesChange: (checked: boolean) => void;
 }) => (
-  <div className="mdxr-library__results-heading">
+  <div className="doc-library__results-heading">
     <h2>{copy.documents}</h2>
     <label>
       <input
@@ -229,7 +229,7 @@ const LibraryResultsHeading = ({
         ? "検証の問題がある文書のみ"
         : "Validation issues only"}
     </label>
-    <output aria-live="polite" className="mdxr-library__count">
+    <output aria-live="polite" className="doc-library__count">
       {data === undefined
         ? copy.loading
         : copy.resultCount(
@@ -238,7 +238,7 @@ const LibraryResultsHeading = ({
           )}
     </output>
     {loading && (
-      <output className="mdxr-library__loading">{copy.loading}</output>
+      <output className="doc-library__loading">{copy.loading}</output>
     )}
   </div>
 );
@@ -269,7 +269,7 @@ export const LibraryResults = ({
     <section
       aria-busy={loading}
       aria-label={copy.title}
-      className="mdxr-library__results"
+      className="doc-library__results"
     >
       <LibraryResultsHeading
         copy={copy}
@@ -282,7 +282,7 @@ export const LibraryResults = ({
       />
 
       {error && (
-        <div className="mdxr-library__error" role="alert">
+        <div className="doc-library__error" role="alert">
           <p>{copy.error}</p>
           {data !== undefined && <p>{copy.staleError}</p>}
           <button onClick={handleRefresh} type="button">
@@ -300,7 +300,7 @@ export const LibraryResults = ({
       )}
 
       {data !== undefined && results.length > 0 && (
-        <ul className="mdxr-library__list">
+        <ul className="doc-library__list">
           {results.map((document) => (
             <li key={document.id}>
               <LibraryDocumentCard
@@ -315,7 +315,7 @@ export const LibraryResults = ({
       )}
 
       {data !== undefined && results.length === 0 && (
-        <div className="mdxr-library__empty">
+        <div className="doc-library__empty">
           <FileSearch aria-hidden="true" size={28} strokeWidth={1.25} />
           <output>
             {data.total === 0 ? copy.emptyLibrary : copy.emptySearch}

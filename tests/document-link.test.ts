@@ -23,7 +23,7 @@ const makeDir = async (prefix: string): Promise<string> => {
 };
 
 const linkedDocumentId = (body: string): string => {
-  const id = /data-mdxr-document="(?<id>[^"]+)"/u.exec(body)?.groups?.id;
+  const id = /data-doc-document="(?<id>[^"]+)"/u.exec(body)?.groups?.id;
   if (id === undefined) {
     throw new Error("Expected a linked-document anchor in the rendered body.");
   }
@@ -37,7 +37,7 @@ const linkedDocumentsFromHtml = (
   html: string
 ): Record<string, LinkedDocument> => {
   const json =
-    /<script\b(?=[^>]*\bid="mdxr-linked-documents")(?=[^>]*\btype="application\/json")[^>]*>(?<json>[\s\S]*?)<\/script>/u.exec(
+    /<script\b(?=[^>]*\bid="doc-linked-documents")(?=[^>]*\btype="application\/json")[^>]*>(?<json>[\s\S]*?)<\/script>/u.exec(
       html
     )?.groups?.json;
   if (json === undefined) {
@@ -77,7 +77,7 @@ describe("DocumentLink", () => {
   it.each(["md", "mdx"] as const)(
     "renders a .%s target as a separately themed HTML document from unsaved source",
     async (extension) => {
-      const dir = await makeDir("mdxr-include-link-extension-");
+      const dir = await makeDir("doc-include-link-extension-");
       const target = path.join(dir, `guide.${extension}`);
       await mkdir(path.join(dir, "refs"));
       await writeFile(
@@ -99,7 +99,7 @@ describe("DocumentLink", () => {
         result.body.includes("Selected target content"),
       ]).toStrictEqual([true, false]);
       expect(result.body).toMatch(
-        /<a\b(?=[^>]*\bdata-mdxr-document="[^"]+")(?=[^>]*\btarget="_blank")(?=[^>]*\brel="noopener noreferrer")[^>]*>/u
+        /<a\b(?=[^>]*\bdata-doc-document="[^"]+")(?=[^>]*\btarget="_blank")(?=[^>]*\brel="noopener noreferrer")[^>]*>/u
       );
       expect([
         result.body.includes(`href="guide.${extension}"`),
@@ -122,7 +122,7 @@ describe("DocumentLink", () => {
   );
 
   it("rebases nested paths, narrows a linked section, and records link ancestry", async () => {
-    const dir = await makeDir("mdxr-include-link-section-");
+    const dir = await makeDir("doc-include-link-section-");
     await mkdir(path.join(dir, "chapters"));
     await mkdir(path.join(dir, "docs"));
     const chapterFile = path.join(dir, "chapters", "chapter.mdx");
@@ -161,7 +161,7 @@ describe("DocumentLink", () => {
   });
 
   it("passes the root theme and custom components to linked documents", async () => {
-    const dir = await makeDir("mdxr-include-link-config-");
+    const dir = await makeDir("doc-include-link-config-");
     await writeFile(
       path.join(dir, "mdxr.config.ts"),
       'export default { components: "./components.tsx", theme: "./theme.css" };\n'
@@ -197,7 +197,7 @@ export const ProjectBadge = defineComponent(
   });
 
   it("updates Include dependencies when the source changes between renders", async () => {
-    const dir = await makeDir("mdxr-include-link-dependencies-");
+    const dir = await makeDir("doc-include-link-dependencies-");
     const projectDir = path.join(dir, "project");
     const outsideDir = path.join(dir, "shared");
     await mkdir(projectDir);
@@ -263,7 +263,7 @@ export const ProjectBadge = defineComponent(
   });
 
   it("rejects unsupported files, missing paths or files, JavaScript, and mixed-mode cycles", async () => {
-    const dir = await makeDir("mdxr-include-link-errors-");
+    const dir = await makeDir("doc-include-link-errors-");
     const filePath = path.join(dir, "unsaved-root.mdx");
     await writeFile(path.join(dir, "script.mdx"), "{process.exit(1)}\n");
     await writeFile(path.join(dir, "unsupported.txt"), "Plain text file.\n");

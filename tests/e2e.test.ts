@@ -36,7 +36,7 @@ describe(renderFile, () => {
     // copy buttons are wired by the inlined delegated listener
     expect(html).toContain("[data-copy]");
     // theme toggle is part of the document chrome
-    expect(html).toContain('data-mdxr-theme data-mode="auto"');
+    expect(html).toContain('data-doc-theme data-mode="auto"');
   });
 
   it("builds the document header from frontmatter meta fields", async () => {
@@ -210,7 +210,7 @@ describe(serveSource, () => {
     try {
       const res = await fetch(`http://localhost:${portOf(server)}/`);
       const html = await res.text();
-      expect(html).toContain("mdxr render error");
+      expect(html).toContain("Document render error");
       expect(html).toContain("not allowed");
     } finally {
       closeServer(server);

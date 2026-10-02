@@ -18,9 +18,9 @@ const deleteDocument = async (
   let deleted = false;
   try {
     const response = await fetch(
-      `/__mdxr_library/document/${encodeURIComponent(id)}`,
+      `/__doc_library/document/${encodeURIComponent(id)}`,
       {
-        headers: { "X-MDXR-Library-Action": "delete" },
+        headers: { "X-Doc-Library-Action": "delete" },
         method: "DELETE",
       }
     );
@@ -61,7 +61,7 @@ export const LibraryDeleteDialog = ({
         opener.focus();
       } else {
         document
-          .querySelector<HTMLInputElement>(".mdxr-library__search input")
+          .querySelector<HTMLInputElement>(".doc-library__search input")
           ?.focus();
       }
     };
@@ -91,9 +91,9 @@ export const LibraryDeleteDialog = ({
   return (
     <dialog
       aria-busy={pending}
-      aria-describedby="mdxr-library-delete-description mdxr-library-delete-path"
-      aria-labelledby="mdxr-library-delete-title"
-      className="mdxr-library__delete-dialog"
+      aria-describedby="doc-library-delete-description doc-library-delete-path"
+      aria-labelledby="doc-library-delete-title"
+      className="doc-library__delete-dialog"
       onCancel={(event) => {
         event.preventDefault();
         if (!inFlight.current) {
@@ -103,23 +103,23 @@ export const LibraryDeleteDialog = ({
       ref={dialogRef}
       role="alertdialog"
     >
-      <h2 id="mdxr-library-delete-title">{copy.deleteTitle}</h2>
-      <div className="mdxr-library__delete-target">
+      <h2 id="doc-library-delete-title">{copy.deleteTitle}</h2>
+      <div className="doc-library__delete-target">
         <p>{target.title}</p>
-        <p id="mdxr-library-delete-path">{target.path}</p>
+        <p id="doc-library-delete-path">{target.path}</p>
       </div>
-      <p id="mdxr-library-delete-description">{copy.deleteDescription}</p>
+      <p id="doc-library-delete-description">{copy.deleteDescription}</p>
       {error && (
-        <p className="mdxr-library__delete-error" role="alert">
+        <p className="doc-library__delete-error" role="alert">
           {copy.deleteError}
         </p>
       )}
-      <div className="mdxr-library__delete-actions">
+      <div className="doc-library__delete-actions">
         <button disabled={pending} onClick={handleCancel} type="button">
           {copy.cancel}
         </button>
         <button
-          className="mdxr-library__delete-confirm"
+          className="doc-library__delete-confirm"
           disabled={pending}
           onClick={handleConfirm}
           type="button"

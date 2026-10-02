@@ -4,7 +4,7 @@ import type { Plugin } from "vite";
 
 type RenderFile = (file: string) => Promise<string>;
 
-const PREFIX = "virtual:mdxr-component/";
+const PREFIX = "virtual:doc-component/";
 const RESOLVED_PREFIX = `\0${PREFIX}`;
 const DOCUMENTS = new Map([
   ["Sources", "sources"],

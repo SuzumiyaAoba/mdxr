@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import documents from "virtual:mdxr-documents";
+import documents from "virtual:doc-documents";
 
 const names = Object.keys(documents).toSorted();
 
@@ -8,7 +8,7 @@ const meta = {
     name: { control: "select", options: names },
   },
   args: { name: names[0] ?? "" },
-  parameters: { layout: "fullscreen", mdxrDocument: true },
+  parameters: { docDocument: true, layout: "fullscreen" },
   render: ({ name }: { name: string }) => (
     <iframe
       className="block h-screen w-full border-0"

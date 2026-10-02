@@ -8,77 +8,77 @@ ul.contains-task-list { padding-left: 1.25rem; }
 .task-list-item input[type='checkbox'] { margin-right: 0.4em; }
 /* Graph fitting is native SVG sizing: readable minimum scale on screen,
  * full-width containment in print, and a keyboard-operable actual-size toggle. */
-.mdxr-graph-view:has(.mdxr-graph-actual:checked) .mdxr-graph-image {
+.doc-graph-view:has(.doc-graph-actual:checked) .doc-graph-image {
   max-width: none !important;
 }
-.mdxr-graph-tools:focus-within { outline: 2px solid rgb(14 165 233); outline-offset: -2px; }
+.doc-graph-tools:focus-within { outline: 2px solid rgb(14 165 233); outline-offset: -2px; }
 /* Navigation is a progressive enhancement: no-JS documents keep native sizing
  * and scrolling. Transform only the outer SVG, never its icons/edge layers. */
-.mdxr-diagram-tools { display: none; }
-.mdxr-diagrams-ready .mdxr-graph-tools { display: none; }
-.mdxr-diagrams-ready .mdxr-diagram:has(.mdxr-diagram-canvas svg) > .mdxr-diagram-tools {
+.doc-diagram-tools { display: none; }
+.doc-diagrams-ready .doc-graph-tools { display: none; }
+.doc-diagrams-ready .doc-diagram:has(.doc-diagram-canvas svg) > .doc-diagram-tools {
   display: flex; align-items: center; justify-content: flex-end; gap: 0.25rem;
   flex-wrap: wrap; padding: 0.375rem 0.75rem; color: rgb(82 82 82);
   border-bottom: 1px solid rgb(229 229 229); font-size: 0.75rem;
 }
-.mdxr-diagram-hint { flex: 1 1 12rem; }
-.mdxr-diagram-actions {
+.doc-diagram-hint { flex: 1 1 12rem; }
+.doc-diagram-actions {
   display: flex; align-items: center; gap: 0.25rem; flex-shrink: 0;
   min-width: 0; margin: 0; padding: 0; border: 0;
 }
-.mdxr-diagram-tools button {
+.doc-diagram-tools button {
   display: inline-flex; align-items: center; justify-content: center;
   width: 2rem; height: 2rem; padding: 0; border-radius: 0.375rem;
   background: transparent; color: inherit; cursor: pointer;
 }
-.mdxr-diagram-tools button:hover { background: rgb(229 229 229); }
-.mdxr-diagram-tools button:disabled { opacity: 0.35; cursor: default; }
-.mdxr-diagram-tools button:focus-visible, .mdxr-diagram-canvas:focus-visible {
+.doc-diagram-tools button:hover { background: rgb(229 229 229); }
+.doc-diagram-tools button:disabled { opacity: 0.35; cursor: default; }
+.doc-diagram-tools button:focus-visible, .doc-diagram-canvas:focus-visible {
   outline: 2px solid rgb(14 165 233); outline-offset: -2px;
 }
-.mdxr-diagram-tools svg { width: 1rem; height: 1rem; }
-.mdxr-diagram-tools output { min-width: 3rem; text-align: center; font-variant-numeric: tabular-nums; }
-.dark .mdxr-diagram-tools { color: rgb(163 163 163) !important; border-color: rgb(64 64 64) !important; }
-.dark .mdxr-diagram-tools button:hover { background: rgb(64 64 64); }
-.mdxr-diagrams-ready .mdxr-diagram-canvas:has(svg) {
+.doc-diagram-tools svg { width: 1rem; height: 1rem; }
+.doc-diagram-tools output { min-width: 3rem; text-align: center; font-variant-numeric: tabular-nums; }
+.dark .doc-diagram-tools { color: rgb(163 163 163) !important; border-color: rgb(64 64 64) !important; }
+.dark .doc-diagram-tools button:hover { background: rgb(64 64 64); }
+.doc-diagrams-ready .doc-diagram-canvas:has(svg) {
   display: flex; align-items: safe center; justify-content: safe center;
   overflow: hidden; min-height: 12rem; max-height: 70vh;
   cursor: grab; touch-action: none;
 }
-.mdxr-diagram-canvas > svg, .mdxr-diagram-canvas > .mermaid { flex: none; }
-.mdxr-diagram-canvas > .mermaid { width: 100%; }
-.mdxr-diagrams-ready .mdxr-diagram-canvas[data-dragging] { cursor: grabbing; user-select: none; }
-.mdxr-diagram-canvas > svg, .mdxr-diagram-canvas > .mermaid > svg {
-  transform: var(--mdxr-diagram-transform, none); transform-origin: 0 0;
+.doc-diagram-canvas > svg, .doc-diagram-canvas > .mermaid { flex: none; }
+.doc-diagram-canvas > .mermaid { width: 100%; }
+.doc-diagrams-ready .doc-diagram-canvas[data-dragging] { cursor: grabbing; user-select: none; }
+.doc-diagram-canvas > svg, .doc-diagram-canvas > .mermaid > svg {
+  transform: var(--doc-diagram-transform, none); transform-origin: 0 0;
 }
-.mdxr-diagram-canvas > .mermaid:has(svg) { overflow: visible; padding: 0; background: transparent; }
+.doc-diagram-canvas > .mermaid:has(svg) { overflow: visible; padding: 0; background: transparent; }
 @media print {
-  .mdxr-graph-tools, .mdxr-diagram-tools { display: none !important; }
-  .mdxr-diagram-canvas {
+  .doc-graph-tools, .doc-diagram-tools { display: none !important; }
+  .doc-diagram-canvas {
     overflow: visible !important; min-height: 0 !important; max-height: none !important;
   }
-  .mdxr-diagram-canvas > svg, .mdxr-diagram-canvas > .mermaid > svg {
+  .doc-diagram-canvas > svg, .doc-diagram-canvas > .mermaid > svg {
     transform: none !important; min-width: 0 !important; max-width: 100% !important;
   }
-  .mdxr-graph-scroll { overflow: visible; }
-  .mdxr-graph-view:has(.mdxr-graph-actual:checked) .mdxr-graph-image,
-  .mdxr-graph-view .mdxr-graph-image {
+  .doc-graph-scroll { overflow: visible; }
+  .doc-graph-view:has(.doc-graph-actual:checked) .doc-graph-image,
+  .doc-graph-view .doc-graph-image {
     max-width: 100% !important; min-width: 0 !important; height: auto !important;
   }
 }
 /* --- Interaction feedback -------------------------------------------
  * Every [data-copy] button carries an idle and a done icon
- * (.mdxr-copy-idle/.mdxr-copy-done); the delegated event handler
+ * (.doc-copy-idle/.doc-copy-done); the delegated event handler
  * (src/client, also bound in the Storybook preview) toggles
  * .copied/.copy-failed for ~1.6s after each clipboard attempt. Success
  * crossfades the copy icon to an emerald check; failure shakes and tints
  * red; pressing the button scales it down briefly. */
-.mdxr-copy {
+.doc-copy {
   display: inline-grid; place-items: center;
   border-radius: 0.25rem;
   transition: opacity 0.15s ease, color 0.15s ease, transform 0.1s ease;
 }
-.mdxr-copy > .mdxr-copy-idle, .mdxr-copy > .mdxr-copy-done {
+.doc-copy > .doc-copy-idle, .doc-copy > .doc-copy-done {
   display: inline-flex; grid-area: 1 / 1;
   opacity: 0; visibility: hidden; pointer-events: none;
   transform: scale(0.82) rotate(-12deg);
@@ -86,23 +86,23 @@ ul.contains-task-list { padding-left: 1.25rem; }
     transform 0.22s cubic-bezier(0.2, 0.7, 0.3, 1),
     visibility 0s linear 0.18s;
 }
-.mdxr-copy:not(.copied) > .mdxr-copy-idle,
-.mdxr-copy.copied > .mdxr-copy-done {
+.doc-copy:not(.copied) > .doc-copy-idle,
+.doc-copy.copied > .doc-copy-done {
   opacity: 1; visibility: visible; pointer-events: auto;
   transform: scale(1) rotate(0);
   transition-delay: 0s;
 }
-.mdxr-copy:hover { opacity: 1; }
-.mdxr-copy:active { transform: scale(0.82); }
-.mdxr-copy:focus-visible {
+.doc-copy:hover { opacity: 1; }
+.doc-copy:active { transform: scale(0.82); }
+.doc-copy:focus-visible {
   outline: 2px solid rgb(14 165 233); outline-offset: 1px; opacity: 1;
 }
-.mdxr-copy.copied, .mdxr-copy.copy-failed { opacity: 1; }
-.mdxr-copy.copy-failed { color: rgb(220 38 38); }
-.dark .mdxr-copy.copy-failed { color: rgb(248 113 113); }
+.doc-copy.copied, .doc-copy.copy-failed { opacity: 1; }
+.doc-copy.copy-failed { color: rgb(220 38 38); }
+.dark .doc-copy.copy-failed { color: rgb(248 113 113); }
 /* Theme toggle: fixed corner chrome injected by htmlDocument. Cycles
  * auto → light → dark; [data-mode] picks which icon shows. */
-.mdxr-theme {
+.doc-theme {
   position: fixed; top: 0.75rem; right: 0.75rem; z-index: 50;
   display: inline-grid; place-items: center;
   height: 2rem; width: 2rem; margin: 0; padding: 0; border-radius: 9999px;
@@ -112,17 +112,17 @@ ul.contains-task-list { padding-left: 1.25rem; }
   transition: color 0.15s ease, background-color 0.15s ease,
     border-color 0.15s ease, transform 0.1s ease;
 }
-.mdxr-theme:hover { color: rgb(23 23 23); background: rgb(255 255 255); }
-.mdxr-theme:active { transform: scale(0.88); }
-.mdxr-theme:focus-visible {
+.doc-theme:hover { color: rgb(23 23 23); background: rgb(255 255 255); }
+.doc-theme:active { transform: scale(0.88); }
+.doc-theme:focus-visible {
   outline: 2px solid rgb(14 165 233); outline-offset: 2px;
 }
-.dark .mdxr-theme {
+.dark .doc-theme {
   border-color: rgb(64 64 64); color: rgb(163 163 163);
   background: rgb(23 23 23 / 0.85);
 }
-.dark .mdxr-theme:hover { color: rgb(250 250 250); background: rgb(23 23 23); }
-.mdxr-theme .mdxr-theme-i {
+.dark .doc-theme:hover { color: rgb(250 250 250); background: rgb(23 23 23); }
+.doc-theme .doc-theme-i {
   display: inline-flex; grid-area: 1 / 1;
   opacity: 0; visibility: hidden; pointer-events: none;
   transform: scale(0.82) rotate(-12deg);
@@ -130,53 +130,53 @@ ul.contains-task-list { padding-left: 1.25rem; }
     transform 0.22s cubic-bezier(0.2, 0.7, 0.3, 1),
     visibility 0s linear 0.18s;
 }
-.mdxr-theme[data-mode="auto"] .mdxr-theme-i-auto,
-.mdxr-theme[data-mode="light"] .mdxr-theme-i-light,
-.mdxr-theme[data-mode="dark"] .mdxr-theme-i-dark {
+.doc-theme[data-mode="auto"] .doc-theme-i-auto,
+.doc-theme[data-mode="light"] .doc-theme-i-light,
+.doc-theme[data-mode="dark"] .doc-theme-i-dark {
   opacity: 1; visibility: visible; pointer-events: auto;
   transform: scale(1) rotate(0);
   transition-delay: 0s;
 }
-.mdxr-theme svg { height: 1rem; width: 1rem; }
+.doc-theme svg { height: 1rem; width: 1rem; }
 @media print {
-  .mdxr-theme { display: none; }
-  .mdxr-copy > .mdxr-copy-idle,
-  .mdxr-copy > .mdxr-copy-done { transition: none; transform: none; }
+  .doc-theme { display: none; }
+  .doc-copy > .doc-copy-idle,
+  .doc-copy > .doc-copy-done { transition: none; transform: none; }
 }
-.mdxr-copy-done { display: none; }
-.copied:not(.mdxr-copy) .mdxr-copy-idle { display: none; }
-.copied:not(.mdxr-copy) .mdxr-copy-done {
+.doc-copy-done { display: none; }
+.copied:not(.doc-copy) .doc-copy-idle { display: none; }
+.copied:not(.doc-copy) .doc-copy-done {
   display: inline-flex;
-  animation: mdxr-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: doc-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.copy-failed { animation: mdxr-shake 0.32s ease; }
+.copy-failed { animation: doc-shake 0.32s ease; }
 [data-ask-copy].copy-failed, [data-ask-save].copy-failed {
   border-color: rgb(248 113 113); color: rgb(220 38 38);
 }
 .dark [data-ask-copy].copy-failed, .dark [data-ask-save].copy-failed {
   color: rgb(248 113 113);
 }
-.mdxr-ask [data-ask-copy].copied, .mdxr-ask [data-ask-save].copied {
+.doc-ask [data-ask-copy].copied, .doc-ask [data-ask-save].copied {
   border-color: rgb(52 211 153 / 0.6);
 }
-/* Board: cards drag between lanes (and reorder within one). .mdxr-drag
- * marks the card being held; .mdxr-drop-before (on a card) and
- * .mdxr-drop-end (on the lane's card box) draw the insertion line;
- * .mdxr-drop-lane outlines the target lane. The ‹ › move buttons stay
+/* Board: cards drag between lanes (and reorder within one). .doc-drag
+ * marks the card being held; .doc-drop-before (on a card) and
+ * .doc-drop-end (on the lane's card box) draw the insertion line;
+ * .doc-drop-lane outlines the target lane. The ‹ › move buttons stay
  * visible at low opacity — they're the touch/keyboard path (HTML5 DnD
  * never reaches touch browsers). */
 [data-board-card] { cursor: grab; }
-[data-board-card].mdxr-drag { cursor: grabbing; opacity: 0.4; }
-[data-board-card].mdxr-drop-before { box-shadow: 0 -2px 0 0 rgb(14 165 233); }
-[data-board-cards].mdxr-drop-end {
+[data-board-card].doc-drag { cursor: grabbing; opacity: 0.4; }
+[data-board-card].doc-drop-before { box-shadow: 0 -2px 0 0 rgb(14 165 233); }
+[data-board-cards].doc-drop-end {
   box-shadow: inset 0 -2px 0 0 rgb(14 165 233);
   border-radius: 0.375rem;
 }
-[data-board-lane].mdxr-drop-lane {
+[data-board-lane].doc-drop-lane {
   outline: 2px dashed rgb(14 165 233 / 0.5);
   outline-offset: -2px;
 }
-.mdxr-move {
+.doc-move {
   display: inline-flex; align-items: center; justify-content: center;
   height: 1.25rem; width: 1.25rem; border: 0; padding: 0;
   border-radius: 0.25rem; background: transparent;
@@ -184,49 +184,49 @@ ul.contains-task-list { padding-left: 1.25rem; }
   transition: opacity 0.15s ease, color 0.15s ease,
     background-color 0.15s ease, transform 0.1s ease;
 }
-.mdxr-move:not(:disabled):hover {
+.doc-move:not(:disabled):hover {
   opacity: 1; color: rgb(64 64 64); background: rgb(245 245 245);
 }
-.dark .mdxr-move:not(:disabled):hover {
+.dark .doc-move:not(:disabled):hover {
   color: rgb(212 212 212); background: rgb(38 38 38);
 }
-.mdxr-move:not(:disabled):active { transform: scale(0.85); }
-.mdxr-move:focus-visible {
+.doc-move:not(:disabled):active { transform: scale(0.85); }
+.doc-move:focus-visible {
   outline: 2px solid rgb(14 165 233); outline-offset: 1px; opacity: 1;
 }
-.mdxr-move:disabled { opacity: 0.2; cursor: default; }
+.doc-move:disabled { opacity: 0.2; cursor: default; }
 @media print {
-  .mdxr-card-moves, .mdxr-board-tools, .mdxr-grip { display: none; }
+  .doc-card-moves, .doc-board-tools, .doc-grip { display: none; }
 }
 /* <Comments>: a hover "+" on every code/diff row opens the comment form
  * under that line. The button sits in the code block's left bleed band
- * (.mdxr-cline — its .line child keeps the -1rem band bleed) or over the
- * diff row's line-number gutter (.mdxr-drow); invisible until the row is
+ * (.doc-cline — its .line child keeps the -1rem band bleed) or over the
+ * diff row's line-number gutter (.doc-drow); invisible until the row is
  * hovered or the button takes keyboard focus. */
-.mdxr-cline, .mdxr-drow { position: relative; }
-.mdxr-add {
+.doc-cline, .doc-drow { position: relative; }
+.doc-add {
   position: absolute; top: 0; bottom: 0; z-index: 1;
   display: flex; align-items: center; justify-content: center;
   width: 1rem; border: 0; padding: 0; background: transparent;
   color: rgb(163 163 163); cursor: pointer; opacity: 0;
   transition: opacity 0.12s ease, color 0.12s ease;
 }
-.mdxr-cline > .mdxr-add { left: -1rem; }
-.mdxr-drow > .mdxr-add { left: 0.1rem; }
-.mdxr-cline:hover > .mdxr-add, .mdxr-drow:hover > .mdxr-add,
-.mdxr-add:focus-visible { opacity: 1; }
-.mdxr-add:hover { color: rgb(2 132 199); }
-.dark .mdxr-add { color: rgb(115 115 115); }
-.dark .mdxr-add:hover { color: rgb(56 189 248); }
+.doc-cline > .doc-add { left: -1rem; }
+.doc-drow > .doc-add { left: 0.1rem; }
+.doc-cline:hover > .doc-add, .doc-drow:hover > .doc-add,
+.doc-add:focus-visible { opacity: 1; }
+.doc-add:hover { color: rgb(2 132 199); }
+.dark .doc-add { color: rgb(115 115 115); }
+.dark .doc-add:hover { color: rgb(56 189 248); }
 @media print {
-  .mdxr-add, .mdxr-thread-tools, [data-comment-form] { display: none; }
+  .doc-add, .doc-thread-tools, [data-comment-form] { display: none; }
 }
-@keyframes mdxr-pop {
+@keyframes doc-pop {
   0% { transform: scale(0.3); opacity: 0; }
   70% { transform: scale(1.15); }
   100% { transform: scale(1); opacity: 1; }
 }
-@keyframes mdxr-shake {
+@keyframes doc-shake {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-2px); }
   75% { transform: translateX(2px); }
@@ -234,17 +234,17 @@ ul.contains-task-list { padding-left: 1.25rem; }
 /* shiki dual-theme: token spans carry --shiki-* variables, not colors.
  * Scoping to .line descendants keeps spans that share a .shiki ancestor for
  * layout (e.g. <Comments> thread strips) from losing their own colors to an
- * undefined --shiki-* var. .mdxr-diff-hl marks the same kind of token span
+ * undefined --shiki-* var. .doc-diff-hl marks the same kind of token span
  * inside DiffView rows — it is not nested in a .shiki code element, so it
  * joins the selectors here. */
-.shiki .line span, .mdxr-diff-hl {
+.shiki .line span, .doc-diff-hl {
   color: var(--shiki-light);
   font-style: var(--shiki-light-font-style, normal);
   font-weight: var(--shiki-light-font-weight, normal);
   text-decoration: var(--shiki-light-text-decoration, none);
 }
 @media (prefers-color-scheme: dark) {
-  .shiki .line span, .mdxr-diff-hl {
+  .shiki .line span, .doc-diff-hl {
     color: var(--shiki-dark);
     font-style: var(--shiki-dark-font-style, normal);
     font-weight: var(--shiki-dark-font-weight, normal);
@@ -253,13 +253,13 @@ ul.contains-task-list { padding-left: 1.25rem; }
 }
 /* The .dark class (set by THEME_JS in documents, the toolbar in Storybook)
  * wins over the media query so toggling it re-themes code blocks too. */
-.dark .shiki .line span, .dark .mdxr-diff-hl {
+.dark .shiki .line span, .dark .doc-diff-hl {
   color: var(--shiki-dark);
   font-style: var(--shiki-dark-font-style, normal);
   font-weight: var(--shiki-dark-font-weight, normal);
   text-decoration: var(--shiki-dark-text-decoration, none);
 }
-html:not(.dark) .shiki .line span, html:not(.dark) .mdxr-diff-hl {
+html:not(.dark) .shiki .line span, html:not(.dark) .doc-diff-hl {
   color: var(--shiki-light);
   font-style: var(--shiki-light-font-style, normal);
   font-weight: var(--shiki-light-font-weight, normal);
@@ -297,15 +297,15 @@ html:not(.dark) .shiki .line span, html:not(.dark) .mdxr-diff-hl {
   background: rgba(245, 158, 11, 0.18); border-radius: 0.25rem;
   outline: 1px solid rgba(245, 158, 11, 0.35); padding: 0 0.1rem;
 }
-.shiki.has-line-numbers { counter-reset: mdxr-line; }
+.shiki.has-line-numbers { counter-reset: doc-line; }
 .shiki.has-line-numbers .line::before {
-  counter-increment: mdxr-line; content: counter(mdxr-line);
+  counter-increment: doc-line; content: counter(doc-line);
   display: inline-block; width: 1.8em; margin-right: 1em;
   text-align: right; color: rgba(113, 113, 122, 0.6); user-select: none;
 }
 .shiki.has-line-numbers .line.diff.add::before,
 .shiki.has-line-numbers .line.diff.remove::before {
-  content: counter(mdxr-line); /* numbers win over the +/− gutter marker */
+  content: counter(doc-line); /* numbers win over the +/− gutter marker */
 }
 /* KaTeX display math gets a little breathing room. */
 .katex-display { margin: 1.25rem 0; }
@@ -313,83 +313,83 @@ html:not(.dark) .shiki .line span, html:not(.dark) .mdxr-diff-hl {
 html { scroll-behavior: smooth; }
 /* Native <details> used by Toc/Details/Tree/Json: drop the default marker,
  * rotate the chevron on open. */
-.mdxr-toc > details > summary::-webkit-details-marker,
-.mdxr-details > summary::-webkit-details-marker,
-.mdxr-tree summary::-webkit-details-marker,
-.mdxr-json summary::-webkit-details-marker { display: none; }
-.mdxr-toc > details > summary::marker,
-.mdxr-details > summary::marker,
-.mdxr-tree summary::marker,
-.mdxr-json summary::marker { content: ""; }
+.doc-toc > details > summary::-webkit-details-marker,
+.doc-details > summary::-webkit-details-marker,
+.doc-tree summary::-webkit-details-marker,
+.doc-json summary::-webkit-details-marker { display: none; }
+.doc-toc > details > summary::marker,
+.doc-details > summary::marker,
+.doc-tree summary::marker,
+.doc-json summary::marker { content: ""; }
 /* Json: the "N keys/items" badge only matters while the node is folded. */
-.mdxr-json details[open] > summary .mdxr-count { display: none; }
-.mdxr-chev { transition: transform 0.15s ease; }
-details[open] > summary .mdxr-chev { transform: rotate(90deg); }
+.doc-json details[open] > summary .doc-count { display: none; }
+.doc-chev { transition: transform 0.15s ease; }
+details[open] > summary .doc-chev { transform: rotate(90deg); }
 /* Smooth expand/collapse for the native <details> blocks (Details, Toc,
  * Tree folders). Chromium animates block-size via ::details-content +
  * interpolate-size; engines without the pseudo-element never match these
  * rules and keep the instant toggle. */
 :root { interpolate-size: allow-keywords; }
-.mdxr-details::details-content,
-.mdxr-toc > details::details-content,
-.mdxr-tree details::details-content {
+.doc-details::details-content,
+.doc-toc > details::details-content,
+.doc-tree details::details-content {
   block-size: 0;
   overflow-y: clip;
   transition:
     content-visibility 0.22s allow-discrete,
     block-size 0.22s ease;
 }
-.mdxr-details[open]::details-content,
-.mdxr-toc > details[open]::details-content,
-.mdxr-tree details[open]::details-content {
+.doc-details[open]::details-content,
+.doc-toc > details[open]::details-content,
+.doc-tree details[open]::details-content {
   block-size: auto;
   block-size: calc-size(auto);
 }
 /* ToC outline: numbered top-level entries, guide-lined nested lists. */
-.mdxr-toc-body ul { list-style: none; margin: 0; padding: 0; }
-.mdxr-toc-body li > p { margin: 0; }
-.mdxr-toc-body a {
+.doc-toc-body ul { list-style: none; margin: 0; padding: 0; }
+.doc-toc-body li > p { margin: 0; }
+.doc-toc-body a {
   display: flex; align-items: baseline; gap: 0.55rem;
   border-radius: 0.375rem; padding: 0.28rem 0.5rem;
   font-size: 0.875rem; line-height: 1.45;
   color: rgb(82 82 82); text-decoration: none;
   transition: color 0.12s, background 0.12s;
 }
-.mdxr-toc-body a:hover { color: rgb(23 23 23); background: rgb(245 245 245); }
-.mdxr-toc-body a:active { background: rgb(229 229 229); }
-.dark .mdxr-toc-body a:active { background: rgb(64 64 64); }
-.dark .mdxr-toc-body a { color: rgb(163 163 163); }
-.dark .mdxr-toc-body a:hover { color: rgb(250 250 250); background: rgb(38 38 38); }
-.mdxr-toc-body > ul { counter-reset: mdxr-toc; }
-.mdxr-toc-body > ul > li { counter-increment: mdxr-toc; }
-.mdxr-toc-body > ul > li > p > a,
-.mdxr-toc-body > ul > li > a { font-weight: 500; color: rgb(64 64 64); }
-.dark .mdxr-toc-body > ul > li > p > a,
-.dark .mdxr-toc-body > ul > li > a { color: rgb(212 212 212); }
-.mdxr-toc-body > ul > li > p > a::before,
-.mdxr-toc-body > ul > li > a::before {
-  content: counter(mdxr-toc); min-width: 1em; flex-shrink: 0; white-space: nowrap;
+.doc-toc-body a:hover { color: rgb(23 23 23); background: rgb(245 245 245); }
+.doc-toc-body a:active { background: rgb(229 229 229); }
+.dark .doc-toc-body a:active { background: rgb(64 64 64); }
+.dark .doc-toc-body a { color: rgb(163 163 163); }
+.dark .doc-toc-body a:hover { color: rgb(250 250 250); background: rgb(38 38 38); }
+.doc-toc-body > ul { counter-reset: doc-toc; }
+.doc-toc-body > ul > li { counter-increment: doc-toc; }
+.doc-toc-body > ul > li > p > a,
+.doc-toc-body > ul > li > a { font-weight: 500; color: rgb(64 64 64); }
+.dark .doc-toc-body > ul > li > p > a,
+.dark .doc-toc-body > ul > li > a { color: rgb(212 212 212); }
+.doc-toc-body > ul > li > p > a::before,
+.doc-toc-body > ul > li > a::before {
+  content: counter(doc-toc); min-width: 1em; flex-shrink: 0; white-space: nowrap;
   font-size: 0.72rem; font-weight: 400; font-variant-numeric: tabular-nums;
   color: rgb(163 163 163);
 }
-.dark .mdxr-toc-body > ul > li > p > a::before,
-.dark .mdxr-toc-body > ul > li > a::before { color: rgb(115 115 115); }
-.mdxr-toc-body ul ul {
+.dark .doc-toc-body > ul > li > p > a::before,
+.dark .doc-toc-body > ul > li > a::before { color: rgb(115 115 115); }
+.doc-toc-body ul ul {
   margin: 0.15rem 0 0.3rem 0.95rem; padding-left: 0.6rem;
   border-left: 1px solid rgb(229 229 229);
 }
-.dark .mdxr-toc-body ul ul { border-color: rgb(64 64 64); }
-.mdxr-toc-body ul ul a { font-size: 0.8125rem; padding: 0.2rem 0.45rem; }
+.dark .doc-toc-body ul ul { border-color: rgb(64 64 64); }
+.doc-toc-body ul ul a { font-size: 0.8125rem; padding: 0.2rem 0.45rem; }
 /* A 64rem viewport fits the usual 45rem article, a 14rem ToC, a 2rem
  * gap, and 1.5rem outer gutters. Only the first document-level ToC docks;
  * additional or nested tables stay in the document flow. Print stays inline. */
 @media screen and (min-width: 64rem) {
-  #mdxr-root:has(> .mdxr-toc, > article:only-of-type > .mdxr-toc) {
+  #doc-root:has(> .doc-toc, > article:only-of-type > .doc-toc) {
     max-width: 64rem;
     padding-right: 17.5rem;
   }
-  #mdxr-root > .mdxr-toc:nth-child(1 of .mdxr-toc),
-  #mdxr-root:not(:has(> .mdxr-toc)) > article:only-of-type > .mdxr-toc:nth-child(1 of .mdxr-toc) {
+  #doc-root > .doc-toc:nth-child(1 of .doc-toc),
+  #doc-root:not(:has(> .doc-toc)) > article:only-of-type > .doc-toc:nth-child(1 of .doc-toc) {
     position: fixed;
     top: 4rem;
     right: max(1.5rem, calc((100vw - 64rem) / 2 + 1.5rem));
@@ -403,99 +403,99 @@ details[open] > summary .mdxr-chev { transform: rotate(90deg); }
 }
 /* Ask: native form controls stay interactive without hydration. The real
  * inputs are visually hidden; state is styled through :checked/~ siblings. */
-.mdxr-choice {
+.doc-choice {
   transition: color 0.12s, background-color 0.12s, border-color 0.12s,
     transform 0.1s ease;
 }
-.mdxr-choice:active { transform: scale(0.985); }
-.mdxr-choice:has(:checked) {
+.doc-choice:active { transform: scale(0.985); }
+.doc-choice:has(:checked) {
   border-color: rgb(23 23 23); background: rgb(250 250 250);
 }
-.dark .mdxr-choice:has(:checked) {
+.dark .doc-choice:has(:checked) {
   border-color: rgb(163 163 163); background: rgb(38 38 38 / 0.35);
 }
-.mdxr-choice:has(:focus-visible),
-.mdxr-q:has(:focus-visible) input ~ .mdxr-switch {
+.doc-choice:has(:focus-visible),
+.doc-q:has(:focus-visible) input ~ .doc-switch {
   outline: 2px solid rgb(14 165 233); outline-offset: 1px;
 }
-.mdxr-mark {
+.doc-mark {
   display: grid; place-items: center; flex-shrink: 0;
   height: 1rem; width: 1rem; margin-top: 0.15rem;
   border: 1px solid rgb(212 212 212); background: rgb(255 255 255);
   color: transparent; transition: all 0.12s;
 }
-.mdxr-mark-box { border-radius: 0.25rem; }
-.mdxr-mark-radio { border-radius: 9999px; }
-.mdxr-mark-radio::after {
+.doc-mark-box { border-radius: 0.25rem; }
+.doc-mark-radio { border-radius: 9999px; }
+.doc-mark-radio::after {
   content: ""; width: 0.45rem; height: 0.45rem; border-radius: 9999px;
   background: rgb(23 23 23); transform: scale(0);
   transition: transform 0.12s;
 }
-.mdxr-choice input:checked ~ .mdxr-mark { border-color: rgb(23 23 23); }
-.mdxr-choice input:checked ~ .mdxr-mark-box {
+.doc-choice input:checked ~ .doc-mark { border-color: rgb(23 23 23); }
+.doc-choice input:checked ~ .doc-mark-box {
   background: rgb(23 23 23); color: rgb(255 255 255);
 }
 /* Checkbox glyph pops in instead of fading. */
-.mdxr-mark-box svg {
+.doc-mark-box svg {
   transform: scale(0.4);
   transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.mdxr-choice input:checked ~ .mdxr-mark-box svg { transform: scale(1); }
-.mdxr-choice input:checked ~ .mdxr-mark-radio::after { transform: scale(1); }
-.dark .mdxr-mark { border-color: rgb(82 82 82); background: rgb(23 23 23); }
-.dark .mdxr-mark-radio::after { background: rgb(250 250 250); }
-.dark .mdxr-choice input:checked ~ .mdxr-mark { border-color: rgb(250 250 250); }
-.dark .mdxr-choice input:checked ~ .mdxr-mark-box {
+.doc-choice input:checked ~ .doc-mark-box svg { transform: scale(1); }
+.doc-choice input:checked ~ .doc-mark-radio::after { transform: scale(1); }
+.dark .doc-mark { border-color: rgb(82 82 82); background: rgb(23 23 23); }
+.dark .doc-mark-radio::after { background: rgb(250 250 250); }
+.dark .doc-choice input:checked ~ .doc-mark { border-color: rgb(250 250 250); }
+.dark .doc-choice input:checked ~ .doc-mark-box {
   background: rgb(250 250 250); color: rgb(23 23 23);
 }
 /* Toggle questions: a native checkbox styled as a switch. */
-.mdxr-switch {
+.doc-switch {
   position: relative; flex-shrink: 0;
   height: 1.25rem; width: 2.25rem; border-radius: 9999px;
   background: rgb(212 212 212); transition: background 0.15s;
 }
-.mdxr-switch::after {
+.doc-switch::after {
   content: ""; position: absolute; top: 0.125rem; left: 0.125rem;
   height: 1rem; width: 1rem; border-radius: 9999px;
   background: rgb(255 255 255); box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
   transition: transform 0.15s, width 0.15s;
 }
-.mdxr-q input:checked ~ .mdxr-switch { background: rgb(23 23 23); }
-.mdxr-q input:checked ~ .mdxr-switch::after { transform: translateX(1rem); }
+.doc-q input:checked ~ .doc-switch { background: rgb(23 23 23); }
+.doc-q input:checked ~ .doc-switch::after { transform: translateX(1rem); }
 /* Thumb stretches while the switch is held (iOS-style press feedback). */
-.mdxr-q:active .mdxr-switch::after { width: 1.25rem; }
-.mdxr-q:active input:checked ~ .mdxr-switch::after {
+.doc-q:active .doc-switch::after { width: 1.25rem; }
+.doc-q:active input:checked ~ .doc-switch::after {
   transform: translateX(0.875rem);
 }
-.dark .mdxr-switch { background: rgb(64 64 64); }
-.dark .mdxr-q input:checked ~ .mdxr-switch { background: rgb(245 245 245); }
-.dark .mdxr-q input:checked ~ .mdxr-switch::after { background: rgb(23 23 23); }
+.dark .doc-switch { background: rgb(64 64 64); }
+.dark .doc-q input:checked ~ .doc-switch { background: rgb(245 245 245); }
+.dark .doc-q input:checked ~ .doc-switch::after { background: rgb(23 23 23); }
 /* Reduced motion: every animation/transition above becomes instant. */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .mdxr-add,
-  .mdxr-copy,
-  .mdxr-copy > .mdxr-copy-idle,
-  .mdxr-copy > .mdxr-copy-done,
-  .mdxr-theme .mdxr-theme-i,
-  .mdxr-chev,
-  .mdxr-choice,
-  .mdxr-mark,
-  .mdxr-mark-box svg,
-  .mdxr-move,
-  .mdxr-switch,
-  .mdxr-switch::after,
-  .mdxr-theme,
-  .mdxr-toc-body a {
+  .doc-add,
+  .doc-copy,
+  .doc-copy > .doc-copy-idle,
+  .doc-copy > .doc-copy-done,
+  .doc-theme .doc-theme-i,
+  .doc-chev,
+  .doc-choice,
+  .doc-mark,
+  .doc-mark-box svg,
+  .doc-move,
+  .doc-switch,
+  .doc-switch::after,
+  .doc-theme,
+  .doc-toc-body a {
     transition: none;
   }
-  .mdxr-copy:active { transform: none; }
-  .mdxr-choice:active { transform: none; }
-  .mdxr-move:active { transform: none; }
-  .mdxr-theme:active { transform: none; }
-  .copied:not(.mdxr-copy) .mdxr-copy-done, .copy-failed { animation: none; }
-  .mdxr-details::details-content,
-  .mdxr-toc > details::details-content,
-  .mdxr-tree details::details-content { transition: none; }
+  .doc-copy:active { transform: none; }
+  .doc-choice:active { transform: none; }
+  .doc-move:active { transform: none; }
+  .doc-theme:active { transform: none; }
+  .copied:not(.doc-copy) .doc-copy-done, .copy-failed { animation: none; }
+  .doc-details::details-content,
+  .doc-toc > details::details-content,
+  .doc-tree details::details-content { transition: none; }
 }
 `;

@@ -304,14 +304,17 @@ describe("document feature workflows", () => {
         title: "Review",
       },
       exportedAt: "2026-10-02T00:00:00.000Z",
-      format: "mdxr-review",
+      format: "doc-review",
       sections: [],
       version: 1,
     });
     const transfer = parseReviewTransfer(raw);
     const local = { annotations: [], history: [] };
     const first = mergeReviews(local, transfer.annotations);
-    expect(first.added).toBe(1);
+    expect({
+      added: first.added,
+      legacy: parseReviewTransfer(raw.replace("doc-review", "mdxr-review")),
+    }).toStrictEqual({ added: 1, legacy: transfer });
     expect(mergeReviews(first.store, transfer.annotations)).toMatchObject({
       added: 0,
       conflicts: 0,

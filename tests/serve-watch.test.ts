@@ -234,7 +234,7 @@ describe("preview watcher lifecycle", () => {
       })
       .mockResolvedValueOnce("updated source preview");
 
-    const recheck = fetch(`${baseUrl}/__mdxr_diagnostics`, { method: "POST" });
+    const recheck = fetch(`${baseUrl}/__doc_diagnostics`, { method: "POST" });
     try {
       await vi.waitFor(() => {
         expect(render).toHaveBeenCalledTimes(2);

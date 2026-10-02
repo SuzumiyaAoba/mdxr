@@ -13,7 +13,7 @@ const escapeAttribute = (value: string): string =>
  * opened from another bundled document.
  */
 export const initLinkedDocuments = (): void => {
-  const payload = document.querySelector("#mdxr-linked-documents");
+  const payload = document.querySelector("#doc-linked-documents");
   if (payload === null) {
     return;
   }
@@ -33,9 +33,9 @@ export const initLinkedDocuments = (): void => {
       return;
     }
     const anchor = event.target.closest<HTMLAnchorElement>(
-      "a[data-mdxr-document]"
+      "a[data-doc-document]"
     );
-    const id = anchor?.dataset.mdxrDocument;
+    const id = anchor?.dataset.docDocument;
     if (
       anchor === null ||
       anchor === undefined ||
@@ -62,7 +62,7 @@ export const initLinkedDocuments = (): void => {
           ? entry.html
           : entry.html.replace(
               "<head>",
-              `<head><base href="${escapeAttribute(base)}" data-mdxr-document-base>`
+              `<head><base href="${escapeAttribute(base)}" data-doc-document-base>`
             );
       url = URL.createObjectURL(
         new Blob([html], { type: "text/html;charset=utf-8" })
@@ -80,7 +80,7 @@ export const initLinkedDocuments = (): void => {
 
 /** A resource base must not send fragment links back to the raw MDX file. */
 export const initLinkedDocumentAnchors = (): void => {
-  if (document.querySelector("base[data-mdxr-document-base]") === null) {
+  if (document.querySelector("base[data-doc-document-base]") === null) {
     return;
   }
   document.addEventListener("click", (event) => {

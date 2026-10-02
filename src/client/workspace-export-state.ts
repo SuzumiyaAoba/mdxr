@@ -18,11 +18,11 @@ export interface WorkspaceBrowserState {
   fields: { label: string; value: string }[];
 }
 
-export const WORKSPACE_EXPORT_STATE_EVENT = "mdxr:export-state" as const;
+export const WORKSPACE_EXPORT_STATE_EVENT = "doc:export-state" as const;
 
 declare global {
   interface DocumentEventMap {
-    "mdxr:export-state": CustomEvent<WorkspaceBrowserState>;
+    "doc:export-state": CustomEvent<WorkspaceBrowserState>;
   }
 }
 
@@ -45,7 +45,7 @@ const choiceText = (control: HTMLInputElement | HTMLOptionElement): string => {
   if (control instanceof HTMLOptionElement) {
     return normalizeLabel(control.textContent) || control.value;
   }
-  const body = control.closest("label")?.querySelector(".mdxr-choice-text");
+  const body = control.closest("label")?.querySelector(".doc-choice-text");
   if (!(body instanceof HTMLElement)) {
     return control.value;
   }
@@ -53,7 +53,7 @@ const choiceText = (control: HTMLInputElement | HTMLOptionElement): string => {
   for (const node of body.childNodes) {
     if (
       node instanceof HTMLElement &&
-      node.classList.contains("mdxr-choice-desc")
+      node.classList.contains("doc-choice-desc")
     ) {
       continue;
     }
@@ -138,7 +138,7 @@ const collectQuestionFields = (
   answeredControls: Set<AnswerControl>
 ): void => {
   for (const question of document.querySelectorAll<HTMLElement>(
-    "#mdxr-root [data-mdxr-q]"
+    "#doc-root [data-doc-q]"
   )) {
     for (const control of questionControls(question)) {
       answeredControls.add(control);
@@ -173,7 +173,7 @@ const collectOtherFields = (
   answeredControls: Set<AnswerControl>
 ): void => {
   for (const control of document.querySelectorAll(
-    "#mdxr-root input, #mdxr-root select, #mdxr-root textarea"
+    "#doc-root input, #doc-root select, #doc-root textarea"
   )) {
     if (!isExportableControl(control) || answeredControls.has(control)) {
       continue;
@@ -193,7 +193,7 @@ const collectFields = (): { label: string; value: string }[] => {
 /** Collect live browser-only state synchronously from the document controllers. */
 export const collectWorkspaceBrowserState = (): WorkspaceBrowserState => {
   const composer = document.querySelector<HTMLTextAreaElement>(
-    "#mdxr-workspace-chat textarea"
+    "#doc-workspace-chat textarea"
   );
   const state: WorkspaceBrowserState = {
     annotations: { annotations: [], history: [] },

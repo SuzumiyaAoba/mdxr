@@ -55,7 +55,7 @@ const GraphNodeCard = ({
     (data.spec?.path === undefined ? undefined : fileIcon(data.spec.path));
   return (
     <div
-      className={`mdxr-graph-node-card flex flex-col justify-center rounded-md border px-2.5 shadow-sm ${
+      className={`doc-graph-node-card flex flex-col justify-center rounded-md border px-2.5 shadow-sm ${
         attrTrue(data.spec?.external)
           ? `border-dashed ${CHIP_BORDER_CLS} ${SUNKEN_CLS}`
           : `${BORDER_CLS} bg-white dark:bg-neutral-950`
@@ -103,14 +103,14 @@ const GraphNodeCard = ({
 const GraphGroupCard = ({
   data,
 }: NodeProps<InteractiveFlowNode>): ReactElement => (
-  <div className="mdxr-graph-group-card">
+  <div className="doc-graph-group-card">
     <span>{data.label}</span>
   </div>
 );
 
 const NODE_TYPES = {
-  "mdxr-group": GraphGroupCard,
-  "mdxr-node": GraphNodeCard,
+  "doc-group": GraphGroupCard,
+  "doc-node": GraphNodeCard,
 } satisfies NodeTypes;
 const FIT_OPTIONS = { maxZoom: 1, padding: 0.15 };
 const PRO_OPTIONS = { hideAttribution: true };
@@ -130,12 +130,12 @@ const GraphTextAlternative = ({
 }: {
   model: InteractiveGraphModel;
 }): ReactElement => (
-  <details className="mdxr-graph-text-alternative">
-    <summary className="mdxr-graph-icon-button" title="図のテキスト表示">
+  <details className="doc-graph-text-alternative">
+    <summary className="doc-graph-icon-button" title="図のテキスト表示">
       <Icon className="h-3.5 w-3.5" name="lucide:text" />
       <span className="sr-only">図のテキスト表示</span>
     </summary>
-    <div className="mdxr-graph-text-content">
+    <div className="doc-graph-text-content">
       <ul>
         {model.specs.nodes.map((node) => (
           <li key={node.id}>
@@ -153,7 +153,7 @@ const GraphTextAlternative = ({
       </ul>
       {model.specs.views.map((view) => (
         <div key={view.id}>
-          <p className="mdxr-graph-detail-title">{view.label ?? view.id}</p>
+          <p className="doc-graph-detail-title">{view.label ?? view.id}</p>
           <TrimBody>{view.body}</TrimBody>
         </div>
       ))}
@@ -173,7 +173,7 @@ interface CanvasProps {
 }
 
 const GraphViewNote = ({ view }: { view?: GraphViewSpec }): ReactElement => (
-  <div className="mdxr-graph-view-note" aria-live="polite">
+  <div className="doc-graph-view-note" aria-live="polite">
     {view === undefined || textOf(view.body).length === 0 ? null : (
       <TrimBody>{view.body}</TrimBody>
     )}
@@ -209,7 +209,7 @@ const InteractiveGraphCanvas = ({
         data: {
           ...node.data,
           dimmed:
-            node.type === "mdxr-node" &&
+            node.type === "doc-node" &&
             selection !== undefined &&
             !selection.nodes.has(node.id),
         },
@@ -223,13 +223,13 @@ const InteractiveGraphCanvas = ({
           edge.data?.color ??
           edgeColor ??
           (selection === undefined
-            ? "var(--mdxr-graph-edge)"
-            : "var(--mdxr-graph-accent)");
+            ? "var(--doc-graph-edge)"
+            : "var(--doc-graph-accent)");
         return {
           ...edge,
           className:
             selection !== undefined && !selection.edges.has(edge.id)
-              ? "mdxr-graph-edge-dimmed"
+              ? "doc-graph-edge-dimmed"
               : undefined,
           markerEnd: { color, type: MarkerType.ArrowClosed },
           style: {
@@ -254,14 +254,14 @@ const InteractiveGraphCanvas = ({
     selectedElement?.focus();
   };
   return (
-    <Panel className="mdxr-interactive-graph">
-      <CaptionBar className="mdxr-graph-caption">
+    <Panel className="doc-interactive-graph">
+      <CaptionBar className="doc-graph-caption">
         <span className={`${CAPTION_TITLE_CLS} min-w-0`}>
           <Icon className="h-3.5 w-3.5 shrink-0" name="lucide:workflow" />
           <span className="truncate">{title}</span>
         </span>
       </CaptionBar>
-      <div className={`mdxr-graph-workspace ${SUNKEN_CLS}`} style={{ height }}>
+      <div className={`doc-graph-workspace ${SUNKEN_CLS}`} style={{ height }}>
         <GraphViewRail
           activeView={activeView}
           defaultCollapsed={viewsCollapsed}
@@ -275,7 +275,7 @@ const InteractiveGraphCanvas = ({
               ? `${graphId}-view-${activeView}`
               : undefined
           }
-          className="mdxr-graph-canvas"
+          className="doc-graph-canvas"
           id={`${graphId}-canvas`}
           ref={canvasRef}
           role={model.specs.views.length > 0 ? "tabpanel" : undefined}
@@ -302,7 +302,7 @@ const InteractiveGraphCanvas = ({
             width={960}
             zoomOnScroll={false}
           >
-            <Background color="var(--mdxr-graph-grid)" gap={16} size={0.75} />
+            <Background color="var(--doc-graph-grid)" gap={16} size={0.75} />
             <Controls
               aria-label="図の操作"
               fitViewOptions={FIT_OPTIONS}
@@ -324,8 +324,8 @@ const InteractiveGraphCanvas = ({
             </Controls>
             {minimap ? (
               <MiniMap
-                maskColor="var(--mdxr-graph-minimap-mask)"
-                nodeColor="var(--mdxr-graph-edge)"
+                maskColor="var(--doc-graph-minimap-mask)"
+                nodeColor="var(--doc-graph-edge)"
                 pannable
                 position="top-right"
                 style={{ height: 72, width: 120 }}

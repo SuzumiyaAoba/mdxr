@@ -10,9 +10,9 @@ import { mergeConfig } from "vite";
 import { importBundledCode } from "../src/load-user-module.js";
 import { mdxrComponentDocuments } from "./component-documents.js";
 
-const VIRTUAL_ID = "virtual:mdxr-documents";
+const VIRTUAL_ID = "virtual:doc-documents";
 const RESOLVED_ID = `\0${VIRTUAL_ID}`;
-const ASCII_ID = "virtual:mdxr-ascii";
+const ASCII_ID = "virtual:doc-ascii";
 const ASCII_RESOLVED_ID = `\0${ASCII_ID}`;
 
 const rootDir = process.cwd();
@@ -129,7 +129,7 @@ const renderDocuments = async function* renderDocuments(
 };
 
 /**
- * Exposes `virtual:mdxr-documents`: every .mdx file under examples/ rendered
+ * Exposes `virtual:doc-documents`: every .mdx file under examples/ rendered
  * through the real `renderFile` pipeline (frontmatter, project components,
  * Tailwind) as a standalone HTML string. Stories display them in an iframe
  * via srcdoc.

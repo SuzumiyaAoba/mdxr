@@ -3,32 +3,32 @@ import { parseWidgetState } from "../widget-state.js";
 import type { WidgetRecord } from "../widget-state.js";
 import { syncBoards } from "./doc-events/board.js";
 import { documentStorageKey } from "./document-identity.js";
+import { readDocumentStorage } from "./storage.js";
 import { createWidgets } from "./widget-controls.js";
 
 export const initWidgetAutosave = (): void => {
   const info = parseAnnotationDocument(
-    document.querySelector("#mdxr-annotation-document")?.textContent ?? "{}"
+    document.querySelector("#doc-annotation-document")?.textContent ?? "{}"
   );
   if (info === undefined) {
     return;
   }
-  const key = documentStorageKey("mdxr:widgets:v1:", info);
+  const key = documentStorageKey("doc:widgets:v1:", info);
   let records = new Map<string, WidgetRecord>();
   let writable = true;
   const readRecords = (): Map<string, WidgetRecord> =>
     new Map(
-      parseWidgetState(localStorage.getItem(key)).records.map((record) => [
-        record.key,
-        record,
-      ])
+      parseWidgetState(readDocumentStorage(localStorage, key)).records.map(
+        (record) => [record.key, record]
+      )
     );
   const notice = (message: string): void => {
-    let status = document.querySelector<HTMLElement>("#mdxr-widget-status");
+    let status = document.querySelector<HTMLElement>("#doc-widget-status");
     if (status === null) {
       status = document.createElement("div");
-      status.id = "mdxr-widget-status";
+      status.id = "doc-widget-status";
       status.setAttribute("role", "status");
-      document.querySelector("#mdxr-content")?.append(status);
+      document.querySelector("#doc-content")?.append(status);
     }
     status.textContent = message;
     if (records.size > 0) {
@@ -50,7 +50,7 @@ export const initWidgetAutosave = (): void => {
         );
         const anchor = document.createElement("a");
         anchor.href = url;
-        anchor.download = "mdxr-answers.json";
+        anchor.download = "doc-answers.json";
         anchor.click();
         setTimeout(() => {
           URL.revokeObjectURL(url);
@@ -123,13 +123,13 @@ export const initWidgetAutosave = (): void => {
         );
       }
     };
-    for (const event of ["input", "change", "mdxr:boardchange"]) {
+    for (const event of ["input", "change", "doc:boardchange"]) {
       document.addEventListener(event, save);
     }
   };
-  if (document.querySelector('[data-mdxr-hydration="true"]') === null) {
+  if (document.querySelector('[data-doc-hydration="true"]') === null) {
     restore();
   } else {
-    document.addEventListener("mdxr:hydrated", restore, { once: true });
+    document.addEventListener("doc:hydrated", restore, { once: true });
   }
 };

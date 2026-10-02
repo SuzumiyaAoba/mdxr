@@ -21,14 +21,14 @@ export const NodeDetails = ({
   moveHandle?: ReactNode;
 }): ReactElement => (
   <div>
-    <div className="mdxr-graph-detail-heading">
+    <div className="doc-graph-detail-heading">
       {moveHandle ?? (
-        <p className="mdxr-graph-detail-title">{node.label ?? node.id}</p>
+        <p className="doc-graph-detail-title">{node.label ?? node.id}</p>
       )}
       {onDismiss === undefined ? null : (
         <button
           aria-label="詳細を閉じる"
-          className="mdxr-graph-icon-button"
+          className="doc-graph-icon-button"
           onClick={onDismiss}
           title="詳細を閉じる"
           type="button"
@@ -39,7 +39,7 @@ export const NodeDetails = ({
     </div>
     {node.note === undefined ||
     (onDismiss !== undefined && textOf(node.body).length > 0) ? null : (
-      <p className="mdxr-graph-detail-note">{node.note}</p>
+      <p className="doc-graph-detail-note">{node.note}</p>
     )}
     {node.path === undefined ? null : (
       <LocLink href={node.href} lines={node.lines} path={node.path} />
@@ -47,7 +47,7 @@ export const NodeDetails = ({
     {node.path !== undefined || node.href === undefined ? null : (
       <LocLink href={node.href} path={node.label ?? node.id} />
     )}
-    <TrimBody className="mdxr-graph-detail-body">{node.body}</TrimBody>
+    <TrimBody className="doc-graph-detail-body">{node.body}</TrimBody>
   </div>
 );
 
@@ -191,7 +191,7 @@ export const NodeInspector = ({
   return (
     // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape bubbles from the inspector's buttons and links.
     <section
-      className="mdxr-graph-details"
+      className="doc-graph-details"
       aria-label="ノードの詳細"
       aria-live="polite"
       ref={inspectorRef}
@@ -213,7 +213,7 @@ export const NodeInspector = ({
         moveHandle={
           <button
             aria-label="詳細を移動"
-            className="mdxr-graph-detail-title mdxr-graph-detail-move"
+            className="doc-graph-detail-title doc-graph-detail-move"
             onKeyDown={moveByKeyboard}
             onLostPointerCapture={endDrag}
             onPointerCancel={endDrag}

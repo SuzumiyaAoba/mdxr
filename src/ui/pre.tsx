@@ -176,7 +176,7 @@ export const Pre = (props: DocProps): ReactElement => {
     <Panel>
       <CodeHeader
         filename={filename}
-        filePath={asString(codeProps["data-mdxr-code-path"])}
+        filePath={asString(codeProps["data-doc-code-path"])}
         lang={lang}
         text={text}
       />

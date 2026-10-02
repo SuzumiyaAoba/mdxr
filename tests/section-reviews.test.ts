@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { parseSectionReviews } from "../src/section-reviews.js";
 import { renderDoc } from "./helpers.js";
 
-const REVIEW_HOST = /<mdxr-section-review\b[^>]*>/gu;
+const REVIEW_HOST = /<doc-section-review\b[^>]*>/gu;
 const SECTION_ID = /data-section-id="(?<id>[^"]+)"/u;
 const SECTION_REVISION = /data-section-revision="(?<revision>[^"]+)"/u;
 

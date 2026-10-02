@@ -175,12 +175,12 @@ const boardWidget = (board: HTMLElement): WidgetControl => {
 export const createWidgets = (): Map<string, WidgetControl> => {
   const current = new Map<string, WidgetControl>();
   const asks = [
-    ...document.querySelectorAll<HTMLElement>("#mdxr-root [data-ask]"),
+    ...document.querySelectorAll<HTMLElement>("#doc-root [data-ask]"),
   ];
   identify(asks, "data-ask-id", (ask) => ask.dataset.askTitle ?? "questions");
   for (const ask of asks) {
     const questions = [
-      ...ask.querySelectorAll<HTMLElement>("[data-mdxr-q]"),
+      ...ask.querySelectorAll<HTMLElement>("[data-doc-q]"),
     ].filter((question) => question.closest("[data-ask]") === ask);
     identify(
       questions,
@@ -193,7 +193,7 @@ export const createWidgets = (): Map<string, WidgetControl> => {
     }
   }
   const boards = [
-    ...document.querySelectorAll<HTMLElement>("#mdxr-root [data-board]"),
+    ...document.querySelectorAll<HTMLElement>("#doc-root [data-board]"),
   ];
   identify(
     boards,

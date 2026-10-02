@@ -63,8 +63,8 @@ describe("diagram navigation", () => {
         await page.setContent(
           await render(`${GRAPH}\n\n${ARCHITECTURE}`, { hydrate })
         );
-        const graph = page.locator("[data-mdxr-diagram]").first();
-        const canvas = graph.locator(".mdxr-diagram-canvas");
+        const graph = page.locator("[data-doc-diagram]").first();
+        const canvas = graph.locator(".doc-diagram-canvas");
         const image = canvas.locator(":scope > svg");
         const original = await geometry(image);
         await graph
@@ -75,7 +75,7 @@ describe("diagram navigation", () => {
         await expect(graph.locator("output").textContent()).resolves.toBe(
           "125%"
         );
-        const second = page.locator("[data-mdxr-diagram]").nth(1);
+        const second = page.locator("[data-doc-diagram]").nth(1);
         await expect(second.locator("output").textContent()).resolves.toBe(
           "100%"
         );
@@ -115,7 +115,7 @@ describe("diagram navigation", () => {
     const page = await browser.newPage();
     try {
       await page.setContent(await render(GRAPH));
-      const canvas = page.locator(".mdxr-diagram-canvas");
+      const canvas = page.locator(".doc-diagram-canvas");
       const image = canvas.locator(":scope > svg");
       const link = page.getByRole("link", { name: "Application interface" });
       await link.evaluate((element) => {
@@ -166,7 +166,7 @@ describe("diagram navigation", () => {
     const page = await browser.newPage();
     try {
       await page.setContent(await render(GRAPH, { hydrate: false }));
-      const canvas = page.locator(".mdxr-diagram-canvas");
+      const canvas = page.locator(".doc-diagram-canvas");
       const image = canvas.locator(":scope > svg");
       const original = await geometry(image);
       const point = {
@@ -226,7 +226,7 @@ describe("diagram navigation", () => {
     });
     try {
       await page.setContent(await render(GRAPH, { hydrate: false }));
-      const canvas = page.locator(".mdxr-diagram-canvas");
+      const canvas = page.locator(".doc-diagram-canvas");
       const image = canvas.locator(":scope > svg");
       const original = await geometry(image);
       const bounds = await geometry(canvas);

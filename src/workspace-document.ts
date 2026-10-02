@@ -15,13 +15,13 @@ export const useWorkspaceDocument = ({
   view: ViewMode;
 }) => {
   useEffect(() => {
-    document.body.classList.add("mdxr-workspace-enabled");
-    const controls = document.querySelector<HTMLElement>(".mdxr-view-controls");
+    document.body.classList.add("doc-workspace-enabled");
+    const controls = document.querySelector<HTMLElement>(".doc-view-controls");
     const pagesButton = controls?.querySelector<HTMLButtonElement>(
-      '[data-mdxr-view="pages"]'
+      '[data-doc-view="pages"]'
     );
     const hasPages =
-      document.querySelector("#mdxr-root [data-mdxr-page]") !== null;
+      document.querySelector("#doc-root [data-doc-page]") !== null;
     const disablePages =
       !hasPages &&
       controls !== null &&
@@ -38,17 +38,17 @@ export const useWorkspaceDocument = ({
         pagesButton.disabled = false;
         pagesButton.removeAttribute("title");
       }
-      document.body.classList.remove("mdxr-workspace-enabled");
+      document.body.classList.remove("doc-workspace-enabled");
     };
   }, []);
 
   useEffect(() => {
     document.body.classList.toggle(
-      "mdxr-chat-open",
+      "doc-chat-open",
       chatOpen && provider !== undefined
     );
     document.body.classList.toggle(
-      "mdxr-alternate-view",
+      "doc-alternate-view",
       view !== "preview" || selection !== "latest"
     );
   }, [chatOpen, provider, selection, view]);

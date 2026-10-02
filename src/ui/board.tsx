@@ -33,7 +33,7 @@ const MoveButton = (props: {
     aria-label={
       props.dir === "-1" ? "Move to previous lane" : "Move to next lane"
     }
-    className="mdxr-move"
+    className="doc-move"
     data-board-move={props.dir}
     title={props.dir === "-1" ? "Move left" : "Move right"}
     type="button"
@@ -76,7 +76,7 @@ export const BoardCard = defineComponent(
       >
         <div className="flex items-start gap-1.5">
           <Icon
-            className={`mdxr-grip mt-0.5 h-3.5 w-3.5 shrink-0 ${TEXT.ghost}`}
+            className={`doc-grip mt-0.5 h-3.5 w-3.5 shrink-0 ${TEXT.ghost}`}
             name="lucide:grip-vertical"
           />
           {status === undefined ? null : (
@@ -89,7 +89,7 @@ export const BoardCard = defineComponent(
           <div className="min-w-0 flex-1 text-sm leading-snug font-medium">
             {title}
           </div>
-          <span className="mdxr-card-moves -mt-0.5 -mr-1 flex shrink-0 items-center">
+          <span className="doc-card-moves -mt-0.5 -mr-1 flex shrink-0 items-center">
             <MoveButton dir="-1" />
             <MoveButton dir="1" />
           </span>
@@ -133,7 +133,7 @@ export const Lane = defineComponent(
             />
           )}
           <span className="min-w-0 flex-1 truncate">{title}</span>
-          <span className={`mdxr-lane-count ${COUNT_CHIP_CLS}`}>{count}</span>
+          <span className={`doc-lane-count ${COUNT_CHIP_CLS}`}>{count}</span>
         </header>
         <div className="min-h-8 space-y-2" data-board-cards="">
           {children}
@@ -152,7 +152,7 @@ export const Board = defineComponent(
   ({ id, title, children }) => (
     <Section title={title}>
       <div
-        className="mdxr-board"
+        className="doc-board"
         data-board=""
         data-board-id={id}
         data-board-title={title}
@@ -160,7 +160,7 @@ export const Board = defineComponent(
         <div className="not-prose flex items-start gap-3 overflow-x-auto pb-1">
           {children}
         </div>
-        <div className="mdxr-board-tools not-prose mt-2 flex items-center justify-between gap-3">
+        <div className="doc-board-tools not-prose mt-2 flex items-center justify-between gap-3">
           <span className={`text-xs ${TEXT.faint}`}>
             Drag cards or use the arrow buttons, then copy the updated markup.
           </span>

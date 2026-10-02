@@ -84,6 +84,8 @@ cat plan.mdx | mdxr serve - --open                                 # explicit st
 
 `--open <file>` takes a document path relative to the working directory, or an absolute path. It opens that document directly, with its relative file path in the preview URL. `--agent codex` or `--agent claude` enables chat in every document workspace. A file argument such as `mdxr serve .mdxr/20260930170000-plan/index.mdx --open` serves the containing `.mdxr/` library and opens that file; outside `.mdxr/`, it serves the file's parent directory.
 
+After all browser tabs are closed, unused previews and their file watchers stop automatically after five minutes. Active agent turns keep their preview alive. `--idle-timeout <seconds>` changes this delay; `--idle-timeout 0` keeps the server running until you stop it. This also applies to `mdxr library`. Ctrl+C, SIGTERM, and SIGHUP close the library, its document previews, and agent connections.
+
 ### Review the rendered document
 
 Select text and click **Add comment**, or open **Annotate → Select figure** to comment on an image, diagram, or chart. Edit or delete comments in the panel, then **Copy Markdown** to send the quoted targets, source locations, and feedback to a coding agent.

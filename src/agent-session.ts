@@ -100,7 +100,7 @@ export const createAgentSession = (
   const storePath = path.join(cwd, ".mdxr", "sessions.json");
   let busy = false;
   let lastError: string | undefined;
-  let onUpdate: (() => void) | undefined;
+  let onUpdate: ((busy: boolean) => void) | undefined;
   let connection: AgentConnection | undefined;
   let claudeConversation: AgentConversation = { messages: [], provider };
 
@@ -158,6 +158,7 @@ export const createAgentSession = (
     lastError = undefined;
     let awaitingQueuedAnswer = false;
     try {
+      onUpdate?.(busy);
       const conversation = await savedConversation();
       connection ??=
         provider === "codex"
@@ -201,7 +202,7 @@ export const createAgentSession = (
           } finally {
             busy = false;
             // oxlint-disable-next-line promise/prefer-await-to-callbacks -- Notify the preview after a background answer is saved.
-            onUpdate?.();
+            onUpdate?.(busy);
           }
         })();
         awaitingQueuedAnswer = true;
@@ -222,6 +223,7 @@ export const createAgentSession = (
     } finally {
       if (!awaitingQueuedAnswer) {
         busy = false;
+        onUpdate?.(busy);
       }
     }
   };
@@ -231,7 +233,7 @@ export const createAgentSession = (
   };
 
   // oxlint-disable-next-line promise/prefer-await-to-callbacks -- Register a notification hook for the long-lived preview.
-  const setOnUpdate = (callback: () => void): void => {
+  const setOnUpdate = (callback: (busy: boolean) => void): void => {
     onUpdate = callback;
   };
 

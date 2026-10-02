@@ -10,6 +10,7 @@ import {
 import type { Server } from "node:http";
 import os from "node:os";
 import path from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -71,7 +72,7 @@ describe("serve document directories", () => {
   });
 
   afterEach(async () => {
-    if (server !== undefined) {
+    if (server?.listening === true) {
       const closed = once(server, "close");
       server.closeAllConnections();
       server.close();
@@ -179,7 +180,9 @@ describe("serve document directories", () => {
     const repeated = await fetch(openUrl, { redirect: "manual" });
     const second = await fetch(
       `${url}/__mdxr_library/open/second%2Findex.mdx`,
-      { redirect: "manual" }
+      {
+        redirect: "manual",
+      }
     );
     const location = opened.headers.get("location");
     if (location === null) {
@@ -207,6 +210,65 @@ describe("serve document directories", () => {
     server = await serveDocuments(undefined, 0, { open: true });
     const openedUrl = vi.mocked(openInBrowser).mock.calls[0]?.[0];
     expect(openedUrl).toMatch(/^http:\/\/localhost:\d+\/$/u);
+  });
+
+  it("expires unused document sessions while the library remains open and recreates them on demand", async () => {
+    await addDocument(".mdxr/first/index.mdx");
+    server = await serveDocuments(undefined, 0, {
+      agent: "codex",
+      idleTimeout: 0.1,
+    });
+    const url = serverUrl(server);
+    const controller = new AbortController();
+    try {
+      const listing = await fetch(`${url}/__mdxr_events`, {
+        signal: controller.signal,
+      });
+      expect(listing.headers.get("content-type")).toBe("text/event-stream");
+      const openUrl = `${url}/__mdxr_library/open/first%2Findex.mdx`;
+      const first = await fetch(openUrl);
+      await first.text();
+      await vi.waitFor(() => {
+        expect(closeAgent).toHaveBeenCalledOnce();
+      });
+      expect(server.listening).toBeTruthy();
+      const reopened = await fetch(openUrl);
+      await reopened.text();
+      expect(reopened.status).toBe(200);
+      expect(createAgentSession).toHaveBeenCalledTimes(2);
+    } finally {
+      controller.abort();
+    }
+  });
+
+  it("keeps the library alive for a connected document and closes both after disconnect", async () => {
+    await addDocument(".mdxr/first/index.mdx");
+    server = await serveDocuments(undefined, 0, {
+      agent: "codex",
+      idleTimeout: 0.1,
+    });
+    const url = serverUrl(server);
+    const preview = await fetch(`${url}/__mdxr_library/open/first%2Findex.mdx`);
+    await preview.text();
+    const controller = new AbortController();
+    try {
+      const events = await fetch(
+        `${new URL(preview.url).origin}/__mdxr_events`,
+        {
+          signal: controller.signal,
+        }
+      );
+      expect(events.status).toBe(200);
+      await delay(300);
+      expect(server.listening).toBeTruthy();
+      expect(closeAgent).not.toHaveBeenCalled();
+    } finally {
+      controller.abort();
+    }
+    await vi.waitFor(() => {
+      expect(server?.listening).toBeFalsy();
+      expect(closeAgent).toHaveBeenCalledOnce();
+    });
   });
 
   it("rejects missing, excluded, external, and symlinked initial documents", async () => {

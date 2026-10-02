@@ -66,6 +66,7 @@ Delete a document from its row to permanently remove only that document file; as
 | --- | --- |
 | `-p, --port <port>` | Preferred port (default `3737`); if taken, the next free port is used |
 | `--open` | Open the library in the default browser once serving |
+| `--idle-timeout <seconds>` | Close unused previews after this delay (default `300`; `0` disables automatic shutdown) |
 
 ## mdxr render
 
@@ -111,9 +112,12 @@ cat plan.mdx | mdxr serve - --open   # explicit stdin preview
 | --- | --- |
 | `-p, --port <port>` | Preferred port (default `3737`); if taken, the next free port is used |
 | `--open [file]` | Open the named document directly, or the directory listing when no file is given |
+| `--idle-timeout <seconds>` | Close unused previews after this delay (default `300`; `0` disables automatic shutdown) |
 | `--agent <agent>` | Show a local chat panel for `codex` or `claude` |
 | `--server <url>` | Codex App Server endpoint; accepts `unix:///absolute/path` or `ws://...` (requires `--agent codex`) |
 | `--session <id>` | Send messages to an existing Codex thread (requires `--agent codex`) |
+
+After the last browser tab disconnects, unused previews stop automatically after five minutes, releasing file watchers and agent connections. Active agent turns keep their preview alive. Each unused document preview can expire while the library stays open; selecting it again starts a fresh preview. Use `--idle-timeout <seconds>` to change the delay or `--idle-timeout 0` to disable it. These settings also apply to `mdxr library`. Ctrl+C, SIGTERM, and SIGHUP close the library and all its previews immediately.
 
 The file given to `--open` is resolved from the working directory; absolute paths also work. The browser opens that document directly, and its preview URL includes the file path relative to the served directory. A file argument such as `mdxr serve .mdxr/20260930170000-plan/index.mdx --open` serves the entire containing `.mdxr/` library and selects that file. Files outside `.mdxr/` use their parent directory as the library.
 

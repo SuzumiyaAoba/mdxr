@@ -1,9 +1,10 @@
 import { spawn } from "node:child_process";
 import type { ChildProcessWithoutNullStreams } from "node:child_process";
 import { once } from "node:events";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -19,7 +20,11 @@ describe("serve CLI input", () => {
   });
 
   afterEach(async () => {
-    if (child !== undefined && child.exitCode === null) {
+    if (
+      child !== undefined &&
+      child.exitCode === null &&
+      child.signalCode === null
+    ) {
       const exited = once(child, "exit");
       child.kill();
       await exited;
@@ -28,10 +33,14 @@ describe("serve CLI input", () => {
     await rm(directory, { force: true, recursive: true });
   });
 
-  const startCli = async (args: string[], source?: string): Promise<string> => {
+  const startCli = async (
+    args: string[],
+    source?: string,
+    command = "serve"
+  ): Promise<string> => {
     const previewProcess = spawn(
       process.execPath,
-      [cliPath, "serve", "-p", "0", ...args],
+      [cliPath, command, "-p", "0", ...args],
       {
         cwd: directory,
         stdio: "pipe",
@@ -92,6 +101,80 @@ describe("serve CLI input", () => {
 
       expect(html).toContain("Stdin preview marker.");
       expect(html).not.toContain('id="mdxr-library-root"');
+    }
+  );
+
+  it.each(["serve", "library"])(
+    "%s exits without a signal when no browser is connected",
+    async (command) => {
+      await startCli([directory, "--idle-timeout", "0.1"], undefined, command);
+      if (child === undefined) {
+        throw new Error("CLI did not start");
+      }
+      await expect(once(child, "exit")).resolves.toStrictEqual([0, null]);
+    }
+  );
+
+  it.each(["SIGINT", "SIGTERM", "SIGHUP"] as const)(
+    "%s closes the library, document watchers and live reload streams",
+    async (signal) => {
+      await writeFile(path.join(directory, "document.mdx"), "# Shutdown\n");
+      const libraryUrl = await startCli([directory, "--idle-timeout", "0"]);
+      const opened = await fetch(
+        `${libraryUrl}/__mdxr_library/open/document.mdx`
+      );
+      await opened.text();
+      const previewUrl = new URL(opened.url).origin;
+      const controller = new AbortController();
+      try {
+        const events = await fetch(`${previewUrl}/__mdxr_events`, {
+          signal: controller.signal,
+        });
+        expect(events.headers.get("content-type")).toBe("text/event-stream");
+        if (child === undefined) {
+          throw new Error("CLI did not start");
+        }
+        const exited = once(child, "exit");
+        child.kill(signal);
+        await expect(exited).resolves.toStrictEqual([0, null]);
+        await expect(fetch(previewUrl)).rejects.toThrow("fetch failed");
+        await expect(fetch(libraryUrl)).rejects.toThrow("fetch failed");
+      } finally {
+        controller.abort();
+      }
+    }
+  );
+
+  it("keeps stdin previews alive until their live reload connection closes", async () => {
+    const url = await startCli(
+      ["-", "--idle-timeout", "0.2"],
+      "# Live reload\n"
+    );
+    const controller = new AbortController();
+    try {
+      const events = await fetch(`${url}/__mdxr_events`, {
+        signal: controller.signal,
+      });
+      expect(events.status).toBe(200);
+      await delay(500);
+      if (child === undefined) {
+        throw new Error("CLI did not start");
+      }
+      expect(child.exitCode).toBeNull();
+      const exited = once(child, "exit");
+      controller.abort();
+      await expect(exited).resolves.toStrictEqual([0, null]);
+    } finally {
+      controller.abort();
+    }
+  });
+
+  it.each(["-1", "Infinity", "2147484", "invalid"])(
+    "rejects invalid --idle-timeout %s before starting a server",
+    async (value) => {
+      await expect(startCli([`--idle-timeout=${value}`])).rejects.toThrow(
+        `invalid --idle-timeout: ${value}`
+      );
     }
   );
 });

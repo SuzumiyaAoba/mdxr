@@ -15,6 +15,8 @@ import { createPreviewRequestHandler } from "./preview-http.js";
 import { createPreviewWatcher } from "./preview-watch.js";
 import type { RenderSourceOptions } from "./render.js";
 import { render, renderFile } from "./render.js";
+import { closePreviewServer, createServerLifetime } from "./serve-lifetime.js";
+import type { ServerLifetimeOptions } from "./serve-lifetime.js";
 
 /** Upper bound on consecutive EADDRINUSE retries before give-up. */
 const MAX_PORT_ATTEMPTS = 100;
@@ -71,12 +73,22 @@ const broadcast = (
 
 const servePreview = async (
   target: PreviewTarget,
-  port: number
+  port: number,
+  options: ServerLifetimeOptions
 ): Promise<http.Server> => {
   let closed = false;
+  const server = http.createServer();
+  const lifetime = createServerLifetime(server, options);
   const document = createPreviewDocument(target);
   const clients = new Set<http.ServerResponse>();
-  const notifyAgent = (): void => {
+  let releaseAgent: (() => void) | undefined;
+  const notifyAgent = (busy?: boolean): void => {
+    if (busy === true) {
+      releaseAgent ??= lifetime.hold();
+    } else if (busy === false) {
+      releaseAgent?.();
+      releaseAgent = undefined;
+    }
     broadcast(clients, "agent");
   };
   target.agent?.setOnUpdate(notifyAgent);
@@ -122,7 +134,8 @@ const servePreview = async (
       }
     })();
   });
-  const server = http.createServer(
+  server.on(
+    "request",
     createPreviewRequestHandler({
       document,
       notifyAgent,
@@ -157,15 +170,16 @@ const servePreview = async (
   server.on("close", () => {
     closed = true;
     watcher.close();
+    releaseAgent?.();
     void closeAgent();
   });
 
-  // Edits during startup must wait for the initial render too.
-  await rebuild(watcher);
   // Bind loopback only — the startup log says localhost, and a preview
   // server has no auth: listening on 0.0.0.0 would expose the document
   // (and its file links) to the LAN.
   try {
+    // Edits during startup must wait for the initial render too.
+    await rebuild(watcher);
     await listenOnFreePort(server, port);
   } catch (error) {
     // Close fires the 'close' handler above — without it a failed listen
@@ -190,7 +204,12 @@ const openPreview = async (
   const address = server.address();
   const boundPort =
     typeof address === "object" && address !== null ? address.port : port;
-  await openInBrowser(`http://localhost:${boundPort}`);
+  try {
+    await openInBrowser(`http://localhost:${boundPort}`);
+  } catch (error) {
+    closePreviewServer(server);
+    throw error;
+  }
 };
 
 /**
@@ -216,10 +235,10 @@ const trackDeps = (
 };
 
 /** Options for {@link serve} and {@link serveSource}. */
-export interface ServeOptions extends Omit<
-  RenderSourceOptions,
-  "filePreview" | "liveReload" | "onDependencies"
-> {
+export interface ServeOptions
+  extends
+    Omit<RenderSourceOptions, "filePreview" | "liveReload" | "onDependencies">,
+    ServerLifetimeOptions {
   /** Open the preview URL in the default browser once the server is listening. */
   open?: boolean;
   /** Show a local chat panel backed by a live Codex or Claude session. */
@@ -236,7 +255,14 @@ export const serve = async (
   port: number,
   opts: Pick<
     ServeOptions,
-    "open" | "agent" | "session" | "server" | "config" | "project"
+    | "open"
+    | "agent"
+    | "session"
+    | "server"
+    | "config"
+    | "project"
+    | "idleTimeout"
+    | "parentLifetime"
   > = {}
 ): Promise<http.Server> => {
   validateAgentOptions(opts.agent, opts.session, opts.server);
@@ -283,7 +309,8 @@ export const serve = async (
       watchDir: path.dirname(abs),
       watchFile: abs,
     },
-    port
+    port,
+    opts
   );
   if (opts.open === true) {
     await openPreview(server, port);
@@ -331,7 +358,8 @@ export const serveSource = async (
       ),
       watchDir: dir,
     },
-    port
+    port,
+    opts
   );
   if (opts.open === true) {
     await openPreview(server, port);

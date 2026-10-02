@@ -8,12 +8,13 @@ import { libraryHtml, libraryJs } from "./library-page.js";
 import type { LibrarySort } from "./library-types.js";
 import { isLocalOrigin, replyJson, replyText } from "./local-http.js";
 import { openInBrowser } from "./open.js";
+import { closePreviewServer, createServerLifetime } from "./serve-lifetime.js";
 import { listenOnFreePort, serve } from "./serve.js";
 import type { ServeOptions } from "./serve.js";
 
 export interface LibraryOptions extends Pick<
   ServeOptions,
-  "agent" | "session" | "server" | "config" | "project"
+  "agent" | "session" | "server" | "config" | "project" | "idleTimeout"
 > {
   /** Open the listing, or a document file path resolved from the working directory. */
   open?: boolean | string;
@@ -38,31 +39,32 @@ const serverUrl = (server: http.Server): string => {
   return `http://localhost:${address.port}`;
 };
 
-const stopPreview = (server: http.Server): void => {
-  server.closeAllConnections();
-  server.close();
+const closePreview = (pending: Promise<http.Server>): void => {
+  void (async () => {
+    try {
+      closePreviewServer(await pending);
+    } catch {
+      // Failed preview starts have no listening server to close.
+    }
+  })();
 };
 
-/** Reuse each document's existing live workspace until the library closes. */
+/** Reuse live workspaces and release their watches and agents when idle. */
 const createPreviews = (
   opts: Pick<
-    LibraryOptions,
-    "agent" | "session" | "server" | "config" | "project"
+    ServeOptions,
+    | "agent"
+    | "session"
+    | "server"
+    | "config"
+    | "project"
+    | "idleTimeout"
+    | "parentLifetime"
   >
 ) => {
   const previews = new Map<string, PreviewEntry>();
   const generations = new Map<string, number>();
   let closed = false;
-
-  const closePreview = (pending: Promise<http.Server>): void => {
-    void (async () => {
-      try {
-        stopPreview(await pending);
-      } catch {
-        // Failed preview starts have no listening server to close.
-      }
-    })();
-  };
 
   return {
     close(): void {
@@ -80,7 +82,15 @@ const createPreviews = (
       if (entry === undefined) {
         entry = {
           generation: generations.get(file) ?? 0,
-          pending: serve(file, 0, opts),
+          pending: (async () => {
+            const preview = await serve(file, 0, opts);
+            preview.once("close", () => {
+              if (previews.get(file) === entry) {
+                previews.delete(file);
+              }
+            });
+            return preview;
+          })(),
         };
         previews.set(file, entry);
       }
@@ -91,7 +101,7 @@ const createPreviews = (
           (generations.get(file) ?? 0) !== entry.generation ||
           previews.get(file) !== entry
         ) {
-          stopPreview(preview);
+          closePreviewServer(preview);
           throw new Error("Document preview has been invalidated");
         }
         return serverUrl(preview);
@@ -108,7 +118,7 @@ const createPreviews = (
       generations.set(file, (generations.get(file) ?? 0) + 1);
       if (entry !== undefined) {
         try {
-          stopPreview(await entry.pending);
+          closePreviewServer(await entry.pending);
         } catch {
           // Failed preview starts have no listening server to close.
         }
@@ -280,6 +290,15 @@ const handleLibraryRequest = async (
     replyJson(response, 403, { error: "forbidden" });
     return;
   }
+  if (url.pathname === "/__mdxr_events") {
+    response.writeHead(200, {
+      "cache-control": "no-cache",
+      connection: "keep-alive",
+      "content-type": "text/event-stream",
+    });
+    response.write("retry: 1000\n\n");
+    return;
+  }
   if (url.pathname === SEARCH_PATH) {
     const sort = parseSort(url.searchParams.get("sort"));
     if (sort === undefined) {
@@ -317,14 +336,18 @@ export const serveLibrary = async (
     typeof opts.open === "string" ? opts.open : undefined,
     index
   );
+  const server = http.createServer();
+  const lifetime = createServerLifetime(server, opts);
   const previews = createPreviews({
     agent: opts.agent,
     config: opts.config,
+    idleTimeout: opts.idleTimeout,
+    parentLifetime: lifetime,
     project: opts.project,
     server: opts.server,
     session: opts.session,
   });
-  const server = http.createServer((request, response) => {
+  server.on("request", (request, response) => {
     void (async () => {
       try {
         await handleLibraryRequest(request, response, index, previews, html);
@@ -346,7 +369,12 @@ export const serveLibrary = async (
   const url = serverUrl(server);
   console.log(`mdxr: library ${dir} at ${url}`);
   if (opts.open === true || typeof opts.open === "string") {
-    await openInBrowser(`${url}${initialPath}`);
+    try {
+      await openInBrowser(`${url}${initialPath}`);
+    } catch (error) {
+      closePreviewServer(server);
+      throw error;
+    }
   }
   return server;
 };

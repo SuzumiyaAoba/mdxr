@@ -22,6 +22,11 @@ import { serveLibrary } from "./library.js";
 import { openInBrowser } from "./open.js";
 import { loadUserComponents, render, renderFile } from "./render.js";
 import { serveDocuments } from "./serve-documents.js";
+import {
+  DEFAULT_IDLE_TIMEOUT,
+  handlePreviewSignals,
+  parseIdleTimeout,
+} from "./serve-lifetime.js";
 import { serveSource } from "./serve.js";
 import {
   createDocument,
@@ -207,17 +212,31 @@ cli
     { default: 3737 }
   )
   .option("--open", "Open the document library in the default browser")
+  .option(
+    "--idle-timeout <seconds>",
+    "Stop after this many seconds without browser connections (0: never)",
+    { default: DEFAULT_IDLE_TIMEOUT }
+  )
   .action(
     async (
       dir: string | undefined,
-      opts: { open?: boolean; port: number | string }
+      opts: {
+        open?: boolean;
+        port: number | string;
+        idleTimeout: number | string;
+      }
     ) => {
       try {
         const port = Number(opts.port);
         if (!Number.isInteger(port) || port < 0 || port > 65_535) {
           throw new Error(`invalid --port: ${opts.port}`);
         }
-        await serveLibrary(dir ?? ".mdxr", port, { open: opts.open === true });
+        handlePreviewSignals(
+          await serveLibrary(dir ?? ".mdxr", port, {
+            idleTimeout: parseIdleTimeout(opts.idleTimeout),
+            open: opts.open === true,
+          })
+        );
       } catch (error) {
         fail(error, false);
       }
@@ -323,6 +342,11 @@ cli
   .option("--agent <agent>", "Chat with codex or claude in the preview")
   .option("--session <id>", "Send to an existing Codex thread")
   .option("--server <url>", "Codex App Server ws:// or unix:// endpoint")
+  .option(
+    "--idle-timeout <seconds>",
+    "Stop after this many seconds without browser connections (0: never)",
+    { default: DEFAULT_IDLE_TIMEOUT }
+  )
   .action(
     async (
       input: string | undefined,
@@ -334,6 +358,7 @@ cli
         port: number | string;
         session?: string;
         server?: string;
+        idleTimeout: number | string;
       }
     ) => {
       try {
@@ -348,6 +373,7 @@ cli
           opts.session,
           opts.server
         );
+        const idleTimeout = parseIdleTimeout(opts.idleTimeout);
         // cac drops a lone '-' unless it follows '--'; keep explicit stdin
         // distinct from the default directory even when the parser omits it.
         const fromStdin =
@@ -361,23 +387,29 @@ cli
             throw new TypeError("--open <file> requires a document directory");
           }
           requireStdinSource();
-          await serveSource(await readStdin(), port, {
-            config: opts.config,
-            dir: process.cwd(),
-            filePath: "<stdin>",
-            open: opts.open === true,
-            project: opts.project,
-          });
+          handlePreviewSignals(
+            await serveSource(await readStdin(), port, {
+              config: opts.config,
+              dir: process.cwd(),
+              filePath: "<stdin>",
+              idleTimeout,
+              open: opts.open === true,
+              project: opts.project,
+            })
+          );
           return;
         }
-        await serveDocuments(input, port, {
-          agent,
-          config: opts.config,
-          open: opts.open,
-          project: opts.project,
-          server: opts.server,
-          session: opts.session,
-        });
+        handlePreviewSignals(
+          await serveDocuments(input, port, {
+            agent,
+            config: opts.config,
+            idleTimeout,
+            open: opts.open,
+            project: opts.project,
+            server: opts.server,
+            session: opts.session,
+          })
+        );
       } catch (error) {
         fail(error, false);
       }

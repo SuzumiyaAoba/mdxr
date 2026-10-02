@@ -240,7 +240,9 @@ describe("live agent sessions", () => {
 
     resolveCompletion?.("Received in the live session");
     await vi.waitFor(() => {
-      expect(onUpdate).toHaveBeenCalledOnce();
+      expect(onUpdate).toHaveBeenCalledTimes(2);
+      expect(onUpdate).toHaveBeenNthCalledWith(1, true);
+      expect(onUpdate).toHaveBeenLastCalledWith(false);
     });
     await expect(session.current()).resolves.toMatchObject({
       busy: false,

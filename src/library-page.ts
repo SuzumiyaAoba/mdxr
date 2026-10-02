@@ -3,7 +3,7 @@ import path from "node:path";
 
 import { build } from "esbuild";
 
-import { THEME_JS } from "./assets/scripts.js";
+import { LIVE_RELOAD_JS, THEME_JS } from "./assets/scripts.js";
 import { inlineScript, inlineStyle } from "./html.js";
 import { pkgRoot, srcDir } from "./paths.js";
 import { buildCss } from "./tailwind.js";
@@ -60,6 +60,7 @@ export const libraryHtml = async (): Promise<string> => {
 <meta name="referrer" content="no-referrer">
 <title>mdxr · 文書ライブラリ / Document library</title>
 <script>${inlineScript(THEME_JS)}</script>
+<script>${inlineScript(LIVE_RELOAD_JS)}</script>
 <style>${inlineStyle(css)}</style>
 <script src="/__mdxr_library.js" defer></script>
 </head>

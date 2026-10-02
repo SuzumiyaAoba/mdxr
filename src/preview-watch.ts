@@ -7,6 +7,12 @@ interface PreviewWatchTarget {
   watchFile?: string;
 }
 
+type WatchListener = (
+  event?: string,
+  filename?: string | null,
+  directory?: string
+) => void;
+
 /** Dependency/build output dirs — never worth a watch fd. */
 const SKIP_DIRS = new Set([
   ".git",
@@ -42,12 +48,17 @@ const createWatchSet = () => {
   };
 
   /** One watcher on `dir` itself (no descent). */
-  const armFlat = (dir: string, onEvent: () => void): void => {
+  const armFlat = (dir: string, onEvent: WatchListener): void => {
     if (armed.has(dir) || SKIP_DIRS.has(path.basename(dir))) {
       return;
     }
     try {
-      track(fs.watch(dir, onEvent), dir);
+      track(
+        fs.watch(dir, (event, filename) => {
+          onEvent(event, filename, dir);
+        }),
+        dir
+      );
     } catch {
       // Directory gone or unwatched — skip.
     }
@@ -59,7 +70,7 @@ const createWatchSet = () => {
    * runs on an already-armed root, so directories created mid-session get
    * picked up on the next rebuild (armDependencies re-arms the tree).
    */
-  const arm = (dir: string, onEvent: () => void): void => {
+  const arm = (dir: string, onEvent: WatchListener): void => {
     if (
       SKIP_DIRS.has(path.basename(dir)) ||
       (path.basename(dir) === "history" &&
@@ -69,7 +80,12 @@ const createWatchSet = () => {
     }
     if (!armed.has(dir)) {
       try {
-        track(fs.watch(dir, onEvent), dir);
+        track(
+          fs.watch(dir, (event, filename) => {
+            onEvent(event, filename, dir);
+          }),
+          dir
+        );
       } catch {
         // Watch failed (dir gone, fd limit) — children may still be
         // watchable, so keep descending.
@@ -106,7 +122,7 @@ const createWatchSet = () => {
 const watchTarget = (
   watch: ReturnType<typeof createWatchSet>,
   target: PreviewWatchTarget,
-  notify: (event?: string, filename?: string | null) => void
+  notify: WatchListener
 ): boolean => {
   let recursiveWatch = false;
   // fs.watch recursive mode exists only on darwin/win32; elsewhere `arm`
@@ -129,6 +145,83 @@ const watchTarget = (
 
 const RELOAD_DEBOUNCE_MS = 80;
 const SESSION_TEMP_FILE = /^\.sessions-.*\.tmp$/u;
+
+const fileSignature = (file: string): string | undefined => {
+  try {
+    const stats = fs.statSync(file, { bigint: true });
+    return [
+      stats.dev,
+      stats.ino,
+      stats.size,
+      stats.mtimeNs,
+      stats.ctimeNs,
+    ].join(":");
+  } catch {
+    return undefined;
+  }
+};
+
+const canonicalPath = (file: string): string => {
+  try {
+    return fs.realpathSync(file);
+  } catch {
+    return path.resolve(file);
+  }
+};
+
+/** Ignore delayed/duplicate events for files whose observed state is unchanged. */
+const createFileState = () => {
+  const signatures = new Map<string, string | undefined>();
+  const remember = (file: string): void => {
+    const signature = fileSignature(file);
+    for (const alias of [path.resolve(file), canonicalPath(file)]) {
+      if (!signatures.has(alias)) {
+        signatures.set(alias, signature);
+      }
+    }
+  };
+  const rememberTree = (directory: string): void => {
+    remember(directory);
+    let entries: fs.Dirent[];
+    try {
+      entries = fs.readdirSync(directory, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (
+        SKIP_DIRS.has(entry.name) ||
+        (entry.name === "history" && path.basename(directory) === ".mdxr")
+      ) {
+        continue;
+      }
+      const file = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        rememberTree(file);
+      } else {
+        remember(file);
+      }
+    }
+  };
+  return {
+    hasChanged(paths: string[]): boolean {
+      const known = paths.find((file) => signatures.has(file));
+      if (known === undefined) {
+        return true;
+      }
+      const current = fileSignature(known);
+      if (current === signatures.get(known)) {
+        return false;
+      }
+      for (const file of paths) {
+        signatures.set(file, current);
+      }
+      return true;
+    },
+    remember,
+    rememberTree,
+  };
+};
 
 const isIgnoredChange = (
   target: PreviewWatchTarget,
@@ -165,21 +258,47 @@ export const createPreviewWatcher = (
 ) => {
   const watch = createWatchSet();
   const dependencies = new Set<string>();
-  let canonicalDir = path.resolve(target.watchDir);
-  try {
-    canonicalDir = fs.realpathSync(target.watchDir);
-  } catch {
-    // The directory may have disappeared before its watcher is installed.
+  const fileState = createFileState();
+  const canonicalDir = canonicalPath(target.watchDir);
+  // Dependencies are only known after rendering. Snapshot existing files now
+  // so delayed startup events cannot queue a reload during the initial render.
+  fileState.rememberTree(target.watchDir);
+  if (target.watchFile !== undefined) {
+    fileState.remember(target.watchFile);
   }
   let closed = false;
   let timer: NodeJS.Timeout | undefined;
-  const notify = (_event?: string, filename?: string | null): void => {
-    const tracked =
-      filename !== undefined &&
-      filename !== null &&
-      (dependencies.has(path.resolve(target.watchDir, filename)) ||
-        dependencies.has(path.resolve(canonicalDir, filename)));
-    if (closed || isIgnoredChange(target, filename, tracked)) {
+  const notify: WatchListener = (
+    event,
+    filename,
+    directory = target.watchDir
+  ): void => {
+    const paths =
+      filename === undefined || filename === null
+        ? []
+        : [
+            path.resolve(directory, filename),
+            path.resolve(canonicalPath(directory), filename),
+          ];
+    const tracked = paths.some((file) => dependencies.has(file));
+    const [eventPath] = paths;
+    const relative =
+      eventPath === undefined
+        ? filename
+        : path.relative(target.watchDir, eventPath);
+    if (closed || isIgnoredChange(target, relative, tracked)) {
+      return;
+    }
+    if (
+      event === "change" &&
+      filename === path.basename(directory) &&
+      !fs.existsSync(eventPath ?? "")
+    ) {
+      // Darwin can report the watched directory's own metadata under its
+      // basename. Child edits have their own events; this is not a child.
+      return;
+    }
+    if (!fileState.hasChanged(paths)) {
       return;
     }
     clearTimeout(timer);
@@ -196,15 +315,17 @@ export const createPreviewWatcher = (
       dependencies.clear();
       for (const dependency of paths) {
         dependencies.add(path.resolve(dependency));
+        fileState.remember(dependency);
       }
       if (!recursiveWatch) {
         watch.arm(target.watchDir, notify);
       }
       for (const dependency of paths) {
         const directory = path.dirname(dependency);
+        const canonical = canonicalPath(directory);
         const inside =
-          directory === target.watchDir ||
-          directory.startsWith(`${target.watchDir}${path.sep}`);
+          canonical === canonicalDir ||
+          canonical.startsWith(`${canonicalDir}${path.sep}`);
         if (inside || directory.split(path.sep).includes("node_modules")) {
           continue;
         }

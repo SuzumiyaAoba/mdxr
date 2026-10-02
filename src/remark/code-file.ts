@@ -8,7 +8,7 @@ import type { VFile } from "vfile";
 import { langForPath } from "../langs.js";
 import { parseLineRange } from "../lines.js";
 import type { MdxTarget } from "./ast.js";
-import { isFlowElement, jsxAttr } from "./ast.js";
+import { isFlowElement, jsxAttr, setHProperty } from "./ast.js";
 
 /** A flow element that becomes a `code` node after mutation. */
 interface CodeTarget extends MdxTarget {
@@ -81,6 +81,7 @@ export const remarkCodeFile = () => (tree: Node, file: VFile) => {
     target.lang = lang;
     // `"` inside a path would close the title="…" meta early — quote it as `'`.
     const title = rel.replaceAll('"', "'");
+    setHProperty(target, "data-mdxr-code-path", rel);
     target.meta = `title="${title}${titleSuffix}"`;
     target.value = content;
   });

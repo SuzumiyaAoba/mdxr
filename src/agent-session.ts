@@ -5,6 +5,7 @@ import path from "node:path";
 import { createClaudeStreamSession } from "./claude-stream-session.js";
 import { createCodexAppServerSession } from "./codex-app-server.js";
 import { acquireFileLock } from "./file-lock.js";
+import { isRecord } from "./guards.js";
 
 export type AgentProvider = "codex" | "claude";
 
@@ -35,35 +36,25 @@ interface AgentConnection {
 
 const emptyStore = (): SessionStore => ({ documents: {}, version: 1 });
 
-const isConversation = (value: unknown): value is AgentConversation => {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-  const item = value as Partial<AgentConversation>;
-  return (
-    (item.provider === "codex" || item.provider === "claude") &&
-    (item.sessionId === undefined || typeof item.sessionId === "string") &&
-    Array.isArray(item.messages) &&
-    item.messages.every(
-      (message) =>
-        (message.role === "user" || message.role === "assistant") &&
-        typeof message.content === "string"
-    )
-  );
-};
+const isMessage = (value: unknown): value is AgentMessage =>
+  isRecord(value) &&
+  (value.role === "user" || value.role === "assistant") &&
+  typeof value.content === "string";
 
-const isSessionStore = (value: unknown): value is SessionStore => {
-  if (typeof value !== "object" || value === null) {
-    return false;
-  }
-  const store = value as Partial<SessionStore>;
-  return (
-    store.version === 1 &&
-    typeof store.documents === "object" &&
-    store.documents !== null &&
-    Object.values(store.documents).every(isConversation)
-  );
-};
+const isConversation = (value: unknown): value is AgentConversation =>
+  isRecord(value) &&
+  !Array.isArray(value) &&
+  (value.provider === "codex" || value.provider === "claude") &&
+  (value.sessionId === undefined || typeof value.sessionId === "string") &&
+  Array.isArray(value.messages) &&
+  value.messages.every(isMessage);
+
+const isSessionStore = (value: unknown): value is SessionStore =>
+  isRecord(value) &&
+  value.version === 1 &&
+  isRecord(value.documents) &&
+  !Array.isArray(value.documents) &&
+  Object.values(value.documents).every(isConversation);
 
 const readStore = async (file: string): Promise<SessionStore> => {
   let raw: string;

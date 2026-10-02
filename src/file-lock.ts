@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import type { FileHandle } from "node:fs/promises";
 import { setTimeout as delay } from "node:timers/promises";
 
 const LOCK_STALE_AFTER_MS = 10 * 60 * 1000;
@@ -24,6 +25,28 @@ const removeStaleLock = async (lockPath: string): Promise<boolean> => {
   }
 };
 
+const closeLockFile = async (
+  handle: FileHandle,
+  lockPath: string
+): Promise<void> => {
+  try {
+    await handle.close();
+  } finally {
+    await fs.rm(lockPath, { force: true });
+  }
+};
+
+const createLockFile = async (lockPath: string): Promise<FileHandle> => {
+  const handle = await fs.open(lockPath, "wx", 0o600);
+  try {
+    await handle.writeFile(`${process.pid}\n${Date.now()}\n`);
+    return handle;
+  } catch (error) {
+    await closeLockFile(handle, lockPath);
+    throw error;
+  }
+};
+
 /** Serialize read-modify-write operations across preview processes. */
 export const acquireFileLock = async (
   lockPath: string,
@@ -34,12 +57,9 @@ export const acquireFileLock = async (
     try {
       // Lock acquisition and stale-lock recovery must be ordered.
       // oxlint-disable-next-line no-await-in-loop
-      const handle = await fs.open(lockPath, "wx", 0o600);
-      // oxlint-disable-next-line no-await-in-loop
-      await handle.writeFile(`${process.pid}\n${Date.now()}\n`);
+      const handle = await createLockFile(lockPath);
       return async () => {
-        await handle.close();
-        await fs.rm(lockPath, { force: true });
+        await closeLockFile(handle, lockPath);
       };
     } catch (error) {
       if (!isNodeError(error) || error.code !== "EEXIST") {

@@ -58,6 +58,7 @@ describe("project document watching", () => {
     await vi.advanceTimersByTimeAsync(100);
     expect(onResult).toHaveBeenCalledOnce();
 
+    await writeFile(path.join(dir, ".mdxr", "doc.mdx"), "# Updated preview");
     listener("change", path.join(".mdxr", "doc.mdx"));
     await vi.advanceTimersByTimeAsync(100);
     vi.useRealTimers();

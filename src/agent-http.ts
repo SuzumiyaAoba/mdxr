@@ -24,6 +24,7 @@ const readMessage = async (req: http.IncomingMessage): Promise<string> => {
   if (contentType !== "application/json") {
     throw new Error("Expected application/json");
   }
+  req.setEncoding("utf-8");
   let source = "";
   for await (const chunk of req) {
     source += Buffer.isBuffer(chunk) ? chunk.toString("utf-8") : String(chunk);

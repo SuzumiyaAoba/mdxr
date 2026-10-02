@@ -1,4 +1,11 @@
-import { mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  realpath,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -177,6 +184,33 @@ describe("live agent sessions", () => {
       })
     );
   });
+
+  it.each([
+    { documents: [], version: 1 },
+    {
+      documents: {
+        invalid: { messages: [null], provider: "codex" },
+      },
+      version: 1,
+    },
+  ])(
+    "rejects malformed stores without sending or overwriting them (%j)",
+    async (store) => {
+      const storePath = path.join(dir, ".mdxr", "sessions.json");
+      await mkdir(path.dirname(storePath));
+      const source = JSON.stringify(store);
+      await writeFile(storePath, source);
+      codexSend.mockResolvedValue({ answer: "Answer", sessionId: "thread-1" });
+      const session = createAgentSession(documentPath, "codex");
+
+      await expect(session.send("Hello")).rejects.toThrow(
+        "Invalid mdxr session store"
+      );
+      expect(codexSend).not.toHaveBeenCalled();
+      await expect(readFile(storePath, "utf-8")).resolves.toBe(source);
+      await session.close();
+    }
+  );
 
   it("records a queued message immediately and adds its answer later", async () => {
     let resolveCompletion: ((value: string) => void) | undefined;

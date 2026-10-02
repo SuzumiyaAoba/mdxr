@@ -65,6 +65,41 @@ const parser = unified()
   .use(remarkMath)
   .use(remarkDirective);
 const REMOTE = /^(?:[a-z][a-z\d+.-]*:|#|\/)/iu;
+const URL_SUFFIX = /[?#]/u;
+
+const rebasePath = (value: string, origin: string, root: string): string =>
+  REMOTE.test(value)
+    ? value
+    : path
+        .relative(root, path.resolve(origin, value))
+        .split(path.sep)
+        .join("/");
+
+/** Rebase the decoded pathname while preserving the authored URL suffix. */
+const rebaseUrl = (value: string, origin: string, root: string): string => {
+  if (value === "" || REMOTE.test(value)) {
+    return value;
+  }
+  const suffixStart = value.search(URL_SUFFIX);
+  const pathname = suffixStart === -1 ? value : value.slice(0, suffixStart);
+  const suffix = suffixStart === -1 ? "" : value.slice(suffixStart);
+  if (pathname === "") {
+    return value;
+  }
+  let decoded = pathname;
+  try {
+    decoded = decodeURIComponent(pathname);
+  } catch {
+    // A literal percent sign may occur in an authored resource filename.
+  }
+  return (
+    path
+      .relative(root, path.resolve(origin, decoded))
+      .split(path.sep)
+      .map(encodeURIComponent)
+      .join("/") + suffix
+  );
+};
 const isDocumentReference = (node: Node): node is MdxTarget =>
   (node.type === "mdxJsxFlowElement" || node.type === "mdxJsxTextElement") &&
   "name" in node &&
@@ -158,13 +193,6 @@ const rebase = (node: Node, origin: string, root: string): void => {
   if (origin === root) {
     return;
   }
-  const relative = (value: string): string =>
-    REMOTE.test(value)
-      ? value
-      : path
-          .relative(root, path.resolve(origin, value))
-          .split(path.sep)
-          .join("/");
   // Keep authored fence labels while resolving their file links from the
   // included document. CodeFile already rebases its explicit path below.
   if (node.type === "code" && "meta" in node && typeof node.meta === "string") {
@@ -173,24 +201,28 @@ const rebase = (node: Node, origin: string, root: string): void => {
       setHProperty(
         node,
         "data-mdxr-code-path",
-        relative(splitPathLines(filename).path)
+        rebasePath(splitPathLines(filename).path, origin, root)
       );
     }
   }
   if ("url" in node && typeof node.url === "string") {
-    node.url = relative(node.url);
+    node.url = rebaseUrl(node.url, origin, root);
   }
   if (!("attributes" in node) || !Array.isArray(node.attributes)) {
     return;
   }
   for (const attr of node.attributes) {
     if (
-      isRecord(attr) &&
-      ["path", "src", "poster", "href"].includes(String(attr.name)) &&
-      typeof attr.value === "string"
+      !isRecord(attr) ||
+      !["path", "src", "poster", "href"].includes(String(attr.name)) ||
+      typeof attr.value !== "string"
     ) {
-      attr.value = relative(attr.value);
+      continue;
     }
+    attr.value =
+      attr.name === "path"
+        ? rebasePath(attr.value, origin, root)
+        : rebaseUrl(attr.value, origin, root);
   }
 };
 

@@ -1,6 +1,6 @@
 import { once } from "node:events";
 import fs from "node:fs";
-import { mkdir, mkdtemp, realpath, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
 import type { Server } from "node:http";
 import os from "node:os";
 import path from "node:path";
@@ -8,6 +8,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { isRecord } from "../src/guards.js";
+import { createPreviewWatcher } from "../src/preview-watch.js";
 import type { renderFile } from "../src/render.js";
 import { render } from "../src/render.js";
 import { serveSource } from "../src/serve.js";
@@ -59,6 +60,45 @@ describe("preview watcher lifecycle", () => {
     expect(render).toHaveBeenCalledTimes(2);
   });
 
+  it("ignores delayed startup and duplicate events without losing actual edits", async () => {
+    const file = path.join(dir, "document.mdx");
+    const dependency = path.join(dir, "part.md");
+    await writeFile(file, "# Initial\n");
+    await writeFile(dependency, "Initial dependency\n");
+    const watch = vi.spyOn(fs, "watch");
+    const onChange = vi.fn<() => void>();
+    const watcher = createPreviewWatcher(
+      { watchDir: dir, watchFile: file },
+      onChange
+    );
+    try {
+      const listener = watch.mock.calls[0]?.at(2);
+      if (typeof listener !== "function") {
+        throw new TypeError("recursive watcher was not installed");
+      }
+      vi.useFakeTimers();
+      listener("change", path.basename(dir));
+      listener("rename", "document.mdx");
+      listener("rename", "part.md");
+      await vi.advanceTimersByTimeAsync(100);
+      expect(onChange).not.toHaveBeenCalled();
+      watcher.armDependencies([await realpath(dependency)]);
+
+      await writeFile(file, "# Updated\n");
+      listener("change", "document.mdx");
+      listener("rename", "document.mdx");
+      await vi.advanceTimersByTimeAsync(100);
+      expect(onChange).toHaveBeenCalledOnce();
+
+      await writeFile(dependency, "Updated dependency\n");
+      listener("change", "part.md");
+      await vi.advanceTimersByTimeAsync(100);
+      expect(onChange).toHaveBeenCalledTimes(2);
+    } finally {
+      watcher.close();
+    }
+  });
+
   it("does not install dependency watchers after closing during a rebuild", async () => {
     const watch = vi.spyOn(fs, "watch");
     server = await serveSource("# Preview", 0, { dir });
@@ -99,6 +139,9 @@ describe("preview watcher lifecycle", () => {
   it("rebuilds when a tracked document under .mdxr changes", async () => {
     const watch = vi.spyOn(fs, "watch");
     const canonicalDir = await realpath(dir);
+    const included = path.join(canonicalDir, ".mdxr", "included.mdx");
+    await mkdir(path.dirname(included));
+    await writeFile(included, "Initial dependency");
     vi.mocked(render).mockImplementation(async (_source, opts) => {
       opts?.onDependencies?.([
         path.join(canonicalDir, ".mdxr", "included.mdx"),
@@ -111,9 +154,40 @@ describe("preview watcher lifecycle", () => {
       throw new TypeError("Recursive document watcher was not installed");
     }
     vi.useFakeTimers();
+    await writeFile(included, "Updated dependency");
     listener("change", path.join(".mdxr", "included.mdx"));
     await vi.advanceTimersByTimeAsync(100);
     expect(render).toHaveBeenCalledTimes(2);
+  });
+
+  it("resolves external events from their watched directory when basenames match", async () => {
+    const source = path.join(dir, "document.mdx");
+    const dependency = path.join(external, "document.mdx");
+    await writeFile(source, "# Source\n");
+    await writeFile(dependency, "# Dependency\n");
+    const watch = vi.spyOn(fs, "watch");
+    const onChange = vi.fn<() => void>();
+    const watcher = createPreviewWatcher(
+      { watchDir: dir, watchFile: source },
+      onChange
+    );
+    try {
+      watcher.armDependencies([dependency]);
+      const listener = watch.mock.calls.find(
+        ([directory, options]) =>
+          directory === external && typeof options === "function"
+      )?.[1];
+      if (typeof listener !== "function") {
+        throw new TypeError("external dependency watcher was not installed");
+      }
+      vi.useFakeTimers();
+      await writeFile(dependency, "# Updated dependency\n");
+      listener("change", "document.mdx");
+      await vi.advanceTimersByTimeAsync(100);
+      expect(onChange).toHaveBeenCalledOnce();
+    } finally {
+      watcher.close();
+    }
   });
 
   it("queues source edits behind the initial render", async () => {

@@ -107,6 +107,65 @@ describe("included inline file references", () => {
     );
   });
 
+  it("preserves URL queries and fragments when rebasing included resources", async () => {
+    const imagePath = path.join(dir, "chapters", "src", "pixel.png");
+    await writeFile(imagePath, Buffer.from([137, 80, 78, 71, 0]));
+    await writeFile(
+      path.join(dir, "chapters", "part.mdx"),
+      '[Guide](guide.md?next=one/../two#section)\n\n<Figure src="src/pixel.png?next=one/../two#preview" />'
+    );
+    const { body, dependencies } = await mdxToHtml(
+      '<Include path="chapters/part.mdx" />',
+      builtinComponents,
+      path.join(dir, "index.mdx"),
+      { hydrate: false, include: { inlineAssets: true } }
+    );
+
+    expect(body).toContain('href="chapters/guide.md?next=one/../two#section"');
+    expect(body).toContain("data:image/png;base64,iVBORwA=#preview");
+    expect(dependencies).toContain(imagePath);
+  });
+
+  it("encodes included resource directories containing URL delimiters", async () => {
+    const chapter = path.join(dir, "chapter #1%");
+    await mkdir(chapter);
+    await writeFile(path.join(chapter, "pixel.png"), Buffer.from([1, 2, 3]));
+    await writeFile(
+      path.join(chapter, "part.mdx"),
+      "[Guide](guide.md#section)\n\n![Pixel](pixel.png)"
+    );
+    const { body } = await mdxToHtml(
+      '<Include path="chapter #1%/part.mdx" />',
+      builtinComponents,
+      path.join(dir, "index.mdx"),
+      { hydrate: false, include: { inlineAssets: true } }
+    );
+
+    expect(body).toContain('href="chapter%20%231%25/guide.md#section"');
+    expect(body).toContain("data:image/png;base64,AQID");
+  });
+
+  it("links CodeFile headers to filenames containing double quotes", async () => {
+    const codePath = path.join(dir, "chapters", "src", 'quo"te.ts');
+    await writeFile(codePath, "const value = 1;\n");
+    await writeFile(
+      path.join(dir, "chapters", "part.mdx"),
+      '<CodeFile path=\'src/quo"te.ts\' lines="1" />'
+    );
+    const { body, fileLinks } = await mdxToHtml(
+      '<Include path="chapters/part.mdx" />',
+      builtinComponents,
+      path.join(dir, "index.mdx"),
+      { hydrate: false }
+    );
+
+    expect(fileLinks['chapters/src/quo"te.ts\u00001']).toBe(
+      editorUrl(undefined, codePath, "1")
+    );
+    expect(body).toContain("vscode://file/");
+    expect(body).not.toContain("data-mdxr-code-path");
+  });
+
   it.each([
     'title="src/sample.ts:2-4"',
     "filename='src/sample.ts:2-4'",

@@ -5,6 +5,7 @@ import http from "node:http";
 import type { Server } from "node:http";
 import os from "node:os";
 import path from "node:path";
+import { setImmediate } from "node:timers/promises";
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -356,6 +357,86 @@ describe("preview agent API", () => {
     }
   );
 
+  it.each(["日本語のメッセージ", "🙂 emoji message"])(
+    "preserves UTF-8 characters split across request chunks: %s",
+    async (message) => {
+      const baseUrl = await startServer("codex");
+      if (server === undefined) {
+        throw new Error("Preview server is not listening");
+      }
+      const transfer = new EventTarget();
+      const firstChunk = once(transfer, "chunk");
+      server.once("request", (incoming) => {
+        incoming.once("readable", () => {
+          transfer.dispatchEvent(new Event("chunk"));
+        });
+      });
+      const request = http.request(`${baseUrl}/__mdxr_agent`, {
+        headers: { "content-type": "application/json" },
+        method: "POST",
+      });
+      const responseEvent = once(request, "response");
+      const body = Buffer.from(JSON.stringify({ message }));
+      const split = Buffer.byteLength('{"message":"') + 1;
+      request.write(body.subarray(0, split));
+      await firstChunk;
+      await setImmediate();
+      request.end(body.subarray(split));
+      const responseArgs: unknown[] = await responseEvent;
+      const [response] = responseArgs;
+      if (!(response instanceof http.IncomingMessage)) {
+        throw new TypeError("HTTP request did not return a response");
+      }
+      const responseEnd = once(response, "end");
+      response.resume();
+      await responseEnd;
+
+      expect(response.statusCode).toBe(200);
+      expect(sendAgentMessage).toHaveBeenCalledWith(message);
+    }
+  );
+
+  it("returns HTTP 413 for oversized messages without resetting the connection", async () => {
+    const baseUrl = await startServer("codex");
+    const response = await fetch(`${baseUrl}/__mdxr_agent`, {
+      body: JSON.stringify({ message: "a".repeat(65_537) }),
+      headers: { "content-type": "application/json" },
+      method: "POST",
+    });
+
+    expect(response.status).toBe(413);
+    await expect(response.json()).resolves.toStrictEqual({
+      error: "Message is too large",
+    });
+    expect(sendAgentMessage).not.toHaveBeenCalled();
+  });
+
+  it("returns HTTP 413 before an oversized request has finished uploading", async () => {
+    const baseUrl = await startServer("codex");
+    const request = http.request(`${baseUrl}/__mdxr_agent`, {
+      headers: { "content-type": "application/json" },
+      method: "POST",
+    });
+    const responseEvent = once(request, "response");
+    try {
+      request.write(`{"message":"${"a".repeat(70_000)}`);
+      const responseArgs: unknown[] = await responseEvent;
+      const [response] = responseArgs;
+      if (!(response instanceof http.IncomingMessage)) {
+        throw new TypeError("HTTP request did not return a response");
+      }
+      const responseEnd = once(response, "end");
+      response.resume();
+      request.end('"}');
+      await responseEnd;
+
+      expect(response.statusCode).toBe(413);
+      expect(sendAgentMessage).not.toHaveBeenCalled();
+    } finally {
+      request.destroy();
+    }
+  });
+
   it("rejects malformed JSON and invalid message values", async () => {
     const baseUrl = await startServer("codex");
     const bodies = ["{", JSON.stringify({ message: 42 }), JSON.stringify({})];
@@ -397,6 +478,7 @@ describe("preview agent API", () => {
     await vi.advanceTimersByTimeAsync(100);
     expect(renderFile).toHaveBeenCalledOnce();
 
+    await writeFile(filePath, "# Updated document\n");
     listener("change", "document.mdx");
     await vi.advanceTimersByTimeAsync(100);
     vi.useRealTimers();

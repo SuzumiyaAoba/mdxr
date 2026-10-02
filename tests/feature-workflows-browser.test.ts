@@ -6,7 +6,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 import { chromium } from "playwright";
-import type { Browser, Page } from "playwright";
+import type { Browser, BrowserContext, Page } from "playwright";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { parseAnnotationDocument } from "../src/annotations.js";
@@ -48,7 +48,7 @@ const closeServer = async (server: Server): Promise<void> => {
   await once(server, "close");
 };
 const fixture = async (
-  browser: Browser,
+  browser: Browser | BrowserContext,
   source = SOURCE,
   files: Record<string, string> = {}
 ) => {
@@ -158,6 +158,90 @@ describe("complete document workflows in the real preview", () => {
       await expect(
         app.page.locator("#mdxr-widget-status").textContent()
       ).resolves.toContain("original records are retained");
+      expect(app.errors).toStrictEqual([]);
+    } finally {
+      await app.close();
+    }
+  });
+
+  it("retains answers and board moves saved by another tab", async () => {
+    const context = await browser.newContext();
+    const app = await fixture(context);
+    try {
+      const second = await context.newPage();
+      await second.goto(serverUrl(app.server));
+      for (const page of [app.page, second]) {
+        // oxlint-disable-next-line no-await-in-loop
+        await page.waitForFunction(
+          () =>
+            document.querySelector<HTMLElement>("[data-ask-id]")?.dataset
+              .widgetIdentity !== undefined
+        );
+      }
+      await app.page.getByLabel("Answer", { exact: true }).fill("First tab");
+      await app.page
+        .locator('[data-card-id="a"]')
+        .getByRole("button", { name: "Move to next lane" })
+        .click();
+      await second.getByLabel("Choice", { exact: true }).selectOption("b");
+      await app.page.reload();
+      await app.page.waitForFunction(
+        () =>
+          document.querySelector<HTMLElement>("[data-ask-id]")?.dataset
+            .widgetIdentity !== undefined
+      );
+
+      expect({
+        answer: await app.page
+          .getByLabel("Answer", { exact: true })
+          .inputValue(),
+        choice: await app.page
+          .getByLabel("Choice", { exact: true })
+          .inputValue(),
+        movedCards: await app.page
+          .locator('[data-lane-id="done"] [data-card-id="a"]')
+          .count(),
+      }).toStrictEqual({ answer: "First tab", choice: "b", movedCards: 1 });
+      expect(app.errors).toStrictEqual([]);
+    } finally {
+      await context.close();
+      await closeServer(app.server);
+      await rm(app.dir, { force: true, recursive: true });
+      await rm(app.outputDir, { force: true, recursive: true });
+    }
+  });
+
+  it("preserves malformed saved answers introduced after the page loaded", async () => {
+    const app = await fixture(browser);
+    try {
+      await app.page.waitForFunction(
+        () =>
+          document.querySelector<HTMLElement>("[data-ask-id]")?.dataset
+            .widgetIdentity !== undefined
+      );
+      await app.page.getByLabel("Answer", { exact: true }).fill("Saved answer");
+      const storageKey = await app.page.evaluate(() => {
+        const key = Object.keys(localStorage).find((candidate) =>
+          candidate.startsWith("mdxr:widgets:v1:")
+        );
+        if (key === undefined) {
+          throw new Error("Missing saved widget state");
+        }
+        localStorage.setItem(key, "{broken");
+        return key;
+      });
+      await app.page
+        .getByLabel("Answer", { exact: true })
+        .fill("Changed answer");
+
+      await expect(
+        app.page.evaluate((key) => localStorage.getItem(key), storageKey)
+      ).resolves.toBe("{broken");
+      await expect(
+        app.page.locator("#mdxr-widget-status").textContent()
+      ).resolves.toContain(
+        "Saved answers could not be read. Existing data was retained."
+      );
       expect(app.errors).toStrictEqual([]);
     } finally {
       await app.close();

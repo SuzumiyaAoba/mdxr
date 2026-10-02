@@ -15,6 +15,13 @@ export const initWidgetAutosave = (): void => {
   const key = documentStorageKey("mdxr:widgets:v1:", info);
   let records = new Map<string, WidgetRecord>();
   let writable = true;
+  const readRecords = (): Map<string, WidgetRecord> =>
+    new Map(
+      parseWidgetState(localStorage.getItem(key)).records.map((record) => [
+        record.key,
+        record,
+      ])
+    );
   const notice = (message: string): void => {
     let status = document.querySelector<HTMLElement>("#mdxr-widget-status");
     if (status === null) {
@@ -54,12 +61,7 @@ export const initWidgetAutosave = (): void => {
   };
   const restore = (): void => {
     try {
-      records = new Map(
-        parseWidgetState(localStorage.getItem(key)).records.map((record) => [
-          record.key,
-          record,
-        ])
-      );
+      records = readRecords();
     } catch {
       writable = false;
       notice("Saved answers could not be read. Existing data was retained.");
@@ -83,6 +85,14 @@ export const initWidgetAutosave = (): void => {
     }
     const save = (event: Event): void => {
       if (!writable || !(event.target instanceof Element)) {
+        return;
+      }
+      try {
+        // Merge changes from other tabs before replacing the edited widget.
+        records = readRecords();
+      } catch {
+        writable = false;
+        notice("Saved answers could not be read. Existing data was retained.");
         return;
       }
       for (const [recordKey, widget] of current) {

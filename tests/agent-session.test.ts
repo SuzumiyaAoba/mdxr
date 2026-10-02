@@ -146,6 +146,38 @@ describe("live agent sessions", () => {
     });
   });
 
+  it("retains every document when multiple conversations save together", async () => {
+    codexSend.mockResolvedValue({ answer: "Answer", sessionId: "thread-1" });
+    const documents = Array.from({ length: 8 }, (_, index) =>
+      path.join(dir, `document-${index}.mdx`)
+    );
+    const sessions = documents.map((file) => createAgentSession(file, "codex"));
+    await Promise.all(
+      sessions.map(async (session) => await session.send("Hello"))
+    );
+    const store: unknown = JSON.parse(
+      await readFile(path.join(dir, ".mdxr", "sessions.json"), "utf-8")
+    );
+    expect(store).toMatchObject({
+      documents: Object.fromEntries(
+        documents.map((file) => [
+          file,
+          {
+            messages: [
+              { content: "Hello", role: "user" },
+              { role: "assistant" },
+            ],
+          },
+        ])
+      ),
+    });
+    await Promise.all(
+      sessions.map(async (session) => {
+        await session.close();
+      })
+    );
+  });
+
   it("records a queued message immediately and adds its answer later", async () => {
     let resolveCompletion: ((value: string) => void) | undefined;
     // oxlint-disable-next-line promise/avoid-new -- Control when the queued provider answer arrives.

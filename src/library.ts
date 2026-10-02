@@ -319,6 +319,8 @@ export const serveLibrary = async (
   );
   const previews = createPreviews({
     agent: opts.agent,
+    config: opts.config,
+    project: opts.project,
     server: opts.server,
     session: opts.session,
   });

@@ -66,6 +66,7 @@ const replyPreview = async (
     dir: path.dirname(filePath),
     filePath,
     initialTheme: theme ?? undefined,
+    inlineAssets: true,
     liveReload: false,
   });
   replyText(response, 200, html, "text/html; charset=utf-8");

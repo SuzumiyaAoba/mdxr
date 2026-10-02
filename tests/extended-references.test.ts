@@ -94,6 +94,68 @@ describe("Include expansion", () => {
     expect(body).not.toContain("First section.");
   });
 
+  it("retains definitions outside selected sections, including references in footnotes", async () => {
+    const dir = await mkdtemp(
+      path.join(os.tmpdir(), "mdxr-include-definitions-")
+    );
+    dirs.push(dir);
+    await writeFile(
+      path.join(dir, "part.md"),
+      [
+        "## Selected",
+        "",
+        "[Reference][url] and ![Image][image] and note[^n].",
+        "",
+        "## Outside",
+        "",
+        "Do not include this paragraph.",
+        "",
+        "[url]: https://example.com/reference",
+        "[image]: image.svg",
+        "[^n]: Footnote [reference][foot].",
+        "[foot]: https://example.com/footnote",
+      ].join("\n")
+    );
+    const source = '<Include path="part.md" section="selected" />';
+    const file = path.join(dir, "root.mdx");
+    const { body } = await renderDoc(source, file);
+    const { markdown } = await mdxToAscii(source, file);
+    expect(body).toContain('href="https://example.com/reference"');
+    expect(body).toContain('src="image.svg"');
+    expect(body).toContain('href="https://example.com/footnote"');
+    for (const output of [body, markdown]) {
+      expect(output).toContain("Footnote");
+      expect(output).not.toContain("Do not include this paragraph.");
+    }
+    expect(markdown).toContain("https://example.com/reference");
+    expect(markdown).toContain("https://example.com/footnote");
+  });
+
+  it("keeps references and footnotes scoped to their original documents", async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), "mdxr-include-scopes-"));
+    dirs.push(dir);
+    await writeFile(
+      path.join(dir, "first.md"),
+      "[First][ref] and note[^n].\n\n[ref]: https://first.example\n[^n]: First footnote.\n"
+    );
+    await writeFile(
+      path.join(dir, "second.md"),
+      "[Second][ref] and note[^n].\n\n[ref]: https://second.example\n[^n]: Second footnote.\n"
+    );
+    const source =
+      '[Root][ref]\n\n<Include path="first.md" />\n\n<Include path="second.md" />\n\n[ref]: https://root.example';
+    const file = path.join(dir, "root.mdx");
+    const { body } = await renderDoc(source, file);
+    const { markdown } = await mdxToAscii(source, file);
+    for (const output of [body, markdown]) {
+      expect(output).toContain("https://root.example");
+      expect(output).toContain("https://first.example");
+      expect(output).toContain("https://second.example");
+      expect(output).toContain("First footnote.");
+      expect(output).toContain("Second footnote.");
+    }
+  });
+
   it("counts nested headings when resolving a top-level section slug", async () => {
     const dir = await mkdtemp(
       path.join(os.tmpdir(), "mdxr-include-nested-slugs-")

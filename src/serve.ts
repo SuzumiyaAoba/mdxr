@@ -242,7 +242,10 @@ export const serve = async (
   validateAgentOptions(opts.agent, opts.session, opts.server);
   const abs = path.resolve(mdxPath);
   const history = createDocumentHistory(abs);
-  const filePreviews = createFilePreviews();
+  const filePreviews = createFilePreviews({
+    config: opts.config,
+    project: opts.project,
+  });
   let diagnosticDependencies: string[] = [];
   const server = await servePreview(
     {
@@ -302,7 +305,10 @@ export const serveSource = async (
     throw new Error("Agent chat requires an MDX file");
   }
   const dir = path.resolve(opts.dir ?? process.cwd());
-  const filePreviews = createFilePreviews();
+  const filePreviews = createFilePreviews({
+    config: opts.config,
+    project: opts.project,
+  });
   const server = await servePreview(
     {
       filePreviews,
@@ -310,6 +316,7 @@ export const serveSource = async (
       ...trackDeps(
         async (onDeps) =>
           await render(source, {
+            config: opts.config,
             dir,
             documentControls: opts.documentControls,
             filePath: opts.filePath,
@@ -319,6 +326,7 @@ export const serveSource = async (
             inlineAssets: opts.inlineAssets ?? true,
             liveReload: true,
             onDependencies: onDeps,
+            project: opts.project,
           })
       ),
       watchDir: dir,

@@ -4,6 +4,7 @@ import { open, realpath } from "node:fs/promises";
 import type http from "node:http";
 import path from "node:path";
 
+import type { ConfigOptions } from "./config.js";
 import type { FilePreviewData } from "./file-preview-data.js";
 import { formatError } from "./format-error.js";
 import { isRecord } from "./guards.js";
@@ -77,7 +78,8 @@ const decodeText = (contents: Buffer): string => {
 
 const previewData = async (
   file: PreviewFile,
-  theme: "light" | "dark"
+  theme: "light" | "dark",
+  configOptions: ConfigOptions
 ): Promise<FilePreviewData> => {
   const extension = path.extname(file.path).toLowerCase();
   const mime = IMAGE_MIME_TYPES[extension];
@@ -103,6 +105,7 @@ const previewData = async (
   }
   try {
     const html = await render(source, {
+      ...configOptions,
       dir: path.dirname(file.path),
       documentControls: false,
       filePath: file.path,
@@ -134,7 +137,7 @@ const replyError = (response: http.ServerResponse, error: unknown): void => {
 };
 
 /** Per-server capabilities, issued only for files a rendered FileRef uses. */
-export const createFilePreviews = () => {
+export const createFilePreviews = (configOptions: ConfigOptions = {}) => {
   const paths = new Map<string, PreviewFile>();
   const files = new Map<string, PreviewFile>();
   return {
@@ -173,7 +176,8 @@ export const createFilePreviews = () => {
           200,
           await previewData(
             file,
-            params.get("theme") === "dark" ? "dark" : "light"
+            params.get("theme") === "dark" ? "dark" : "light",
+            configOptions
           )
         );
       } catch (error) {

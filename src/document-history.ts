@@ -13,6 +13,7 @@ import type {
   DependencyChange,
   DependencySnapshot,
 } from "./dependency-history.js";
+import { acquireFileLock } from "./file-lock.js";
 import { isRecord } from "./guards.js";
 
 export type DocumentVersionKind = "initial" | "before-instruction" | "change";
@@ -76,9 +77,6 @@ type StoredVersion = DocumentVersion;
 const HASH_PATTERN = /^[\da-f]{64}$/u;
 const EVENT_PATTERN =
   /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/iu;
-const LOCK_STALE_AFTER_MS = 10 * 60 * 1000;
-const LOCK_RETRY_MS = 20;
-const MAX_LOCK_WAIT_MS = 30 * 1000;
 const MAX_STABLE_READS = 6;
 
 const sha256 = (value: Buffer | string): string =>
@@ -216,50 +214,6 @@ const readVersionEvent = async (
     sequence: raw.sequence,
     size: raw.size,
   };
-};
-
-const removeStaleLock = async (lockPath: string): Promise<boolean> => {
-  try {
-    const stat = await fs.stat(lockPath);
-    if (Date.now() - stat.mtimeMs <= LOCK_STALE_AFTER_MS) {
-      return false;
-    }
-    await fs.rm(lockPath, { force: true });
-    return true;
-  } catch (error) {
-    if (isNodeError(error) && error.code === "ENOENT") {
-      return false;
-    }
-    throw error;
-  }
-};
-
-const acquireLock = async (lockPath: string): Promise<() => Promise<void>> => {
-  const startedAt = Date.now();
-  while (Date.now() - startedAt < MAX_LOCK_WAIT_MS) {
-    try {
-      // Lock acquisition and stale-lock recovery must be ordered.
-      // oxlint-disable-next-line no-await-in-loop
-      const handle = await fs.open(lockPath, "wx", 0o600);
-      // oxlint-disable-next-line no-await-in-loop
-      await handle.writeFile(`${process.pid}\n${Date.now()}\n`);
-      return async () => {
-        await handle.close();
-        await fs.rm(lockPath, { force: true });
-      };
-    } catch (error) {
-      if (!isNodeError(error) || error.code !== "EEXIST") {
-        throw error;
-      }
-      // oxlint-disable-next-line no-await-in-loop
-      if (await removeStaleLock(lockPath)) {
-        continue;
-      }
-      // oxlint-disable-next-line no-await-in-loop
-      await delay(LOCK_RETRY_MS);
-    }
-  }
-  throw new Error("Timed out waiting for the MDX history lock");
 };
 
 const versionBlobPath = (
@@ -489,7 +443,7 @@ export const createDocumentHistory = (
       dependencyFiles?: string[]
     ): Promise<DocumentVersion> => {
       await fs.mkdir(versionsPath, { recursive: true });
-      const release = await acquireLock(lockPath);
+      const release = await acquireFileLock(lockPath, "MDX history");
       try {
         const content = await readStableFile(absoluteFilePath);
         const contentHash = sha256(content);

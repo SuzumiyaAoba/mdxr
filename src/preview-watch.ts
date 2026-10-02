@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 interface PreviewWatchTarget {
+  includeMdxrDocuments?: boolean;
   watchDir: string;
   watchFile?: string;
 }
@@ -130,21 +131,29 @@ const RELOAD_DEBOUNCE_MS = 80;
 const SESSION_TEMP_FILE = /^\.sessions-.*\.tmp$/u;
 
 const isIgnoredChange = (
-  watchDir: string,
-  filename: string | null | undefined
+  target: PreviewWatchTarget,
+  filename: string | null | undefined,
+  tracked: boolean
 ): boolean => {
+  const { watchDir } = target;
   const parts = filename?.split(path.sep) ?? [];
   const isHistoryWrite =
     parts.includes("history") &&
     (parts.includes(".mdxr") || path.basename(watchDir) === ".mdxr");
   const isInternalMdxrWrite =
-    path.basename(watchDir) !== ".mdxr" && parts.includes(".mdxr");
+    target.includeMdxrDocuments !== true &&
+    !tracked &&
+    path.basename(watchDir) !== ".mdxr" &&
+    parts.includes(".mdxr");
   return (
     parts.some((part) => SKIP_DIRS.has(part)) ||
     isHistoryWrite ||
     isInternalMdxrWrite ||
     parts.some(
-      (part) => part === "sessions.json" || SESSION_TEMP_FILE.test(part)
+      (part) =>
+        part === "sessions.json" ||
+        part === ".sessions.lock" ||
+        SESSION_TEMP_FILE.test(part)
     )
   );
 };
@@ -155,10 +164,22 @@ export const createPreviewWatcher = (
   onChange: () => void
 ) => {
   const watch = createWatchSet();
+  const dependencies = new Set<string>();
+  let canonicalDir = path.resolve(target.watchDir);
+  try {
+    canonicalDir = fs.realpathSync(target.watchDir);
+  } catch {
+    // The directory may have disappeared before its watcher is installed.
+  }
   let closed = false;
   let timer: NodeJS.Timeout | undefined;
   const notify = (_event?: string, filename?: string | null): void => {
-    if (closed || isIgnoredChange(target.watchDir, filename)) {
+    const tracked =
+      filename !== undefined &&
+      filename !== null &&
+      (dependencies.has(path.resolve(target.watchDir, filename)) ||
+        dependencies.has(path.resolve(canonicalDir, filename)));
+    if (closed || isIgnoredChange(target, filename, tracked)) {
       return;
     }
     clearTimeout(timer);
@@ -168,14 +189,18 @@ export const createPreviewWatcher = (
 
   return {
     /** Watch external dependencies and newly created source directories. */
-    armDependencies(dependencies: string[]): void {
+    armDependencies(paths: string[]): void {
       if (closed) {
         return;
+      }
+      dependencies.clear();
+      for (const dependency of paths) {
+        dependencies.add(path.resolve(dependency));
       }
       if (!recursiveWatch) {
         watch.arm(target.watchDir, notify);
       }
-      for (const dependency of dependencies) {
+      for (const dependency of paths) {
         const directory = path.dirname(dependency);
         const inside =
           directory === target.watchDir ||

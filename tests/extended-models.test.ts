@@ -43,6 +43,16 @@ describe("structured data and differences", () => {
     expect(() => dateValue("yesterday")).toThrow("ISO");
   });
 
+  it("preserves CR and CRLF within quoted CSV fields", () => {
+    const rows = [{ text: "one\r\ntwo\rthree\nfour" }];
+    expect(readRecords(csvOf(rows), "csv")).toStrictEqual(rows);
+    expect(parseCsv("name,value\ra,b\rc,d\r")).toStrictEqual([
+      ["name", "value"],
+      ["a", "b"],
+      ["c", "d"],
+    ]);
+  });
+
   it("preserves missing/null distinctions and escaped JSON Pointer keys", () => {
     expect(
       jsonDifference({ "a/b": null }, { "a/b": null, "x~y": null })

@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 
 import type { Node } from "unist";
@@ -41,6 +41,8 @@ export const remarkCodeFile = () => (tree: Node, file: VFile) => {
     let content: string;
     try {
       content = readFileSync(abs, "utf-8");
+      file.data.includeDependencies ??= [];
+      file.data.includeDependencies.push(realpathSync(abs));
     } catch {
       file.fail(`<CodeFile> cannot read ${rel}`, node, "mdxr:code-file");
     }

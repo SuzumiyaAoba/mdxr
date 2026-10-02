@@ -4,6 +4,7 @@ import path from "node:path";
 
 import { createClaudeStreamSession } from "./claude-stream-session.js";
 import { createCodexAppServerSession } from "./codex-app-server.js";
+import { acquireFileLock } from "./file-lock.js";
 
 export type AgentProvider = "codex" | "claude";
 
@@ -142,9 +143,18 @@ export const createAgentSession = (
       claudeConversation = conversation;
       return;
     }
-    const store = await readStore(storePath);
-    store.documents[document] = conversation;
-    await writeStore(storePath, store);
+    await mkdir(path.dirname(storePath), { recursive: true });
+    const release = await acquireFileLock(
+      path.join(path.dirname(storePath), ".sessions.lock"),
+      "MDX session store"
+    );
+    try {
+      const store = await readStore(storePath);
+      store.documents[document] = conversation;
+      await writeStore(storePath, store);
+    } finally {
+      await release();
+    }
   };
 
   const send = async (

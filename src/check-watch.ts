@@ -41,6 +41,7 @@ export const watchDocuments = async (
   };
   const watcher = createPreviewWatcher(
     {
+      includeMdxrDocuments: true,
       watchDir: stats.isDirectory() ? target : path.dirname(target),
       watchFile: stats.isFile() ? target : undefined,
     },

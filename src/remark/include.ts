@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
 
@@ -9,6 +10,7 @@ import remarkMdx from "remark-mdx";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
 import type { Node, Parent } from "unist";
+import { visit } from "unist-util-visit";
 import { VFile } from "vfile";
 
 import { isRecord } from "../guards.js";
@@ -17,6 +19,10 @@ import type { MdxTarget } from "./ast.js";
 import { remarkMdxrDirectives } from "./directives.js";
 import { createHeadingSlugger } from "./headings.js";
 import { remarkNoJs } from "./no-js.js";
+import {
+  referenceDefinitions,
+  referencedContent,
+} from "./reference-definitions.js";
 
 declare module "unist" {
   interface Data {
@@ -102,7 +108,43 @@ const sectionNodes = (nodes: Node[], section: string): Node[] => {
     }
     end += 1;
   }
-  return nodes.slice(start, end);
+  const sectionTree: Parent = {
+    children: nodes.slice(start, end),
+    type: "root",
+  };
+  const included = new Set<Node>();
+  visit(sectionTree, (node) => {
+    included.add(node);
+  });
+  const document: Parent = { children: nodes, type: "root" };
+  return [
+    ...sectionTree.children,
+    ...referencedContent(sectionTree, referenceDefinitions(document)).filter(
+      (node) => !included.has(node)
+    ),
+  ];
+};
+
+const REFERENCE_NODE_TYPES = new Set([
+  "definition",
+  "footnoteDefinition",
+  "footnoteReference",
+  "imageReference",
+  "linkReference",
+]);
+
+const scopeReference = (node: Node, namespace: string): void => {
+  if (
+    !REFERENCE_NODE_TYPES.has(node.type) ||
+    !("identifier" in node) ||
+    typeof node.identifier !== "string"
+  ) {
+    return;
+  }
+  node.identifier = `${namespace}${node.identifier}`;
+  if ("label" in node && typeof node.label === "string") {
+    node.label = `${namespace}${node.label}`;
+  }
 };
 
 const rebase = (node: Node, origin: string, root: string): void => {
@@ -212,12 +254,27 @@ export const remarkInclude =
     const rootFile = existsSync(filename) ? realpathSync(filename) : filename;
     const directory = path.dirname(filename);
     const root = existsSync(directory) ? realpathSync(directory) : directory;
+    const namespaces = new Map<string, string>();
+    const namespaceFor = (origin: string): string => {
+      if (origin === filename) {
+        return "";
+      }
+      const existing = namespaces.get(origin);
+      if (existing !== undefined) {
+        return existing;
+      }
+      const namespace = `mdxr-include-${createHash("sha256").update(origin).digest("hex").slice(0, 12)}-`;
+      namespaces.set(origin, namespace);
+      return namespace;
+    };
     const expand = (parent: Parent, origin: string, chain: string[]): void => {
       if (chain.length > 32) {
         file.fail("Include: nesting exceeds 32 files");
       }
       const originDirectory = origin === filename ? root : path.dirname(origin);
+      const namespace = namespaceFor(origin);
       for (const child of parent.children) {
+        scopeReference(child, namespace);
         child.data = { ...child.data, mdxrSourceFile: origin };
         if (isDocumentReference(child)) {
           if (child.name === "Include" && child.type === "mdxJsxTextElement") {

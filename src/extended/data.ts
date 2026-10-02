@@ -48,22 +48,26 @@ const quotedField = (
   throw new Error("CSV: unterminated quoted field");
 };
 
+const isLineBreak = (char: string | undefined): boolean =>
+  char === "\r" || char === "\n";
+
 /** RFC 4180 fields, including quoted newlines and doubled quotes. */
 export const parseCsv = (source: string): string[][] => {
   const rows: string[][] = [];
   let row: string[] = [];
   let field = "";
   let closed = false;
-  const input = source.replace(/^\uFEFF/u, "").replaceAll(/\r\n?/gu, "\n");
+  const input = source.replace(/^\uFEFF/u, "");
   for (let i = 0; i < input.length; i += 1) {
     const char = input[i];
-    if (char === "," || char === "\n") {
+    if (char === "," || isLineBreak(char)) {
       row.push(field);
       field = "";
       closed = false;
-      if (char === "\n") {
+      if (isLineBreak(char)) {
         rows.push(row);
         row = [];
+        i += Number(input.startsWith("\r\n", i));
       }
       continue;
     }

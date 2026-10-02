@@ -571,6 +571,7 @@ describe("preview agent API", () => {
       dir,
       filePath,
       initialTheme: undefined,
+      inlineAssets: true,
       liveReload: false,
     });
 

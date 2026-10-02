@@ -5,49 +5,10 @@ import { visit } from "unist-util-visit";
 
 import { isRecord } from "../guards.js";
 import { isFlowElement, jsxAttr, jsxAttrs } from "./ast.js";
-
-const referenceDefinitions = (tree: Node): Map<string, Node> => {
-  const definitions = new Map<string, Node>();
-  visit(tree, ["definition", "footnoteDefinition"], (node) => {
-    if ("identifier" in node && typeof node.identifier === "string") {
-      const key = `${node.type}:${node.identifier}`;
-      if (!definitions.has(key)) {
-        definitions.set(key, node);
-      }
-    }
-  });
-  return definitions;
-};
-
-/** Links and footnotes may resolve to definitions outside their section. */
-const referencedContent = (
-  section: Node,
-  definitions: Map<string, Node>
-): Node[] => {
-  const found = new Set<Node>();
-  const collect = (tree: Node): void => {
-    visit(
-      tree,
-      ["linkReference", "imageReference", "footnoteReference"],
-      (node) => {
-        if (!("identifier" in node) || typeof node.identifier !== "string") {
-          return;
-        }
-        const kind =
-          node.type === "footnoteReference"
-            ? "footnoteDefinition"
-            : "definition";
-        const definition = definitions.get(`${kind}:${node.identifier}`);
-        if (definition !== undefined && !found.has(definition)) {
-          found.add(definition);
-          collect(definition);
-        }
-      }
-    );
-  };
-  collect(section);
-  return [...found];
-};
+import {
+  referenceDefinitions,
+  referencedContent,
+} from "./reference-definitions.js";
 
 /** Ignore source offsets so edits to another section do not reset a review. */
 const sectionRevision = (

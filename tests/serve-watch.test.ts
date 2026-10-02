@@ -1,6 +1,6 @@
 import { once } from "node:events";
 import fs from "node:fs";
-import { mkdir, mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, realpath, rm } from "node:fs/promises";
 import type { Server } from "node:http";
 import os from "node:os";
 import path from "node:path";
@@ -94,6 +94,26 @@ describe("preview watcher lifecycle", () => {
         }
       }
     }
+  });
+
+  it("rebuilds when a tracked document under .mdxr changes", async () => {
+    const watch = vi.spyOn(fs, "watch");
+    const canonicalDir = await realpath(dir);
+    vi.mocked(render).mockImplementation(async (_source, opts) => {
+      opts?.onDependencies?.([
+        path.join(canonicalDir, ".mdxr", "included.mdx"),
+      ]);
+      return await Promise.resolve("preview");
+    });
+    server = await serveSource("# Preview", 0, { dir });
+    const listener = watch.mock.calls[0]?.at(2);
+    if (typeof listener !== "function") {
+      throw new TypeError("Recursive document watcher was not installed");
+    }
+    vi.useFakeTimers();
+    listener("change", path.join(".mdxr", "included.mdx"));
+    await vi.advanceTimersByTimeAsync(100);
+    expect(render).toHaveBeenCalledTimes(2);
   });
 
   it("queues source edits behind the initial render", async () => {

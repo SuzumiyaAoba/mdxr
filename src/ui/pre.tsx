@@ -23,22 +23,27 @@ const splitFileLine = (filename: string): { line?: string; path: string } => {
 };
 
 /** Editor link for a code-header filename, when it resolves to a real file. */
-const useFilenameLink = (filename: string | undefined): string | undefined => {
+const useFilenameLink = (
+  filename: string | undefined,
+  filePath: string | undefined
+): string | undefined => {
   const { fileLink } = useContext(DocContext);
   if (filename === undefined || fileLink === undefined) {
     return undefined;
   }
   const target = splitFileLine(filename);
-  return nonEmpty(target.path) ? fileLink(target.path, target.line) : undefined;
+  const resolved = filePath ?? target.path;
+  return nonEmpty(resolved) ? fileLink(resolved, target.line) : undefined;
 };
 
 /** Filename/language bar for a fenced block; links to the file when it exists. */
 export const CodeHeader = (props: {
   filename?: string;
+  filePath?: string;
   lang?: string;
   text: string;
 }): ReactElement => {
-  const link = useFilenameLink(props.filename);
+  const link = useFilenameLink(props.filename, props.filePath);
   const label = (
     <>
       <Icon
@@ -169,7 +174,12 @@ export const Pre = (props: DocProps): ReactElement => {
 
   return (
     <Panel>
-      <CodeHeader filename={filename} lang={lang} text={text} />
+      <CodeHeader
+        filename={filename}
+        filePath={asString(codeProps["data-mdxr-code-path"])}
+        lang={lang}
+        text={text}
+      />
       <pre className="m-0 overflow-x-auto bg-white p-4 text-sm dark:bg-neutral-950">
         {cleanCode}
       </pre>

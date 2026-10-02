@@ -53,6 +53,30 @@ describe(renderFile, () => {
     expect(html).toContain("v2");
   });
 
+  it.each([false, true])(
+    "keeps the frontmatter header when findings render article cards (hydrate=%s)",
+    async (hydrate) => {
+      const dir = await makeDir();
+      const html = await render(
+        '---\ntitle: Findings report\nstatus: doing\nowner: alice\n---\n\n<Findings><Finding title="Evidence">Details</Finding></Findings>',
+        { dir, hydrate }
+      );
+      expect(html).toContain('<h1 class="m-0!">Findings report</h1>');
+      expect(html).toContain("In progress");
+      expect(html).toContain("alice");
+    }
+  );
+
+  it("lets an explicit Plan supply the header without adding another", async () => {
+    const dir = await makeDir();
+    const html = await render(
+      '---\ntitle: Metadata title\n---\n\n<Plan title="Plan title">Body</Plan>',
+      { dir, hydrate: false }
+    );
+    expect(html).toContain('<h1 class="m-0!">Plan title</h1>');
+    expect(html.match(/<h1\b/gu)).toHaveLength(1);
+  });
+
   it("keeps <Icon> inline in prose", async () => {
     const dir = await makeDir();
     const file = path.join(dir, "doc.mdx");

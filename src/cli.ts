@@ -13,6 +13,7 @@ import { formatGithubDiagnostic } from "./check-github.js";
 import { watchDocuments } from "./check-watch.js";
 import { checkDocument, checkDocuments, checkResult } from "./check.js";
 import type { CheckResult } from "./check.js";
+import { normalizeOutputArgs } from "./cli-args.js";
 import { loadConfig } from "./config.js";
 import { formatError, parseErrorFormat } from "./format-error.js";
 import { ensureDocsDirIgnored, installSkill } from "./init.js";
@@ -523,4 +524,4 @@ cli
   );
 
 cli.help();
-cli.parse();
+cli.parse(normalizeOutputArgs(process.argv));

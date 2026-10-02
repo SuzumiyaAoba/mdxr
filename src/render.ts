@@ -185,15 +185,15 @@ const headerStatus = (raw: string | undefined): string | undefined => {
 
 /**
  * PlanHeader props from frontmatter — present only with a `title` and no
- * `<Plan>`-style `<article>` root in the body (that would render a second
+ * `<Plan>` component in the document (that would render a second
  * header). Used for both the SSR header and the hydration payload.
  */
 const frontmatterHeader = (
   fm: (key: string) => string | undefined,
-  body: string
+  hasPlan: boolean
 ): Record<string, string | undefined> | undefined => {
   const title = fm("title");
-  if (title === undefined || title === "" || /<article/u.test(body)) {
+  if (title === undefined || title === "" || hasPlan) {
     return undefined;
   }
   return {
@@ -315,7 +315,7 @@ const renderDocument = async (
   const title =
     fmTitle ?? (nonEmpty(h1Text) ? h1Text : undefined) ?? "mdxr document";
 
-  const headerProps = frontmatterHeader(fmStr, body);
+  const headerProps = frontmatterHeader(fmStr, usedComponents.includes("Plan"));
   // The header must be part of the body's vnode tree, not concatenated HTML:
   // the hydration client mounts Provider > Fragment > [header|null, doc] and
   // useId() encodes tree position — separately rendered markup would shift

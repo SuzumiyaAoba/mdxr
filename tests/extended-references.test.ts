@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, realpath, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -187,6 +187,28 @@ describe("Include expansion", () => {
       )
     ).rejects.toThrow("Include must be used as a block element");
   });
+
+  it.each([
+    '<CrossRef target="missing" />',
+    '<Cite source="missing" />',
+    '<ResearchClaim kind="proposal" source="missing">Needs evidence.</ResearchClaim>',
+  ])(
+    "reports included reference failures at their original source: %s",
+    async (reference) => {
+      const dir = await mkdtemp(
+        path.join(os.tmpdir(), "mdxr-include-reference-errors-")
+      );
+      dirs.push(dir);
+      const included = path.join(dir, "part.mdx");
+      await writeFile(included, `# Included\n\n${reference}\n`);
+      const source = '<Include path="part.mdx" />';
+      const file = path.join(dir, "root.mdx");
+      const location = { file: await realpath(included), line: 3 };
+
+      await expect(renderDoc(source, file)).rejects.toMatchObject(location);
+      await expect(mdxToAscii(source, file)).rejects.toMatchObject(location);
+    }
+  );
 
   it("rejects cycles, missing sections, and executable expressions inside includes", async () => {
     const dir = await mkdtemp(path.join(os.tmpdir(), "mdxr-include-errors-"));

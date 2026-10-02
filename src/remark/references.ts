@@ -40,15 +40,14 @@ const reportReferenceError = (
   message: string,
   node: MdxTarget
 ): void => {
-  if (state.collect) {
-    const diagnostic = state.file.message(message, node, "mdxr:references");
-    diagnostic.fatal = true;
-    if (node.data?.mdxrSourceFile !== undefined) {
-      diagnostic.file = node.data.mdxrSourceFile;
-    }
-    return;
+  const diagnostic = state.file.message(message, node, "mdxr:references");
+  diagnostic.fatal = true;
+  if (node.data?.mdxrSourceFile !== undefined) {
+    diagnostic.file = node.data.mdxrSourceFile;
   }
-  state.file.fail(message, node);
+  if (!state.collect) {
+    throw diagnostic;
+  }
 };
 const PREFIXES: Record<string, string> = {
   DataTable: "Table",
@@ -160,6 +159,7 @@ const resolveClaimCitation = (node: MdxTarget, state: ReferenceState): void => {
   const citation: MdxTarget = {
     attributes: [{ name: "source", type: "mdxJsxAttribute", value: source }],
     children: [],
+    data: node.data,
     name: "Cite",
     position: node.position,
     type: "mdxJsxTextElement",

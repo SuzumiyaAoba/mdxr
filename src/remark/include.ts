@@ -14,7 +14,14 @@ import { visit } from "unist-util-visit";
 import { VFile } from "vfile";
 
 import { isRecord } from "../guards.js";
-import { isParent, jsxAttr, jsxAttrs, textContent } from "./ast.js";
+import { fenceFilename, splitPathLines } from "../lines.js";
+import {
+  isParent,
+  jsxAttr,
+  jsxAttrs,
+  setHProperty,
+  textContent,
+} from "./ast.js";
 import type { MdxTarget } from "./ast.js";
 import { remarkMdxrDirectives } from "./directives.js";
 import { createHeadingSlugger } from "./headings.js";
@@ -158,6 +165,18 @@ const rebase = (node: Node, origin: string, root: string): void => {
           .relative(root, path.resolve(origin, value))
           .split(path.sep)
           .join("/");
+  // Keep authored fence labels while resolving their file links from the
+  // included document. CodeFile already rebases its explicit path below.
+  if (node.type === "code" && "meta" in node && typeof node.meta === "string") {
+    const filename = fenceFilename(node.meta);
+    if (filename !== undefined) {
+      setHProperty(
+        node,
+        "data-mdxr-code-path",
+        relative(splitPathLines(filename).path)
+      );
+    }
+  }
   if ("url" in node && typeof node.url === "string") {
     node.url = relative(node.url);
   }

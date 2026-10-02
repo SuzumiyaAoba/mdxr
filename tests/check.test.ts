@@ -172,6 +172,23 @@ An ordinary note with $x^2$.
     );
   });
 
+  it("reports an included research claim's missing source at the claim's original location", async () => {
+    const included = path.join(dir, "claim.mdx");
+    await writeFile(
+      included,
+      '# Evidence\n\n<ResearchClaim kind="proposal" source="missing">Needs evidence.</ResearchClaim>\n'
+    );
+
+    expect(checkSource('<Include path="claim.mdx" />', file)).toStrictEqual([
+      expect.objectContaining({
+        code: "mdxr:references",
+        file: await realpath(included),
+        line: 3,
+        message: "Unknown citation source: missing",
+      }),
+    ]);
+  });
+
   it("reports duplicate references, attributes, and include cycles", async () => {
     const source = '<Include path="plan.mdx" />';
     await writeFile(file, source);

@@ -14,6 +14,7 @@
     "forceConsistentCasingInFileNames": true,
     "paths": {
       "@suzumiyaaoba/mdxr": ["./src/index.ts"],
+      "@suzumiyaaoba/mdxr/check": ["./src/check-api.ts"],
       "@suzumiyaaoba/mdxr/components": ["./src/components.ts"],
       "@/*": ["./src/*"]
     }

@@ -14,26 +14,38 @@ import { toMdxElement } from "./ast.js";
  * `<FileRef>` chip, so prose references get the same editor link, icon, and
  * copy button as an explicit component. The value must contain a `/` (a bare
  * `file.ts` stays code) and resolve to an existing file relative to the
- * document; a trailing `:N`/`:N-M` becomes `lines`. Paths inside links are
- * left alone — a chip can't nest inside <a>. Runs late in the pipeline so
- * directive labels and heading slugs are already computed.
+ * source document (including an included file); a trailing `:N`/`:N-M` becomes
+ * `lines`. Paths inside links are left alone — a chip can't nest inside <a>.
+ * Runs late in the pipeline so directive labels and heading slugs are already
+ * computed.
  */
 export const remarkFilePaths = () => (tree: Node, file: VFile) => {
   const dir = file.dirname ?? ".";
   const resolve = (
-    value: string
+    value: string,
+    origin: string
   ): { lines?: string; path: string } | undefined => {
     if (!value.includes("/") || value.includes("://")) {
       return undefined;
     }
-    const target = splitPathLines(value);
-    if (existsSync(path.resolve(dir, target.path))) {
-      return target;
+    let target = splitPathLines(value);
+    if (!existsSync(path.resolve(origin, target.path))) {
+      // A file literally named "x.ts:2" beats the lines interpretation.
+      if (
+        target.lines === undefined ||
+        !existsSync(path.resolve(origin, value))
+      ) {
+        return undefined;
+      }
+      target = { path: value };
     }
-    // A file literally named "x.ts:2" beats the lines interpretation.
-    return target.lines !== undefined && existsSync(path.resolve(dir, value))
-      ? { path: value }
-      : undefined;
+    if (!path.isAbsolute(target.path) && path.relative(dir, origin) !== "") {
+      target.path = path
+        .relative(dir, path.resolve(origin, target.path))
+        .split(path.sep)
+        .join("/");
+    }
+    return target;
   };
   visitParents(tree, "inlineCode", (node: Node, ancestors: Node[]) => {
     // Links keep plain code — FileRef renders its own <a>, and nested
@@ -49,7 +61,11 @@ export const remarkFilePaths = () => (tree: Node, file: VFile) => {
     if (inLink || !("value" in node) || typeof node.value !== "string") {
       return;
     }
-    const target = resolve(node.value);
+    const origin = node.data?.mdxrSourceFile;
+    const target = resolve(
+      node.value,
+      origin === undefined ? dir : path.dirname(origin)
+    );
     if (target === undefined) {
       return;
     }

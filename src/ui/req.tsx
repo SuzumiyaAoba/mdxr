@@ -17,7 +17,7 @@ export const Reqs = defineComponent(
 export const Req = defineComponent(
   {
     description:
-      '要件1行。id="REQ-1" などの識別子チップ。status (todo|doing|done|blocked) でバッジを付けられる',
+      '要件1行。id="REQ-1" などの識別子チップ。status (todo|pending|doing|done|blocked) でバッジを付けられる',
     schema: v.looseObject({
       id: NUMISH,
       status: STATUS_PROP,

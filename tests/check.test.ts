@@ -95,6 +95,29 @@ An ordinary note with $x^2$.
     expect(diagnostics).toStrictEqual([]);
   });
 
+  it("accepts pending task statuses in JSX and directives", () => {
+    const diagnostics = checkSource(
+      `<Plan title="Release" status="pending">
+<StatusBadge status="pending" />
+<Steps progress><Step status="pending">Await review</Step></Steps>
+<Phase title="Review" status="pending" />
+<Timeline><Event date="2026-10-05" status="pending" /></Timeline>
+<Reqs><Req id="REQ-1" status="pending">Await review</Req></Reqs>
+<Board><Lane title="Waiting" status="pending"><BoardCard title="Await review" status="pending" /></Lane></Board>
+<Gantt><Task name="Review" start="2026-10-05" status="pending" /><Milestone name="Approval" date="2026-10-06" status="pending" /></Gantt>
+<Graph><Node id="review" status="pending" /></Graph>
+<Pathway><Stop label="Review" status="pending" /></Pathway>
+</Plan>
+
+:::phase{title="Waiting" status="pending"}
+Await review
+:::`,
+      file
+    );
+
+    expect(diagnostics).toStrictEqual([]);
+  });
+
   it("reports all prohibited expressions without executing them", () => {
     const diagnostics = checkSource(
       'import marker from "never-imported";\n\n{marker()}\n\n<Step status={marker()} />',

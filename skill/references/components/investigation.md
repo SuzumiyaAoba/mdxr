@@ -117,7 +117,7 @@ API/props table for documenting a component or function signature. `of` renders 
 
 ```mdx
 <Props of="Step">
-  <Prop name="status" type="todo | doing | done | blocked" required>
+  <Prop name="status" type="todo | pending | doing | done | blocked" required>
     Marker state.
   </Prop>
   <Prop name="effort" type="xs | s | m | l | xl" default="m" />

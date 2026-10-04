@@ -334,6 +334,43 @@ describe(mdxToHtml, () => {
     expect(body).toContain("2999-01-01");
   });
 
+  it("renders pending steps with a waiting icon and counts them as incomplete", async () => {
+    const { body } = await render(
+      '<Steps progress><Step status="done">Ready</Step><Step status="pending">Await review</Step></Steps>'
+    );
+    expect(body).toContain('aria-label="pending"');
+    expect(body).toContain("text-amber-600");
+    expect(body).toContain("Await review");
+    expect(body).toContain("1/2");
+  });
+
+  it.each([
+    '<StatusBadge status="pending" />',
+    '<Plan title="Release" status="pending" />',
+    '<Phase title="Review" status="pending" />',
+    ':::phase{title="Review" status="pending"}\nWaiting\n:::',
+    '<Event date="2026-10-05" status="pending" />',
+    '<Req id="REQ-1" status="pending">Await review</Req>',
+  ])("renders pending badges in %s", async (source) => {
+    const { body } = await render(source);
+    expect(body).toContain("Pending");
+    expect(body).toContain("bg-amber-100");
+  });
+
+  it("renders pending board lanes, gantt bars, graph nodes, and pathway stops", async () => {
+    const { body } = await render(`<Board>
+  <Lane title="Waiting" status="pending"><BoardCard title="Await review" status="pending" /></Lane>
+</Board>
+<Gantt today="false"><Task name="Await review" start="2026-10-05" status="pending" /><Milestone name="Approval" date="2026-10-06" status="pending" /></Gantt>
+<Graph><Node id="review" label="Await review" status="pending" /></Graph>
+<Pathway><Stop label="Review" status="pending" /></Pathway>`);
+    expect(body).toContain('data-lane-status="pending"');
+    expect(body).toContain('data-card-status="pending"');
+    expect(body).toContain("bg-amber-500");
+    expect(body).toContain('aria-label="pending"');
+    expect(body).not.toContain("undefined");
+  });
+
   it("renders <Icon> as an inline svg (decorative by default)", async () => {
     const { body } = await render('<Icon name="lucide:rocket" />');
     expect(body).toContain("<svg");

@@ -24,7 +24,7 @@ import {
 export const Stop = defineComponent(
   {
     description:
-      "経路ステップ1点。label は必須 (バージョン・環境名など)、status は todo|doing|done|blocked、note で補足 (codemod・レビュー待ちなど)、current で現在地マーク。children は説明文",
+      "経路ステップ1点。label は必須 (バージョン・環境名など)、status は todo|pending|doing|done|blocked、note で補足 (codemod・レビュー待ちなど)、current で現在地マーク。children は説明文",
     schema: v.looseObject({
       current: BOOLISH_PROP,
       label: v.string(),

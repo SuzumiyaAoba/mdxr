@@ -2,7 +2,9 @@
 
 Index: [../components.md](../components.md). MDX attributes are always strings; `children` is Markdown.
 
-### `<Phase title="…" status="todo|doing|done|blocked" owner due>`
+Shared task statuses are `todo` (not started), `pending` (waiting for a review, dependency, or scheduled start), `doing` (in progress), `done` (completed), and `blocked` (cannot proceed). `pending` uses an amber clock icon and counts as incomplete in progress summaries.
+
+### `<Phase title="…" status="todo|pending|doing|done|blocked" owner due>`
 
 A section heading with a status badge, plus optional owner chip and deadline. Also produced by `:::phase{title="…"}`.
 
@@ -24,7 +26,7 @@ Ordered, status-aware step list. `progress` on `<Steps>` renders an automatic pr
 
 ### `<Timeline title="…">` / `<Event date status title>`
 
-Chronological milestone list with a left rail. `Event` requires `date` (any string), optional `status` (todo|doing|done|blocked) and `title`. Also produced by `:::timeline{title="…"}`.
+Chronological milestone list with a left rail. `Event` requires `date` (any string), optional `status` (todo|pending|doing|done|blocked) and `title`. Also produced by `:::timeline{title="…"}`.
 
 ```mdx
 <Timeline title="Milestones">
@@ -35,7 +37,7 @@ Chronological milestone list with a left rail. `Event` requires `date` (any stri
 
 ### `<Gantt title start end today>` / `<Task name start end status progress owner note>` / `<Milestone name date status owner note>` / `:::gantt`
 
-Date-based schedule chart. `<Task>` needs `name` + `start` (ISO `YYYY-MM-DD`); `end` defaults to `start` (a one-day bar). `status` (todo|doing|done|blocked) colors the bar, `progress="0–100"` shows a partial fill, `owner`/`note` add a muted sub-line. `<Milestone>` needs `name` + `date` and renders a diamond. The range spans the earliest start to the latest end; `start`/`end` on `<Gantt>` override it. A "today" marker is drawn when the render date falls inside the range — disable with `today="false"` or pin it with `today="YYYY-MM-DD"`. Axis ticks are days on short ranges, Mondays mid-range, month starts after.
+Date-based schedule chart. `<Task>` needs `name` + `start` (ISO `YYYY-MM-DD`); `end` defaults to `start` (a one-day bar). `status` (todo|pending|doing|done|blocked) colors the bar, `progress="0–100"` shows a partial fill, `owner`/`note` add a muted sub-line. `<Milestone>` needs `name` + `date` and renders a diamond. The range spans the earliest start to the latest end; `start`/`end` on `<Gantt>` override it. A "today" marker is drawn when the render date falls inside the range — disable with `today="false"` or pin it with `today="YYYY-MM-DD"`. Axis ticks are days on short ranges, Mondays mid-range, month starts after.
 
 ```mdx
 <Gantt title="v1.0 release">
@@ -113,7 +115,7 @@ Inline chips: priority pill, T-shirt effort estimate (children = e.g. `3d`), dea
 
 ### `<Reqs>` / `<Req id="REQ-1" status="…">`
 
-Requirement / acceptance-criteria rows: `id` renders a mono chip, optional `status` (todo|doing|done|blocked) a badge; children are the requirement text.
+Requirement / acceptance-criteria rows: `id` renders a mono chip, optional `status` (todo|pending|doing|done|blocked) a badge; children are the requirement text.
 
 ### `<Board title>` / `<Lane title status>` / `<BoardCard title>` / `:::board`
 

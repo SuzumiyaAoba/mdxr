@@ -352,6 +352,49 @@ describe("document library browser UI", () => {
     }
   });
 
+  it("localizes pending statuses and lets readers filter waiting documents", async () => {
+    const { page, requests } = await openLibraryPage(browser, bundle, () => ({
+      body: {
+        ...RESPONSE,
+        results: RESULTS.map((result) => ({ ...result, status: "pending" })),
+        statuses: ["pending"],
+      },
+    }));
+    try {
+      const badge = page.locator('.doc-library__status[data-status="pending"]');
+      await badge.waitFor({ state: "visible" });
+      await expect(badge.getAttribute("class")).resolves.toContain(
+        "bg-amber-100"
+      );
+      expect({
+        badge: await badge.textContent(),
+        option: await page.locator('option[value="pending"]').textContent(),
+      }).toStrictEqual({ badge: "待機中", option: "待機中" });
+
+      const pendingSearch = page.waitForResponse((response) => {
+        const url = new URL(response.url());
+        return (
+          url.pathname === "/__doc_library/search" &&
+          url.searchParams.get("status") === "pending"
+        );
+      });
+      await page
+        .getByRole("combobox", { exact: true, name: "状態" })
+        .selectOption("pending");
+      await pendingSearch;
+      expect(requests.at(-1)?.status).toBe("pending");
+
+      await page.getByRole("button", { name: "英語に切り替え" }).click();
+      await page.waitForFunction(() => document.documentElement.lang === "en");
+      expect({
+        badge: await badge.textContent(),
+        option: await page.locator('option[value="pending"]').textContent(),
+      }).toStrictEqual({ badge: "Pending", option: "Pending" });
+    } finally {
+      await page.close();
+    }
+  });
+
   it("follows system color, cycles modes, and restores a saved theme", async () => {
     const { page } = await openLibraryPage(browser, bundle, undefined, {
       colorScheme: "light",

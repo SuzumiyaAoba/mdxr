@@ -16,6 +16,7 @@ const DOT: Record<Status, string> = {
   blocked: "bg-red-500",
   doing: "bg-sky-500",
   done: "bg-emerald-500",
+  pending: "bg-amber-500",
   todo: "bg-neutral-400",
 };
 
@@ -104,7 +105,7 @@ export const BoardCard = defineComponent(
 export const Lane = defineComponent(
   {
     description:
-      "カンバンの列。<Board> の子として使う。title は列名、status でヘッダの色点 (todo|doing|done|blocked)。子の <BoardCard> 数がバッジになる。空の列もドロップ先になる",
+      "カンバンの列。<Board> の子として使う。title は列名、status でヘッダの色点 (todo|pending|doing|done|blocked)。子の <BoardCard> 数がバッジになる。空の列もドロップ先になる",
     schema: v.looseObject({
       id: v.optional(v.string()),
       status: STATUS_PROP,

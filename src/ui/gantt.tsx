@@ -47,6 +47,7 @@ const BAR: Record<Status, { soft: string; solid: string }> = {
   blocked: { soft: "bg-red-500/30", solid: "bg-red-500" },
   doing: { soft: "bg-sky-500/30", solid: "bg-sky-500" },
   done: { soft: "bg-emerald-500/30", solid: "bg-emerald-500" },
+  pending: { soft: "bg-amber-500/30", solid: "bg-amber-500" },
   todo: { soft: "bg-neutral-400/40", solid: "bg-neutral-400" },
 };
 const DEFAULT_BAR = { soft: "bg-sky-500/30", solid: "bg-sky-500" };
@@ -207,7 +208,7 @@ const taskBar = (
 export const Task = defineComponent(
   {
     description:
-      "ガントの1タスク行。name/start は必須 (ISO 日付)、end 省略時は start と同日。status でバーの色 (todo|doing|done|blocked)、progress は 0–100 の進捗塗り、owner/note は補足行",
+      "ガントの1タスク行。name/start は必須 (ISO 日付)、end 省略時は start と同日。status でバーの色 (todo|pending|doing|done|blocked)、progress は 0–100 の進捗塗り、owner/note は補足行",
     schema: v.looseObject({
       end: v.optional(v.string()),
       name: v.string(),

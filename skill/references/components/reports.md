@@ -221,7 +221,7 @@ Release notes / changelog block. `Release` needs `version` (shown mono in the ca
 
 ### `<Pathway title>` / `<Stop label status note current>` / `:::pathway`
 
-Horizontal stepper for migration/rollout paths — version upgrade routes (v17→v18→v19), environment promotion (dev→staging→prod), phased rollouts. `Stop` needs `label`; `status` is `todo|doing|done|blocked` (same icon set as `<StatusBadge>`), `note` a sub-line, `current` rings the active stop. Connectors draw automatically between stops; overflow scrolls.
+Horizontal stepper for migration/rollout paths — version upgrade routes (v17→v18→v19), environment promotion (dev→staging→prod), phased rollouts. `Stop` needs `label`; `status` is `todo|pending|doing|done|blocked` (same icon set as `<StatusBadge>`), `note` a sub-line, `current` rings the active stop. Connectors draw automatically between stops; overflow scrolls.
 
 ```mdx
 <Pathway title="Upgrade path">

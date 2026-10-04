@@ -23,7 +23,7 @@ YAML frontmatter がドキュメントヘッダーを駆動します:
 ```mdx
 ---
 title: Renderer rewrite
-status: doing        # todo | doing | done | blocked
+status: doing        # todo | pending | doing | done | blocked
 date: 2026-09-10
 updated: 2026-09-16
 owner: "@suzumiyaaoba"
@@ -33,6 +33,8 @@ editor: cursor       # エディタリンクのスキーム。mdxr.config.ts を
 ```
 
 `title` があれば、mdxr はドキュメントヘッダー — ステータスバッジとメタ行 — を自動で描画します。本文がすでに `<Plan>` 系のルートで始まる場合（そちらが同じ props を自分で持つため）はスキップされます。
+
+未着手の作業には `todo`、レビュー・依存作業・開始予定を待っている作業には `pending`、進行を妨げる問題がある作業には `blocked` を使います。`<Step>`、`<Phase>`、`<BoardCard>` などのタスク系コンポーネントも同じステータスを受け付けます。`pending` は琥珀色の時計アイコンで表示され、進捗集計では未完了として数えます。
 
 ## Markdown 規約はコンポーネントにコンパイルされる
 

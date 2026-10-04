@@ -40,6 +40,16 @@ describe(mdxToAscii, () => {
     expect(markdown).toContain("1/3");
   });
 
+  it("renders pending steps as waiting and includes them in progress totals", async () => {
+    const { markdown, warnings } = await render(
+      '<Steps progress><Step status="done">Ready</Step><Step status="pending">Await review</Step></Steps>'
+    );
+    expect(warnings).toStrictEqual([]);
+    expect(markdown).toContain("1/2");
+    expect(markdown).toContain("[x] Ready");
+    expect(markdown).toContain("○ Await review");
+  });
+
   it("renders callouts and details readably", async () => {
     const src = `:::warning[Careful]\nMind the gap.\n:::\n\n<Details summary="More">\nhidden stuff\n</Details>`;
     const { markdown } = await render(src);

@@ -18,7 +18,7 @@ import { TRIM_CLS } from "./tones.js";
 export const Step = defineComponent(
   {
     description:
-      "単一の手順。status は todo|doing|done|blocked。owner/effort/priority/due でチップを付けられる",
+      "単一の手順。status は todo|pending|doing|done|blocked。pending は待機中。owner/effort/priority/due でチップを付けられる",
     schema: v.looseObject({
       ...CHIP_PROPS,
       status: v.optional(v.picklist(STATUSES), "todo"),

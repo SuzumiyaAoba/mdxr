@@ -99,6 +99,7 @@ const statusLabels: Record<string, { en: string; ja: string }> = {
   blocked: { en: "Blocked", ja: "ブロック中" },
   doing: { en: "In progress", ja: "対応中" },
   done: { en: "Done", ja: "完了" },
+  pending: { en: "Pending", ja: "待機中" },
   todo: { en: "To do", ja: "未着手" },
 };
 

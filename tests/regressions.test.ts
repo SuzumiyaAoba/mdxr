@@ -481,32 +481,41 @@ describe(render, () => {
     expect(html).toContain("<title>42</title>");
   });
 
-  it("normalizes frontmatter status case; unknown values warn, not crash", async () => {
-    const dir = await makeDir();
-    const spy = vi.spyOn(process.stderr, "write").mockReturnValue(true);
-    try {
-      // "Doing" used to hit StatusBadge's picklist and fail the whole
-      // document render — frontmatter is metadata, not a JSX prop.
-      const good = await render("---\ntitle: T\nstatus: Doing\n---\n\nbody", {
-        dir,
-      });
-      expect(good).toContain("In progress");
-      expect(spy.mock.calls.flat().join("")).not.toContain(
-        "frontmatter status"
-      );
+  it.each([
+    ["Doing", "In progress"],
+    ["Pending", "Pending"],
+  ])(
+    "normalizes frontmatter status %s; unknown values warn, not crash",
+    async (status, label) => {
+      const dir = await makeDir();
+      const spy = vi.spyOn(process.stderr, "write").mockReturnValue(true);
+      try {
+        // "Doing" used to hit StatusBadge's picklist and fail the whole
+        // document render — frontmatter is metadata, not a JSX prop.
+        const good = await render(
+          `---\ntitle: T\nstatus: ${status}\n---\n\nbody`,
+          {
+            dir,
+          }
+        );
+        expect(good).toContain(label);
+        expect(spy.mock.calls.flat().join("")).not.toContain(
+          "frontmatter status"
+        );
 
-      spy.mockClear();
-      const bad = await render("---\ntitle: T\nstatus: wip\n---\n\nbody", {
-        dir,
-      });
-      expect(bad).toContain("<h1");
-      expect(spy.mock.calls.flat().join("")).toContain(
-        'frontmatter status "wip"'
-      );
-    } finally {
-      spy.mockRestore();
+        spy.mockClear();
+        const bad = await render("---\ntitle: T\nstatus: wip\n---\n\nbody", {
+          dir,
+        });
+        expect(bad).toContain("<h1");
+        expect(spy.mock.calls.flat().join("")).toContain(
+          'frontmatter status "wip"'
+        );
+      } finally {
+        spy.mockRestore();
+      }
     }
-  });
+  );
 
   it("anchors a relative filePath to dir, not cwd", async () => {
     const dir = await makeDir();

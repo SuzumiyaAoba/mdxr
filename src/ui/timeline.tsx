@@ -28,7 +28,7 @@ export const Timeline = defineComponent(
 export const Event = defineComponent(
   {
     description:
-      "タイムラインの1項目。date は必須、status は todo|doing|done|blocked",
+      "タイムラインの1項目。date は必須、status は todo|pending|doing|done|blocked",
     schema: v.looseObject({
       date: v.string(),
       status: STATUS_PROP,

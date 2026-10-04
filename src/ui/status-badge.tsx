@@ -5,7 +5,13 @@ import { isOneOf } from "../guards.js";
 import { Pill } from "./bits.js";
 import { TONE, TONE_TEXT } from "./tones.js";
 
-export const STATUSES = ["todo", "doing", "done", "blocked"] as const;
+export const STATUSES = [
+  "todo",
+  "pending",
+  "doing",
+  "done",
+  "blocked",
+] as const;
 export type Status = (typeof STATUSES)[number];
 
 export const isStatus = isOneOf(STATUSES);
@@ -18,6 +24,7 @@ export const STATUS_ICONS: Record<Status, string> = {
   blocked: "lucide:circle-x",
   doing: "lucide:loader-circle",
   done: "lucide:circle-check",
+  pending: "lucide:clock",
   todo: "lucide:circle",
 };
 
@@ -26,6 +33,7 @@ export const STATUS_ICON_CLS: Record<Status, string> = {
   blocked: TONE_TEXT.red,
   doing: TONE_TEXT.sky,
   done: TONE_TEXT.emerald,
+  pending: TONE_TEXT.amber,
   todo: TONE_TEXT.neutral,
 };
 
@@ -41,6 +49,10 @@ const STYLES: Record<Status, { label: string; cls: string }> = {
   done: {
     cls: TONE.emerald,
     label: "Done",
+  },
+  pending: {
+    cls: TONE.amber,
+    label: "Pending",
   },
   todo: {
     cls: TONE.neutral,

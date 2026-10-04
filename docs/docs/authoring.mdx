@@ -23,7 +23,7 @@ YAML frontmatter drives the document header:
 ```mdx
 ---
 title: Renderer rewrite
-status: doing        # todo | doing | done | blocked
+status: doing        # todo | pending | doing | done | blocked
 date: 2026-09-10
 updated: 2026-09-16
 owner: "@suzumiyaaoba"
@@ -33,6 +33,8 @@ editor: cursor       # editor-link scheme, overrides mdxr.config.ts
 ```
 
 With a `title`, mdxr renders a document header — status badge plus a meta row — automatically. It is skipped when the body already opens with a `<Plan>`-style root, which takes the same props itself (`<Plan title="…" status="…">`).
+
+Use `todo` for work that has not started, `pending` for work waiting on a review, dependency, or scheduled start, and `blocked` when work cannot proceed. Task components such as `<Step>`, `<Phase>`, and `<BoardCard>` accept the same statuses. `pending` displays an amber clock icon and counts as incomplete in progress summaries.
 
 ## Markdown conventions compile to components
 

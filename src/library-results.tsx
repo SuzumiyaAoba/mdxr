@@ -24,6 +24,7 @@ const statusTones: Record<string, string> = {
   blocked: TONE.red,
   doing: TONE.sky,
   done: TONE.emerald,
+  pending: TONE.amber,
   todo: TONE.neutral,
 };
 

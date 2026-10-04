@@ -13,7 +13,11 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   render: () => (
     <Props of="Step">
-      <Prop name="status" type='"todo" | "doing" | "done" | "blocked"' required>
+      <Prop
+        name="status"
+        type='"todo" | "pending" | "doing" | "done" | "blocked"'
+        required
+      >
         Step marker state.
       </Prop>
       <Prop name="owner" type="string">

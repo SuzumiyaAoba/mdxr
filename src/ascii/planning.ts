@@ -52,7 +52,7 @@ const chipParts = (node: MdxTarget): (string | undefined)[] => {
 
 /**
  * Statused list item: `[x]`/`[ ]` real checkboxes for done/todo, a glyph
- * (`◐`/`✗`) for doing/blocked so four-state lists stay readable.
+ * (`○`/`◐`/`✗`) for pending/doing/blocked so statused lists stay readable.
  */
 const statusItem = (
   status: string | undefined,

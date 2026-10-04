@@ -58,7 +58,7 @@ Schemas turn typos into document errors with `file:line:col` instead of
 silent mis-render. `<FeatureCard status="nope">` fails at render time:
 
 ```console
-mdxr: error: Invalid props: status: Invalid type: Expected ("todo" | "doing" | "done" | "blocked") but received "nope"
+mdxr: error: Invalid props: status: Invalid type: Expected ("todo" | "pending" | "doing" | "done" | "blocked") but received "nope"
 ```
 
 `mdxr catalog --json` lists project components alongside the built-ins —

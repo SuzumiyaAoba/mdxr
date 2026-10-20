@@ -13,7 +13,8 @@ import type { Node, Parent } from "unist";
 import { visit } from "unist-util-visit";
 import { VFile } from "vfile";
 
-import { isRecord } from "../guards.js";
+import { isRecord, own } from "../guards.js";
+import { JSX_IMAGE_ATTRIBUTES } from "../image-attributes.js";
 import { fenceFilename, splitPathLines } from "../lines.js";
 import {
   isParent,
@@ -189,6 +190,37 @@ const scopeReference = (node: Node, namespace: string): void => {
   }
 };
 
+const rebaseAttributes = (node: Node, origin: string, root: string): void => {
+  if (!("attributes" in node) || !Array.isArray(node.attributes)) {
+    return;
+  }
+  const imageAttributes =
+    "name" in node && typeof node.name === "string"
+      ? own(JSX_IMAGE_ATTRIBUTES, node.name)
+      : undefined;
+  const resourceAttributes = new Set([
+    "path",
+    "src",
+    "poster",
+    "href",
+    ...(imageAttributes ?? []),
+  ]);
+  for (const attr of node.attributes) {
+    if (
+      !isRecord(attr) ||
+      typeof attr.name !== "string" ||
+      !resourceAttributes.has(attr.name) ||
+      typeof attr.value !== "string"
+    ) {
+      continue;
+    }
+    attr.value =
+      attr.name === "path"
+        ? rebasePath(attr.value, origin, root)
+        : rebaseUrl(attr.value, origin, root);
+  }
+};
+
 const rebase = (node: Node, origin: string, root: string): void => {
   if (origin === root) {
     return;
@@ -208,22 +240,7 @@ const rebase = (node: Node, origin: string, root: string): void => {
   if ("url" in node && typeof node.url === "string") {
     node.url = rebaseUrl(node.url, origin, root);
   }
-  if (!("attributes" in node) || !Array.isArray(node.attributes)) {
-    return;
-  }
-  for (const attr of node.attributes) {
-    if (
-      !isRecord(attr) ||
-      !["path", "src", "poster", "href"].includes(String(attr.name)) ||
-      typeof attr.value !== "string"
-    ) {
-      continue;
-    }
-    attr.value =
-      attr.name === "path"
-        ? rebasePath(attr.value, origin, root)
-        : rebaseUrl(attr.value, origin, root);
-  }
+  rebaseAttributes(node, origin, root);
 };
 
 const includePath = (

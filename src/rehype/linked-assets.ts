@@ -7,6 +7,7 @@ import { visit } from "unist-util-visit";
 import type { VFile } from "vfile";
 
 import { isRecord, own } from "../guards.js";
+import { JSX_IMAGE_ATTRIBUTES } from "../image-attributes.js";
 
 export interface LinkedAssetsOptions {
   enabled?: boolean;
@@ -28,12 +29,6 @@ export const IMAGE_MIME_TYPES: Readonly<Record<string, string>> = {
   ".tif": "image/tiff",
   ".tiff": "image/tiff",
   ".webp": "image/webp",
-};
-
-const JSX_IMAGE_ATTRIBUTES: Readonly<Record<string, readonly string[]>> = {
-  Figure: ["src"],
-  img: ["src"],
-  video: ["poster"],
 };
 
 const REMOTE_OR_ROOTED = /^(?:[a-z][a-z\d+.-]*:|\/|#)/iu;

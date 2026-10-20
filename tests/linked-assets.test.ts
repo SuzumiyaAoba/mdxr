@@ -50,6 +50,7 @@ describe("linked document local assets", () => {
         "![Pixel](pixel.png)",
         "![Encoded path](%E7%94%BB%E5%83%8F%20photo.png)",
         '<Figure src="pixel.png" />',
+        '<ImageCompare before="pixel.png" after="pixel.png#preview" />',
         '<img src="pixel.png" />',
         '<video src="clip.mp4" poster="pixel.png" />',
       ].join("\n\n"),
@@ -57,8 +58,9 @@ describe("linked document local assets", () => {
     );
     const output = String(file.value);
 
-    expect(output.match(/data:image\/png;base64,/gu)).toHaveLength(5);
+    expect(output.match(/data:image\/png;base64,/gu)).toHaveLength(7);
     expect(output).toContain(image.toString("base64"));
+    expect(output).toContain(`${image.toString("base64")}#preview`);
     expect(output).toContain("clip.mp4");
     expect(file.data.includeDependencies).toStrictEqual([
       realpathSync(imagePath),
@@ -71,6 +73,7 @@ describe("linked document local assets", () => {
     const file = await compileWithLinkedAssets(
       [
         '<Figure src="https://example.com/cover.png" />',
+        '<ImageCompare before="https://example.com/before.png" after="//example.com/after.png" />',
         '<Figure src="unknown.image" />',
         '<toString src="prototype.image" />',
       ].join("\n\n"),
@@ -78,9 +81,15 @@ describe("linked document local assets", () => {
     );
     const output = String(file.value);
 
-    expect(output).toContain("https://example.com/cover.png");
-    expect(output).toContain("unknown.image");
-    expect(output).toContain("prototype.image");
+    for (const source of [
+      "https://example.com/cover.png",
+      "https://example.com/before.png",
+      "//example.com/after.png",
+      "unknown.image",
+      "prototype.image",
+    ]) {
+      expect(output).toContain(source);
+    }
     expect(file.data.includeDependencies).toBeUndefined();
   });
 

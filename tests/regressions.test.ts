@@ -12,7 +12,7 @@ import { ChartStyle } from "../src/components/ui/chart.js";
 import type { AnyComponent } from "../src/define.js";
 import type { DocContextValue } from "../src/doc-context.js";
 import { DocContext } from "../src/doc-context.js";
-import { isComponent, safeHref } from "../src/guards.js";
+import { isComponent, safeHref, safeImageSrc } from "../src/guards.js";
 import { htmlDocument } from "../src/html.js";
 import { langForPath } from "../src/langs.js";
 import { importBundledCode } from "../src/load-user-module.js";
@@ -243,6 +243,35 @@ describe(safeHref, () => {
       undefined,
       undefined,
     ]);
+  });
+});
+
+describe(safeImageSrc, () => {
+  it("preserves embedded images without allowing data URLs in links", () => {
+    const sources = [
+      "data:image/png;base64,iVBORwA=",
+      "data:image/svg+xml;base64,PHN2Zy8+#preview",
+      "https://example.com/image.png",
+      "assets/image.png",
+    ];
+    expect(sources.map((source) => safeImageSrc(source))).toStrictEqual(
+      sources
+    );
+    expect(safeHref(sources[0])).toBeUndefined();
+  });
+
+  it("rejects non-image data URLs and executable schemes", () => {
+    const sources = [
+      "data:text/html;base64,PHNjcmlwdD4=",
+      "data:image/png;text/html;base64,PHNjcmlwdD4=",
+      "java\tscript:unsafe",
+      "file:///tmp/image.png",
+      "",
+      undefined,
+    ];
+    expect(
+      sources.filter((source) => safeImageSrc(source) !== undefined)
+    ).toStrictEqual([]);
   });
 });
 

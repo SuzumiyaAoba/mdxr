@@ -120,4 +120,83 @@ describe("local images in live previews", () => {
       await page.close();
     }
   });
+
+  it.each(["columns", "before-after", "comparison"] as const)(
+    "loads local images in included %s layouts after hydration",
+    async (layout) => {
+      const dir = await makeDir();
+      const included = path.join(dir, "比較 #1", "images.mdx");
+      await mkdir(path.join(path.dirname(included), "assets"), {
+        recursive: true,
+      });
+      await writeFile(
+        path.join(path.dirname(included), "assets", "before photo.png"),
+        IMAGE
+      );
+      await writeFile(
+        path.join(path.dirname(included), "assets", "after.svg"),
+        '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="1"/>'
+      );
+      const before = "assets/before%20photo.png?version=1";
+      const after = "assets/after.svg";
+      const sources = {
+        "before-after": `<Columns cols="2">
+<Before>
+
+![Before image](${before})
+
+</Before>
+<After>
+
+![After image](${after})
+
+</After>
+</Columns>`,
+        columns: `<Columns><Column><Figure src="${before}" alt="Before image" /></Column><Column><Figure src="${after}" alt="After image" /></Column></Columns>`,
+        comparison: `<ImageCompare before="${before}" after="${after}" beforeAlt="Before image" afterAlt="After image" />`,
+      };
+      await writeFile(included, sources[layout]);
+      const server = await serveSource(
+        '<Include path="比較 #1/images.mdx" />',
+        0,
+        { dir }
+      );
+      servers.push(server);
+      const page = await browser.newPage();
+      try {
+        await page.goto(serverUrl(server));
+        for (const [alt, width] of [
+          ["Before image", 1],
+          ["After image", 2],
+        ] as const) {
+          const image = page.getByRole("img", { exact: true, name: alt });
+          // oxlint-disable-next-line no-await-in-loop
+          await expect
+            .poll(
+              async () =>
+                await image.evaluate((element: HTMLImageElement) =>
+                  element.complete ? element.naturalWidth : 0
+                )
+            )
+            .toBe(width);
+        }
+        if (layout === "comparison") {
+          const slider = page.getByRole("slider", {
+            name: "Comparison split",
+          });
+          await slider.fill("75");
+        }
+        await expect
+          .poll(
+            async () =>
+              await page
+                .getByRole("img", { exact: true, name: "After image" })
+                .evaluate((element) => element.style.clipPath)
+          )
+          .toBe(layout === "comparison" ? "inset(0px 0px 0px 75%)" : "");
+      } finally {
+        await page.close();
+      }
+    }
+  );
 });

@@ -82,3 +82,14 @@ export const safeHref = (v: unknown): string | undefined => {
   }
   return undefined;
 };
+
+/** Image sources may also contain the image data URLs emitted by the renderer. */
+export const safeImageSrc = (value: unknown): string | undefined => {
+  if (
+    typeof value === "string" &&
+    /^data:image\/[a-z\d.+-]+;base64,/iu.test(value)
+  ) {
+    return value;
+  }
+  return safeHref(value);
+};

@@ -9,7 +9,7 @@ import {
   keyed,
   recordKey,
 } from "../extended/data.js";
-import { safeHref } from "../guards.js";
+import { safeHref, safeImageSrc } from "../guards.js";
 import { attrTrue, BOOLISH_PROP } from "./attrs.js";
 import { rowsFrom } from "./data-children.js";
 import { DATA_BUTTON, DATA_PROPS } from "./data-props.js";
@@ -201,12 +201,12 @@ export const ImageCompare = defineComponent(
       <DataPanel title={props.title ?? "Image comparison"} id={props.id}>
         <div className="relative m-4 overflow-hidden rounded-lg">
           <img
-            src={safeHref(props.before)}
+            src={safeImageSrc(props.before)}
             alt={props.beforeAlt}
             className="w-full"
           />
           <img
-            src={safeHref(props.after)}
+            src={safeImageSrc(props.after)}
             alt={props.afterAlt}
             className="absolute inset-0 h-full w-full object-contain"
             style={{ clipPath: `inset(0 0 0 ${position}%)` }}

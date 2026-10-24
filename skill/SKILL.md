@@ -5,7 +5,7 @@ description: Write documents as MDX using the mdxr component catalog, then previ
 
 # mdxr — agent-authored documents rendered to HTML
 
-MDXR version: 0.17.0
+MDXR version: 0.18.0
 
 Write documents as **Markdown + a small set of JSX components** (MDX). Do NOT write raw HTML: `mdxr render` compiles the document deterministically, so markup, styling and scripts are never emitted by the model.
 

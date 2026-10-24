@@ -164,6 +164,8 @@ Once the instructions or skill are installed, ask your agent, for example:
 
 > Write an implementation plan for the auth feature and render it to HTML with mdxr.
 
+Agents write MDXR files when presenting a plan in Plan mode or when you explicitly request MDXR files or output. For other tasks, including ordinary plans, reports, and reviews, they respond in the conversation without writing MDXR files.
+
 Plans, reports, reviews, investigation summaries, release notes, and postmortems all work. By default, new documents use `.mdxr/yyyyMMddhhmmss-<name>/index.mdx`, with a zero-padded 14-digit local creation time in 24-hour format (for example, `.mdxr/20260929140530-auth-plan/index.mdx`). Keep images and related MDX files in the document's directory. A file path you provide takes priority, and existing documents keep their current paths. If you specify only a directory, create a timestamped subdirectory there and save the document as `index.mdx`. Serve the directory and open the new document directly with `mdxr serve .mdxr/ --open .mdxr/20260929140530-auth-plan/index.mdx`.
 
 ## Document workflows

@@ -1,11 +1,15 @@
 ---
 name: mdxr
-description: Write rich plan/report documents as MDX using the mdxr component catalog, then render them to standalone HTML with `npx @suzumiyaaoba/mdxr render`. Use when creating plan files, status reports, reviews, or any structured document meant to be viewed as a styled HTML page — and whenever the user explicitly asks for a deliverable written or rendered with mdxr, regardless of document type.
+description: Write documents as MDX using the mdxr component catalog, then render them to standalone HTML with `npx @suzumiyaaoba/mdxr render`. Use when presenting a plan to the user in Plan mode or when the user explicitly requests MDXR files or output. For other tasks, respond in the conversation without writing MDXR files.
 ---
 
 # mdxr — agent-authored documents rendered to HTML
 
 Write documents as **Markdown + a small set of JSX components** (MDX). Do NOT write raw HTML: `mdxr render` compiles the document deterministically, so markup, styling and scripts are never emitted by the model.
+
+## When to write files
+
+Write MDXR document files only when presenting a plan to the user in **Plan mode** or when the user explicitly requests MDXR files or output. For every other task, respond in the conversation without writing MDXR files. A request for a plan, report, review, investigation summary, or other structured response alone does not authorize file creation outside the Plan-mode exception. That exception covers only the plan being presented, not additional reports or other documents. Apply the workflow below only when one of these conditions is met.
 
 ## Workflow
 

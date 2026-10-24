@@ -70,7 +70,7 @@ const instructionTarget = (
   const entry =
     name === "claude"
       ? `@${importPath}`
-      : `Read and follow the mdxr instructions in \`${global ? instructions.split(path.sep).join("/") : importPath}\` (relative paths resolve from this AGENTS.md) when creating plans, reports, reviews, or other structured documents, and whenever the user requests mdxr.`;
+      : `Read and follow the mdxr instructions in \`${global ? instructions.split(path.sep).join("/") : importPath}\` (relative paths resolve from this AGENTS.md) when presenting a plan to the user in Plan mode or when the user explicitly requests mdxr files or output. For other tasks, respond in the conversation without writing mdxr files.`;
   return { config, content, entry, instructions, references };
 };
 
